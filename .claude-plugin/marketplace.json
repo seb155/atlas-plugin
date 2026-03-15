@@ -1,0 +1,20 @@
+{
+  "name": "atlas-dev-marketplace",
+  "description": "Local marketplace for Atlas Dev plugin",
+  "owner": {
+    "name": "Seb Gagnon",
+    "email": "seb@axoiq.com"
+  },
+  "plugins": [
+    {
+      "name": "atlas-dev",
+      "description": "Enterprise Development Plugin for Claude Code — full dev cycle with ultra-detailed planning",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "Seb Gagnon",
+        "email": "seb@axoiq.com"
+      }
+    }
+  ]
+}
