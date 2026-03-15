@@ -55,9 +55,10 @@ Score against 15 criteria (0 or 1 each):
 - Update INDEX.md
 
 ## Output Format
-- ASCII diagrams for ALL architecture
-- ASCII mockups for ALL UI changes
-- Tables for ALL comparisons and matrices
-- Emojis for scannability
-- Bold for recommendations
-- Code blocks for SQL, Python, TypeScript
+- **Mermaid diagrams** (PREFERRED) for architecture, data flow, sequences, Gantt phases
+- ASCII mockups for UI layouts (Mermaid can't do UI wireframes)
+- GFM **tables** for ALL comparisons, inventories, and matrices
+- **Emojis** in section headers (🔍 A. VISION, 🏗️ C. ARCHITECTURE, etc.)
+- **Bold** for recommendations
+- **Code blocks** with language tags for SQL, Python, TypeScript (syntax highlighted)
+- Plans render in Atlas Dev dashboard via MarkdownRenderer (Mermaid + highlight.js)

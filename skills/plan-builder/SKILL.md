@@ -126,6 +126,75 @@ plan({subsystem}): {description}
 ```
 Example: `plan(rule-engine): add AI auto-tune workflow`
 
+## Diagram & Visual Format
+
+### Mermaid Diagrams (PREFERRED over ASCII)
+
+Plans render in the Atlas Dev dashboard via MarkdownRenderer which supports Mermaid v11.
+Use Mermaid for ALL architecture and flow diagrams:
+
+**Architecture (Section C)**:
+````markdown
+```mermaid
+graph TD
+    FE["🧩 Frontend<br/>React 19"] --> API["🔌 FastAPI"]
+    API --> SVC["⚙️ Services"]
+    SVC --> DB[("💾 PostgreSQL 17")]
+    SVC --> CACHE[("⚡ Valkey 8.1")]
+```
+````
+
+**Execution Phases (Section N)**:
+````markdown
+```mermaid
+gantt
+    title Execution Phases
+    dateFormat YYYY-MM-DD
+    section Phase A
+    DB Migration    :a1, 2026-03-16, 1d
+    section Phase B
+    Backend Service :b1, after a1, 2d
+    section Phase C
+    Frontend UI     :c1, after b1, 3d
+```
+````
+
+**Data Flow / Sequence**:
+````markdown
+```mermaid
+sequenceDiagram
+    User->>Frontend: Action
+    Frontend->>API: REST call
+    API->>Service: Business logic
+    Service->>DB: Query/Mutation
+    DB-->>Service: Result
+    Service-->>API: Response
+    API-->>Frontend: JSON
+```
+````
+
+### Tables (GFM markdown)
+All comparisons, inventories, and matrices → markdown tables with `|` borders.
+MarkdownRenderer styles them with Synapse theme automatically.
+
+### Emojis in Section Headers
+Use emojis for scannability:
+- `## 🔍 A. VISION`
+- `## 📦 B. INVENTAIRE`
+- `## 🏗️ C. ARCHITECTURE`
+- `## 💾 D. DB SCHEMA`
+- `## ⚙️ E. BACKEND`
+- `## 🔌 F. API`
+- `## 🖥️ G. FRONTEND UX`
+- `## 🎭 H. PERSONA IMPACT`
+- `## 🔒 I. SECURITY`
+- `## 🤖 J. AI-NATIVE`
+- `## 🖥️ K. INFRASTRUCTURE`
+- `## ♻️ L. REUSABILITY`
+- `## 📋 M. TRACEABILITY`
+- `## 📅 N. PHASES`
+- `## ✅ O. VERIFICATION`
+
 ## Extending Existing Plans
 
 When extending (not creating new):
