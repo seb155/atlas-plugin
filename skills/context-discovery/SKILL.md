@@ -169,8 +169,25 @@ After all 8 phases, compile a report:
 - If user provides all context explicitly
 - If this is a trivial task (< 3 complexity score)
 
+## Architecture Perspective Mapping
+
+When the project has a `.blueprint/plans/INDEX.md` or `atlas-dev-perspectives.ts`, map discovered subsystems to their architectural layer:
+
+```
+📐 Architecture Layers:
+- Data Pipeline: import, classification, data ingestion
+- Engineering Chain: rule engine, spec grouping, estimation
+- Procurement & Outputs: procurement, document generation
+- Visualization: UI views, canvas, search
+- Platform: auth, multi-tenant, observability, infrastructure
+```
+
+This mapping helps the plan-builder skill reference where a subsystem fits in the overall architecture.
+
 ## Integration with Plan Builder
 The context report is passed to the plan-builder skill, which uses it to pre-fill:
+- Section A (Vision) — architectural layer this subsystem belongs to
+- Section B (Inventaire) — discovered files, patterns, hooks
 - Section H (Personas) from docs
 - Section I (Security) from security detection
 - Section J (AI-Native) from observability detection
