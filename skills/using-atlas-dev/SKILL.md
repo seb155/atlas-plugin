@@ -111,12 +111,25 @@ When the user requests development work, this pipeline activates:
 - ALWAYS use AskUserQuestion for questions (never free text)
 - HITL gates on architecture decisions and plan approval
 
-### Visual Output
-- ASCII diagrams for ALL architecture
-- ASCII mockups for ALL new pages/components
-- Tables for comparisons and decisions
-- Emojis for scannability (headers, status)
-- Recommendations in bold with justification
+### Visual Documentation Standards
+
+ALL documentation generated (plans, architecture docs, reports) uses rich visual
+elements that render in the Dev Explorer dashboard via MarkdownRenderer:
+
+**Mermaid Diagrams** (rendered as SVG in dashboard):
+- `graph TD` / `graph LR` — architecture, system diagrams
+- `sequenceDiagram` — API/data flows
+- `gantt` — phase timelines
+- `flowchart TD` — decision trees
+- `stateDiagram-v2` — lifecycle, state machines
+- `erDiagram` — database schemas
+- `pie` — distribution charts
+
+**GFM Markdown Tables** — ALL comparisons, inventories, matrices
+**Code Blocks** with language tags (`sql`, `python`, `typescript`, `bash`) — syntax highlighted
+**Bold text** for emphasis (NOT emojis — emojis are for CLI persona only, never in generated docs)
+**Markdown headers** (##) for sections, bullet points for lists
+**Recommendations** in bold with justification
 
 ### Continuous Improvement
 - Note ALL improvements, errors, tech debt, backlog items
