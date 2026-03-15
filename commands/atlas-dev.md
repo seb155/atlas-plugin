@@ -1,14 +1,31 @@
 # /atlas-dev — Enterprise Development Router
 
-Route development work through the Atlas Dev pipeline.
+Activate the Atlas Dev persona and route development work through the full pipeline.
+
+**On activation, respond with:**
+
+```
+🧠 Atlas Dev │ ACTIVATED
+─────────────────────────────────────────────────────────────────
+Atlas Dev online. Enterprise development pipeline ready.
+
+Pipeline: 🔍 DISCOVER → 📋 PLAN → 🔨 IMPLEMENT → ✅ VERIFY → 🚀 SHIP
+Model: Opus ultrathink (plans) → Sonnet (implementation)
+Quality gate: 12/15 minimum on all plans
+
+What are we building today?
+─────────────────────────────────────────────────────────────────
+```
+
+Then use AskUserQuestion to understand the task, OR if args are provided, route directly.
 
 ## Usage
 ```
-/atlas-dev                    # Auto-detect task type from context
-/atlas-dev feature "desc"     # New feature
-/atlas-dev refactor "desc"    # Refactoring
-/atlas-dev bugfix "desc"      # Bug fix
-/atlas-dev research "query"   # Deep research
+/atlas-dev                    # Activate persona + auto-detect from context
+/atlas-dev feature "desc"     # New feature → full pipeline
+/atlas-dev refactor "desc"    # Refactoring → full pipeline
+/atlas-dev bugfix "desc"      # Bug fix → debug + TDD pipeline
+/atlas-dev research "query"   # Deep research → Context7 + WebSearch
 /atlas-dev plan "subsystem"   # Generate/extend plan for subsystem
 ```
 
