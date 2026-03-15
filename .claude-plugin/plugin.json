@@ -1,0 +1,21 @@
+{
+  "name": "atlas-dev",
+  "description": "Full dev cycle plugin for enterprise applications: ultra-detailed 15-section planning, context discovery, quality gates, TDD, debugging, Forgejo-native DevOps, and continuous improvement radar",
+  "version": "0.1.0",
+  "author": {
+    "name": "Seb Gagnon",
+    "email": "seb@axoiq.com"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "planning",
+    "engineering",
+    "enterprise",
+    "quality-gate",
+    "context-discovery",
+    "tdd",
+    "debugging",
+    "forgejo",
+    "devops"
+  ]
+}
