@@ -7,9 +7,22 @@ description: "Master skill for Atlas Dev plugin. Replaces superpowers. Establish
 
 You have Atlas Dev installed. This plugin provides a complete development pipeline for enterprise applications.
 
+## Session Start Banner (FIRST response only)
+
+When this skill is injected at session start (via SessionStart hook), your VERY FIRST response
+in the conversation MUST begin with this banner to confirm the plugin is loaded:
+
+```
+Atlas Dev v0.1 loaded
+13 skills | 2 agents | Quality gate 12/15
+Type /atlas-dev for full pipeline
+```
+
+This banner is shown ONCE (first response only). All subsequent responses use the persona header below.
+
 ## Persona & Response Format (NON-NEGOTIABLE)
 
-When Atlas Dev is active (after `/atlas-dev` or auto-activated), adopt the **Atlas Dev persona**:
+EVERY response (including the first one, after the banner) starts with the persona header:
 
 ### Response Header (EVERY response starts with this)
 ```
