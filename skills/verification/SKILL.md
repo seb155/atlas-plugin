@@ -1,6 +1,6 @@
 ---
 name: verification
-description: "Complete verification: L1-L4 tests + E2E persona tests + security scan + performance benchmarks. Evidence before assertions."
+description: "Complete verification: L1-L6 tests + quality gates pipeline (build→types→lint→tests→security→diff) + E2E persona tests + security scan + performance benchmarks + checkpoints. Evidence before assertions."
 ---
 
 # Verification
@@ -102,3 +102,137 @@ OVERALL: ✅ ALL CHECKS PASS
 - NEVER claim "it works" without verifying
 - ALWAYS show the actual output
 - ALWAYS run type-check (catches many bugs statically)
+
+---
+
+## Quality Gates Pipeline (from /a-verify)
+
+Sequential checks performed in order. **First failure stops the pipeline (fail-fast).**
+
+### Gate Sequence
+
+| Gate | Command | Purpose |
+|------|---------|---------|
+| **Build** | `bun run build` (or project equivalent) | Compilation check |
+| **Types** | `bun run typecheck` | Type safety validation |
+| **Lint** | `bun run lint` | Code style & quality |
+| **Tests** | `bun test` / `pytest` | Unit & integration tests |
+| **Security** | Pattern scan (see below) | Detect secrets, console.log |
+| **Diff** | `git status --short` + `git diff --stat` | Show changed files |
+
+### 1. Detect Project Configuration
+
+Before running gates, detect what's available:
+
+```bash
+# Check what commands are available in package.json / pyproject.toml
+if grep -q '"build"' package.json 2>/dev/null; then HAS_BUILD=true; fi
+if grep -q '"typecheck"' package.json 2>/dev/null; then HAS_TYPECHECK=true; fi
+if grep -q '"lint"' package.json 2>/dev/null; then HAS_LINT=true; fi
+```
+
+If a script is missing, that gate is skipped (marked as ⏭️ in the report).
+
+### 2. Run Gates (Sequential, Stop on First Failure)
+
+**CRITICAL**: Stop on first failure. Do NOT continue if a gate fails.
+
+For each gate:
+1. Announce which gate is running
+2. Execute the command
+3. Record pass/fail/skip status
+4. If fail → stop pipeline, report
+
+### 3. Security Scan Gate
+
+```bash
+# Check for console.log in source files (not tests, not comments)
+git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx|py)$' | \
+  xargs grep -n 'console\.log' | grep -v '^\s*//' | grep -v '\.test\.'
+
+# Check for potential secrets in staged changes
+git diff --cached | grep -iE '(api_key|password|secret|token)\s*=\s*["\x27]'
+
+# Check for .env files being committed
+git diff --cached --name-only | grep -E '\.env(\.|$)'
+
+# Check for private keys
+git diff --cached --name-only | grep -E '\.(pem|key|p12|pfx)$'
+```
+
+**Hard fail** on: secrets detected, .env files staged, private keys staged.
+**Warning** on: console.log statements found.
+
+### 4. Generate Verification Report
+
+Format output as a structured table:
+
+```
+## Verification Results
+
+| Check | Status | Details |
+|-------|:------:|---------|
+| Build | ✅/❌/⏭️ | <message> |
+| Types | ✅/❌/⏭️ | <message> |
+| Lint | ✅/❌/⚠️ | <message> |
+| Tests | ✅/❌ | <passed>/<total> passed |
+| Security | ✅/⚠️/❌ | <issues found> |
+| Changes | 📊 | <file count> files modified |
+
+### Summary
+Ready to commit: YES/NO
+```
+
+**Status Indicators**:
+- ✅ Passed
+- ❌ Failed (blocking)
+- ⚠️ Warning (non-blocking)
+- ⏭️ Skipped (not configured)
+
+### Flags
+
+| Flag | Behavior |
+|------|----------|
+| `--quick` | Skip long-running tests, run smoke tests only |
+| `--fix` | Auto-fix linting issues with `--fix` flag |
+| `--verbose` | Show full output from each command |
+| `--no-security` | Skip security scan (not recommended) |
+
+### Checkpoint Subcommands
+
+Save and compare verification state over time:
+
+```
+checkpoint save [name]      # Save current verification state
+checkpoint compare [name]   # Compare with saved checkpoint
+checkpoint list             # List saved checkpoints
+checkpoint diff <a> <b>     # Compare two checkpoints
+```
+
+Each checkpoint captures: test counts, type errors, lint errors, security issues, coverage %, file checksums.
+
+**Regression Detection**: Comparison flags when test pass count decreases, type errors increase, or security issues increase.
+
+### HITL Gate: After Verification
+
+If ALL gates pass → present result and ask:
+```
+AskUserQuestion: "All quality gates pass. Ready to proceed with commit/ship?"
+```
+
+If ANY gate fails → present failures and ask:
+```
+AskUserQuestion: "Gate {X} failed. Options:
+(a) Fix the issues (show errors above)
+(b) Skip this gate (if non-blocking)
+(c) Abort — I'll fix manually"
+```
+
+### Integration with Other Skills
+
+| Workflow | Usage |
+|----------|-------|
+| Pre-commit | verification → finishing-branch |
+| Pre-PR | verification → `git push` |
+| After refactor | verification `--fix` then review |
+| Full pipeline | context-discovery → plan-builder → tdd → verification → finishing-branch |

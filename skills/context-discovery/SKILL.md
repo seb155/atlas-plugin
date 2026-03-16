@@ -1,6 +1,6 @@
 ---
 name: context-discovery
-description: "Auto-discover project context for planning. 8-phase scan: stack, docs, domain, architecture, deployment, security, observability, performance. Run before any plan creation."
+description: "Auto-discover project context + context engineering toolkit. 8-phase scan + audit + codemap + patterns + sync-plan + CLAUDE.md management (W3H). Run before any plan creation."
 ---
 
 # Context Discovery
@@ -194,3 +194,192 @@ The context report is passed to the plan-builder skill, which uses it to pre-fil
 - Section K (Infrastructure) from deployment detection
 - Section L (Reusability) from architecture patterns
 - Section M (Traceability) from observability + security
+
+---
+
+## Context Engineering Toolkit (from /a-context-engineer)
+
+Extended subcommands for context audit, codemap generation, pattern extraction, CLAUDE.md management, and plan sync.
+
+### Subcommand: `audit`
+
+Audit existing project documentation quality. Measures how well-structured the project context is for AI agents.
+
+**Steps**:
+1. Read CLAUDE.md (or report missing)
+2. Count lines, check W3H sections (WHAT/WHY/HOW/RULES)
+3. Check for `.blueprint/` directory and contents
+4. Score lazy-loading tier presence (MODULES.md, PATTERNS.md, DECISIONS.md, etc.)
+5. Report findings with prioritized recommendations
+
+**Output**:
+```
+┌─────────────────────────────────────────────────────────────┐
+│ CONTEXT ENGINEERING AUDIT                                    │
+├─────────────────────────────────────────────────────────────┤
+│ CLAUDE.md: {N} lines (TARGET: <=100)         ✅/❌          │
+│ W3H Sections: WHAT ✅/❌ WHY ✅/❌ HOW ✅/❌ RULES ✅/❌   │
+│ .blueprint/: {status}                        ✅/❌          │
+│ Code map (MODULES.md): ✅/❌                                │
+│ Patterns (PATTERNS.md): ✅/❌                               │
+│ Lazy-loading: {N}/5 docs                     ✅/❌          │
+├─────────────────────────────────────────────────────────────┤
+│ SCORE: {N}/10                                                │
+│ PRIORITY: {recommendation}                                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Scoring**:
+| Criteria | Points |
+|----------|--------|
+| CLAUDE.md exists | 1 |
+| CLAUDE.md <= 100 lines | 1 |
+| W3H sections present (WHAT/WHY/HOW/RULES) | 1 per section (max 4) |
+| `.blueprint/` exists | 1 |
+| MODULES.md exists | 1 |
+| PATTERNS.md exists | 1 |
+| Rules files (`.claude/rules/`) exist | 1 |
+
+### Subcommand: `apply`
+
+Apply the context engineering template to a new project.
+
+**Steps**:
+1. Check if `.blueprint/` already exists (warn if so)
+2. AskUserQuestion about: stack, structure, conventions, domain
+3. Pre-fill CLAUDE.md template with project-specific values (W3H format, <=100 lines)
+4. Create `.blueprint/` with skeleton docs:
+   - `MODULES.md` — Code map skeleton
+   - `PATTERNS.md` — Pattern templates skeleton
+   - `AI-COLLABORATION.md` — Claude Code limits + session workflow
+   - `DECISIONS.md` — ADR template
+
+**HITL Gate**:
+```
+AskUserQuestion: "I'll create the context engineering kit. Please confirm:
+- Stack: {detected or ask}
+- Domain: {detected or ask}
+- Key conventions: {detected or ask}
+Proceed?"
+```
+
+### Subcommand: `codemap`
+
+Generate a MODULES.md code map by scanning the project.
+
+**Steps**:
+1. Scan key directories: `src/`, `components/`, `routes/`, `stores/`, `api/`, `services/`, `hooks/`, `models/`
+2. Identify modules by directory structure
+3. Find entry points (`index.ts`, `main.ts`, `App.tsx`, `main.py`, etc.)
+4. Document conventions (naming, imports, exports)
+5. Write `.blueprint/MODULES.md`
+
+**Output**: Module registry with entry points, key files, role descriptions, and file counts.
+
+```markdown
+# MODULES.md — Code Map
+
+## Frontend
+| Module | Path | Entry | Files | Role |
+|--------|------|-------|-------|------|
+| Components | src/components/ | index.ts | 45 | UI components |
+| Hooks | src/hooks/ | — | 12 | Reusable logic |
+| Pages | src/pages/ | — | 8 | Route pages |
+
+## Backend
+| Module | Path | Entry | Files | Role |
+|--------|------|-------|-------|------|
+| API | api/v1/ | router.py | 15 | REST endpoints |
+| Services | services/ | — | 10 | Business logic |
+```
+
+### Subcommand: `patterns`
+
+Extract reusable code patterns from the project.
+
+**Steps**:
+1. Identify recurring patterns (API calls, state management, component structure, hooks)
+2. Find 4-6 most common patterns
+3. Create copy-paste templates with `{PLACEHOLDER}` substitution points
+4. Document anti-patterns (what NOT to do)
+5. Write `.blueprint/PATTERNS.md`
+
+**Output**: Copy-paste code blocks with placeholder substitution points.
+
+### Subcommand: `sync-plan`
+
+Sync decisions from the active plan into `.blueprint/` documentation.
+
+**When to use**: After plan approval, before starting implementation. Captures architectural decisions, new modules, routes, domain knowledge, and phase timelines.
+
+**Steps**:
+1. Find active plan in `.claude/plans/*.md` or `.blueprint/plans/*.md` (most recent if multiple)
+2. Parse plan sections and extract:
+   - **Architectural decisions** → `.blueprint/TECH-DECISIONS.md`
+   - **New modules/services/stores** → `.blueprint/MODULES.md`
+   - **New routes/pages/nav items** → `.blueprint/NAVIGATION-MAP.md`
+   - **Domain concepts** → `.blueprint/DOMAIN-KNOWLEDGE.md`
+   - **Phase/sprint timeline** → `.blueprint/STATUS.md`
+   - **UX wireframes/mockups** → `.blueprint/UX-VISION.md`
+3. For each target doc:
+   - Read existing content
+   - **APPEND** new sections (never overwrite existing content)
+   - Add `<!-- Synced from plan: {plan_filename} on {date} -->` marker
+   - Preserve document structure and formatting conventions
+4. If a target doc doesn't exist, create it with the plan content + skeleton
+5. Report what was synced with a summary table
+
+**Rules**:
+- APPEND only — never delete or overwrite existing doc content
+- Date-stamp all synced sections with plan reference
+- Skip sections that already exist (idempotent — safe to re-run)
+- After sync, recommend running `audit` to verify overall doc quality
+
+**HITL Gate**:
+```
+AskUserQuestion: "Plan sync will update {N} docs from plan {name}:
+{list of docs to update}
+Proceed with sync?"
+```
+
+### CLAUDE.md Management
+
+The W3H framework for CLAUDE.md:
+
+```
+CLAUDE.md (<=100 lines, W3H format)
+├── WHAT: Stack, metrics, structure (15 lines)
+├── WHY: Business context, constraints (10 lines)
+├── HOW: Commands, workflow, lazy-load index (40 lines)
+└── RULES: 5-7 non-negotiable rules (20 lines)
+
+.blueprint/ (lazy-loaded on demand)
+├── MODULES.md         → Code map: file → role (replaces scanning)
+├── PATTERNS.md        → Copy-paste code templates
+├── NAVIGATION-MAP.md  → UI routes + stores (frontend)
+├── AI-COLLABORATION.md → Claude Code limits + session workflow
+└── DECISIONS.md       → ADRs: why X not Y
+```
+
+**Target**: CLAUDE.md <= 100 lines. Everything else lazy-loaded from `.blueprint/`.
+
+### Context Efficiency Metrics
+
+| Metric | Before Optimization | After Optimization |
+|--------|--------------------|--------------------|
+| CLAUDE.md size | 500+ lines | <=100 lines |
+| Files scanned per session | 50+ | 3-5 |
+| Context burn on exploration | 40-60% | 5-10% |
+| Time to first code change | 5-10 min | < 1 min |
+
+### Setup Detection (claude-code-setup)
+
+When entering a new project, auto-detect and recommend setup:
+
+1. **Check for CLAUDE.md** — if missing, recommend `apply`
+2. **Check for .blueprint/** — if missing, recommend creating
+3. **Check for .claude/rules/** — if missing, recommend adding project rules
+4. **Check for memory files** — if missing, note that Claude Code memory is not configured
+5. **Check for .claude/settings.json** — if missing, recommend creating with allowed tools
+
+Present findings and recommendations via AskUserQuestion before taking any action.

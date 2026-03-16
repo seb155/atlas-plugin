@@ -64,28 +64,48 @@ EVERY response (including the first one, after the banner) starts with the perso
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills
+## Available Skills (25)
 
 ### Planning & Design
-- **context-discovery**: Auto-scan project to detect stack, patterns, security, infra, personas
+- **context-discovery**: Auto-scan project + CLAUDE.md audit + codemap generation
 - **plan-builder**: Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15
 - **brainstorming**: Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval
+- **frontend-design**: UI/UX implementation from specs. Distinctive, production-grade. Uses design-implementer agent
 
 ### Implementation
 - **tdd**: Failing test → minimal impl → pass → commit. Strict TDD cycle
 - **executing-plans**: Load plan → TaskCreate per step → execute with subagents
 - **subagent-dispatch**: Dispatch Sonnet subagents per task. 2-stage review (spec + quality)
-- **git-worktrees**: Isolated branch per feature. Safety verification
+- **git-worktrees**: Isolated branch per feature. Safety verification (Forgejo-native)
 
-### Quality & Debugging
+### Quality & Review
 - **systematic-debugging**: Hypothesize → verify → fix. Max 2 attempts then escalate
-- **verification**: L1-L4 tests + E2E persona tests + security + perf benchmarks
-- **finishing-branch**: Verify tests → PR → CI → cleanup
+- **verification**: L1-L4 tests + E2E + security scan + perf benchmarks + quality gates pipeline
+- **code-review**: Code review with confidence filtering. Local or PR mode. Uses code-reviewer agent
+- **code-simplify**: Refactoring for clarity, consistency, maintainability
+- **finishing-branch**: Commit + push + PR + CI + cleanup (conventional commits, exclude secrets)
 
-### Governance
+### Optimization
+- **experiment-loop**: Autonomous optimization (autoresearch pattern). Uses experiment-runner agent
+- **engineering-ops**: I&C maintenance (status, update, checklist, recalc) + 4-agent estimation pipeline
+
+### Research & Knowledge
+- **deep-research**: Multi-query decomposition → search → triangulate → synthesize
+- **document-generator**: Generate PPTX/DOCX/XLSX with storytelling and visual layouts
+
+### Meta & Governance
 - **scope-check**: Detect drift. Are you working outside original scope?
 - **decision-log**: Log architectural decisions to `.claude/decisions.jsonl`
-- **session-retrospective**: End-of-session lessons learned
+- **session-retrospective**: End-of-session lessons + session close + handoff context
+- **hookify**: Create Claude Code hooks from conversation patterns
+- **browser-automation**: Browser automation for E2E testing and visual QA
+- **skill-management**: Create, improve, benchmark skills. Plugin development
+
+### Domain Reference Libraries (loaded on demand)
+- **refs/composition-patterns**: React composition patterns
+- **refs/react-best-practices**: React 19 + Next.js performance
+- **refs/gmining-excel**: G Mining Excel document standards
+- **refs/web-design-guidelines**: Web design system principles
 
 ## Pipeline (Automatic)
 
