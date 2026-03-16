@@ -7,10 +7,11 @@ Route to the right skill based on subcommand or auto-detect from context.
 ```
 🔷 ATLAS │ ACTIVATED
 ─────────────────────────────────────────────────────────────────
-ATLAS v1.0 online. 16 subcommands | 25 skills | 6 agents
+ATLAS v2.0 online. 27 subcommands | 30 skills | 6 agents
 Auto-routing active — just tell me what you need.
 
-Or use a subcommand:  /atlas dev | tune | review | design | verify | ship | research | ...
+Dev: /atlas dev | tune | review | design | verify | ship | research | present | eng
+PA:  /atlas meeting | email | notes | agenda | people | learn | profile | remind | brief
 
 What are we working on?
 ─────────────────────────────────────────────────────────────────
@@ -97,6 +98,21 @@ Parse the first argument and invoke the matching skill:
 | `context` | context-discovery | Sonnet |
 | `hooks` | hookify | Sonnet |
 | `skill` | skill-management | Sonnet |
+
+### PERSONAL ASSISTANT
+
+| Subcommand | Skill(s) Invoked | Model |
+|-----------|-----------------|-------|
+| `meeting` | meeting-assistant | Opus (synthesis) |
+| `email` | email-triage | Opus (classify) → Sonnet (summarize) |
+| `notes` | note-capture | Sonnet |
+| `agenda` | agenda-planner | Sonnet |
+| `people` | people-mapper | Sonnet |
+| `learn` | knowledge-builder | Opus (extract) → Sonnet (store) |
+| `profile` | user-profiler | Opus (synthesize profile) |
+| `remind` | reminder-scheduler | Sonnet (CronCreate wrapper) |
+| `summarize` | doc-summarizer | Sonnet |
+| `brief` | morning-brief | Sonnet (fetch) → Opus (compile) |
 
 ## Pipeline (for /atlas dev)
 

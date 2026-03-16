@@ -13,8 +13,8 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-ATLAS v1.0 loaded
-25 skills | 6 agents | 16 subcommands | Quality gate 12/15
+ATLAS v2.0 loaded
+30 skills | 6 agents | 27 subcommands | Quality gate 12/15
 Auto-routing active — just tell me what you need.
 ```
 
@@ -100,6 +100,13 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - **hookify**: Create Claude Code hooks from conversation patterns
 - **browser-automation**: Browser automation for E2E testing and visual QA
 - **skill-management**: Create, improve, benchmark skills. Plugin development
+
+### Personal Assistant
+- **note-capture**: Quick capture notes with tags, context, linked to meetings/projects/people
+- **knowledge-builder**: Learn facts/preferences/relationships. Confidence-based with reinforcement
+- **user-profiler**: Build and display user's complete profile. Human context engineering
+- **reminder-scheduler**: Schedule reminders via CronCreate. Parse natural language time
+- **morning-brief**: Compile daily brief: agenda + emails + tasks + suggestions
 
 ### Domain Reference Libraries (loaded on demand)
 - **refs/composition-patterns**: React composition patterns
