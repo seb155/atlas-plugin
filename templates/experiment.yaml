@@ -1,0 +1,77 @@
+# ATLAS Experiment Template
+# Copy to .claude/assay/experiments.yaml and customize per project
+# See skills/experiment-loop/SKILL.md for full documentation
+
+experiments:
+  # Example: Optimize database-backed rules
+  example-rules:
+    description: "Optimize {rule_type} accuracy"
+    target:
+      type: database          # database | file | api
+      table: "{table_name}"
+      filter: "is_active = true"
+    metric:
+      name: accuracy
+      direction: maximize     # maximize | minimize
+      command: |
+        # Command that outputs a single number (the metric value)
+        curl -s http://localhost:8001/api/v1/evaluate | python3 -c "import sys,json; print(json.load(sys.stdin)['accuracy'])"
+    golden_dataset:
+      path: .claude/assay/baselines/{experiment}-baseline.json
+      description: "Human-validated reference dataset"
+    budget:
+      max_iterations: 12
+      time_per_iteration: 5m
+      total_timeout: 60m
+    hitl:
+      threshold: 0.02         # HITL gate if improvement > 2%
+      auto_accept_below: 0.005
+      always_reject_below: -0.001
+    mutation_strategy:
+      approach: insights       # insights | random | systematic
+    model: sonnet
+
+  # Example: Optimize ML model training
+  example-ml:
+    description: "Optimize {model_name} performance"
+    target:
+      type: file
+      path: config/training.yaml
+    metric:
+      name: "mAP@0.5"
+      direction: maximize
+      command: "python evaluate.py --weights best.pt"
+    budget:
+      max_iterations: 6
+      time_per_iteration: 30m
+    hitl:
+      threshold: 0.01
+    mutation_strategy:
+      approach: systematic
+      parameters:
+        - learning_rate: [0.001, 0.005, 0.01]
+        - batch_size: [8, 16, 32]
+    model: opus
+
+  # Example: Optimize search relevance
+  example-search:
+    description: "Optimize search relevance"
+    target:
+      type: file
+      path: config/search.yaml
+    metric:
+      name: "NDCG@10"
+      direction: maximize
+      command: "python eval_search.py --queries baselines/search-queries.json"
+    budget:
+      max_iterations: 20
+      time_per_iteration: 1m
+    hitl:
+      threshold: 0.05
+    mutation_strategy:
+      approach: systematic
+      parameters:
+        - field_weight_title: [1.0, 2.0, 5.0]
+        - field_weight_body: [0.5, 1.0, 2.0]
+        - boost_exact: [2.0, 5.0, 10.0]
+    model: sonnet
