@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Atlas Dev Plugin — Session Start Hook
-# Injects the using-atlas-dev skill into every Claude Code session
+# ATLAS Plugin — Session Start Hook
+# Injects the using-atlas skill into every Claude Code session
 
-SKILL_FILE="${CLAUDE_PLUGIN_ROOT}/skills/using-atlas-dev/SKILL.md"
+SKILL_FILE="${CLAUDE_PLUGIN_ROOT}/skills/using-atlas/SKILL.md"
 
 if [ ! -f "$SKILL_FILE" ]; then
-  echo '{"additionalContext": "atlas-dev plugin: skill file not found"}'
+  echo '{"additionalContext": "ATLAS plugin: skill file not found"}'
   exit 0
 fi
 
@@ -14,6 +14,6 @@ SKILL_CONTENT=$(cat "$SKILL_FILE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':
 
 cat <<EOF
 {
-  "additionalContext": "<ATLAS_DEV_PLUGIN>\\n${SKILL_CONTENT}\\n</ATLAS_DEV_PLUGIN>"
+  "additionalContext": "<ATLAS_PLUGIN>\n${SKILL_CONTENT}\n</ATLAS_PLUGIN>"
 }
 EOF

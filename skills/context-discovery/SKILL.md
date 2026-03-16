@@ -171,7 +171,7 @@ After all 8 phases, compile a report:
 
 ## Architecture Perspective Mapping
 
-When the project has a `.blueprint/plans/INDEX.md` or `atlas-dev-perspectives.ts`, map discovered subsystems to their architectural layer:
+When the project has a `.blueprint/plans/INDEX.md` or `atlas-perspectives.ts`, map discovered subsystems to their architectural layer:
 
 ```
 📐 Architecture Layers:

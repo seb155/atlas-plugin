@@ -1,13 +1,13 @@
-# /atlas-dev — Enterprise Development Router
+# /atlas — Enterprise Development Router
 
-Activate the Atlas Dev persona and route development work through the full pipeline.
+Activate the ATLAS persona and route development work through the full pipeline.
 
 **On activation, respond with:**
 
 ```
-🧠 Atlas Dev │ ACTIVATED
+🧠 ATLAS │ ACTIVATED
 ─────────────────────────────────────────────────────────────────
-Atlas Dev online. Enterprise development pipeline ready.
+ATLAS online. Enterprise development pipeline ready.
 
 Pipeline: 🔍 DISCOVER → 📋 PLAN → 🔨 IMPLEMENT → ✅ VERIFY → 🚀 SHIP
 Model: Opus ultrathink (plans) → Sonnet (implementation)
@@ -21,12 +21,12 @@ Then use AskUserQuestion to understand the task, OR if args are provided, route 
 
 ## Usage
 ```
-/atlas-dev                    # Activate persona + auto-detect from context
-/atlas-dev feature "desc"     # New feature → full pipeline
-/atlas-dev refactor "desc"    # Refactoring → full pipeline
-/atlas-dev bugfix "desc"      # Bug fix → debug + TDD pipeline
-/atlas-dev research "query"   # Deep research → Context7 + WebSearch
-/atlas-dev plan "subsystem"   # Generate/extend plan for subsystem
+/atlas                    # Activate persona + auto-detect from context
+/atlas feature "desc"     # New feature → full pipeline
+/atlas refactor "desc"    # Refactoring → full pipeline
+/atlas bugfix "desc"      # Bug fix → debug + TDD pipeline
+/atlas research "query"   # Deep research → Context7 + WebSearch
+/atlas plan "subsystem"   # Generate/extend plan for subsystem
 ```
 
 ## Pipeline
