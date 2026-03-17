@@ -215,5 +215,8 @@ Proceed with push?"
 AskUserQuestion: "Pushed to {branch}. CI will run.
 (a) Monitor CI (ci-feedback-loop)
 (b) Create PR to dev
-(c) Done for now"
+(c) Deploy to staging (devops-deploy)
+(d) Done for now"
 ```
+
+If `.atlas/deploy.yaml` exists, also show deploy option with environment names.

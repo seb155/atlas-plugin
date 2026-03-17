@@ -33,6 +33,7 @@ Then use AskUserQuestion to understand the task. If args are provided, route dir
 /atlas verify [--full]         # Quality gates + security
 /atlas simplify [file|dir]     # Code refactoring for clarity
 /atlas ship [message]          # Commit & push
+/atlas deploy [env|status]     # Deploy to envs + health check + data sync
 /atlas research <query>        # Deep multi-query research
 /atlas present [--format xlsx] # Generate PPTX/DOCX/XLSX
 /atlas eng [status|update]     # Engineering maintenance
@@ -76,11 +77,15 @@ Parse the first argument and invoke the matching skill:
 | `tune` | experiment-loop (+ experiment-runner agent) | Opus (design) → Sonnet (iterate) |
 | `estimate` | engineering-ops (estimate mode, 4-agent pipeline) | Opus (orchestrator) |
 
-### SHIP
+### SHIP & DEPLOY
 
 | Subcommand | Skill(s) Invoked | Model |
 |-----------|-----------------|-------|
 | `ship` | finishing-branch | Sonnet |
+| `deploy` | devops-deploy (config-driven, multi-env) | Sonnet |
+| `deploy status` | devops-deploy (health check all envs) | Sonnet |
+| `deploy promote` | devops-deploy (merge dev→main + deploy) | Sonnet |
+| `deploy sync` | devops-deploy (data sync) | Sonnet |
 | `end` | session-retrospective | Sonnet |
 | `handoff` | session-retrospective (handoff mode) | Sonnet |
 
@@ -125,6 +130,7 @@ Parse the first argument and invoke the matching skill:
 5. **VERIFY**: `verification` skill → tests + E2E + security + perf
    - If fail → fix (max 2 attempts) → escalate via AskUserQuestion
 6. **SHIP**: `finishing-branch` skill → commit + PR + CI + cleanup
+7. **DEPLOY** (optional): `devops-deploy` skill → deploy envs + health check + data sync
 
 ### Bugfix
 1. **DISCOVER**: `context-discovery` skill
@@ -133,6 +139,7 @@ Parse the first argument and invoke the matching skill:
 4. **IMPLEMENT**: `tdd` skill → failing test for bug → fix → pass
 5. **VERIFY**: `verification` skill
 6. **SHIP**: `finishing-branch` skill
+7. **DEPLOY** (optional): `devops-deploy` skill
 
 ## HITL Co-Pilot (NON-NEGOTIABLE)
 

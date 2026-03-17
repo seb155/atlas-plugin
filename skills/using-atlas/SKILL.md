@@ -64,7 +64,7 @@ EVERY response (including the first one, after the banner) starts with the perso
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (25)
+## Available Skills (26)
 
 ### Planning & Design
 - **context-discovery**: Auto-scan project + CLAUDE.md audit + codemap generation
@@ -84,6 +84,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - **code-review**: Code review with confidence filtering. Local or PR mode. Uses code-reviewer agent
 - **code-simplify**: Refactoring for clarity, consistency, maintainability
 - **finishing-branch**: Commit + push + PR + CI + cleanup (conventional commits, exclude secrets)
+- **devops-deploy**: Deploy to any env (staging/prod/sandbox) with health checks, validators, data sync. Config-driven via `.atlas/deploy.yaml`
 
 ### Optimization
 - **experiment-loop**: Autonomous optimization (autoresearch pattern). Uses experiment-runner agent
@@ -125,6 +126,7 @@ When the user requests development work, this pipeline activates:
 3. IMPLEMENT → tdd + executing-plans + subagent-dispatch (Sonnet)
 4. VERIFY → verification skill (tests, E2E, security, perf)
 5. SHIP → finishing-branch skill (commit, PR, CI, cleanup)
+6. DEPLOY → devops-deploy skill (deploy envs, health check, validators, data sync)
 ```
 
 ## Instruction Priority
