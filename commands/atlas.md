@@ -5,13 +5,13 @@ Route to the right skill based on subcommand or auto-detect from context.
 **On activation (no subcommand), respond with:**
 
 ```
-🔷 ATLAS │ ACTIVATED
+🏛️ ATLAS │ ACTIVATED
 ─────────────────────────────────────────────────────────────────
-ATLAS v2.0 online. 27 subcommands | 30 skills | 6 agents
+🏛️ ATLAS v2.1 online. 28 subcommands | 26 skills | 6 agents
 Auto-routing active — just tell me what you need.
 
-Dev: /atlas dev | tune | review | design | verify | ship | research | present | eng
-PA:  /atlas meeting | email | notes | agenda | people | learn | profile | remind | brief
+Dev:    /atlas dev | tune | review | design | verify | ship | deploy | research | present | eng
+PA:     /atlas notes | learn | profile | remind | brief
 
 What are we working on?
 ─────────────────────────────────────────────────────────────────
