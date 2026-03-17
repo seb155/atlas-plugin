@@ -44,6 +44,7 @@ Then use AskUserQuestion to understand the task. If args are provided, route dir
 /atlas skill [create|improve]  # Create/improve skills
 /atlas end                     # Session close
 /atlas handoff                 # Session handoff for resume
+/atlas pickup                  # Resume from last handoff
 ```
 
 ## Routing Table
@@ -88,6 +89,7 @@ Parse the first argument and invoke the matching skill:
 | `deploy sync` | devops-deploy (data sync) | Sonnet |
 | `end` | session-retrospective | Sonnet |
 | `handoff` | session-retrospective (handoff mode) | Sonnet |
+| `pickup` | session-retrospective (pickup mode) | Sonnet |
 
 ### KNOWLEDGE
 

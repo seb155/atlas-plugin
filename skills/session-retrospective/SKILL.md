@@ -127,7 +127,31 @@ Collect:
 6. **File references** — key files modified or created (from `git status`)
 7. **Branch/worktree** — current branch, worktree name if applicable
 
-### Handoff Step 3: Generate Handoff File
+### Handoff Step 3: Generate Structured Handoff
+
+**A) JSON handoff** (for `/atlas pickup` — machine-readable):
+
+Write to `.claude/handoffs/latest.json`:
+
+```json
+{
+  "id": "{project}-{YYYY-MM-DD}-{HH}",
+  "date": "YYYY-MM-DDTHH:MM:SSZ",
+  "project": "{project name from CLAUDE.md or directory}",
+  "branch": "{current branch}",
+  "commit": "{HEAD commit hash}",
+  "plan": "{path to active plan, e.g. .blueprint/plans/platform-intelligence.md}",
+  "phase": 1,
+  "summary": "{1-line summary of what was accomplished}",
+  "next_steps": ["{step 1}", "{step 2}"],
+  "decisions": ["{decision 1}", "{decision 2}"],
+  "files_modified": ["{file 1}", "{file 2}"],
+  "tasks_pending": ["{task 1}", "{task 2}"],
+  "resume_prompt": "lis {plan_path} et commence phase {N}. Contexte: {summary}"
+}
+```
+
+**B) Markdown handoff** (for humans — readable):
 
 Write to project root: `handoff-{YYYY-MM-DD}.md`
 
