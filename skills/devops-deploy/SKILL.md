@@ -60,14 +60,42 @@ data_sync:                         # Optional: DB/file sync
     status: <cmd>
 ```
 
+## Forgejo API Access (CRITICAL)
+
+> Forgejo external URL (`forgejo.axoiq.com`) is behind Cloudflare Access → 302 on API calls.
+> ALWAYS read `forgejo.api_base` from `.atlas/deploy.yaml` or default to internal IP.
+
+```bash
+# Load from deploy config or default
+FORGEJO_API="${config_forgejo_api_base:-http://192.168.10.75:3000/api/v1}"
+source ~/.env  # loads $FORGEJO_TOKEN
+
+# PR creation
+curl -s -X POST "$FORGEJO_API/repos/{owner}/{repo}/pulls" \
+  -H "Authorization: token $FORGEJO_TOKEN" -H "Content-Type: application/json" \
+  -d '{"title":"...","head":"dev","base":"main"}'
+
+# PR merge (NOTE: lowercase "do", NOT "Do" — 405 on wrong casing)
+curl -s -X POST "$FORGEJO_API/repos/{owner}/{repo}/pulls/{N}/merge" \
+  -H "Authorization: token $FORGEJO_TOKEN" -H "Content-Type: application/json" \
+  -d '{"do":"merge","delete_branch_after_merge":false}'
+
+# CI status check
+curl -s -H "Authorization: token $FORGEJO_TOKEN" \
+  "$FORGEJO_API/repos/{owner}/{repo}/commits/{SHA}/status"
+```
+
+Full reference: `.claude/references/forgejo-api.md` (project-level)
+
 ## Process
 
 ### Step 1: Pre-Flight
 
 1. Read `.atlas/deploy.yaml` (or detect minimal mode)
-2. Check `git status` — must be clean
-3. Detect current branch and environment
-4. Verify target env exists in config
+2. **Load Forgejo config** — `forgejo.api_base`, `forgejo.token_env`, `ssh.jump_host`
+3. Check `git status` — must be clean
+4. Detect current branch and environment
+5. Verify target env exists in config
 5. Show deployment summary via AskUserQuestion (for prod) or auto-proceed (staging/sandbox)
 
 ### Step 2: Validate Local (Optional)

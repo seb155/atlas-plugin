@@ -79,18 +79,43 @@ If any improvements/tech debt was noticed during implementation:
 
 ## Forgejo PR Creation
 
+> **CRITICAL**: Forgejo external URL (`forgejo.axoiq.com`) is behind Cloudflare Access.
+> API calls to the external URL return 302 redirects. ALWAYS use the internal IP.
+
 ```bash
-# Via Forgejo API (if available)
-curl -X POST "https://forgejo.axoiq.com/api/v1/repos/{owner}/{repo}/pulls" \
-  -H "Authorization: token $FORGEJO_TOKEN" \
+# Step 0: Source token and set API base (MANDATORY)
+source ~/.env
+FORGEJO_API="http://192.168.10.75:3000/api/v1"
+
+# Step 1: Create PR
+curl -s -X POST "$FORGEJO_API/repos/{owner}/{repo}/pulls" \
   -H "Content-Type: application/json" \
+  -H "Authorization: token $FORGEJO_TOKEN" \
   -d '{
     "title": "feat({subsystem}): {description}",
     "body": "## Summary\n{plan reference}\n\n## Changes\n{file list}",
     "head": "feature/{name}",
     "base": "dev"
   }'
+
+# Step 2: Merge PR (NOTE: lowercase "do", NOT "Do")
+curl -s -X POST "$FORGEJO_API/repos/{owner}/{repo}/pulls/{PR_NUMBER}/merge" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: token $FORGEJO_TOKEN" \
+  -d '{"do":"merge","delete_branch_after_merge":false}'
+
+# Step 3: Check CI status on commit
+curl -s -H "Authorization: token $FORGEJO_TOKEN" \
+  "$FORGEJO_API/repos/{owner}/{repo}/commits/{SHA}/status"
 ```
+
+### Forgejo API Gotchas
+- **NEVER use `https://forgejo.axoiq.com` for API** — CF Access blocks with 302
+- **Token**: `$FORGEJO_TOKEN` in `~/.env` — always `source ~/.env` first
+- **Merge field**: lowercase `"do":"merge"` — uppercase `"Do"` returns 405
+- **SSH remote**: `ssh://forgejo/` alias → `192.168.10.75:2222`
+- **PR URLs in responses** use external URL (works in browser with CF SSO)
+- **Full reference**: `.claude/references/forgejo-api.md` (project-level)
 
 ---
 
