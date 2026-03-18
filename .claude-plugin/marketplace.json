@@ -8,9 +8,12 @@
   "plugins": [
     {
       "name": "atlas",
-      "description": "ATLAS — AXOIQ's unified AI engineering assistant. Auto-routing co-pilot with strategic HITL gates.",
+      "description": "ATLAS \u2014 AXOIQ unified AI engineering assistant. 30 commands + 31 skills + 6 agents + 2 hooks. Auto-routing co-pilot with HITL gates.",
       "version": "1.2.0",
-      "source": "./",
+      "source": {
+        "source": "url",
+        "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git"
+      },
       "author": {
         "name": "Seb Gagnon",
         "email": "seb@axoiq.com"
