@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — Session End Memory Cleanup Hook
+# Runs async at session end to maintain memory hygiene
+#
+# Actions:
+# 1. Detect orphaned files (in dir but not referenced in MEMORY.md)
+# 2. Flag stale files (>60 days old)
+# 3. Report stats as JSON
+#
+# NOTE: This hook REPORTS only — it does NOT delete files.
+# Deletion requires human confirmation via the memory-manager skill.
+
+set -euo pipefail
+
+CLAUDE_PROJECTS_DIR="$HOME/.claude/projects"
+MEMORY_DIRS=$(find "$CLAUDE_PROJECTS_DIR" -maxdepth 2 -name "memory" -type d 2>/dev/null)
+
+if [ -z "$MEMORY_DIRS" ]; then
+  echo '{"memoryStats":{"status":"no_memory_dirs"}}'
+  exit 0
+fi
+
+TOTAL_FILES=0
+TOTAL_ORPHANED=0
+TOTAL_STALE=0
+TOTAL_SIZE="0K"
+NOW=$(date +%s)
+STALE_THRESHOLD=$((60 * 86400))
+
+for MEMORY_DIR in $MEMORY_DIRS; do
+  MEMORY_INDEX="$MEMORY_DIR/MEMORY.md"
+  [ -f "$MEMORY_INDEX" ] || continue
+
+  # Count files
+  DIR_FILES=$(find "$MEMORY_DIR" -maxdepth 1 -name "*.md" -not -name "MEMORY.md" 2>/dev/null | wc -l)
+  TOTAL_FILES=$((TOTAL_FILES + DIR_FILES))
+  TOTAL_SIZE=$(du -sh "$MEMORY_DIR" 2>/dev/null | cut -f1)
+
+  for f in "$MEMORY_DIR"/*.md; do
+    [ -f "$f" ] || continue
+    fname=$(basename "$f")
+    [ "$fname" = "MEMORY.md" ] && continue
+
+    # Check orphaned (not in MEMORY.md index)
+    fbase="${fname%.md}"
+    if ! grep -q "$fbase" "$MEMORY_INDEX" 2>/dev/null; then
+      TOTAL_ORPHANED=$((TOTAL_ORPHANED + 1))
+    fi
+
+    # Check stale (>60 days)
+    MTIME=$(stat -c %Y "$f" 2>/dev/null || echo "0")
+    AGE=$(( (NOW - MTIME) / 86400 ))
+    if [ "$AGE" -gt 60 ]; then
+      TOTAL_STALE=$((TOTAL_STALE + 1))
+    fi
+  done
+done
+
+cat <<EOF
+{
+  "memoryStats": {
+    "totalFiles": $TOTAL_FILES,
+    "totalSize": "$TOTAL_SIZE",
+    "orphanedFiles": $TOTAL_ORPHANED,
+    "staleFiles": $TOTAL_STALE,
+    "action": "report_only"
+  }
+}
+EOF
