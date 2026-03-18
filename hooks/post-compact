@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — PostCompact Hook
+# Injects context after auto-compaction to restore critical session state
+# stdout → injected as additional context post-summary
+# Exit 0 = OK (never block)
+
+set -euo pipefail
+
+INPUT=$(cat)
+TRIGGER=$(echo "$INPUT" | jq -r '.trigger // "unknown"')
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M %Z')
+
+# --- Log compaction event ---
+LOG_FILE="$HOME/.claude/compaction-log.txt"
+echo "[$TIMESTAMP] PostCompact ($TRIGGER)" >> "$LOG_FILE"
+
+# --- Re-inject critical context that compaction may have lost ---
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+
+echo "=== POST-COMPACTION CONTEXT RELOAD ==="
+echo ""
+echo "Timestamp: $TIMESTAMP"
+echo "Branch: $BRANCH"
+
+# Inject active plans if found
+for PLAN_DIR in .blueprint/plans .claude/plans; do
+  if [ -d "$PLAN_DIR" ]; then
+    PLAN_FILES=$(find "$PLAN_DIR" -name "*.md" -newer "$LOG_FILE" 2>/dev/null | head -5)
+    if [ -n "$PLAN_FILES" ]; then
+      echo ""
+      echo "Active plans ($PLAN_DIR):"
+      echo "$PLAN_FILES"
+    fi
+  fi
+done
+
+# Inject recent git activity (last 3 commits)
+RECENT_COMMITS=$(git log --oneline -3 2>/dev/null)
+if [ -n "$RECENT_COMMITS" ]; then
+  echo ""
+  echo "Recent commits:"
+  echo "$RECENT_COMMITS"
+fi
+
+echo ""
+echo "REMINDER: Re-read any plan or task list if work was in progress."
+
+exit 0
