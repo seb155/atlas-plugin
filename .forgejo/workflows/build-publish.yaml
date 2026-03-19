@@ -1,0 +1,99 @@
+name: Build & Publish
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build all tiers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo snap install yq
+          yq --version
+
+      - name: Build all tiers
+        run: ./build.sh all
+
+      - name: Verify outputs
+        run: |
+          for tier in admin dev user; do
+            out="dist/atlas-${tier}"
+            echo "Checking ${out}..."
+            test -d "${out}" || { echo "MISSING: ${out}"; exit 1; }
+            test -f "${out}/.claude-plugin/plugin.json" || { echo "MISSING: ${out}/.claude-plugin/plugin.json"; exit 1; }
+            test -f "${out}/.claude-plugin/marketplace.json" || { echo "MISSING: ${out}/.claude-plugin/marketplace.json"; exit 1; }
+            test -f "${out}/hooks/hooks.json" || { echo "MISSING: ${out}/hooks/hooks.json"; exit 1; }
+            echo "  OK — $(find ${out}/skills -name 'SKILL.md' | wc -l) skills, $(find ${out}/commands -name '*.md' | wc -l) commands"
+          done
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+
+  publish:
+    name: Publish to Forgejo Package Registry
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo snap install yq
+          yq --version
+
+      - name: Build all tiers
+        run: ./build.sh all
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Publishing version ${VERSION}"
+
+      - name: Package and publish tiers
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+          FORGEJO_URL: ${{ github.server_url }}
+          OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          for tier in admin dev user; do
+            pkg="atlas-${tier}"
+            tarball="${pkg}-${VERSION}.tar.gz"
+
+            echo "Packaging ${pkg} v${VERSION}..."
+            tar -czf "${tarball}" -C dist "${pkg}"
+
+            echo "Publishing ${tarball} to Forgejo Package Registry..."
+            curl --fail-with-body \
+              --silent \
+              --show-error \
+              -X PUT \
+              -H "Authorization: token ${FORGEJO_TOKEN}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@${tarball}" \
+              "${FORGEJO_URL}/api/packages/${OWNER}/generic/${pkg}/${VERSION}/${tarball}"
+
+            echo "  Published: ${FORGEJO_URL}/${OWNER}/-/packages/generic/${pkg}/${VERSION}"
+          done
+
+          echo "All 3 tiers published for v${VERSION}"

@@ -1,81 +1,162 @@
 # ATLAS — AXOIQ's Unified AI Engineering Assistant
 
-ONE plugin to replace them all. Auto-routing co-pilot with strategic HITL gates.
+ATLAS is AXOIQ's unified Claude Code plugin that replaces 18 individual plugins, 10 global commands,
+and 26 skills with a single auto-routing co-pilot. It activates at session start, detects context,
+and routes to the appropriate workflow — with HITL gates at every strategic decision point.
 
-## What ATLAS Replaces
+## Tiers
 
-- 18 Claude Code plugins (superpowers, feature-dev, code-review, frontend-design, hookify, etc.)
-- 10 `/a-*` global commands
-- 26 global skills
+ATLAS ships as three tiers, each inheriting from the one below it.
 
-## Features
-
-- **Auto-Routing**: `using-atlas` master skill detects context and invokes the right workflow
-- **16 Subcommands**: dev, tune, review, design, verify, ship, research, present, eng, estimate, context, hooks, simplify, browse, skill, and session management
-- **HITL Co-Pilot**: AskUserQuestion gates at every strategic decision point
-- **25 Skills**: Planning, TDD, debugging, review, design, optimization, research, and more
-- **6 Agents**: plan-architect (Opus), plan-reviewer, code-reviewer, context-scanner (Haiku), experiment-runner, design-implementer (Sonnet)
-- **15-Section Plans** (A-O): Quality gate 12/15 minimum
-- **`/atlas tune`**: Autonomous optimization loop (inspired by Karpathy's autoresearch)
-- **Model Strategy**: Opus 4.6 (plans) → Sonnet 4.6 (implementation) → Haiku 4.5 (triage)
+| Feature | User | Dev | Admin |
+|---------|:----:|:---:|:-----:|
+| Personal assistant (notes, brief, research) | ✓ | ✓ | ✓ |
+| Browser automation | ✓ | ✓ | ✓ |
+| Document generation (PPTX/DOCX/XLSX) | ✓ | ✓ | ✓ |
+| TDD pipeline | | ✓ | ✓ |
+| Code review & simplify | | ✓ | ✓ |
+| Plan builder (15-section, quality gate 12/15) | | ✓ | ✓ |
+| Git worktrees | | ✓ | ✓ |
+| Subagent dispatch | | ✓ | ✓ |
+| Engineering ops & estimation | | ✓ | ✓ |
+| Deploy to any environment | | | ✓ |
+| Infrastructure ops | | | ✓ |
+| Security audit | | | ✓ |
+| Autonomous optimization (`/atlas tune`) | | | ✓ |
+| **Skills** | 10 | ~25 | ~29 |
+| **Agents** | 1 | 5 | 5 |
+| **Commands** | 10 | ~18 | ~22 |
 
 ## Installation
 
+### From Forgejo Package Registry
+
 ```bash
-# From Forgejo (private)
-claude plugins add https://forgejo.axoiq.com/atlas/atlas-plugin.git
-
-# From local directory
-claude plugins add /path/to/atlas-plugin
-
-# Remove old plugins (superpowers, feature-dev, etc.)
-claude plugins remove superpowers
+# Install a specific tier (replace {tier} with admin, dev, or user)
+VERSION=$(curl -s https://forgejo.axoiq.com/api/packages/atlas/generic/atlas-{tier}/index.json | jq -r '.versions[0]')
+curl -L "https://forgejo.axoiq.com/api/packages/atlas/generic/atlas-{tier}/${VERSION}/atlas-{tier}-${VERSION}.tar.gz" \
+  -o atlas-{tier}.tar.gz
+tar -xzf atlas-{tier}.tar.gz
+claude plugins add ./atlas-{tier}
 ```
 
-## Usage
+### From Git (latest)
 
-The plugin activates automatically at session start. Just talk naturally:
-
-```
-"I want to add X to the system"      → brainstorming → plan-builder → tdd
-"Fix the bug in Z"                    → systematic-debugging → tdd
-"Review this code"                    → code-review skill
-"Optimize the rules"                  → experiment-loop (autoresearch)
-"Ship it"                             → finishing-branch skill
-"/atlas dev feature 'description'"    → Explicit pipeline invocation
-"/atlas tune rule-engine"             → Explicit experiment
+```bash
+# Clone and install directly
+git clone https://forgejo.axoiq.com/atlas/atlas-plugin.git
+cd atlas-plugin
+./build.sh dev          # or: admin, user, all
+claude plugins add ./dist/atlas-dev
 ```
 
-## Subcommands (16)
+### Remove old plugins
 
-| Category | Command | Description |
-|----------|---------|-------------|
-| **BUILD** | `/atlas dev` | Feature/bugfix/refactor pipeline |
-| | `/atlas design` | Frontend UI/UX from specs |
-| | `/atlas browse` | Browser automation / E2E |
-| | `/atlas eng` | Engineering maintenance |
-| **QUALITY** | `/atlas review` | Code review |
-| | `/atlas pr-review` | PR review |
-| | `/atlas verify` | Quality gates + security |
-| | `/atlas simplify` | Code refactoring |
-| **OPTIMIZE** | `/atlas tune` | Autonomous optimization |
-| | `/atlas estimate` | I&C estimation pipeline |
-| **SHIP** | `/atlas ship` | Commit & push |
-| | `/atlas end` | Session close |
-| | `/atlas handoff` | Session handoff |
-| **KNOWLEDGE** | `/atlas research` | Deep research |
-| | `/atlas present` | Document generation |
-| **META** | `/atlas context` | Context audit |
-| | `/atlas hooks` | Create hooks |
-| | `/atlas skill` | Create/improve skills |
+```bash
+# Remove legacy plugins before installing ATLAS
+for p in superpowers feature-dev code-review frontend-design hookify; do
+  claude plugins remove "$p" 2>/dev/null || true
+done
+```
 
-## Project Customization
+## Building from Source
 
-The plugin is generic. Customize per-project with:
-- `.claude/rules/` — Project-specific rules (plan quality, code quality, UX)
-- `.blueprint/plans/` — Subsystem plans (Git versioned)
-- `.claude/assay/experiments.yaml` — Experiment definitions for `/atlas tune`
-- `CLAUDE.md` — Project principles and constraints
+Requires: `bash`, `yq` (via snap: `sudo snap install yq`)
+
+```bash
+./build.sh all      # Build all 3 tiers → dist/atlas-{admin,dev,user}/
+./build.sh dev      # Build one tier only
+./build.sh admin
+./build.sh user
+```
+
+Outputs land in `dist/atlas-{tier}/` with the full plugin structure:
+
+```
+dist/atlas-dev/
+├── .claude-plugin/
+│   ├── plugin.json
+│   └── marketplace.json
+├── commands/       # /atlas subcommands
+├── skills/         # Skill definitions (SKILL.md per skill)
+├── agents/         # Subagent configs
+└── hooks/          # SessionStart, SessionEnd, PostCompact hooks
+```
+
+## Version Bumping
+
+```bash
+# Bump patch (2.0.0 → 2.0.1), commit, and tag
+./scripts/bump-version.sh patch
+
+# Bump minor (2.0.0 → 2.1.0)
+./scripts/bump-version.sh minor
+
+# Bump major (2.0.0 → 3.0.0)
+./scripts/bump-version.sh major
+```
+
+The script writes the new version to `VERSION`, commits, and creates a `v{version}` git tag.
+Pushing the tag triggers the CI publish workflow.
+
+```bash
+git push && git push --tags
+```
+
+## Architecture
+
+```
+atlas-plugin/
+├── profiles/           # Tier definitions (YAML, with inheritance)
+│   ├── user.yaml       # Base tier
+│   ├── dev.yaml        # Inherits: user
+│   └── admin.yaml      # Inherits: dev
+│
+├── skills/             # Shared skill library
+│   ├── tdd/
+│   ├── plan-builder/
+│   ├── deep-research/
+│   └── refs/           # Reference docs bundled into tiers
+│
+├── commands/           # /atlas subcommand definitions (*.md)
+├── agents/             # Subagent configs (plan-architect, code-reviewer, …)
+├── hooks/              # hooks.json + session lifecycle scripts
+├── templates/          # Reusable templates
+│
+├── build.sh            # Builder: resolves inheritance → dist/
+├── scripts/
+│   ├── generate-master-skill.sh  # Generates using-atlas SKILL.md per tier
+│   └── bump-version.sh           # Semver bump + git tag
+│
+└── dist/               # Build outputs (gitignored)
+    ├── atlas-admin/
+    ├── atlas-dev/
+    └── atlas-user/
+```
+
+Tier inheritance resolves at build time — `admin` inherits all `dev` skills/commands, which
+inherit all `user` skills/commands. No runtime resolution; each `dist/` artifact is self-contained.
+
+## CI/CD
+
+The `.forgejo/workflows/build-publish.yaml` workflow runs on every push to `main` and on tag pushes.
+
+| Trigger | Jobs |
+|---------|------|
+| Push to `main` | build + verify |
+| Tag `v*` | build + verify + publish to Package Registry |
+| Manual dispatch | build + verify |
+
+Published packages are available at:
+`https://forgejo.axoiq.com/atlas/-/packages/generic/atlas-{tier}`
+
+## Contributing
+
+1. Branch from `main`: `git checkout -b feature/my-change`
+2. Edit skills in `skills/`, commands in `commands/`, or tier profiles in `profiles/`
+3. Build and test locally: `./build.sh all && claude plugins add ./dist/atlas-dev`
+4. Commit with conventional format: `feat(skills): add new-skill`
+5. Open a PR on Forgejo — CI must be green before merge
 
 ## License
 
