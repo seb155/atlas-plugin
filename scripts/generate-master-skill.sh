@@ -110,15 +110,17 @@ declare -A CATEGORY_EMOJI=(
 
 # Build skill list grouped by category
 build_skill_list() {
-  local prev_category=""
-  # Sort skills by category for grouping
-  local sorted_skills=""
+  # Build sorted list into temp file to avoid subshell issues
+  local tmpfile
+  tmpfile=$(mktemp)
   for skill in $ALL_SKILLS; do
     local cat="${CATEGORY_MAP[$skill]:-Other}"
-    sorted_skills+="${cat}|${skill}\n"
+    printf '%s|%s\n' "$cat" "$skill" >> "$tmpfile"
   done
+  sort "$tmpfile" > "${tmpfile}.sorted"
 
-  echo "$sorted_skills" | sort | while IFS='|' read -r cat skill; do
+  local prev_category=""
+  while IFS='|' read -r cat skill; do
     [ -z "$skill" ] && continue
     local emoji="${EMOJI_MAP[$skill]:-❓}"
     local desc="${DESC_MAP[$skill]:-}"
@@ -130,7 +132,9 @@ build_skill_list() {
       prev_category="$cat"
     fi
     echo "- ${emoji} **${skill}**: ${desc}"
-  done
+  done < "${tmpfile}.sorted"
+
+  rm -f "$tmpfile" "${tmpfile}.sorted"
 }
 
 # Build emoji map table

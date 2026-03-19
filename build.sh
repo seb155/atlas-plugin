@@ -111,6 +111,9 @@ build_tier() {
     cp "hooks/$hook" "$output/hooks/" 2>/dev/null || true
   done
 
+  # Copy VERSION file
+  cp VERSION "$output/VERSION"
+
   # Generate tier-specific using-atlas SKILL.md
   mkdir -p "$output/skills/using-atlas"
   ./scripts/generate-master-skill.sh "$tier" "$output/skills/using-atlas/SKILL.md"
