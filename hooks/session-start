@@ -111,10 +111,30 @@ curl -sf --max-time 3 -X POST "${SYNAPSE_API}/hooks/atlas/sessions/start" \
     \"cwd\": \"$(pwd)\"
   }" >/dev/null 2>&1 &
 
-# Output with optional feature context
-if [ -n "$FEATURE_SUMMARY" ]; then
-  # Escape for JSON (newlines → \n, quotes → \")
-  ESCAPED=$(echo "$FEATURE_SUMMARY" | sed ':a;N;$!ba;s/\n/\\n/g;s/"/\\"/g')
+# Fetch mini-brief from Synapse PA API (if available)
+BRIEF_CONTEXT=""
+if [ -n "${SYNAPSE_API:-}" ]; then
+  # Get a JWT token first (use service account or skip if no auth)
+  BRIEF_JSON=$(curl -sf --max-time 3 "${SYNAPSE_API}/pa/brief" \
+    -H "Authorization: Bearer ${SYNAPSE_TOKEN:-}" 2>/dev/null || true)
+  if [ -n "$BRIEF_JSON" ]; then
+    # Extract key counts for compact injection
+    ACTIVE_SESSIONS=$(echo "$BRIEF_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('active_sessions',[])))" 2>/dev/null || echo "0")
+    ACTIVE_FEATURES=$(echo "$BRIEF_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('feature_summary',[])))" 2>/dev/null || echo "0")
+    OPEN_TASKS=$(echo "$BRIEF_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('recent_tasks',[])))" 2>/dev/null || echo "0")
+    BRIEF_CONTEXT="ATLAS BRIEF: ${ACTIVE_SESSIONS} active sessions, ${ACTIVE_FEATURES} features in progress, ${OPEN_TASKS} open tasks."
+  fi
+fi
+
+# Combine all context
+ALL_CONTEXT=""
+[ -n "$FEATURE_SUMMARY" ] && ALL_CONTEXT="${FEATURE_SUMMARY}"
+[ -n "$BRIEF_CONTEXT" ] && ALL_CONTEXT="${ALL_CONTEXT}\n${BRIEF_CONTEXT}"
+[ -n "$TIER_WARNING" ] && ALL_CONTEXT="${ALL_CONTEXT}\n${TIER_WARNING}"
+
+# Output with optional context
+if [ -n "$ALL_CONTEXT" ]; then
+  ESCAPED=$(echo -e "$ALL_CONTEXT" | sed ':a;N;$!ba;s/\n/\\n/g;s/"/\\"/g')
   echo "{\"continue\": true, \"additionalContext\": \"${ESCAPED}\"}"
 else
   echo '{"continue": true}'

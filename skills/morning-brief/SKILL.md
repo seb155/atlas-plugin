@@ -24,11 +24,15 @@ Dispatch data fetches in parallel for speed. Use subagents (Sonnet) for each sou
 
 | # | Source | API / Command | Fallback |
 |---|--------|---------------|----------|
-| 1 | Calendar & Agenda | `GET /pa/brief` | Show "No agenda data" |
+| 1 | Full Brief | `GET /pa/brief` | Fallback to individual endpoints |
 | 2 | Tasks | `GET /pa/tasks?status=pending&status=in_progress` | Show "No tasks" |
 | 3 | Knowledge | `GET /pa/knowledge?limit=10&sort=-updated_at` | Skip section |
-| 4 | Git Activity | `git log --oneline -5` (from project root) | Skip section |
+| 4 | Git Activity | Included in brief (`recent_commits`) | `git log --oneline -5` |
 | 5 | Emails | `GET /pa/emails?importance=high` | Show "No email data" |
+| 6 | Live Sessions | Included in brief (`active_sessions`) | Skip section |
+| 7 | Features | Included in brief (`feature_summary`) | Skip section |
+
+**The `/pa/brief` endpoint now returns all 7 sources in one call** (sessions, features, commits are embedded). Use it as primary source, individual endpoints as fallback.
 
 **Error handling**: If an API is unavailable, skip that section gracefully with a note.
 Never block the entire brief because one source failed.
@@ -63,9 +67,17 @@ TASKS ({N} open, {X} overdue)
   [{priority}] {task title} (due: {date})
   ... or "All tasks complete"
 
-RECENT WORK
-  {commit hash} {commit message}
-  {commit hash} {commit message}
+ACTIVE SESSIONS ({N} live)
+  🟢 {user} — {feature_id} ({model}, {duration}, {tool_count} tools, ctx {pct}%)
+  ... or "No active sessions"
+
+FEATURES IN PROGRESS ({N})
+  🟡 {FEAT-NNN} {name} ({progress}%)
+  ... or "No active features"
+
+RECENT COMMITS
+  {hash} {message}
+  {hash} {message}
   ... or "No recent commits"
 
 KNOWLEDGE UPDATES
