@@ -7,6 +7,9 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && p
 SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"
 AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
+# Read CC stdin JSON ONCE (contains session_id, cwd, hook_event_name, etc.)
+HOOK_INPUT=$(cat 2>/dev/null || true)
+
 # Detect the plugin's built-in tier from plugin.json
 detect_plugin_tier() {
   local plugin_name
@@ -90,16 +93,18 @@ if [ -f ".blueprint/FEATURES.md" ] && [ -x "$PARSE_SCRIPT" ]; then
   FEATURE_SUMMARY=$("$PARSE_SCRIPT" ".blueprint/FEATURES.md" 2>/dev/null || true)
 fi
 
-# Report session to Synapse API (fire-and-forget)
+# Report session to Synapse API (synchronous, max 2s)
 SYNAPSE_API="${SYNAPSE_API_URL:-http://localhost:8001/api/v1}"
-SESSION_ID="${CLAUDE_SESSION_ID:-$(date +%s)-$$}"
+# Parse session_id from CC stdin JSON (the correct way — NOT env var)
+SESSION_ID=$(echo "$HOOK_INPUT" | jq -r '.session_id // empty' 2>/dev/null)
+[ -z "$SESSION_ID" ] && SESSION_ID="cc-$(date +%s)-$$"
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 MODEL="${CLAUDE_MODEL:-unknown}"
-USER_EMAIL="${USER_EMAIL:-${EMAIL:-unknown}}"
+USER_EMAIL="${USER_EMAIL:-${EMAIL:-$(git config user.email 2>/dev/null || echo unknown)}}"
 # Extract feature ID from branch name (feature/FEAT-001-xxx → FEAT-001)
 FEATURE_ID=$(echo "$BRANCH" | grep -oP 'FEAT-\d+' 2>/dev/null || true)
 
-curl -sf --max-time 3 -X POST "${SYNAPSE_API}/hooks/atlas/sessions/start" \
+curl -sf --max-time 2 -X POST "${SYNAPSE_API}/hooks/atlas/sessions/start" \
   -H "Content-Type: application/json" \
   -H "X-Atlas-Token: ${ATLAS_HOOKS_TOKEN:-}" \
   -d "{
@@ -109,7 +114,7 @@ curl -sf --max-time 3 -X POST "${SYNAPSE_API}/hooks/atlas/sessions/start" \
     \"branch\": \"${BRANCH}\",
     \"feature_id\": \"${FEATURE_ID}\",
     \"cwd\": \"$(pwd)\"
-  }" >/dev/null 2>&1 &
+  }" >/dev/null 2>&1 || true
 
 # Fetch mini-brief from Synapse PA API (if available)
 BRIEF_CONTEXT=""

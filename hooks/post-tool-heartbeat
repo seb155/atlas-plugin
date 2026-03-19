@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — PostToolUse Heartbeat (throttled 15s)
+# Counts tool calls and sends accumulated delta every 15s.
+# Parses session_id from CC stdin JSON (multi-session safe).
+
+# Read CC stdin JSON (contains session_id, tool_name, etc.)
+INPUT=$(cat 2>/dev/null || true)
+
+# Parse session_id from stdin JSON (CC passes it on every hook event)
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
+[ -z "$SESSION_ID" ] && exit 0
+
+# Extract tool name from stdin JSON
+TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // .tool // "unknown"' 2>/dev/null || echo "unknown")
+
+# Always increment tool count file (per session)
+COUNT_FILE="/tmp/atlas-tc-${SESSION_ID}"
+CURRENT_COUNT=0
+[ -f "$COUNT_FILE" ] && CURRENT_COUNT=$(cat "$COUNT_FILE" 2>/dev/null || echo 0)
+echo $((CURRENT_COUNT + 1)) > "$COUNT_FILE"
+
+# Throttle: only fire heartbeat if last POST was >15s ago
+THROTTLE_FILE="/tmp/atlas-hb-${SESSION_ID}"
+NOW=$(date +%s)
+if [ -f "$THROTTLE_FILE" ]; then
+  LAST=$(cat "$THROTTLE_FILE" 2>/dev/null || echo 0)
+  DIFF=$((NOW - LAST))
+  [ "$DIFF" -lt 15 ] && exit 0
+fi
+echo "$NOW" > "$THROTTLE_FILE"
+
+# Read accumulated delta and reset counter
+DELTA=$(cat "$COUNT_FILE" 2>/dev/null || echo 1)
+echo "0" > "$COUNT_FILE"
+
+SYNAPSE_API="${SYNAPSE_API_URL:-http://localhost:8001/api/v1}"
+curl -sf --max-time 2 -X POST "${SYNAPSE_API}/hooks/atlas/sessions/heartbeat" \
+  -H "Content-Type: application/json" \
+  -H "X-Atlas-Token: ${ATLAS_HOOKS_TOKEN:-}" \
+  -d "{
+    \"session_id\": \"${SESSION_ID}\",
+    \"tool_count_delta\": ${DELTA},
+    \"metadata\": {\"last_tool\": \"${TOOL_NAME}\", \"heartbeat_source\": \"post_tool_use\"}
+  }" >/dev/null 2>&1 || true
+
+exit 0

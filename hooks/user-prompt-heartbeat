@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — UserPromptSubmit Heartbeat (throttled 10s)
+# Parses session_id from CC stdin JSON (multi-session safe).
+
+# Read CC stdin JSON (contains session_id, prompt, etc.)
+INPUT=$(cat 2>/dev/null || true)
+
+# Parse session_id from stdin JSON
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
+[ -z "$SESSION_ID" ] && exit 0
+
+# Throttle: 10s minimum between heartbeats
+THROTTLE_FILE="/tmp/atlas-uhb-${SESSION_ID}"
+NOW=$(date +%s)
+if [ -f "$THROTTLE_FILE" ]; then
+  LAST=$(cat "$THROTTLE_FILE" 2>/dev/null || echo 0)
+  DIFF=$((NOW - LAST))
+  [ "$DIFF" -lt 10 ] && exit 0
+fi
+echo "$NOW" > "$THROTTLE_FILE"
+
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
+[ -z "$CWD" ] && CWD=$(pwd)
+
+SYNAPSE_API="${SYNAPSE_API_URL:-http://localhost:8001/api/v1}"
+curl -sf --max-time 2 -X POST "${SYNAPSE_API}/hooks/atlas/sessions/heartbeat" \
+  -H "Content-Type: application/json" \
+  -H "X-Atlas-Token: ${ATLAS_HOOKS_TOKEN:-}" \
+  -d "{
+    \"session_id\": \"${SESSION_ID}\",
+    \"metadata\": {\"branch\": \"${BRANCH}\", \"cwd\": \"${CWD}\", \"heartbeat_source\": \"user_prompt\"}
+  }" >/dev/null 2>&1 || true
+
+exit 0
