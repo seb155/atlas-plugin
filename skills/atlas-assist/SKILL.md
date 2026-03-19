@@ -80,6 +80,7 @@ Every skill has a unique emoji for instant visual identification in breadcrumbs 
 | **verification** | 📊 | Quality |
 | **code-review** | 🔍 | Quality |
 | **code-simplify** | ✨ | Quality |
+| **feature-board** | 📌 | Project |
 | **finishing-branch** | 📦 | Ship |
 | **devops-deploy** | 🎯 | Deploy |
 | **experiment-loop** | 🧬 | Optimize |
@@ -146,6 +147,9 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 📊 **verification**: L1-L4 tests + E2E + security scan + perf benchmarks
 - 🔍 **code-review**: Code review with confidence filtering. Local or PR mode
 - ✨ **code-simplify**: Refactoring for clarity, consistency, maintainability
+
+### 📌 Project
+- 📌 **feature-board**: Feature registry dashboard — kanban board, validation matrix, roadmap. `/atlas board`
 
 ### 📦 Ship & Deploy
 - 📦 **finishing-branch**: Commit + push + PR + CI + cleanup (conventional commits)

@@ -78,10 +78,23 @@ detect_role() {
   echo "$role"
 }
 
-# Main — SessionStart hook: role detection + audit log ONLY
+# Main — SessionStart hook: role detection + audit log + feature summary
 # Skills are loaded on-demand by CC's skill system, NOT injected here.
 TIER_WARNING=""
 DETECTED_ROLE=$(detect_role)
 
-# Minimal output — no content injection (saves ~3K tokens)
-echo '{"continue": true}'
+# Feature Board summary injection (if FEATURES.md exists in current project)
+FEATURE_SUMMARY=""
+PARSE_SCRIPT="${PLUGIN_ROOT}/scripts/parse-features.sh"
+if [ -f ".blueprint/FEATURES.md" ] && [ -x "$PARSE_SCRIPT" ]; then
+  FEATURE_SUMMARY=$("$PARSE_SCRIPT" ".blueprint/FEATURES.md" 2>/dev/null || true)
+fi
+
+# Output with optional feature context
+if [ -n "$FEATURE_SUMMARY" ]; then
+  # Escape for JSON (newlines → \n, quotes → \")
+  ESCAPED=$(echo "$FEATURE_SUMMARY" | sed ':a;N;$!ba;s/\n/\\n/g;s/"/\\"/g')
+  echo "{\"continue\": true, \"additionalContext\": \"${ESCAPED}\"}"
+else
+  echo '{"continue": true}'
+fi

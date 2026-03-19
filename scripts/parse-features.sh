@@ -23,14 +23,15 @@ echo "📌 Feature Board: ${total} features | ${active} active | ${done_count} d
 if [ "$active" -gt 0 ]; then
   echo ""
   echo "🟡 Active features:"
-  # Extract feature name + validation matrix for active ones
-  awk '
-    /^## Feature: FEAT-/ { feat=$0; sub(/^## Feature: /, "", feat); in_feat=1; status="" }
+  # Extract feature name + validation status for active ones
+  # Markdown table format: | **Layer** | Status | TestedBy | Date | Method | Notes |
+  awk -F'|' '
+    /^## Feature: FEAT-/ { feat=$0; sub(/^## Feature: /, "", feat); in_feat=1; status=""; be=""; fe=""; e2e=""; hitl="" }
     in_feat && /IN_PROGRESS/ { status="active" }
-    in_feat && /\*\*BE Unit\*\*/ && status=="active" { be=$4 }
-    in_feat && /\*\*FE Unit\*\*/ && status=="active" { fe=$4 }
-    in_feat && /\*\*E2E Workflow\*\*/ && status=="active" { e2e=$4 }
-    in_feat && /\*\*HITL Review\*\*/ && status=="active" { hitl=$4; printf "  • %s  BE:%s FE:%s E2E:%s HITL:%s\n", feat, be, fe, e2e, hitl; status="" }
+    in_feat && status=="active" && /\*\*BE Unit\*\*/ { gsub(/[[:space:]]/, "", $3); be=$3 }
+    in_feat && status=="active" && /\*\*FE Unit\*\*/ { gsub(/[[:space:]]/, "", $3); fe=$3 }
+    in_feat && status=="active" && /\*\*E2E Workflow\*\*/ { gsub(/[[:space:]]/, "", $3); e2e=$3 }
+    in_feat && status=="active" && /\*\*HITL Review\*\*/ { gsub(/[[:space:]]/, "", $3); hitl=$3; printf "  • %s  BE:%s FE:%s E2E:%s HITL:%s\n", feat, be, fe, e2e, hitl; status="" }
   ' "$FEATURES_FILE" 2>/dev/null || true
 fi
 

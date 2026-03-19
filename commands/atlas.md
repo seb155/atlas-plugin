@@ -74,6 +74,15 @@ Parse the first argument and invoke the matching skill:
 | `verify` | verification (+ security scan) | Sonnet |
 | `simplify` | code-simplify | Sonnet |
 
+### PROJECT
+
+| Subcommand | Skill(s) Invoked | Model |
+|-----------|-----------------|-------|
+| `board` | feature-board | Sonnet |
+| `board matrix` | feature-board (matrix mode) | Sonnet |
+| `board FEAT-NNN` | feature-board (detail mode) | Sonnet |
+| `roadmap` | feature-board (roadmap mode) | Sonnet |
+
 ### OPTIMIZE
 
 | Subcommand | Skill(s) Invoked | Model |
