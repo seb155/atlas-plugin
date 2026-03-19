@@ -74,7 +74,12 @@ Extract from each handoff: the "Focus" line (header or first summary), "What was
 
 ### Step 4: AskUserQuestion for next action
 
-Present the suggested next steps from handoff + feature board suggestions.
+Present ONLY the next steps listed in the handoff file's "Prochaines étapes" or "Next Steps" section.
+Do NOT add tasks from other features, dirty files, or the general feature board.
+The handoff already curated what's relevant — trust it.
+
+If the handoff lists "P4 Backend API" as next → that's the primary option.
+Add at most 1-2 alternatives FROM THE SAME HANDOFF (not from other features).
 
 ### Step 5: Drill into selected action (NON-NEGOTIABLE)
 
@@ -94,7 +99,12 @@ When user selects a next action, **stay in that context**. No re-presenting the 
    # If exists: cd .worktrees/{name}
    ```
 
-3. **Present task breakdown** via AskUserQuestion:
+3. **Present ONLY tasks from the selected plan/feature** via AskUserQuestion:
+
+   **CRITICAL**: Do NOT mix tasks from other features/projects.
+   Only show tasks that belong to the selected handoff action.
+   Extract tasks from the plan file's phase section.
+
    ```
    🏛️ ATLAS │ P4 Backend API — Tasks
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -110,8 +120,15 @@ When user selects a next action, **stay in that context**. No re-presenting the 
    | 5 | GET /features/matrix endpoint     | 1h     | #1  |
    | 6 | Tests + validation                | 1-2h   | #2-5|
 
-   Which task to start? (or "all" to create TaskList and go)
+   Start with task #1? (or "all" for TaskList)
    ```
+
+   **SCOPE RULE**: If user selected "P4 Backend API", do NOT show:
+   - SynapseCAD tasks (different feature)
+   - CI/CD tasks (different scope)
+   - Rule Engine HITL (different feature)
+   - Dirty files from other worktrees
+   Only show P4-related work from the plan.
 
 4. **On task selection → Enter Plan Mode first (NON-NEGOTIABLE)**:
    - Read the FULL plan file (not just summary — every section)
