@@ -34,9 +34,9 @@ For comprehensive reviews, launch 3 review agents **simultaneously** — one Age
 call per agent, all issued in the **same message**. Each agent gets a single focused
 responsibility to avoid overlap and reduce false positives.
 
-**Agent 1 — Bug & Logic Review**
+**Agent 1 — Bug & Logic Review** (uses `code-reviewer` agent definition)
 ```
-subagent_type: general-purpose
+subagent_type: atlas-admin:code-review:code-review
 model: sonnet
 prompt: "Review this diff for correctness only. Focus on:
   - Logic errors and off-by-one bugs
