@@ -18,7 +18,9 @@ jobs:
 
       - name: Install yq
         run: |
-          sudo snap install yq
+          YQ_VERSION="v4.44.6"
+          sudo wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
           yq --version
 
       - name: Build all tiers
@@ -54,7 +56,9 @@ jobs:
 
       - name: Install yq
         run: |
-          sudo snap install yq
+          YQ_VERSION="v4.44.6"
+          sudo wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
           yq --version
 
       - name: Build all tiers
