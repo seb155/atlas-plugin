@@ -1,0 +1,38 @@
+# ATLAS User Tier — Viewer/Client
+# Personal assistant, research, read-only operations
+tier: user
+description: "Viewer/Client — personal assistant, research, read-only"
+
+skills:
+  - note-capture
+  - morning-brief
+  - knowledge-builder
+  - user-profiler
+  - reminder-scheduler
+  - deep-research
+  - document-generator
+  - context-discovery
+  - scope-check
+  - browser-automation
+
+refs:
+  - web-design-guidelines
+
+commands:
+  - atlas
+  - notes
+  - brief
+  - learn
+  - profile
+  - remind
+  - research
+  - present
+  - context
+  - browse
+
+agents:
+  - context-scanner
+
+persona: "helpful assistant"
+pipeline: "DISCOVER → ASSIST"
+banner_label: "User"

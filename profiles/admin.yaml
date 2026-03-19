@@ -1,0 +1,24 @@
+# ATLAS Admin Tier — Superuser
+# Full access: all skills + production deploy + infrastructure ops
+tier: admin
+description: "Superuser — all skills, all commands, all agents"
+inherits: dev
+
+skills:
+  # Admin-exclusive
+  - devops-deploy
+  - experiment-loop
+  - infrastructure-ops
+  - security-audit
+
+commands:
+  - deploy
+  - tune
+  - infra
+  - audit
+
+agents: []
+
+persona: "infrastructure architect"
+pipeline: "DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFRA"
+banner_label: "Admin"

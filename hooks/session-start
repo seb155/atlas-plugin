@@ -1,19 +1,102 @@
 #!/usr/bin/env bash
 # ATLAS Plugin — Session Start Hook
-# Injects the using-atlas skill into every Claude Code session
+# Injects the tier-appropriate using-atlas skill into every Claude Code session
+# Detects user role via: Authentik API → ATLAS_ROLE env var → plugin default
 
-SKILL_FILE="${CLAUDE_PLUGIN_ROOT}/skills/using-atlas/SKILL.md"
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+SKILL_FILE="${PLUGIN_ROOT}/skills/using-atlas/SKILL.md"
+AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
+# Detect the plugin's built-in tier from plugin.json
+detect_plugin_tier() {
+  local plugin_name
+  plugin_name=$(cat "${PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null \
+    | grep -o '"name": *"[^"]*"' | head -1 | sed 's/.*"name": *"atlas-\?\([^"]*\)".*/\1/')
+
+  case "$plugin_name" in
+    admin|dev|user) echo "$plugin_name" ;;
+    *) echo "dev" ;;  # Default to dev for legacy "atlas" plugin name
+  esac
+}
+
+# Detect user role from Authentik or environment
+detect_role() {
+  local source="default"
+  local role=""
+  local details=""
+
+  # Priority 1: Authentik API (if token available)
+  if [ -n "${AUTHENTIK_TOKEN:-}" ]; then
+    local groups
+    groups=$(curl -sf --max-time 3 \
+      "${AUTHENTIK_URL:-https://auth.home.axoiq.com}/api/v3/core/users/me/" \
+      -H "Authorization: Bearer $AUTHENTIK_TOKEN" \
+      | grep -o '"name":"[^"]*"' | sed 's/"name":"//;s/"//' 2>/dev/null || true)
+
+    if [ -n "$groups" ]; then
+      source="authentik"
+      if echo "$groups" | grep -q "axoiq-admins"; then
+        role="admin"; details="group=axoiq-admins"
+      elif echo "$groups" | grep -q "axoiq-devs"; then
+        role="dev"; details="group=axoiq-devs"
+      else
+        role="user"; details="group=other"
+      fi
+    fi
+  fi
+
+  # Priority 2: ATLAS_ROLE env var
+  if [ -z "$role" ] && [ -n "${ATLAS_ROLE:-}" ]; then
+    source="env_var"
+    role="${ATLAS_ROLE}"
+    details="ATLAS_ROLE=${ATLAS_ROLE}"
+  fi
+
+  # Priority 3: Plugin's built-in tier
+  if [ -z "$role" ]; then
+    source="plugin_tier"
+    role=$(detect_plugin_tier)
+    details="plugin=$(basename "$PLUGIN_ROOT")"
+  fi
+
+  # Audit log
+  local ts
+  ts=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  local plugin_tier
+  plugin_tier=$(detect_plugin_tier)
+  local version
+  version=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "unknown")
+  mkdir -p "$(dirname "$AUDIT_LOG")"
+  echo "${ts} | tier=${role} | source=${source} | ${details} | plugin=atlas-${plugin_tier}@${version}" >> "$AUDIT_LOG"
+
+  # Check for tier mismatch
+  if [ "$source" = "authentik" ] && [ "$role" != "$plugin_tier" ]; then
+    # User's Authentik role doesn't match installed plugin tier
+    TIER_WARNING="⚠️ TIER MISMATCH: Your Authentik role is '${role}' but you have atlas-${plugin_tier} installed. Consider installing atlas-${role} for the best experience."
+  fi
+
+  echo "$role"
+}
+
+# Main
 if [ ! -f "$SKILL_FILE" ]; then
   echo '{"additionalContext": "ATLAS plugin: skill file not found"}'
   exit 0
 fi
 
+TIER_WARNING=""
+DETECTED_ROLE=$(detect_role)
+
 # Read and escape the skill content for JSON injection
 SKILL_CONTENT=$(cat "$SKILL_FILE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
 
+# Add tier warning if applicable
+if [ -n "$TIER_WARNING" ]; then
+  SKILL_CONTENT="${SKILL_CONTENT}\\n\\n## ⚠️ Tier Mismatch Warning\\n${TIER_WARNING}"
+fi
+
 cat <<EOF
 {
-  "additionalContext": "<ATLAS_PLUGIN>\n${SKILL_CONTENT}\n</ATLAS_PLUGIN>"
+  "additionalContext": "<ATLAS_PLUGIN tier=\"${DETECTED_ROLE}\">\n${SKILL_CONTENT}\n</ATLAS_PLUGIN>"
 }
 EOF

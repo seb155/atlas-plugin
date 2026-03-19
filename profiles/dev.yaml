@@ -1,0 +1,66 @@
+# ATLAS Dev Tier — Developer/Engineer
+# Implementation, quality, shipping workflows
+tier: dev
+description: "Developer — implementation, quality, shipping"
+inherits: user
+
+skills:
+  # Implementation
+  - tdd
+  - executing-plans
+  - subagent-dispatch
+  - git-worktrees
+  - frontend-design
+  # Quality
+  - systematic-debugging
+  - verification
+  - code-review
+  - code-simplify
+  # Ship
+  - finishing-branch
+  # Planning
+  - plan-builder
+  - brainstorming
+  # Meta
+  - decision-log
+  - session-retrospective
+  - hookify
+  - skill-management
+  # Domain
+  - engineering-ops
+
+refs:
+  - composition-patterns
+  - react-best-practices
+  - gmining-excel
+
+commands:
+  - dev
+  - tdd
+  - debug
+  - review
+  - simplify
+  - verify
+  - ship
+  - plan
+  - brainstorm
+  - design
+  - eng
+  - estimate
+  - scope
+  - hooks
+  - skill
+  - end
+  - handoff
+  - pickup
+
+agents:
+  - plan-architect
+  - plan-reviewer
+  - design-implementer
+  - code-reviewer
+  - experiment-runner
+
+persona: "senior engineering architect"
+pipeline: "DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP"
+banner_label: "Dev"
