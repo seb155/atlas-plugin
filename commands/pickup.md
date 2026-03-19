@@ -76,16 +76,53 @@ Extract from each handoff: the "Focus" line (header or first summary), "What was
 
 Present the suggested next steps from handoff + feature board suggestions.
 
-### Step 5: EXECUTE immediately after selection (NON-NEGOTIABLE)
+### Step 5: Drill into selected action (NON-NEGOTIABLE)
 
-When user selects a next action:
-- **DO NOT** ask again, re-present options, or confirm
-- **DO NOT** show another handoff or another pickup
-- **IMMEDIATELY** start working on the selected action:
-  - If plan exists → Read the plan, create TaskList, start Phase 1
-  - If feature work → Switch to worktree, read FEATURES.md entry, start coding
-  - If CI fix → Run diagnostics immediately
-- The user already made their choice. **Just go.**
+When user selects a next action, **stay in that context**. No re-presenting the pickup menu.
+
+**Process**:
+
+1. **Load context for the selection**:
+   - Read the associated plan file (from handoff "Plan Actif" section)
+   - Read the FEATURES.md entry for the selected feature
+   - Identify the current phase/step in the plan
+
+2. **Switch to correct worktree** (if feature work):
+   ```bash
+   # Check if worktree exists for this feature
+   git worktree list | grep feature/{name}
+   # If exists: cd .worktrees/{name}
+   ```
+
+3. **Present task breakdown** via AskUserQuestion:
+   ```
+   🏛️ ATLAS │ P4 Backend API — Tasks
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Plan: glittery-cuddling-phoenix.md (Section P4)
+   Branch: dev | Worktree: (main)
+
+   | # | Task                              | Effort | Dep |
+   |---|-----------------------------------|--------|-----|
+   | 1 | FEATURES.md parser (regex)        | 1-2h   | —   |
+   | 2 | GET /features endpoint            | 1h     | #1  |
+   | 3 | GET /features/{id} endpoint       | 1h     | #1  |
+   | 4 | GET /features/board endpoint      | 1h     | #1  |
+   | 5 | GET /features/matrix endpoint     | 1h     | #1  |
+   | 6 | Tests + validation                | 1-2h   | #2-5|
+
+   Which task to start? (or "all" to create TaskList and go)
+   ```
+
+4. **On selection → Create TaskList + start immediately**:
+   - TaskCreate for selected task(s)
+   - Set dependencies via addBlockedBy
+   - Mark first task in_progress
+   - Start coding — no more questions
+
+**Rules**:
+- Never go back to the handoff/pickup menu after this point
+- Stay in the selected feature/plan context for the rest of the session
+- If user wants to switch → they say "switch to X" or run `/pickup` again
 
 **Usage**: `/pickup` or `/atlas pickup`
 
