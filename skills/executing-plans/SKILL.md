@@ -39,11 +39,48 @@ For each task:
 - Invoke `finishing-branch` skill
 - Update .blueprint/plans/INDEX.md if plan was modified
 
+## Parallel Explore Phase
+
+When a plan requires understanding multiple independent areas of the codebase, launch
+2-3 Explore agents **in parallel** before implementation begins. Multiple Agent tool
+calls issued in the **same message** execute concurrently.
+
+### When to use
+- Plan touches 2+ subsystems (e.g. backend service + frontend hook + DB schema)
+- Unclear which existing patterns/hooks can be reused
+- Need to map file locations across unrelated directories
+
+### Pattern
+
+```
+# PARALLEL — all 3 Agent calls in the same message
+Agent 1: "Search backend/services/ for any existing spec_grouping patterns.
+          List file paths, class names, and key method signatures."
+
+Agent 2: "Search frontend/src/hooks/ for TanStack Query hooks related to
+          instruments or tags. List hook names and their query keys."
+
+Agent 3: "Read .blueprint/PATTERNS.md and summarize the data-fetching and
+          form-submission patterns relevant to a new CRUD page."
+```
+
+### Consolidation (after all 3 complete)
+1. Merge findings into a shared context block
+2. Identify reusable hooks/utils — prefer extend over duplicate
+3. Resolve conflicts (e.g. two agents found the same pattern via different paths)
+4. **Then** begin implementation (sequential from this point)
+
+### Safety rules
+- Explore agents are **read-only** — no writes, no git ops
+- If 2 agents might read the same file, that is fine (reads are safe in parallel)
+- Never launch parallel agents that write to overlapping files
+
 ## Subagent Strategy
 
 If subagents are available (Claude Code):
-- Dispatch 1 Sonnet subagent per task
-- Provide full task text + context in the prompt (don't make subagent read files)
+- **Phase 1 — Explore** (parallel): 2-3 Explore agents per subsystem area
+- **Phase 2 — Implement** (sequential per task): 1 Sonnet subagent per task
+- Provide full task text + consolidated explore results in the prompt
 - After each subagent completes: review output, run verification
 
 If no subagents:

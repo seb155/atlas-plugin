@@ -29,17 +29,58 @@ git log --oneline origin/dev..HEAD # Unpushed commits
 - Identify project conventions (linting, naming, patterns)
 
 ### 3. Parallel Review (launch subagents)
-Launch 3-4 parallel Sonnet agents:
 
-**Agent 1 — CLAUDE.md Compliance**: Audit changes against CLAUDE.md rules in scope. Only flag violations of explicit rules.
+For comprehensive reviews, launch 3 review agents **simultaneously** — one Agent tool
+call per agent, all issued in the **same message**. Each agent gets a single focused
+responsibility to avoid overlap and reduce false positives.
 
-**Agent 2 — Bug Scanner**: Scan diff for obvious bugs. Focus on significant issues only. Ignore style, formatting, linter-catchable issues.
+**Agent 1 — Bug & Logic Review**
+```
+subagent_type: general-purpose
+model: sonnet
+prompt: "Review this diff for correctness only. Focus on:
+  - Logic errors and off-by-one bugs
+  - Unhandled edge cases and null dereferences
+  - Race conditions or async issues
+  Ignore style, formatting, and patterns.
+  Diff: {diff_content}"
+```
 
-**Agent 3 — Logic & Security**: Look for incorrect logic, security issues, unhandled edge cases. Only flag issues within changed code.
+**Agent 2 — Convention & Style Review**
+```
+subagent_type: general-purpose
+model: sonnet
+prompt: "Review this diff for convention compliance only. Focus on:
+  - CLAUDE.md rule violations (rules provided below)
+  - Naming conventions (kebab-case files, PascalCase components, use* hooks)
+  - File size limits (hooks < 50 lines, components < 300 lines)
+  - Import organization and barrel exports
+  CLAUDE.md rules in scope: {claude_md_rules}
+  Diff: {diff_content}"
+```
+
+**Agent 3 — Simplification Review**
+```
+subagent_type: general-purpose
+model: sonnet
+prompt: "Review this diff for complexity and DRY violations only. Focus on:
+  - Duplicated logic that could be extracted to a shared hook/util
+  - Overly complex conditionals that could be simplified
+  - Dead code or unused variables introduced by this change
+  - Opportunities to reuse existing patterns from PATTERNS.md
+  Diff: {diff_content}"
+```
 
 **Agent 4 — Pattern Consistency** (if project has PATTERNS.md): Check changes follow established project patterns.
 
-### 4. Confidence Scoring
+### 4. Consolidate Parallel Results
+
+After all agents complete:
+1. Deduplicate findings (same issue reported by 2 agents = 1 finding)
+2. Apply confidence scoring below
+3. Merge into a single structured report
+
+### 5. Confidence Scoring
 For each issue found, score confidence 0-100:
 - **0-25**: Likely false positive or pre-existing
 - **25-50**: Might be real, can't fully verify
@@ -48,7 +89,7 @@ For each issue found, score confidence 0-100:
 
 **Filter threshold: 75+** — only report high-confidence issues.
 
-### 5. Present Results
+### 6. Present Results
 Show findings grouped by severity. For each issue:
 - File and line reference
 - Brief description

@@ -86,6 +86,52 @@ L6 Performance: ✅ API < 200ms, build 2.1MB
 OVERALL: ✅ ALL CHECKS PASS
 ```
 
+## Parallel Test Execution
+
+Backend tests, frontend tests, and type-check are **fully independent** — they touch
+different processes and file systems. Run them in parallel using `run_in_background: true`.
+
+### Safety prerequisite (sequential first)
+
+DB migrations **must complete before** any test suite starts:
+
+```bash
+# Run FIRST — sequential, blocking
+docker exec synapse-backend bash -c "cd /app && alembic upgrade head"
+```
+
+### Parallel launch pattern
+
+After migrations succeed, issue all 3 Bash calls **in the same message**:
+
+```bash
+# Bash call 1 — run_in_background: true
+docker exec synapse-backend bash -c \
+  "cd /app && python -m pytest tests/ -x -q --tb=short 2>&1" \
+  > /tmp/pytest-results.txt
+
+# Bash call 2 — run_in_background: true
+cd /path/to/frontend && bunx vitest --run 2>&1 > /tmp/vitest-results.txt
+
+# Bash call 3 — run_in_background: true
+cd /path/to/frontend && bun run type-check 2>&1 > /tmp/typecheck-results.txt
+```
+
+### Collect results
+
+Once all 3 background tasks notify completion, read each output file and compile
+the verification report. A failure in any runner is reported independently —
+the other runners are not cancelled.
+
+### When NOT to parallelize
+
+| Scenario | Why sequential |
+|----------|---------------|
+| DB migration + tests | Tests depend on schema being current |
+| Two pytest runs on same DB | Risk of fixture collision |
+| E2E (Playwright) + pytest | E2E needs backend fully up |
+| Security scan + deploy | Scan must pass before deploy starts |
+
 ## If Verification Fails
 
 1. Identify which level failed

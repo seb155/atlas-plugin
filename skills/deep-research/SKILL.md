@@ -27,19 +27,39 @@ Before searching, break the user's question into 2-3 specific sub-questions:
 
 Pick the 2-3 most relevant angles for the question. Not every question needs all three.
 
-### 2. Research (Sonnet Agent)
+### 2. Parallel Research Queries
 
-Launch ONE background researcher agent with all sub-questions:
+Sub-questions are independent — launch WebSearch calls **in parallel** by issuing
+multiple tool calls in the **same message**. This cuts total research time by 2-3x.
 
-- Use **WebSearch** for discovery (broad queries, recent results)
-- Use **WebFetch** for deep content extraction (specific pages, docs)
-- Use **Context7** for library documentation when researching specific packages
-- **Triangulate**: confirm key facts across 2-3 independent sources
-- Report extraction confidence: High / Medium / Low per finding
+```
+# PARALLEL — all issued in the same message
+
+WebSearch call 1:
+  query: "{angle 1 — technical implementation, current year}"
+
+WebSearch call 2:
+  query: "{angle 2 — recent developments, ecosystem, current year}"
+
+WebSearch call 3 (if applicable):
+  query: "{angle 3 — alternatives, community opinion, benchmarks}"
+```
+
+After WebSearch results arrive, use **WebFetch** to deep-dive the 1-2 most
+promising URLs per angle (sequentially — each fetch depends on search results).
+
+Use **Context7** for any specific library/package documentation:
+```
+resolve-library-id → query-docs (can run in parallel with WebSearch)
+```
+
+**Triangulate**: confirm key facts across 2-3 independent sources per angle.
+Report extraction confidence per finding: High / Medium / Low.
 
 ### 3. Collect Results
 
-Wait for the agent to complete (timeout: 120s). If it times out, use partial results.
+Wait for all parallel searches to complete. If any search times out (>30s), use
+partial results from that angle and note the gap in the synthesis.
 
 ### 4. Synthesize (Opus)
 
@@ -65,7 +85,7 @@ Present findings to the user in this structure:
 [What should we do? Clear, actionable.]
 
 ### Sources
-[URLs with relevance notes]
+[URLs with relevance notes — cite angle + confidence per source]
 ```
 
 ### 5. Knowledge Capture
