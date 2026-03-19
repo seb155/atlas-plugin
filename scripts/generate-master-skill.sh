@@ -52,6 +52,7 @@ declare -A EMOJI_MAP=(
   [session-retrospective]="🔄" [hookify]="🪝" [browser-automation]="🌐" [skill-management]="🧩"
   [note-capture]="📝" [knowledge-builder]="🧠" [user-profiler]="👤" [reminder-scheduler]="⏰"
   [morning-brief]="☀️" [infrastructure-ops]="🏗️" [security-audit]="🔐"
+  [plugin-builder]="🔌"
 )
 
 # Skill category map
@@ -64,6 +65,7 @@ declare -A CATEGORY_MAP=(
   [session-retrospective]="Meta" [hookify]="Meta" [browser-automation]="Meta" [skill-management]="Meta"
   [note-capture]="Personal" [knowledge-builder]="Personal" [user-profiler]="Personal" [reminder-scheduler]="Personal"
   [morning-brief]="Personal" [infrastructure-ops]="Infrastructure" [security-audit]="Security"
+  [plugin-builder]="Meta"
 )
 
 # Skill one-liner descriptions
@@ -99,6 +101,7 @@ declare -A DESC_MAP=(
   [morning-brief]="Compile daily brief: agenda + emails + tasks + suggestions"
   [infrastructure-ops]="Infrastructure management: VMs, containers, networking, monitoring"
   [security-audit]="Security scanning, RBAC audit, vulnerability assessment, compliance"
+  [plugin-builder]="Build Claude Code plugins from scratch with correct structure and validation"
 )
 
 # Category header emojis
