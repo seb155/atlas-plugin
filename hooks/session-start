@@ -78,40 +78,10 @@ detect_role() {
   echo "$role"
 }
 
-# Main
-if [ ! -f "$SKILL_FILE" ]; then
-  echo '{"additionalContext": "ATLAS plugin: skill file not found"}'
-  exit 0
-fi
-
+# Main — SessionStart hook: role detection + audit log ONLY
+# Skills are loaded on-demand by CC's skill system, NOT injected here.
 TIER_WARNING=""
 DETECTED_ROLE=$(detect_role)
 
-# Read and escape the skill content for JSON injection
-SKILL_CONTENT=$(cat "$SKILL_FILE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-
-# Add tier warning if applicable
-if [ -n "$TIER_WARNING" ]; then
-  SKILL_CONTENT="${SKILL_CONTENT}\\n\\n## ⚠️ Tier Mismatch Warning\\n${TIER_WARNING}"
-fi
-
-# Inject feature board summary if FEATURES.md exists
-FEATURES_SUMMARY=""
-FEATURES_FILE="${PWD}/.blueprint/FEATURES.md"
-if [ -f "$FEATURES_FILE" ]; then
-  PARSE_SCRIPT="${PLUGIN_ROOT}/scripts/parse-features.sh"
-  if [ -x "$PARSE_SCRIPT" ]; then
-    FEATURES_SUMMARY=$("$PARSE_SCRIPT" "$FEATURES_FILE" 2>/dev/null | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g' || true)
-  fi
-fi
-if [ -n "$FEATURES_SUMMARY" ]; then
-  SKILL_CONTENT="${SKILL_CONTENT}\\n\\n## Feature Board (auto-loaded)\\n${FEATURES_SUMMARY}"
-fi
-
-# Output for UserPromptSubmit hook (systemMessage injects into model context)
-cat <<EOF
-{
-  "continue": true,
-  "systemMessage": "<ATLAS_PLUGIN tier=\"${DETECTED_ROLE}\">\n${SKILL_CONTENT}\n</ATLAS_PLUGIN>"
-}
-EOF
+# Minimal output — no content injection (saves ~3K tokens)
+echo '{"continue": true}'
