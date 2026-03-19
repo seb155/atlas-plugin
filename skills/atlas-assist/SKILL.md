@@ -90,6 +90,7 @@ Every skill has a unique emoji for instant visual identification in breadcrumbs 
 | **scope-check** | 🛡️ | Meta |
 | **decision-log** | 📋 | Meta |
 | **session-retrospective** | 🔄 | Meta |
+| **platform-update** | 🔄 | Meta |
 | **hookify** | 🪝 | Meta |
 | **browser-automation** | 🌐 | Meta |
 | **skill-management** | 🧩 | Meta |
@@ -163,7 +164,8 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 📚 **deep-research**: Multi-query decomposition → search → triangulate → synthesize
 - 📄 **document-generator**: Generate PPTX/DOCX/XLSX with storytelling and layouts
 
-### 🛡️ Meta & Governance
+### 🔄 Meta & Governance
+- 🔄 **platform-update**: SOTA audit + auto-update for CC environment + plugin (admin-only, HITL)
 - 🛡️ **scope-check**: Detect drift. Are you working outside original scope?
 - 📋 **decision-log**: Log architectural decisions to `.claude/decisions.jsonl`
 - 🔄 **session-retrospective**: End-of-session lessons + session close + handoff context

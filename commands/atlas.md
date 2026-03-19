@@ -123,6 +123,7 @@ Parse the first argument and invoke the matching skill:
 
 | Subcommand | Skill(s) Invoked | Model |
 |-----------|-----------------|-------|
+| `update` | platform-update | Opus (research) → Sonnet (apply) |
 | `context` | context-discovery | Sonnet |
 | `hooks` | hookify | Sonnet |
 | `skill` | skill-management | Sonnet |

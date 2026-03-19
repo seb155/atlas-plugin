@@ -11,6 +11,7 @@ skills:
   - infrastructure-ops
   - security-audit
   - feature-board
+  - platform-update
 
 commands:
   - deploy
@@ -19,6 +20,7 @@ commands:
   - audit
   - board
   - roadmap
+  - update
 
 agents: []
 
