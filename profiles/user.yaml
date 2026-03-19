@@ -14,6 +14,7 @@ skills:
   - context-discovery
   - scope-check
   - browser-automation
+  - feature-board
 
 refs:
   - web-design-guidelines
@@ -29,6 +30,8 @@ commands:
   - present
   - context
   - browse
+  - board
+  - roadmap
 
 agents:
   - context-scanner

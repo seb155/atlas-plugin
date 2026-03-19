@@ -27,6 +27,8 @@ skills:
   - hookify
   - skill-management
   - plugin-builder
+  # Project
+  - feature-board
   # Domain
   - engineering-ops
 
@@ -51,6 +53,8 @@ commands:
   - scope
   - hooks
   - skill
+  - board
+  - roadmap
   - end
   - handoff
   - pickup

@@ -74,6 +74,12 @@ Icons: ✅ PASS, ❌ FAIL, ⏳ TODO, 🔵 PENDING HITL
 | 👁️ REVIEW | REVIEW |
 | ✅ DONE | DONE |
 
+## Suggest Mode (`/atlas board suggest`)
+
+Show ONLY the suggestions — no board rendering. Quick status check.
+Run `parse-features.sh` from the plugin scripts directory and display the `🎯 Suggestions:` section.
+If no FEATURES.md exists, say so. If no suggestions, say "✅ No issues detected".
+
 ## Proactive Suggestions
 
 After rendering, analyze and surface:

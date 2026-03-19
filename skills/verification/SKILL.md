@@ -83,6 +83,28 @@ Detect available scripts first. Missing gate = ⏭️ skipped. Stop on first fai
 - **All pass** → AskUserQuestion: "All gates pass. Ready to commit/ship?"
 - **Any fail** → AskUserQuestion: "(a) Fix issues (b) Skip gate (c) Abort — I'll fix manually"
 
+## Auto-Update FEATURES.md (after verification completes)
+
+After all verification levels complete, update `.blueprint/FEATURES.md` validation matrix for the current feature.
+
+**Steps:**
+1. Identify the current feature: match the `feature/*` branch name to `FEAT-NNN` in FEATURES.md, or ask the user
+2. For each verification level that ran, update the corresponding row in the feature's Validation Matrix table:
+   - `| **BE Unit** | ✅ PASS | Claude | {today} | {test command} | {count} tests |`
+   - `| **FE Unit** | ✅ PASS | Claude | {today} | vitest | — |`
+   - If a level FAILED: `| **E2E Workflow** | ❌ FAIL | Claude | {today} | {command} | {error summary} |`
+3. Use `Edit` tool to replace the old row with the new one (exact string match on `| **Layer** |`)
+4. Commit the FEATURES.md update: `docs(features): update validation matrix for FEAT-NNN`
+
+**Status mapping:**
+- Test passed → `✅ PASS`
+- Test failed → `❌ FAIL`
+- Test skipped → leave as `⏳ TODO`
+- Not applicable → `N/A`
+
+**Date format:** `2026-03-19` (ISO date)
+**Tested by:** `Claude` (for automated) or leave existing if human-tested
+
 ## Environment Health Checks (run BEFORE L1-L6)
 
 Before running any verification, check the runtime environment is healthy:
