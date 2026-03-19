@@ -83,6 +83,35 @@ Detect available scripts first. Missing gate = ⏭️ skipped. Stop on first fai
 - **All pass** → AskUserQuestion: "All gates pass. Ready to commit/ship?"
 - **Any fail** → AskUserQuestion: "(a) Fix issues (b) Skip gate (c) Abort — I'll fix manually"
 
+## Environment Health Checks (run BEFORE L1-L6)
+
+Before running any verification, check the runtime environment is healthy:
+
+| Check | Command | Fix if broken |
+|-------|---------|---------------|
+| **Docker containers up** | `docker compose ps --format "{{.Name}} {{.Status}}"` | `docker compose up -d` |
+| **Workspace packages synced** | `docker exec synapse-frontend ls node_modules/@axoiq/` | `docker exec synapse-frontend bun install && docker restart synapse-frontend` |
+| **Vite dev server responding** | `curl -s -o /dev/null -w "%{http_code}" http://localhost:4000` | `docker restart synapse-frontend` |
+| **Backend API healthy** | `curl -s http://localhost:8001/health` | `docker restart synapse-backend` |
+| **Vite cache stale** | Check if `node_modules/.vite` is outdated after package changes | `docker exec synapse-frontend rm -rf node_modules/.vite && docker restart synapse-frontend` |
+
+**When to run**:
+- After adding/modifying workspace packages (`frontend/packages/*`)
+- After `bun install` or `bun.lock` changes
+- After Docker container rebuild
+- When you see `Failed to resolve import "@axoiq/*"` errors
+
+**Auto-fix pattern** (for finishing-branch skill):
+```bash
+# If workspace packages changed in this commit:
+if git diff --cached --name-only | grep -q "^frontend/packages/"; then
+  docker exec synapse-frontend bun install
+  docker restart synapse-frontend
+  sleep 5
+  curl -sf http://localhost:4000 > /dev/null || echo "⚠️ Frontend not responding after package sync"
+fi
+```
+
 ## Never Skip
 - NEVER claim "tests pass" without running them
 - NEVER claim "it works" without verifying

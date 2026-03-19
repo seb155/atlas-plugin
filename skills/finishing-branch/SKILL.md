@@ -8,8 +8,20 @@ effort: medium
 
 ## Process
 
-### Step 1: Verify Tests Pass
+### Step 1: Environment Health + Verify Tests Pass
 
+**Pre-flight checks** (if workspace packages changed):
+```bash
+# If any frontend/packages/* files are staged, sync Docker workspace
+if git diff --cached --name-only | grep -q "^frontend/packages/"; then
+  docker exec synapse-frontend bun install
+  docker restart synapse-frontend
+  sleep 5
+  curl -sf http://localhost:4000 > /dev/null || echo "⚠️ Frontend not responding"
+fi
+```
+
+**Tests**:
 ```bash
 docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -x -q --tb=short"
 cd frontend && bunx vitest --run && bun run type-check
