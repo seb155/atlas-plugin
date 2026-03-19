@@ -113,13 +113,20 @@ When user selects a next action, **stay in that context**. No re-presenting the 
    Which task to start? (or "all" to create TaskList and go)
    ```
 
-4. **On selection → Create TaskList + start immediately**:
-   - TaskCreate for selected task(s)
-   - Set dependencies via addBlockedBy
-   - Mark first task in_progress
-   - Start coding — no more questions
+4. **On task selection → Enter Plan Mode first (NON-NEGOTIABLE)**:
+   - Read the FULL plan file (not just summary — every section)
+   - Read the FEATURES.md entry for the feature
+   - Read the relevant backend/frontend files that will be modified
+   - **Enter plan mode** (EnterPlanMode) to prepare implementation plan
+   - In plan mode: write a focused implementation plan for THIS phase only
+   - Present plan with tasks, files, dependencies → HITL approval
+   - ONLY after approval → Create TaskList + start coding
+
+   This ensures the AI understands the FULL context before writing any code.
+   The plan mode also lets the user review and adjust before committing.
 
 **Rules**:
+- **ALWAYS plan before code** — even for "simple" tasks
 - Never go back to the handoff/pickup menu after this point
 - Stay in the selected feature/plan context for the rest of the session
 - If user wants to switch → they say "switch to X" or run `/pickup` again
