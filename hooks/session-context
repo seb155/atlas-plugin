@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — Lightweight session context injection
+# Injects ONLY the feature board summary (not the full skill)
+# Used by UserPromptSubmit hook — fires every message, must be fast + small
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
+# Parse feature summary (lightweight — just counts + active list)
+FEATURES_FILE="${PWD}/.blueprint/FEATURES.md"
+SUMMARY=""
+
+if [ -f "$FEATURES_FILE" ]; then
+  PARSE_SCRIPT="${PLUGIN_ROOT}/scripts/parse-features.sh"
+  if [ -x "$PARSE_SCRIPT" ]; then
+    SUMMARY=$("$PARSE_SCRIPT" "$FEATURES_FILE" 2>/dev/null || true)
+  fi
+fi
+
+if [ -n "$SUMMARY" ]; then
+  # Escape for JSON
+  ESCAPED=$(echo "$SUMMARY" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+  cat <<EOF
+{
+  "continue": true,
+  "systemMessage": "${ESCAPED}"
+}
+EOF
+else
+  echo '{"continue": true}'
+fi
