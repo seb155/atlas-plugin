@@ -90,6 +90,27 @@ if [ -f ".blueprint/FEATURES.md" ] && [ -x "$PARSE_SCRIPT" ]; then
   FEATURE_SUMMARY=$("$PARSE_SCRIPT" ".blueprint/FEATURES.md" 2>/dev/null || true)
 fi
 
+# Report session to Synapse API (fire-and-forget)
+SYNAPSE_API="${SYNAPSE_API_URL:-http://localhost:8001/api/v1}"
+SESSION_ID="${CLAUDE_SESSION_ID:-$(date +%s)-$$}"
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+MODEL="${CLAUDE_MODEL:-unknown}"
+USER_EMAIL="${USER_EMAIL:-${EMAIL:-unknown}}"
+# Extract feature ID from branch name (feature/FEAT-001-xxx → FEAT-001)
+FEATURE_ID=$(echo "$BRANCH" | grep -oP 'FEAT-\d+' 2>/dev/null || true)
+
+curl -sf --max-time 3 -X POST "${SYNAPSE_API}/hooks/atlas/sessions/start" \
+  -H "Content-Type: application/json" \
+  -H "X-Atlas-Token: ${ATLAS_HOOKS_TOKEN:-}" \
+  -d "{
+    \"session_id\": \"${SESSION_ID}\",
+    \"user_email\": \"${USER_EMAIL}\",
+    \"model\": \"${MODEL}\",
+    \"branch\": \"${BRANCH}\",
+    \"feature_id\": \"${FEATURE_ID}\",
+    \"cwd\": \"$(pwd)\"
+  }" >/dev/null 2>&1 &
+
 # Output with optional feature context
 if [ -n "$FEATURE_SUMMARY" ]; then
   # Escape for JSON (newlines → \n, quotes → \")
