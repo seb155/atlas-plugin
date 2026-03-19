@@ -55,12 +55,24 @@ After steps 1-5:
 
 **1. Capture state**: session metadata, task state (TaskList), recent decisions, work summary, next steps, files modified (`git status`), branch/worktree.
 
-**2. Generate structured handoff**:
+**2. Generate RICH handoff** (not just a task list):
 
-| Output | Location | Format |
-|--------|----------|--------|
-| JSON (machine) | `.claude/handoffs/latest.json` | `{id, date, project, branch, commit, plan, phase, summary, next_steps, decisions, files_modified, tasks_pending, resume_prompt}` |
-| Markdown (human) | `handoff-{YYYY-MM-DD}.md` | Resume Session + What was done + Task State + Key Decisions + To Resume + Key Files |
+| Section | Content | Why |
+|---------|---------|-----|
+| **Context Reload** | List 5 files to read first (FEATURES.md, active plan, INDEX.md, CLAUDE.md, MEMORY.md) | Next session loads these → instant context |
+| **État du Projet** | Branch, HEAD, feature board summary, epic progress bars | See project state at a glance |
+| **Plan Actif** | Plan file path + phase table (done/next/todo) | Know exactly where we are |
+| **Décisions** | Each decision + WHY + alternatives rejected | Don't re-debate settled decisions |
+| **Erreurs / Dead-Ends** | What we tried that failed + why | Don't re-try known failures |
+| **Feedback Humain** | What user said that shaped approach + memory file ref | Preserve user preferences |
+| **Worktrees** | Active worktrees with branch mapping | Know the git topology |
+| **Fichiers Modifiés** | Files changed this session (from git) | Quick scan of scope |
+| **Issues Connues** | Open bugs, blockers, infra issues | Don't be surprised |
+| **Pour Reprendre** | Exact commands to run | Zero-friction resume |
+
+**Output locations**:
+- `handoff-{YYYY-MM-DD}.md` in project root (human-readable, git-tracked)
+- `.claude/handoffs/latest.json` (machine-readable for `/pickup`)
 
 **3. Memory update**: Update MEMORY.md + session-log.md if sprint/architecture changed.
 
