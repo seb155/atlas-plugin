@@ -10,12 +10,15 @@ skills:
   - experiment-loop
   - infrastructure-ops
   - security-audit
+  - feature-board
 
 commands:
   - deploy
   - tune
   - infra
   - audit
+  - board
+  - roadmap
 
 agents: []
 
