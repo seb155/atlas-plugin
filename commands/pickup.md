@@ -76,6 +76,17 @@ Extract from each handoff: the "Focus" line (header or first summary), "What was
 
 Present the suggested next steps from handoff + feature board suggestions.
 
+### Step 5: EXECUTE immediately after selection (NON-NEGOTIABLE)
+
+When user selects a next action:
+- **DO NOT** ask again, re-present options, or confirm
+- **DO NOT** show another handoff or another pickup
+- **IMMEDIATELY** start working on the selected action:
+  - If plan exists → Read the plan, create TaskList, start Phase 1
+  - If feature work → Switch to worktree, read FEATURES.md entry, start coding
+  - If CI fix → Run diagnostics immediately
+- The user already made their choice. **Just go.**
+
 **Usage**: `/pickup` or `/atlas pickup`
 
 ARGUMENTS: $ARGUMENTS
