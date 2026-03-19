@@ -21,8 +21,10 @@ Also activate when the user explicitly references notes:
 
 ## API Configuration
 
-**Base URL**: `http://localhost:8001/api/v1/pa`
-**Auth**: `Authorization: Bearer $SYNAPSE_TOKEN` (from current session or env var)
+**Write (from CC skills)**: `http://localhost:8001/api/v1/hooks/atlas` — token-protected, no JWT
+**Read (from browser)**: `http://localhost:8001/api/v1/pa` — JWT auth
+
+For CC skills, always use the hooks router with `?user_email=seb@test.dev` query param.
 
 ## Creating a Note
 
@@ -63,19 +65,23 @@ Use AskUserQuestion with the preview. Let user modify tags or title before savin
 
 ### Step 4 — Save via API
 
+**Schema**: `UserNoteCreate` — fields: `title`, `content`, `tags[]`, `context{}`, `project_id?`
+
+The `context` JSONB field holds source info and metadata:
+
 ```bash
-curl -s -X POST http://localhost:8001/api/v1/pa/notes \
-  -H "Authorization: Bearer $SYNAPSE_TOKEN" \
+curl -s -X POST "http://localhost:8001/api/v1/hooks/atlas/notes?user_email=seb@test.dev" \
   -H "Content-Type: application/json" \
+  -H "X-Atlas-Token: ${ATLAS_HOOKS_TOKEN:-}" \
   -d '{
     "title": "...",
     "content": "...",
     "tags": ["tag1", "tag2"],
-    "source_type": "conversation",
-    "source_ref": null,
-    "metadata": {
+    "context": {
+      "source": "conversation",
       "captured_by": "atlas-skill",
-      "session_context": "..."
+      "session_id": "...",
+      "branch": "dev"
     }
   }'
 ```

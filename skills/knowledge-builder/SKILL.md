@@ -18,13 +18,14 @@ Extract, store, and reinforce structured knowledge about the user over time.
 
 ## API
 
-**Base**: `http://localhost:8001/api/v1/pa` | **Auth**: `Bearer $SYNAPSE_TOKEN`
+**Write (CC skills)**: `http://localhost:8001/api/v1/hooks/atlas` — no JWT, token-protected
+**Read (browser)**: `http://localhost:8001/api/v1/pa` — JWT auth
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/knowledge` | GET | List all (optional: `?category=X&search=Y`) |
-| `/knowledge/learn` | POST | Create or reinforce entry (UPSERT) |
-| `/knowledge/{id}` | DELETE | Remove entry |
+| Endpoint | Method | Router | Purpose |
+|----------|--------|--------|---------|
+| `/hooks/atlas/knowledge/learn?user_email=X` | POST | hooks | Create or reinforce (UPSERT) |
+| `/pa/knowledge` | GET | pa (JWT) | List all (`?category=X&search=Y`) |
+| `/pa/knowledge/{id}` | DELETE | pa (JWT) | Remove entry |
 
 ## Categories
 
