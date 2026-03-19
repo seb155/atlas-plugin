@@ -108,8 +108,10 @@ if [ -n "$FEATURES_SUMMARY" ]; then
   SKILL_CONTENT="${SKILL_CONTENT}\\n\\n## Feature Board (auto-loaded)\\n${FEATURES_SUMMARY}"
 fi
 
+# Output for UserPromptSubmit hook (systemMessage injects into model context)
 cat <<EOF
 {
-  "additionalContext": "<ATLAS_PLUGIN tier=\"${DETECTED_ROLE}\">\n${SKILL_CONTENT}\n</ATLAS_PLUGIN>"
+  "continue": true,
+  "systemMessage": "<ATLAS_PLUGIN tier=\"${DETECTED_ROLE}\">\n${SKILL_CONTENT}\n</ATLAS_PLUGIN>"
 }
 EOF
