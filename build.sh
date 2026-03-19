@@ -131,12 +131,20 @@ build_tier() {
 }
 EOF
 
-  # Generate marketplace.json
+  # Generate marketplace.json (valid marketplace manifest — no extra keys)
   cat > "$output/.claude-plugin/marketplace.json" <<EOF
 {
-  "source": "./",
-  "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git",
-  "tier": "${tier}"
+  "name": "atlas-${tier}-marketplace",
+  "owner": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "plugins": [
+    {
+      "name": "atlas-${tier}",
+      "description": "ATLAS ${tier_upper} — AXOIQ AI Engineering Assistant (${tier} tier)",
+      "version": "${VERSION}",
+      "source": "./",
+      "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
+    }
+  ]
 }
 EOF
 
