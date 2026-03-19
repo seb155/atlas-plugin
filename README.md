@@ -125,7 +125,7 @@ atlas-plugin/
 │
 ├── build.sh            # Builder: resolves inheritance → dist/
 ├── scripts/
-│   ├── generate-master-skill.sh  # Generates using-atlas SKILL.md per tier
+│   ├── generate-master-skill.sh  # Generates atlas-assist SKILL.md per tier
 │   └── bump-version.sh           # Semver bump + git tag
 │
 └── dist/               # Build outputs (gitignored)

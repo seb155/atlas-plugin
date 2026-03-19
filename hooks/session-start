@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ATLAS Plugin — Session Start Hook
-# Injects the tier-appropriate using-atlas skill into every Claude Code session
+# Injects the tier-appropriate atlas-assist skill into every Claude Code session
 # Detects user role via: Authentik API → ATLAS_ROLE env var → plugin default
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-SKILL_FILE="${PLUGIN_ROOT}/skills/using-atlas/SKILL.md"
+SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"
 AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
 # Detect the plugin's built-in tier from plugin.json

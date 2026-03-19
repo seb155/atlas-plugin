@@ -1,284 +1,90 @@
 ---
 name: verification
 description: "Complete verification: L1-L6 tests + quality gates pipeline (build→types→lint→tests→security→diff) + E2E persona tests + security scan + performance benchmarks + checkpoints. Evidence before assertions."
+effort: medium
 ---
 
 # Verification
 
-## Principle
-
-**Evidence before assertions.** NEVER claim work is complete, fixed, or passing without running verification commands and confirming output.
+**Principle**: Evidence before assertions. NEVER claim work passes without running commands and confirming output.
 
 ## Verification Levels
 
-### L1: Unit Tests (Backend)
-```bash
-docker exec synapse-backend bash -c "cd /app && python -m pytest tests/{specific_path} -x -q --tb=short"
-```
-- Run specific test file first (fast feedback)
-- Then run broader suite if specific passes
-
-### L2: Unit Tests (Frontend)
-```bash
-cd frontend && bunx vitest --run
-cd frontend && bun run type-check
-```
-- vitest for logic tests
-- TypeScript strict for type safety
-
-### L3: E2E Tests (Playwright)
-```bash
-cd frontend && bunx playwright test e2e/qa-*.spec.ts
-```
-- Only if plan Section O specifies E2E scenarios
-- Run against real dev environment
-
-### L4: Persona-Based Validation
-For each persona identified in plan Section H:
-
-```
-Persona: {role}
-Pre-condition: {project state}
-1. {action as this persona would do}
-2. {verify expected result}
-3. {verify RBAC — can they see/do what they should?}
-4. {verify performance — acceptable speed?}
-```
-
-This can be done via:
-- Browser automation (Playwright MCP or Claude in Chrome)
-- Manual check (describe what to verify, user confirms)
-- API testing (curl commands as different auth roles)
-
-### L5: Security Check
-```bash
-# Input validation test
-# RBAC enforcement test (try accessing as wrong role)
-# Check no secrets in responses/logs
-```
-
-### L6: Performance Benchmark
-```bash
-# API response time
-time curl -s "localhost:8001/api/v1/{pid}/resource?size=500"
-# Target: < 200ms
-
-# Frontend build
-cd frontend && bunx vite build
-# Check bundle size
-```
+| Level | Scope | Command pattern | Notes |
+|-------|-------|----------------|-------|
+| **L1** | Backend unit | `docker exec synapse-backend bash -c "cd /app && python -m pytest tests/{path} -x -q --tb=short"` | Specific file first, then broader |
+| **L2** | Frontend unit + types | `cd frontend && bunx vitest --run` + `bun run type-check` | Independent, can parallelize |
+| **L3** | E2E (Playwright) | `cd frontend && bunx playwright test e2e/qa-*.spec.ts` | Only if plan Section O specifies E2E |
+| **L4** | Persona validation | Per persona: precondition → action → verify result → check RBAC → check perf | Browser automation, API curl, or manual |
+| **L5** | Security | Input validation, RBAC enforcement (wrong role), no secrets in responses/logs | Code review + runtime checks |
+| **L6** | Performance | `time curl -s "localhost:8001/api/v1/{pid}/resource"` (target <200ms) + `bunx vite build` (bundle size) | Benchmarks |
 
 ## Output Format
 
 ```
 ✅ VERIFICATION REPORT
-
-L1 Backend: ✅ 247 passed (0 failed)
-L2 Frontend: ✅ 89 passed, type-check clean
-L3 E2E: ✅ 12 scenarios passed
-L4 Persona:
-  - I&C Eng: ✅ CRUD + filters + export working
-  - PM: ✅ Read-only view correct
-  - Admin: ✅ Seed + config working
-L5 Security: ✅ RBAC enforced, no secrets leaked
-L6 Performance: ✅ API < 200ms, build 2.1MB
-
-OVERALL: ✅ ALL CHECKS PASS
+L1 Backend:  ✅/❌ {passed} passed ({failed} failed)
+L2 Frontend: ✅/❌ {passed} passed, type-check {status}
+L3 E2E:      ✅/❌ {scenarios} scenarios
+L4 Persona:  {role}: ✅/❌ {details} (per persona)
+L5 Security: ✅/❌ {details}
+L6 Perf:     ✅/❌ API {ms}ms, build {size}
+OVERALL: ✅/❌
 ```
 
-## Parallel Test Execution
+## Parallel Execution
 
-Backend tests, frontend tests, and type-check are **fully independent** — they touch
-different processes and file systems. Run them in parallel using `run_in_background: true`.
+**Sequential first**: DB migrations (`alembic upgrade head`) must complete before any test.
 
-### Safety prerequisite (sequential first)
+**Then parallel** (3 background calls in same message):
+1. pytest (backend) → `/tmp/pytest-results.txt`
+2. vitest (frontend) → `/tmp/vitest-results.txt`
+3. type-check → `/tmp/typecheck-results.txt`
 
-DB migrations **must complete before** any test suite starts:
+**Do NOT parallelize**: migration+tests, 2 pytest on same DB, E2E+pytest, security+deploy.
 
-```bash
-# Run FIRST — sequential, blocking
-docker exec synapse-backend bash -c "cd /app && alembic upgrade head"
-```
+## Quality Gates Pipeline (fail-fast)
 
-### Parallel launch pattern
+| Gate | Command | Hard fail |
+|------|---------|-----------|
+| **Build** | `bun run build` | Yes |
+| **Types** | `bun run typecheck` | Yes |
+| **Lint** | `bun run lint` | Yes |
+| **Tests** | `bun test` / `pytest` | Yes |
+| **Security** | Grep staged: secrets, .env, private keys, console.log | Secrets/keys: yes. console.log: warning |
+| **Diff** | `git status --short` + `git diff --stat` | Info only |
 
-After migrations succeed, issue all 3 Bash calls **in the same message**:
+Detect available scripts first. Missing gate = ⏭️ skipped. Stop on first failure.
 
-```bash
-# Bash call 1 — run_in_background: true
-docker exec synapse-backend bash -c \
-  "cd /app && python -m pytest tests/ -x -q --tb=short 2>&1" \
-  > /tmp/pytest-results.txt
+**Status**: ✅ Passed | ❌ Failed (blocking) | ⚠️ Warning | ⏭️ Skipped
 
-# Bash call 2 — run_in_background: true
-cd /path/to/frontend && bunx vitest --run 2>&1 > /tmp/vitest-results.txt
+## Flags
 
-# Bash call 3 — run_in_background: true
-cd /path/to/frontend && bun run type-check 2>&1 > /tmp/typecheck-results.txt
-```
+| Flag | Behavior |
+|------|----------|
+| `--quick` | Smoke tests only |
+| `--fix` | Auto-fix lint |
+| `--verbose` | Full output |
+| `--no-security` | Skip security scan |
 
-### Collect results
+## Checkpoints
 
-Once all 3 background tasks notify completion, read each output file and compile
-the verification report. A failure in any runner is reported independently —
-the other runners are not cancelled.
+`checkpoint save|compare|list|diff` — captures test counts, type errors, lint errors, security issues, coverage %, file checksums. Flags regressions (decreased passes, increased errors).
 
-### When NOT to parallelize
-
-| Scenario | Why sequential |
-|----------|---------------|
-| DB migration + tests | Tests depend on schema being current |
-| Two pytest runs on same DB | Risk of fixture collision |
-| E2E (Playwright) + pytest | E2E needs backend fully up |
-| Security scan + deploy | Scan must pass before deploy starts |
-
-## If Verification Fails
+## On Failure
 
 1. Identify which level failed
 2. Use systematic-debugging skill
 3. Max 2 fix attempts
-4. If still failing → AskUserQuestion with:
-   - What failed
-   - What you tried
-   - 2-3 alternatives
+4. Still failing → AskUserQuestion: what failed, what tried, 2-3 alternatives
+
+## HITL Gates
+
+- **All pass** → AskUserQuestion: "All gates pass. Ready to commit/ship?"
+- **Any fail** → AskUserQuestion: "(a) Fix issues (b) Skip gate (c) Abort — I'll fix manually"
 
 ## Never Skip
-
 - NEVER claim "tests pass" without running them
 - NEVER claim "it works" without verifying
-- ALWAYS show the actual output
-- ALWAYS run type-check (catches many bugs statically)
-
----
-
-## Quality Gates Pipeline (from /a-verify)
-
-Sequential checks performed in order. **First failure stops the pipeline (fail-fast).**
-
-### Gate Sequence
-
-| Gate | Command | Purpose |
-|------|---------|---------|
-| **Build** | `bun run build` (or project equivalent) | Compilation check |
-| **Types** | `bun run typecheck` | Type safety validation |
-| **Lint** | `bun run lint` | Code style & quality |
-| **Tests** | `bun test` / `pytest` | Unit & integration tests |
-| **Security** | Pattern scan (see below) | Detect secrets, console.log |
-| **Diff** | `git status --short` + `git diff --stat` | Show changed files |
-
-### 1. Detect Project Configuration
-
-Before running gates, detect what's available:
-
-```bash
-# Check what commands are available in package.json / pyproject.toml
-if grep -q '"build"' package.json 2>/dev/null; then HAS_BUILD=true; fi
-if grep -q '"typecheck"' package.json 2>/dev/null; then HAS_TYPECHECK=true; fi
-if grep -q '"lint"' package.json 2>/dev/null; then HAS_LINT=true; fi
-```
-
-If a script is missing, that gate is skipped (marked as ⏭️ in the report).
-
-### 2. Run Gates (Sequential, Stop on First Failure)
-
-**CRITICAL**: Stop on first failure. Do NOT continue if a gate fails.
-
-For each gate:
-1. Announce which gate is running
-2. Execute the command
-3. Record pass/fail/skip status
-4. If fail → stop pipeline, report
-
-### 3. Security Scan Gate
-
-```bash
-# Check for console.log in source files (not tests, not comments)
-git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx|py)$' | \
-  xargs grep -n 'console\.log' | grep -v '^\s*//' | grep -v '\.test\.'
-
-# Check for potential secrets in staged changes
-git diff --cached | grep -iE '(api_key|password|secret|token)\s*=\s*["\x27]'
-
-# Check for .env files being committed
-git diff --cached --name-only | grep -E '\.env(\.|$)'
-
-# Check for private keys
-git diff --cached --name-only | grep -E '\.(pem|key|p12|pfx)$'
-```
-
-**Hard fail** on: secrets detected, .env files staged, private keys staged.
-**Warning** on: console.log statements found.
-
-### 4. Generate Verification Report
-
-Format output as a structured table:
-
-```
-## Verification Results
-
-| Check | Status | Details |
-|-------|:------:|---------|
-| Build | ✅/❌/⏭️ | <message> |
-| Types | ✅/❌/⏭️ | <message> |
-| Lint | ✅/❌/⚠️ | <message> |
-| Tests | ✅/❌ | <passed>/<total> passed |
-| Security | ✅/⚠️/❌ | <issues found> |
-| Changes | 📊 | <file count> files modified |
-
-### Summary
-Ready to commit: YES/NO
-```
-
-**Status Indicators**:
-- ✅ Passed
-- ❌ Failed (blocking)
-- ⚠️ Warning (non-blocking)
-- ⏭️ Skipped (not configured)
-
-### Flags
-
-| Flag | Behavior |
-|------|----------|
-| `--quick` | Skip long-running tests, run smoke tests only |
-| `--fix` | Auto-fix linting issues with `--fix` flag |
-| `--verbose` | Show full output from each command |
-| `--no-security` | Skip security scan (not recommended) |
-
-### Checkpoint Subcommands
-
-Save and compare verification state over time:
-
-```
-checkpoint save [name]      # Save current verification state
-checkpoint compare [name]   # Compare with saved checkpoint
-checkpoint list             # List saved checkpoints
-checkpoint diff <a> <b>     # Compare two checkpoints
-```
-
-Each checkpoint captures: test counts, type errors, lint errors, security issues, coverage %, file checksums.
-
-**Regression Detection**: Comparison flags when test pass count decreases, type errors increase, or security issues increase.
-
-### HITL Gate: After Verification
-
-If ALL gates pass → present result and ask:
-```
-AskUserQuestion: "All quality gates pass. Ready to proceed with commit/ship?"
-```
-
-If ANY gate fails → present failures and ask:
-```
-AskUserQuestion: "Gate {X} failed. Options:
-(a) Fix the issues (show errors above)
-(b) Skip this gate (if non-blocking)
-(c) Abort — I'll fix manually"
-```
-
-### Integration with Other Skills
-
-| Workflow | Usage |
-|----------|-------|
-| Pre-commit | verification → finishing-branch |
-| Pre-PR | verification → `git push` |
-| After refactor | verification `--fix` then review |
-| Full pipeline | context-discovery → plan-builder → tdd → verification → finishing-branch |
+- ALWAYS show actual output
+- ALWAYS run type-check

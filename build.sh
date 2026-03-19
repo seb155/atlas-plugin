@@ -114,9 +114,9 @@ build_tier() {
   # Copy VERSION file
   cp VERSION "$output/VERSION"
 
-  # Generate tier-specific using-atlas SKILL.md
-  mkdir -p "$output/skills/using-atlas"
-  ./scripts/generate-master-skill.sh "$tier" "$output/skills/using-atlas/SKILL.md"
+  # Generate tier-specific atlas-assist SKILL.md
+  mkdir -p "$output/skills/atlas-assist"
+  ./scripts/generate-master-skill.sh "$tier" "$output/skills/atlas-assist/SKILL.md"
 
   # Generate tier-specific plugin.json
   local tier_upper

@@ -1,247 +1,93 @@
 ---
 name: finishing-branch
 description: "Complete development work: verify tests pass → intelligent commit (auto-detect type, conventional commits, exclude secrets) → present 4 options (merge/PR/keep/discard) → push → cleanup worktree → update INDEX."
+effort: medium
 ---
 
 # Finishing a Development Branch
 
-## Overview
-
-After all implementation tasks are complete, guide the user through finishing the work: verify, choose integration strategy, execute, cleanup.
-
 ## Process
 
 ### Step 1: Verify Tests Pass
-```bash
-# Backend
-docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -x -q --tb=short"
 
-# Frontend
+```bash
+docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -x -q --tb=short"
 cd frontend && bunx vitest --run && bun run type-check
 ```
 
-If tests FAIL → cannot proceed. Show failures. Fix first.
+If tests FAIL → stop. Fix first.
 
-### Step 2: Present 4 Options
+### Step 2: Present 4 Options (AskUserQuestion)
 
-Use AskUserQuestion:
+| Option | Action |
+|--------|--------|
+| 1. Merge locally | `git checkout {base}` → `git merge --no-ff feature/{name}` → verify tests → delete branch → cleanup worktree |
+| 2. Push + PR | `git push -u origin feature/{name}` → create Forgejo PR → keep worktree |
+| 3. Keep as-is | No action, branch and worktree stay |
+| 4. Discard | Require "discard" confirmation → delete branch + worktree |
 
-```
-How do you want to integrate this work?
+### Step 3: Post-Integration
 
-1. Merge back to {base-branch} locally
-   → Merge + verify tests + delete branch + cleanup worktree
-
-2. Push and create Pull Request
-   → Push branch + create PR on Forgejo + keep worktree
-
-3. Keep the branch as-is
-   → Don't merge, don't push. Keep for later.
-
-4. Discard this work
-   → Delete branch + cleanup worktree (requires confirmation)
-```
-
-### Step 3: Execute Choice
-
-**Option 1 — Local Merge:**
-```bash
-git checkout {base-branch}
-git merge --no-ff feature/{name}
-# Run tests again to verify
-git branch -d feature/{name}
-# Cleanup worktree
-```
-
-**Option 2 — Push + PR:**
-```bash
-git push -u origin feature/{name}
-# Create PR on Forgejo via API or manual
-# Keep worktree alive for iteration
-```
-
-**Option 3 — Keep:**
-- No action. Branch and worktree stay.
-
-**Option 4 — Discard:**
-- Require user to type "discard" to confirm
-- Delete branch and cleanup worktree
-
-### Step 4: Update Plans Index
-If the work was tracked in a plan:
-- Update `.blueprint/plans/INDEX.md` → status change
-- Commit: `plan({subsystem}): mark phase X complete`
-
-### Step 5: Note Improvements
-If any improvements/tech debt was noticed during implementation:
-- Add to `.blueprint/IMPROVEMENTS.md`
-- Categorize: CRITICAL / IMPORTANT / NICE-TO-HAVE / SOTA
+- Update `.blueprint/plans/INDEX.md` if tracked in plan → `plan({subsystem}): mark phase X complete`
+- Add noticed improvements to `.blueprint/IMPROVEMENTS.md` (CRITICAL/IMPORTANT/NICE-TO-HAVE/SOTA)
 
 ## Forgejo PR Creation
 
-> **CRITICAL**: Forgejo external URL (`forgejo.axoiq.com`) is behind Cloudflare Access.
-> API calls to the external URL return 302 redirects. ALWAYS use the internal IP.
+> **CRITICAL**: ALWAYS use internal IP. External URL returns 302 (CF Access).
 
 ```bash
-# Step 0: Source token and set API base (MANDATORY)
 source ~/.env
 FORGEJO_API="http://192.168.10.75:3000/api/v1"
-
-# Step 1: Create PR
-curl -s -X POST "$FORGEJO_API/repos/{owner}/{repo}/pulls" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: token $FORGEJO_TOKEN" \
-  -d '{
-    "title": "feat({subsystem}): {description}",
-    "body": "## Summary\n{plan reference}\n\n## Changes\n{file list}",
-    "head": "feature/{name}",
-    "base": "dev"
-  }'
-
-# Step 2: Merge PR (NOTE: lowercase "do", NOT "Do")
-curl -s -X POST "$FORGEJO_API/repos/{owner}/{repo}/pulls/{PR_NUMBER}/merge" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: token $FORGEJO_TOKEN" \
-  -d '{"do":"merge","delete_branch_after_merge":false}'
-
-# Step 3: Check CI status on commit
-curl -s -H "Authorization: token $FORGEJO_TOKEN" \
-  "$FORGEJO_API/repos/{owner}/{repo}/commits/{SHA}/status"
+# Create:  POST $FORGEJO_API/repos/{owner}/{repo}/pulls  {title, body, head, base}
+# Merge:   POST $FORGEJO_API/repos/{owner}/{repo}/pulls/{N}/merge  {"do":"merge"}
+# CI:      GET  $FORGEJO_API/repos/{owner}/{repo}/commits/{SHA}/status
 ```
 
-### Forgejo API Gotchas
-- **NEVER use `https://forgejo.axoiq.com` for API** — CF Access blocks with 302
-- **Token**: `$FORGEJO_TOKEN` in `~/.env` — always `source ~/.env` first
-- **Merge field**: lowercase `"do":"merge"` — uppercase `"Do"` returns 405
-- **SSH remote**: `ssh://forgejo/` alias → `192.168.10.75:2222`
-- **PR URLs in responses** use external URL (works in browser with CF SSO)
-- **Full reference**: `.claude/references/forgejo-api.md` (project-level)
+| Gotcha | Detail |
+|--------|--------|
+| API URL | NEVER `https://forgejo.axoiq.com` — CF Access blocks |
+| Token | `$FORGEJO_TOKEN` from `~/.env` — always source first |
+| Merge field | lowercase `"do":"merge"` — uppercase returns 405 |
+| Full ref | `.claude/references/forgejo-api.md` |
 
----
+## Intelligent Commit (from /a-ship)
 
-## Intelligent Commit & Push (from /a-ship)
+### Staging Rules
 
-Zero-friction git workflow with smart commit message generation and safety guards.
+**NEVER `git add -A`.** Stage explicitly. **EXCLUDE**: `.env*`, `credentials*`, `secrets*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `vaults/`, `node_modules/`, `__pycache__/`.
 
-### Commit Workflow
+### Auto-Detect Commit Type
 
-#### 1. Check Status
-```bash
-git status --short
-```
-If no changes → inform user and stop.
+| Files Changed | Type | Scope |
+|---------------|------|-------|
+| New features/components | `feat` | Most common directory |
+| Bug fixes | `fix` | Affected module |
+| `*.md` in docs/.blueprint/ | `docs` | Subsystem |
+| Config/deps | `chore` | Dependency name |
+| Perf improvements | `perf` | Target area |
+| Tests only | `test` | Module tested |
+| Restructuring | `refactor` | Module |
+| Build/CI | `build`/`ci` | Tool |
+| Plans | `plan` | Subsystem |
 
-#### 2. Stage Changes INTELLIGENTLY
+Format: `<type>(<scope>): <summary>` + `Co-Authored-By: ATLAS AI <atlas@sgagnon.dev>`
 
-**NEVER use `git add -A`.** Always stage explicitly:
+### Push
 
-1. Run `git status` to list changed files
-2. **EXCLUDE** (never stage):
-   - `.env*`, `credentials*`, `secrets*`
-   - `*.pem`, `*.key`, `*.p12`, `*.pfx`
-   - `vaults/`, `node_modules/`, `__pycache__/`
-3. Stage remaining files by name: `git add <file1> <file2> ...`
-4. If >20 files, group by directory for readability in the commit
+`git push origin $(git branch --show-current)` — **NEVER force push**. If rejected: `git pull --rebase` then retry.
 
-#### 3. Auto-Detect Commit Type
+## HITL Gates
 
-| Files Changed | Type | Example |
-|---------------|------|---------|
-| New features, components, pages | `feat` | `feat(search): add BM25 omnisearch` |
-| Bug fixes, error corrections | `fix` | `fix(import): handle empty CSV rows` |
-| `*.md` in docs/ or .blueprint/ | `docs` | `docs(blueprint): update MODULES.md` |
-| Config files, dependencies | `chore` | `chore(deps): bump AG Grid to v35` |
-| Performance improvements | `perf` | `perf(query): add composite index` |
-| Test files only | `test` | `test(api): add spec group coverage` |
-| Code restructuring (no behavior change) | `refactor` | `refactor(hooks): extract useGridConfig` |
-| Build/CI changes | `build` / `ci` | `ci(forgejo): add lint step` |
-| Plan files | `plan` | `plan(rule-engine): add AI auto-tune` |
+| When | Trigger | Options |
+|------|---------|---------|
+| Before commit | >20 files or mixed types | (a) Commit as proposed (b) Split (c) Edit msg (d) Abort |
+| Before push | Always | Confirm branch + file count |
+| After push | Always | (a) Monitor CI (b) Create PR (c) Deploy staging (d) Done |
 
-#### 4. Generate Conventional Commit Message
+## Safety Rules (NON-NEGOTIABLE)
 
-Format: `<type>(<scope>): <summary>`
-
-- **type**: Auto-detected from changed files (see table above)
-- **scope**: Auto-detected from directories (most common directory in changes)
-- **summary**: Concise description of what changed (imperative mood)
-- **Co-Author**: Append `Co-Authored-By: ATLAS AI <atlas@sgagnon.dev>`
-
-```bash
-git commit -m "<type>(<scope>): <summary>
-
-Co-Authored-By: ATLAS AI <atlas@sgagnon.dev>"
-```
-
-#### 5. Push
-
-```bash
-git push origin $(git branch --show-current)
-```
-
-**NEVER force push.** If push fails due to remote changes:
-```bash
-git pull --rebase origin $(git branch --show-current)
-# Then retry push
-```
-
-#### 6. Output Summary
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ SHIP COMPLETE                                                    │
-├─────────────────────────────────────────────────────────────────┤
-│ repo    │ N files │ type(scope): summary message       │ ✅     │
-├─────────────────────────────────────────────────────────────────┤
-│ CI will run. Use ci-feedback-loop to monitor.                    │
-│ Before ending session: run session-retrospective                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Safety Rules (NON-NEGOTIABLE)
-
-1. **Never force push** — `git push --force` is forbidden
-2. **Never stage secrets** — `.env*`, `credentials*`, `secrets*`, `*.pem`, `*.key` are excluded
-3. **Warn on large commits** — If >50 files, AskUserQuestion for confirmation before committing
-4. **Pre-commit hooks respected** — Never skip with `--no-verify`
-5. **Never push to main directly** — Must go through PR (except emergency hotfix with HITL approval)
-
-### Dry Run Mode
-
-`--dry` flag shows what would be shipped without committing:
-
-```bash
-# Show staged changes and proposed commit message
-git status --short
-# Display: "Would commit as: feat(search): add BM25 omnisearch"
-# Display: "Would push to: origin/feature/omnisearch"
-```
-
-### HITL Gates
-
-**Before commit** (if >20 files or mixed types):
-```
-AskUserQuestion: "I detected {N} changed files across {M} types. Proposed commit:
-  {type}({scope}): {summary}
-Options:
-(a) Commit as proposed
-(b) Split into multiple commits (suggest split)
-(c) Edit the commit message
-(d) Abort"
-```
-
-**Before push** (always):
-```
-AskUserQuestion: "Ready to push to {branch}. {N} files, commit: {hash}.
-Proceed with push?"
-```
-
-**After push**:
-```
-AskUserQuestion: "Pushed to {branch}. CI will run.
-(a) Monitor CI (ci-feedback-loop)
-(b) Create PR to dev
-(c) Deploy to staging (devops-deploy)
-(d) Done for now"
-```
-
-If `.atlas/deploy.yaml` exists, also show deploy option with environment names.
+1. Never force push
+2. Never stage secrets
+3. Warn on >50 files (AskUserQuestion)
+4. Never skip pre-commit hooks
+5. Never push to main directly (except HITL-approved hotfix)

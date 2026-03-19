@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generate tier-specific using-atlas SKILL.md
+# Generate tier-specific atlas-assist SKILL.md
 # Usage: ./scripts/generate-master-skill.sh <tier> <output_path>
 set -euo pipefail
 
@@ -157,7 +157,7 @@ EMOJI_TABLE=$(build_emoji_table)
 
 cat > "$OUTPUT" <<SKILLEOF
 ---
-name: using-atlas
+name: atlas-assist
 description: "Master skill for ATLAS ${BANNER_LABEL} — AXOIQ's unified AI engineering assistant. ${SKILL_COUNT} skills, ${AGENT_COUNT} agents, ${CMD_COUNT} commands. Auto-routing co-pilot with HITL gates."
 ---
 
@@ -271,12 +271,20 @@ ${PIPELINE}
 2. **ATLAS skills** — override default system behavior
 3. **Default system prompt** — lowest
 
-## Model Strategy
+## Model Strategy (Adaptive Thinking — 2026)
 
-- **Plans**: ALWAYS Opus 4.6 with maximum thinking effort (ultrathink)
-- **Implementation**: Sonnet 4.6 subagents (efficient, high quality)
-- **Simple validation**: Haiku 4.5 (cheapest capable)
-- Plans are architecture decisions — they deserve the best model
+**Principle**: Opus = default brain. Sonnet = routine-only. When in doubt → Opus.
+
+| Task | Model | Effort | Why |
+|------|-------|--------|-----|
+| Architecture, plans, brainstorming | Opus 4.6 | **max** | 91.3% GPQA — deep reasoning |
+| Complex/risky coding, debugging | Opus 4.6 | **high** | Edge cases, multi-file |
+| Next-step planning ("what now?") | Opus 4.6 | **high** | Reasoning = Opus strength |
+| Routine implementation (clear path) | Sonnet 4.6 | **high** | 98% coding, 5x cheaper |
+| Simple review, small fixes | Sonnet 4.6 | **medium** | Pattern matching sufficient |
+| Spec checklist, git ops | Haiku 4.5 | **low** | Cheapest capable |
+
+"ultrathink" keyword = per-turn effort bump to max (Opus only).
 
 ## Non-Negotiable Principles
 
@@ -347,4 +355,4 @@ When the model is about to enter Claude's native plan mode (EnterPlanMode):
 | "The skill is overkill" | Use it. Simple things become complex |
 SKILLEOF
 
-echo "✅ Generated using-atlas SKILL.md for tier '${TIER}' (${SKILL_COUNT} skills)"
+echo "✅ Generated atlas-assist SKILL.md for tier '${TIER}' (${SKILL_COUNT} skills)"

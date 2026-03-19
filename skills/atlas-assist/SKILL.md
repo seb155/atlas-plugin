@@ -1,5 +1,5 @@
 ---
-name: using-atlas
+name: atlas-assist
 description: "Master skill for ATLAS — AXOIQ's unified AI engineering assistant. Auto-routing co-pilot with 16 subcommands, strategic HITL gates, and autonomous optimization. Replaces superpowers + atlas-dev + 18 plugins."
 ---
 
