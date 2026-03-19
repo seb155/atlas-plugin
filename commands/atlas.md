@@ -11,6 +11,7 @@ Route to the right skill based on subcommand or auto-detect from context.
 Auto-routing active — just tell me what you need.
 
 Dev:    /atlas dev | tune | review | design | verify | ship | deploy | research | present | eng
+Admin:  /atlas infra | audit
 PA:     /atlas notes | learn | profile | remind | brief
 
 What are we working on?
@@ -38,6 +39,8 @@ Then use AskUserQuestion to understand the task. If args are provided, route dir
 /atlas present [--format xlsx] # Generate PPTX/DOCX/XLSX
 /atlas eng [status|update]     # Engineering maintenance
 /atlas estimate [project]      # I&C estimation pipeline
+/atlas infra [status|audit]     # Infrastructure management (admin)
+/atlas audit [secrets|ssl|rbac] # Security audit (admin)
 /atlas context [audit|codemap] # Context audit & code maps
 /atlas hooks [create|list]     # Create hooks from patterns
 /atlas browse [url|test]       # Browser automation / E2E
@@ -77,6 +80,15 @@ Parse the first argument and invoke the matching skill:
 |-----------|-----------------|-------|
 | `tune` | experiment-loop (+ experiment-runner agent) | Opus (design) → Sonnet (iterate) |
 | `estimate` | engineering-ops (estimate mode, 4-agent pipeline) | Opus (orchestrator) |
+
+### ADMIN (atlas-admin tier only)
+
+| Subcommand | Skill(s) Invoked | Model |
+|-----------|-----------------|-------|
+| `infra` | infrastructure-ops | Sonnet |
+| `infra status` | infrastructure-ops (health sweep) | Sonnet |
+| `audit` | security-audit (full pipeline) | Sonnet |
+| `audit secrets` | security-audit (gitleaks scan) | Sonnet |
 
 ### SHIP & DEPLOY
 
