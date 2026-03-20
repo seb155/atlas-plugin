@@ -1,7 +1,7 @@
 {
   "name": "atlas",
-  "description": "ATLAS — AXOIQ's unified AI engineering assistant. 30 commands + 31 skills + 6 agents + 4 hooks. Auto-routing co-pilot with HITL gates.",
-  "version": "1.2.1",
+  "description": "ATLAS — AXOIQ's unified AI engineering assistant. 31 commands + 32 skills + 6 agents + 4 hooks. Auto-routing co-pilot with HITL gates.",
+  "version": "3.1.0",
   "author": {
     "name": "Seb Gagnon",
     "email": "seb@axoiq.com"
@@ -22,6 +22,7 @@
     "optimization",
     "auto-tune",
     "hitl",
-    "co-pilot"
+    "co-pilot",
+    "enterprise-audit"
   ]
 }

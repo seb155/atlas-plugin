@@ -9,6 +9,24 @@ cd "$SCRIPT_DIR"
 VERSION=$(cat VERSION | tr -d '[:space:]')
 TIERS="${1:-all}"
 
+# Propagate VERSION to source JSON files (keeps them in sync)
+if command -v python3 &>/dev/null; then
+  python3 -c "
+import json, sys
+v = '$VERSION'
+for f in ['.claude-plugin/plugin.json', '.claude-plugin/marketplace.json']:
+    try:
+        with open(f) as fh: d = json.load(fh)
+        if 'version' in d and d['version'] != v:
+            d['version'] = v; open(f,'w').write(json.dumps(d, indent=2) + '\n')
+        if 'plugins' in d:
+            for p in d['plugins']:
+                if 'version' in p and p['version'] != v:
+                    p['version'] = v; open(f,'w').write(json.dumps(d, indent=2) + '\n')
+    except: pass
+" 2>/dev/null || true
+fi
+
 # Resolve profile inheritance and collect all items for a field
 # Usage: resolve_field <tier> <field>
 resolve_field() {
