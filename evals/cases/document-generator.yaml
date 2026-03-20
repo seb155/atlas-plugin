@@ -1,0 +1,10 @@
+skill: document-generator
+version: '1.0'
+type: presentation
+structural:
+  min_body_lines: 20
+  required_sections: []
+  required_tool_mentions:
+  - Write
+  max_token_estimate: 3000
+  requires_hitl_gates: true

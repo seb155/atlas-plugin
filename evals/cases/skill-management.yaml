@@ -1,0 +1,9 @@
+skill: skill-management
+version: '1.0'
+type: meta
+structural:
+  min_body_lines: 15
+  required_sections: []
+  required_tool_mentions: []
+  max_token_estimate: 2000
+  requires_hitl_gates: false

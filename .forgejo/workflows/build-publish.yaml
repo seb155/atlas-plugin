@@ -32,6 +32,13 @@ jobs:
         shell: sh
         run: ./build.sh all
 
+      - name: Eval gate (structural)
+        shell: sh
+        run: |
+          pip install pyyaml pydantic httpx 2>/dev/null || pip3 install pyyaml pydantic httpx
+          python3 -m evals.runner --mode plugin --level structural --suite structural-only -o /tmp/eval.json
+          python3 -m evals.gate --min-structural 70 --max-regressions 0 /tmp/eval.json
+
       - name: Verify outputs
         shell: sh
         run: |

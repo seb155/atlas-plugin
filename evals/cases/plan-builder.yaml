@@ -1,0 +1,35 @@
+skill: plan-builder
+version: '1.0'
+type: planning
+structural:
+  min_body_lines: 40
+  required_sections:
+  - Phase
+  - Output
+  required_tool_mentions:
+  - Read
+  - Glob
+  - Agent
+  max_token_estimate: 4000
+  requires_hitl_gates: true
+behavioral:
+  cases:
+  - id: plan-001
+    name: Feature plan for auth system
+    input: Plan implementing JWT authentication with refresh tokens for Synapse.
+    expected_contains:
+    - Phase
+    - security
+    - RBAC
+    - migration
+    ground_truth: 15-section plan with security analysis, DB schema, API endpoints,
+      tests.
+  - id: plan-002
+    name: Refactoring plan
+    input: Plan refactoring the import pipeline from monolith to pipeline pattern.
+    expected_contains:
+    - Phase
+    - existing code
+    - migration
+    - rollback
+    ground_truth: Inventory of existing code, phased migration, backwards compat strategy.

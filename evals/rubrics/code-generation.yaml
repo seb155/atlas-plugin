@@ -1,0 +1,30 @@
+name: code-generation
+description: "Rubric for skills that generate code (tdd, frontend-design, hookify, plugin-builder)"
+dimensions:
+  correctness: 30
+  adherence: 25
+  completeness: 20
+  style: 15
+  safety: 10
+
+criteria:
+  correctness:
+    "5": "Output is functionally correct, all edge cases handled"
+    "3": "Core logic correct, minor issues or missing edge cases"
+    "1": "Broken logic, wrong output, or compilation errors"
+  adherence:
+    "5": "Strictly follows the skill's methodology (e.g., TDD cycle, design system)"
+    "3": "Generally follows methodology with minor deviations"
+    "1": "Ignores or contradicts the skill's core methodology"
+  completeness:
+    "5": "All steps, files, and artifacts produced as specified"
+    "3": "Main deliverable present, some secondary artifacts missing"
+    "1": "Critical steps skipped or major deliverables missing"
+  style:
+    "5": "Clean code, proper naming, follows project conventions exactly"
+    "3": "Readable code with minor style inconsistencies"
+    "1": "Messy code, no conventions followed, poor naming"
+  safety:
+    "5": "Error handling, input validation, secure patterns throughout"
+    "3": "Basic error handling, some edge cases uncovered"
+    "1": "No error handling, potential security issues, crashes on bad input"

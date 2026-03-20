@@ -1,0 +1,12 @@
+name: core
+description: "Core dev workflow skills — higher quality judge"
+skills:
+  - tdd
+  - plan-builder
+  - code-review
+  - verification
+  - enterprise-audit
+  - frontend-design
+levels: [structural, behavioral]
+judge_model: claude-sonnet-4-5-20250514
+timeout_per_case: 180

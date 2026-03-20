@@ -1,0 +1,40 @@
+skill: tdd
+version: '1.0'
+type: code-generation
+structural:
+  min_body_lines: 30
+  required_sections:
+  - Test
+  - Commit
+  required_tool_mentions:
+  - Write
+  - Edit
+  - Bash
+  max_token_estimate: 3000
+  requires_hitl_gates: false
+behavioral:
+  cases:
+  - id: tdd-001
+    name: Basic TDD for Python function
+    input: Write a function validate_isa_tag(tag) that checks ISA-5.1 tag format XX-NNNN.
+      Use TDD.
+    expected_contains:
+    - test_
+    - assert
+    - def validate
+    expected_order:
+    - failing test
+    - implementation
+    ground_truth: Test file first with 3+ cases (valid, invalid, edge), then implementation.
+  - id: tdd-002
+    name: TDD for React hook
+    input: Create a useDebounce hook with configurable delay. TDD approach.
+    expected_contains:
+    - test
+    - describe
+    - useDebounce
+    - setTimeout
+    expected_order:
+    - test file
+    - hook implementation
+    ground_truth: Test with vitest/RTL first, then implement hook with cleanup.

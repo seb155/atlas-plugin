@@ -1,0 +1,34 @@
+skill: code-review
+version: '1.0'
+type: review
+structural:
+  min_body_lines: 30
+  required_sections:
+  - Dimension
+  - Score
+  required_tool_mentions:
+  - Read
+  - Grep
+  max_token_estimate: 4000
+  requires_hitl_gates: true
+behavioral:
+  cases:
+  - id: review-001
+    name: Review a FastAPI endpoint
+    input: 'Review this PR: new endpoint POST /api/v1/instruments with CRUD operations.'
+    expected_contains:
+    - security
+    - validation
+    - test
+    - error handling
+    ground_truth: Check auth, input validation, SQL injection, error responses, test
+      coverage.
+  - id: review-002
+    name: Review React component
+    input: Review a new DataGrid component with 500 lines of code.
+    expected_contains:
+    - performance
+    - accessibility
+    - type safety
+    ground_truth: Check memoization, a11y, TypeScript strict, component size, extract
+      hooks.

@@ -1,0 +1,24 @@
+skill: verification
+version: '1.0'
+type: ops
+structural:
+  min_body_lines: 25
+  required_sections:
+  - Command
+  - Verification
+  required_tool_mentions:
+  - Bash
+  max_token_estimate: 3000
+  requires_hitl_gates: true
+behavioral:
+  cases:
+  - id: verify-001
+    name: Full verification pipeline
+    input: Run full L1-L6 verification on the instruments feature.
+    expected_contains:
+    - pytest
+    - vitest
+    - type-check
+    - security
+    ground_truth: Run all 6 levels sequentially, report per-level results, update
+      FEATURES.md.

@@ -1,0 +1,30 @@
+name: review
+description: "Rubric for review skills (code-review, enterprise-audit, security-audit)"
+dimensions:
+  thoroughness: 30
+  accuracy: 25
+  actionability: 20
+  severity_calibration: 15
+  evidence: 10
+
+criteria:
+  thoroughness:
+    "5": "All categories/dimensions covered, no blind spots"
+    "3": "Major categories covered, some minor dimensions missed"
+    "1": "Superficial review, most categories skipped"
+  accuracy:
+    "5": "All findings are accurate, no false positives or missed issues"
+    "3": "Most findings accurate, occasional false positive or missed issue"
+    "1": "Many incorrect findings, critical issues missed"
+  actionability:
+    "5": "Every finding has clear remediation steps with code/config examples"
+    "3": "Remediation direction provided but lacking specifics"
+    "1": "Findings listed without any remediation guidance"
+  severity_calibration:
+    "5": "Severity levels precisely match actual impact (CRITICAL/HIGH/MEDIUM/LOW)"
+    "3": "Generally correct severity with occasional over/under-classification"
+    "1": "Severity levels do not match actual impact"
+  evidence:
+    "5": "Every finding includes file paths, line numbers, and code examples"
+    "3": "Some evidence provided, but not consistently"
+    "1": "Findings stated without supporting evidence"

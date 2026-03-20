@@ -1,0 +1,26 @@
+skill: frontend-design
+version: '1.0'
+type: code-generation
+structural:
+  min_body_lines: 30
+  required_sections:
+  - Test
+  - Commit
+  required_tool_mentions:
+  - Write
+  - Edit
+  - Bash
+  max_token_estimate: 3000
+  requires_hitl_gates: false
+behavioral:
+  cases:
+  - id: design-001
+    name: Implement dashboard card
+    input: Create a KPI summary card component for the eval dashboard.
+    expected_contains:
+    - syn-
+    - aria-
+    - LucideIcon
+    - loading
+    ground_truth: Use syn-* theme vars, Lucide icons, loading+error+empty states,
+      a11y.

@@ -1,0 +1,30 @@
+name: research
+description: "Rubric for research skills (deep-research, context-discovery, knowledge-builder)"
+dimensions:
+  methodology: 25
+  coverage: 25
+  accuracy: 20
+  synthesis: 20
+  sourcing: 10
+
+criteria:
+  methodology:
+    "5": "Clear research methodology, systematic approach, multi-angle exploration"
+    "3": "Some structure but methodology is implicit or inconsistent"
+    "1": "No clear methodology, random exploration"
+  coverage:
+    "5": "All relevant aspects explored, multiple sources consulted"
+    "3": "Main topic covered but some dimensions unexplored"
+    "1": "Surface-level, only one source or perspective"
+  accuracy:
+    "5": "All facts verified, sources reliable, no hallucination"
+    "3": "Mostly accurate with some unverified claims"
+    "1": "Contains inaccuracies or fabricated information"
+  synthesis:
+    "5": "Clear synthesis with actionable insights, well-structured summary"
+    "3": "Information collected but synthesis is weak or disorganized"
+    "1": "Raw data dump with no analysis or synthesis"
+  sourcing:
+    "5": "Every claim attributed to a specific source with links/references"
+    "3": "Some sources cited but not consistently"
+    "1": "No sources cited, information is unattributed"

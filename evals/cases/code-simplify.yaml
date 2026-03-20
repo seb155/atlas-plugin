@@ -1,0 +1,13 @@
+skill: code-simplify
+version: '1.0'
+type: review
+structural:
+  min_body_lines: 30
+  required_sections:
+  - Dimension
+  - Score
+  required_tool_mentions:
+  - Read
+  - Grep
+  max_token_estimate: 4000
+  requires_hitl_gates: true

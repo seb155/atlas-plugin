@@ -1,0 +1,30 @@
+name: default
+description: "Default rubric for skill types without a specific rubric"
+dimensions:
+  correctness: 25
+  completeness: 25
+  clarity: 20
+  usefulness: 20
+  safety: 10
+
+criteria:
+  correctness:
+    "5": "Output is correct and matches expectations"
+    "3": "Mostly correct with minor issues"
+    "1": "Fundamentally wrong or misleading"
+  completeness:
+    "5": "All expected aspects covered, nothing missing"
+    "3": "Core content present, some secondary items missing"
+    "1": "Major gaps, critical content missing"
+  clarity:
+    "5": "Clear, well-structured, easy to follow"
+    "3": "Understandable but could be better organized"
+    "1": "Confusing, poorly structured, hard to follow"
+  usefulness:
+    "5": "Immediately actionable, solves the user's actual problem"
+    "3": "Helpful but requires additional work or clarification"
+    "1": "Not useful, doesn't address the user's needs"
+  safety:
+    "5": "No harmful actions, proper error handling, secure patterns"
+    "3": "Generally safe with minor gaps"
+    "1": "Contains risky actions without safeguards"

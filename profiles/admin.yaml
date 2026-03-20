@@ -7,6 +7,7 @@ inherits: dev
 skills:
   # Admin-exclusive
   - devops-deploy
+  - eval-lifecycle
   - experiment-loop
   - infrastructure-ops
   - security-audit
@@ -15,6 +16,7 @@ skills:
 
 commands:
   - deploy
+  - eval
   - tune
   - infra
   - audit

@@ -1,0 +1,22 @@
+skill: devops-deploy
+version: '1.0'
+type: ops
+structural:
+  min_body_lines: 25
+  required_sections:
+  - Command
+  - Verification
+  required_tool_mentions:
+  - Bash
+  max_token_estimate: 3000
+  requires_hitl_gates: true
+behavioral:
+  cases:
+  - id: deploy-001
+    name: Production deployment
+    input: Deploy latest changes to production environment.
+    expected_contains:
+    - health check
+    - rollback
+    - backup
+    ground_truth: Pre-flight checks, deploy, health verify, rollback plan documented.

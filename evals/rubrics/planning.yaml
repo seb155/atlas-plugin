@@ -1,0 +1,30 @@
+name: planning
+description: "Rubric for planning skills (plan-builder, brainstorming, executing-plans)"
+dimensions:
+  structure: 25
+  coverage: 25
+  feasibility: 20
+  actionability: 20
+  traceability: 10
+
+criteria:
+  structure:
+    "5": "All required sections present, logically ordered, well-formatted"
+    "3": "Main sections present but some disorganization or missing subsections"
+    "1": "Missing critical sections, chaotic organization"
+  coverage:
+    "5": "Problem space fully explored, alternatives considered, risks identified"
+    "3": "Main aspects covered but some blind spots"
+    "1": "Surface-level analysis, major aspects ignored"
+  feasibility:
+    "5": "Realistic effort estimates, dependencies mapped, risks mitigated"
+    "3": "Generally realistic with some gaps in estimation or dependency tracking"
+    "1": "Unrealistic scope, missing dependencies, no risk analysis"
+  actionability:
+    "5": "Clear next steps, assignable tasks, specific file paths and commands"
+    "3": "Directional guidance but some tasks are vague or unassignable"
+    "1": "Abstract recommendations with no concrete action items"
+  traceability:
+    "5": "Every decision linked to requirements, all artifacts have audit trail"
+    "3": "Some traceability but gaps in linking decisions to requirements"
+    "1": "No requirement references, no rationale documented"

@@ -1,0 +1,6 @@
+name: structural-only
+description: "Structural eval only — fast, no API cost"
+skills: ["*"]
+levels: [structural]
+judge_model: claude-haiku-4-5-20251001
+timeout_per_case: 30

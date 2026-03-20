@@ -1,0 +1,14 @@
+skill: plugin-builder
+version: '1.0'
+type: code-generation
+structural:
+  min_body_lines: 30
+  required_sections:
+  - Test
+  - Commit
+  required_tool_mentions:
+  - Write
+  - Edit
+  - Bash
+  max_token_estimate: 3000
+  requires_hitl_gates: false

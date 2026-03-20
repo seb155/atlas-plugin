@@ -1,0 +1,3260 @@
+{
+  "mode": "plugin",
+  "level": "structural",
+  "suite_name": "structural-only",
+  "target_name": "atlas-plugin",
+  "plugin_version": "3.1.0",
+  "branch": "main",
+  "commit_sha": "da27c89594820eaa80386ace4f548a356e950e56",
+  "total_items": 47,
+  "structural_avg": 96.1,
+  "behavioral_avg": 0.0,
+  "composite_avg": 96.1,
+  "grade": "A",
+  "regression_count": 0,
+  "scores": [
+    {
+      "item_name": "atlas-assist",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 100.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "277 lines; 32 sections; 6 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~2873 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: audit, security"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of atlas-assist: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "brainstorming",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 92.2,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "80 lines; 9 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "weight": 15,
+          "details": "missing sections: Phase"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~717 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "1 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 2/5"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of brainstorming: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "browser-automation",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "124 lines; 11 sections; 7 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~855 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of browser-automation: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "code-review",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 96.8,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "154 lines; 19 sections; 6 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "weight": 15,
+          "details": "missing sections: Dimension"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1249 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Read, Bash, git (3/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of code-review: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "code-simplify",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 90.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "76 lines; 10 sections"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 70.0,
+          "weight": 15,
+          "details": "missing sections: Dimension, Score"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~797 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 2/5"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of code-simplify: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "composition-patterns",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 90.2,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 55.0,
+          "weight": 15,
+          "details": "body too short (20 < 30 lines); few sections (1)"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~199 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of composition-patterns: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "context-discovery",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 97.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "84 lines; 13 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 2 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~970 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 1/4"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: RBAC, audit, security, observab, structlog"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of context-discovery: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "decision-log",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 94.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "36 lines; 3 sections; 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~337 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 0/4"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of decision-log: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "deep-research",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 94.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "113 lines; 17 sections; 4 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 70.0,
+          "weight": 15,
+          "details": "missing sections: Method, Output"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~861 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: WebSearch, WebFetch (2/4)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of deep-research: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "devops-deploy",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 96.8,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "79 lines; 8 sections; 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "weight": 15,
+          "details": "missing sections: Verification"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~845 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Bash, docker, ssh, curl, deploy (5/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of devops-deploy: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "document-generator",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "121 lines; 15 sections; 3 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1029 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of document-generator: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "engineering-ops",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "67 lines; 6 sections; 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~788 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of engineering-ops: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "enterprise-audit",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 100.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "228 lines; 16 sections; 5 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 2 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~2278 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Read, Bash, git (3/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: project_id, RBAC, audit, security, observab, structlog, backup"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of enterprise-audit: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "eval-lifecycle",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 97.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "109 lines; 14 sections; 6 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~996 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 0/4"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: audit, security, multi-tenant, observab"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of eval-lifecycle: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "executing-plans",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 97.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "108 lines; 15 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 2 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~911 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "1 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Read, Agent, AskUserQuestion (3/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of executing-plans: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "experiment-loop",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "86 lines; 10 sections"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~837 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of experiment-loop: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "feature-board",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 94.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "125 lines; 9 sections; 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 95.0,
+          "weight": 10,
+          "details": "has TODO"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 60.0,
+          "weight": 10,
+          "details": "1/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1152 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of feature-board: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "finishing-branch",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 94.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "99 lines; 11 sections; 3 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 70.0,
+          "weight": 15,
+          "details": "missing sections: Command, Verification"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~877 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Bash, docker, curl, deploy (4/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of finishing-branch: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "frontend-design",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 94.2,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "65 lines; 9 sections"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "weight": 15,
+          "details": "missing sections: Test"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~769 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 1/6"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of frontend-design: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "git-worktrees",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "71 lines; 10 sections; 5 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~454 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of git-worktrees: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "gmining-excel",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 90.2,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 55.0,
+          "weight": 15,
+          "details": "body too short (18 < 30 lines); few sections (1)"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~192 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of gmining-excel: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "hookify",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 94.8,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "83 lines; 8 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "weight": 15,
+          "details": "missing sections: Commit"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~677 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Write, Edit, Bash, test (4/6)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of hookify: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "infrastructure-ops",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 98.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "106 lines; 13 sections; 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 2 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1245 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: docker, curl, deploy (3/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: audit, backup"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of infrastructure-ops: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "knowledge-builder",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 92.2,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "78 lines; 8 sections"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "weight": 15,
+          "details": "missing sections: Output"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~803 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 1/4"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of knowledge-builder: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "knowledge-manager",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 97.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "91 lines; 13 sections; 6 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 2 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~977 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 0/4"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: project_id"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of knowledge-manager: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "morning-brief",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "191 lines; 16 sections; 4 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1389 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "1 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of morning-brief: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "note-capture",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "156 lines; 13 sections; 7 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 95.0,
+          "weight": 10,
+          "details": "has TODO"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1240 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: project_id"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of note-capture: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "opex-dashboard",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 96.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "53 lines; 4 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 60.0,
+          "weight": 10,
+          "details": "1/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~442 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: backup"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of opex-dashboard: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "plan-builder",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 98.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "83 lines; 10 sections"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 2 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~940 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Read, Agent, AskUserQuestion (3/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: RBAC, audit, security"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of plan-builder: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "platform-update",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 100.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "211 lines; 13 sections; 7 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1946 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: audit"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of platform-update: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "plugin-builder",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 92.2,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "91 lines; 9 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "weight": 15,
+          "details": "missing sections: Commit"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~895 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 2/6"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of plugin-builder: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "react-best-practices",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 93.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 73.0,
+          "weight": 15,
+          "details": "body too short (26 < 30 lines); few sections (1); 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~290 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of react-best-practices: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "reminder-scheduler",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "169 lines; 17 sections; 9 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1117 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of reminder-scheduler: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "resource-planner",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 95.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "38 lines; 3 sections; 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 60.0,
+          "weight": 10,
+          "details": "1/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~298 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "1 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of resource-planner: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "rollout-tracker",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 95.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "44 lines; 3 sections; 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 60.0,
+          "weight": 10,
+          "details": "1/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~332 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of rollout-tracker: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "scope-check",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 92.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "60 lines; 4 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 60.0,
+          "weight": 10,
+          "details": "1/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~488 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "1 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 0/4"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of scope-check: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "security-audit",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 95.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "125 lines; 15 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 70.0,
+          "weight": 15,
+          "details": "missing sections: Dimension, Score"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1267 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Read, Grep, git (3/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: RBAC, audit, security"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of security-audit: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "session-retrospective",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 97.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "73 lines; 10 sections"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~799 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "1 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 1/4"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: security"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of session-retrospective: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "skill-management",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "118 lines; 14 sections; 5 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~932 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Read, Write (2/4)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of skill-management: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "subagent-dispatch",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 97.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "143 lines; 15 sections; 6 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1139 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of subagent-dispatch: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "swimlane-tracker",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 98.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "50 lines; 4 sections; 1 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~537 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "1 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: RBAC, audit, security, structlog"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of swimlane-tracker: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "systematic-debugging",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 92.2,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "86 lines; 12 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 85.0,
+          "weight": 15,
+          "details": "missing sections: Verification"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~579 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "1 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 75.0,
+          "weight": 10,
+          "details": "low tool coverage: 1/5"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of systematic-debugging: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "tdd",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 99.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "71 lines; 9 sections; 5 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 2 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 disclosure levels (target: 3)"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~457 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Write, Bash, pytest, vitest, test (5/6)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of tdd: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "test-orchestrator",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 98.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "161 lines; 15 sections; 10 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1671 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: RBAC, security"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of test-orchestrator: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "user-profiler",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 98.0,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "67 lines; 6 sections"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~611 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "2 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: audit"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of user-profiler: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "verification",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 95.5,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 100.0,
+          "weight": 15,
+          "details": "135 lines; 11 sections; 2 code blocks"
+        },
+        {
+          "name": "coherence",
+          "score": 95.0,
+          "weight": 10,
+          "details": "has TODO"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 2 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 60.0,
+          "weight": 10,
+          "details": "1/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~1481 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "3 HITL gate indicators"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100.0,
+          "weight": 10,
+          "details": "tools: Bash, docker, curl, deploy (4/5)"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 100.0,
+          "weight": 10,
+          "details": "enterprise keywords: RBAC, security"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of verification: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    },
+    {
+      "item_name": "web-design-guidelines",
+      "eval_level": "structural",
+      "case_id": null,
+      "composite": 90.2,
+      "dimensions": [
+        {
+          "name": "body_quality",
+          "score": 55.0,
+          "weight": 15,
+          "details": "body too short (20 < 30 lines); few sections (1)"
+        },
+        {
+          "name": "coherence",
+          "score": 100.0,
+          "weight": 10,
+          "details": "coherent structure"
+        },
+        {
+          "name": "completeness",
+          "score": 100.0,
+          "weight": 15,
+          "details": "all 0 required sections present"
+        },
+        {
+          "name": "progressive_disclosure",
+          "score": 80.0,
+          "weight": 10,
+          "details": "2/3 disclosure levels"
+        },
+        {
+          "name": "cross_references",
+          "score": 100.0,
+          "weight": 10,
+          "details": "all references valid"
+        },
+        {
+          "name": "token_budget",
+          "score": 100.0,
+          "weight": 10,
+          "details": "~183 tokens"
+        },
+        {
+          "name": "hitl_coverage",
+          "score": 100.0,
+          "weight": 10,
+          "details": "no HITL required"
+        },
+        {
+          "name": "tool_patterns",
+          "score": 100,
+          "weight": 10,
+          "details": "no specific tools expected"
+        },
+        {
+          "name": "enterprise_compliance",
+          "score": 90.0,
+          "weight": 10,
+          "details": "no enterprise keywords found"
+        }
+      ],
+      "grade": "A",
+      "reasoning": "Structural eval of web-design-guidelines: 9 dimensions",
+      "judge_model": null,
+      "judge_tokens": 0,
+      "baseline_composite": null,
+      "delta": null,
+      "is_regression": false
+    }
+  ]
+}

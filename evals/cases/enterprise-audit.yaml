@@ -1,0 +1,24 @@
+skill: enterprise-audit
+version: '1.0'
+type: review
+structural:
+  min_body_lines: 30
+  required_sections:
+  - Dimension
+  - Score
+  required_tool_mentions:
+  - Read
+  - Grep
+  max_token_estimate: 4000
+  requires_hitl_gates: true
+behavioral:
+  cases:
+  - id: audit-001
+    name: Full enterprise audit
+    input: Run enterprise audit on Synapse for G Mining due diligence.
+    expected_contains:
+    - security
+    - multi-tenant
+    - grade
+    - remediation
+    ground_truth: 14-dimension audit, weighted scoring, A-F grade, remediation plan.

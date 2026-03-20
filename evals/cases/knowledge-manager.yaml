@@ -1,0 +1,13 @@
+skill: knowledge-manager
+version: '1.0'
+type: research
+structural:
+  min_body_lines: 25
+  required_sections:
+  - Method
+  - Output
+  required_tool_mentions:
+  - WebSearch
+  - Read
+  max_token_estimate: 3000
+  requires_hitl_gates: false

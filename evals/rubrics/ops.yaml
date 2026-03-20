@@ -1,0 +1,30 @@
+name: ops
+description: "Rubric for ops skills (devops-deploy, infrastructure-ops, verification, finishing-branch)"
+dimensions:
+  completeness: 25
+  safety: 25
+  correctness: 20
+  idempotency: 15
+  observability: 15
+
+criteria:
+  completeness:
+    "5": "All steps present in correct order, no gaps in the pipeline"
+    "3": "Main steps present, some optional/edge-case steps missing"
+    "1": "Critical steps missing, pipeline incomplete"
+  safety:
+    "5": "HITL gates, rollback plan, pre-flight checks, destructive action warnings"
+    "3": "Some safety measures but missing rollback or HITL gates"
+    "1": "No safety measures, destructive actions without confirmation"
+  correctness:
+    "5": "All commands, configs, and paths are correct and up-to-date"
+    "3": "Mostly correct with minor typos or outdated references"
+    "1": "Commands are wrong, configs are invalid, paths don't exist"
+  idempotency:
+    "5": "Safe to re-run without side effects, checks state before acting"
+    "3": "Mostly idempotent but some steps may fail on re-run"
+    "1": "Re-running causes errors, duplicates, or data corruption"
+  observability:
+    "5": "Structured logging, health checks, metrics, error reporting at every step"
+    "3": "Basic logging present, some gaps in monitoring"
+    "1": "No logging, no health checks, failures are silent"

@@ -1,0 +1,12 @@
+skill: infrastructure-ops
+version: '1.0'
+type: ops
+structural:
+  min_body_lines: 25
+  required_sections:
+  - Command
+  - Verification
+  required_tool_mentions:
+  - Bash
+  max_token_estimate: 3000
+  requires_hitl_gates: true

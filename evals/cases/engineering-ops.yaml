@@ -1,0 +1,10 @@
+skill: engineering-ops
+version: '1.0'
+type: domain
+structural:
+  min_body_lines: 20
+  required_sections: []
+  required_tool_mentions:
+  - Read
+  max_token_estimate: 3000
+  requires_hitl_gates: false

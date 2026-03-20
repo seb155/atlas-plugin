@@ -1,0 +1,6 @@
+name: full
+description: "Complete eval of all skills — structural + behavioral"
+skills: ["*"]
+levels: [structural, behavioral]
+judge_model: claude-haiku-4-5-20251001
+timeout_per_case: 120

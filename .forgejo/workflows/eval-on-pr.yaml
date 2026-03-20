@@ -1,0 +1,70 @@
+name: Eval Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'agents/**'
+      - 'evals/**'
+      - 'profiles/**'
+  workflow_dispatch:
+
+jobs:
+  structural-eval:
+    name: Structural eval gate
+    runs-on: bun
+    steps:
+      - name: Checkout
+        shell: sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@192.168.10.75:3000/${{ github.repository }}.git .
+
+      - name: Install Python deps
+        shell: sh
+        run: pip install pyyaml pydantic httpx 2>/dev/null || pip3 install pyyaml pydantic httpx
+
+      - name: Run structural eval
+        shell: sh
+        run: |
+          python3 -m evals.runner \
+            --mode plugin \
+            --level structural \
+            --suite structural-only \
+            -o /tmp/eval-results.json
+
+      - name: Check release gate
+        shell: sh
+        run: |
+          python3 -m evals.gate \
+            --min-structural 70 \
+            --max-regressions 0 \
+            /tmp/eval-results.json
+
+      - name: Submit to Synapse (optional)
+        shell: sh
+        if: always()
+        env:
+          ATLAS_HOOKS_TOKEN: ${{ secrets.ATLAS_HOOKS_TOKEN }}
+          SYNAPSE_API: ${{ secrets.SYNAPSE_API_URL }}
+        run: |
+          if [ -n "${SYNAPSE_API}" ] && [ -n "${ATLAS_HOOKS_TOKEN}" ]; then
+            python3 -c "
+          import json, httpx, sys
+          data = json.load(open('/tmp/eval-results.json'))
+          try:
+              resp = httpx.post(
+                  '${SYNAPSE_API}/api/v1/admin/eval/runs',
+                  json=data,
+                  headers={'X-Atlas-Token': '${ATLAS_HOOKS_TOKEN}'},
+                  timeout=30,
+              )
+              print(f'Submitted to Synapse: {resp.status_code}')
+          except Exception as e:
+              print(f'Synapse submit skipped: {e}')
+          "
+          else
+            echo "Synapse API not configured — skipping submission"
+          fi

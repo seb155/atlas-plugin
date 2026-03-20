@@ -1,0 +1,14 @@
+skill: brainstorming
+version: '1.0'
+type: planning
+structural:
+  min_body_lines: 40
+  required_sections:
+  - Phase
+  - Output
+  required_tool_mentions:
+  - Read
+  - Glob
+  - Agent
+  max_token_estimate: 4000
+  requires_hitl_gates: true

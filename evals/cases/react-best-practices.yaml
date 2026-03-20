@@ -1,0 +1,9 @@
+skill: react-best-practices
+version: '1.0'
+type: reference
+structural:
+  min_body_lines: 30
+  required_sections: []
+  required_tool_mentions: []
+  max_token_estimate: 6000
+  requires_hitl_gates: false
