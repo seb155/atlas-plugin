@@ -368,6 +368,7 @@ def main() -> None:
     parser.add_argument("--output", "-o", type=Path, help="Output JSON path")
     parser.add_argument("--baseline", action="store_true", help="Save result as baseline")
     parser.add_argument("--compare", type=Path, help="Baseline JSON to compare against")
+    parser.add_argument("--experiment", type=Path, help="Run A/B experiment from config YAML")
     parser.add_argument("--plugin-root", type=Path, help="Override plugin root path")
     parser.add_argument("-v", "--verbose", action="store_true")
 
@@ -377,6 +378,18 @@ def main() -> None:
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(levelname)s: %(message)s",
     )
+
+    # Experiment mode
+    if args.experiment:
+        from .experiment import load_experiment_config, print_experiment_report, run_experiment
+
+        config = load_experiment_config(args.experiment)
+        root = args.plugin_root or _find_plugin_root()
+        report = asyncio.run(run_experiment(config, root))
+        print_experiment_report(report)
+        if report.status != "completed":
+            sys.exit(1)
+        return
 
     result = asyncio.run(
         run_eval(
