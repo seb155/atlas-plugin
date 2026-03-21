@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.11.0 (2026-03-21)
+
+### ✨ Features
+- feat(plugin): add youtube-transcript skill + ci command + gitignore pycache
+
+
+
 ## v3.10.0 (2026-03-21)
 
 ### ✨ Features
