@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.12.0 (2026-03-21)
+
+### ✨ Features
+- feat(setup): add showClearContextOnPlanAccept validation to onboarding + doctor
+
+
+
 ## v3.11.2 (2026-03-21)
 
 ### 🐛 Bug Fixes
