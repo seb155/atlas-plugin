@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.8.0 (2026-03-21)
+
+### ✨ Features
+- feat(ci): custom ci-atlas Docker image + simplified workflow
+
+
+
 ## v3.7.0 (2026-03-21)
 
 ### ✨ Features
