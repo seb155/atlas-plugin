@@ -7,6 +7,9 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && p
 SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"
 AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
+# Source user env (tokens, API keys) if available
+[ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
+
 # Detect the plugin's built-in tier from plugin.json or install path
 detect_plugin_tier() {
   local plugin_name
