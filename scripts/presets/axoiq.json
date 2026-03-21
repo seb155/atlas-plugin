@@ -32,7 +32,7 @@
   },
   "secrets": {
     "provider": "vaultwarden",
-    "vaultwarden_server": "https://vault.home.axoiq.com"
+    "vaultwarden_server": "https://vaultwarden.home.s-gagnon.com"
   },
   "identity": {
     "co_author_name": "ATLAS AI",

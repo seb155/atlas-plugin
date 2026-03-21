@@ -9,7 +9,7 @@
     {
       "name": "atlas",
       "description": "ATLAS \u2014 AXOIQ unified AI engineering assistant. 30 commands + 31 skills + 6 agents + 4 hooks. Auto-routing co-pilot with HITL gates.",
-      "version": "3.4.0",
+      "version": "3.5.0",
       "source": {
         "source": "url",
         "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git"
