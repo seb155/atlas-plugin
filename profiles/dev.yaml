@@ -54,6 +54,7 @@ commands:
   - end
   - handoff
   - pickup
+  - ci
 
 agents:
   - plan-architect

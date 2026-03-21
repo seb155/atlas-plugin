@@ -32,6 +32,7 @@ commands:
   - update
   - dev-self
   - vault
+  - ci
 
 agents: []
 
