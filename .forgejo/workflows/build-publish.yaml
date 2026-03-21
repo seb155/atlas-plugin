@@ -72,10 +72,37 @@ jobs:
           wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.44.6/yq_linux_amd64"
           chmod +x /usr/local/bin/yq
 
-      - name: Run plugin tests
+      - name: Build for E2E tests
+        shell: sh
+        run: ./build.sh all
+
+      - name: Run ALL tests (structural + E2E + regression)
         shell: sh
         run: |
-          cd tests && python3 -m pytest . -x -q --tb=short
+          python3 -m pytest tests/ -x -q --tb=short --maxfail=3
+
+      - name: E2E hook smoke tests
+        shell: sh
+        run: |
+          echo '{}' | CLAUDE_PLUGIN_ROOT=. hooks/session-start | tail -1 | python3 -c "
+          import sys,json; d=json.load(sys.stdin); assert d['continue'] == True; print('session-start: OK')
+          "
+          echo '{"file_path":"/dev/null"}' | hooks/enterprise-check && echo "enterprise-check: OK"
+          echo '{}' | CLAUDE_PLUGIN_ROOT=. hooks/post-compact | grep -q "ATLAS" && echo "post-compact: OK"
+          scripts/detect-platform.sh | python3 -c "import sys,json; json.load(sys.stdin); print('detect-platform: OK')"
+          echo "All E2E smoke tests passed"
+
+      - name: Regression gate
+        shell: sh
+        run: |
+          SKILLS=$(find dist/atlas-admin/skills -name 'SKILL.md' | wc -l)
+          CMDS=$(find dist/atlas-admin/commands -name '*.md' | wc -l)
+          AGENTS=$(find dist/atlas-admin/agents -name 'AGENT.md' 2>/dev/null | wc -l)
+          echo "Skills: ${SKILLS} | Commands: ${CMDS} | Agents: ${AGENTS}"
+          test ${SKILLS} -ge 40 || { echo "REGRESSION: skill count dropped below 40"; exit 1; }
+          test ${CMDS} -ge 38 || { echo "REGRESSION: command count dropped below 38"; exit 1; }
+          test ${AGENTS} -ge 6 || { echo "REGRESSION: agent count dropped below 6"; exit 1; }
+          echo "Regression gate passed"
 
   publish:
     name: Publish to Forgejo Package Registry
