@@ -1,0 +1,41 @@
+{
+  "$schema": "atlas-config-v1",
+  "preset": "axoiq",
+  "organization": "AXOIQ Inc.",
+  "services": {
+    "forgejo": {
+      "local_url": "https://forgejo.home.axoiq.com",
+      "external_url": "https://forgejo.axoiq.com",
+      "api_path": "/api/v1"
+    },
+    "synapse": {
+      "url": "http://localhost:8001",
+      "enabled": true
+    },
+    "authentik": {
+      "url": "https://auth.home.axoiq.com",
+      "enabled": true
+    },
+    "cloud": {
+      "url": "https://cloud.axoiq.com",
+      "enabled": true
+    },
+    "hub": {
+      "local_url": "https://synapse.home.axoiq.com",
+      "external_url": "https://synapse.axoiq.com"
+    }
+  },
+  "auth": {
+    "admin_groups": ["axoiq-admins"],
+    "dev_groups": ["axoiq-devs"],
+    "user_groups": ["axoiq-users"]
+  },
+  "secrets": {
+    "provider": "vaultwarden",
+    "vaultwarden_server": "https://vault.home.axoiq.com"
+  },
+  "identity": {
+    "co_author_name": "ATLAS AI",
+    "co_author_email": "atlas@axoiq.com"
+  }
+}

@@ -49,7 +49,26 @@ If tests FAIL → stop. Fix first.
 
 ```bash
 source ~/.env
-FORGEJO_API="http://192.168.10.75:3000/api/v1"
+# Config helper — read from ~/.atlas/config.json with fallback
+atlas_config() {
+  local key="$1" fallback="${2:-}"
+  python3 -c "
+import json, os
+try:
+    with open(os.path.expanduser('~/.atlas/config.json')) as f:
+        d = json.load(f)
+    keys = '$key'.split('.')
+    v = d
+    for k in keys: v = v[k]
+    if isinstance(v, list): print(' '.join(v))
+    else: print(v)
+except: print('$fallback')
+" 2>/dev/null || echo "$fallback"
+}
+
+FORGEJO_URL=$(atlas_config "services.forgejo.local_url" "")
+FORGEJO_API_PATH=$(atlas_config "services.forgejo.api_path" "/api/v1")
+FORGEJO_API="${FORGEJO_URL}${FORGEJO_API_PATH}"
 # Create:  POST $FORGEJO_API/repos/{owner}/{repo}/pulls  {title, body, head, base}
 # Merge:   POST $FORGEJO_API/repos/{owner}/{repo}/pulls/{N}/merge  {"do":"merge"}
 # CI:      GET  $FORGEJO_API/repos/{owner}/{repo}/commits/{SHA}/status
@@ -57,7 +76,7 @@ FORGEJO_API="http://192.168.10.75:3000/api/v1"
 
 | Gotcha | Detail |
 |--------|--------|
-| API URL | NEVER `https://forgejo.axoiq.com` — CF Access blocks |
+| API URL | Use local_url from config — external URL may be blocked by CF Access |
 | Token | `$FORGEJO_TOKEN` from `~/.env` — always source first |
 | Merge field | lowercase `"do":"merge"` — uppercase returns 405 |
 | Full ref | `.claude/references/forgejo-api.md` |
@@ -82,7 +101,7 @@ FORGEJO_API="http://192.168.10.75:3000/api/v1"
 | Build/CI | `build`/`ci` | Tool |
 | Plans | `plan` | Subsystem |
 
-Format: `<type>(<scope>): <summary>` + `Co-Authored-By: ATLAS AI <atlas@sgagnon.dev>`
+Format: `<type>(<scope>): <summary>` + `Co-Authored-By: $(atlas_config "identity.co_author_name" "ATLAS AI") <$(atlas_config "identity.co_author_email" "")>`
 
 ### Push
 

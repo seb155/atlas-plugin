@@ -10,6 +10,23 @@ AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 # Source user env (tokens, API keys) if available
 [ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
 
+# Read value from ~/.atlas/config.json with fallback
+atlas_config() {
+  local key="$1" fallback="${2:-}"
+  python3 -c "
+import json, os
+try:
+    with open(os.path.expanduser('~/.atlas/config.json')) as f:
+        d = json.load(f)
+    keys = '$key'.split('.')
+    v = d
+    for k in keys: v = v[k]
+    if isinstance(v, list): print(' '.join(v))
+    else: print(v)
+except: print('$fallback')
+" 2>/dev/null || echo "$fallback"
+}
+
 # Detect the plugin's built-in tier from plugin.json or install path
 detect_plugin_tier() {
   local plugin_name
@@ -38,18 +55,31 @@ detect_role() {
 
   # Priority 1: Authentik API (if token available)
   if [ -n "${AUTHENTIK_TOKEN:-}" ]; then
+    local authentik_url_cfg admin_groups dev_groups
+    authentik_url_cfg=$(atlas_config "services.authentik.url" "")
+    admin_groups=$(atlas_config "auth.admin_groups" "admins")
+    dev_groups=$(atlas_config "auth.dev_groups" "developers")
+
     local groups
     groups=$(curl -sf --max-time 3 \
-      "${AUTHENTIK_URL:-https://auth.home.axoiq.com}/api/v3/core/users/me/" \
+      "${AUTHENTIK_URL:-$authentik_url_cfg}/api/v3/core/users/me/" \
       -H "Authorization: Bearer $AUTHENTIK_TOKEN" \
       | grep -o '"name":"[^"]*"' | sed 's/"name":"//;s/"//' 2>/dev/null || true)
 
     if [ -n "$groups" ]; then
       source="authentik"
-      if echo "$groups" | grep -q "axoiq-admins"; then
-        role="admin"; details="group=axoiq-admins"
-      elif echo "$groups" | grep -q "axoiq-devs"; then
-        role="dev"; details="group=axoiq-devs"
+      # Check admin groups (space-separated from config)
+      local is_admin="false" is_dev="false"
+      for ag in $admin_groups; do
+        echo "$groups" | grep -q "$ag" && is_admin="true" && break
+      done
+      for dg in $dev_groups; do
+        echo "$groups" | grep -q "$dg" && is_dev="true" && break
+      done
+      if [ "$is_admin" = "true" ]; then
+        role="admin"; details="group=${admin_groups}"
+      elif [ "$is_dev" = "true" ]; then
+        role="dev"; details="group=${dev_groups}"
       else
         role="user"; details="group=other"
       fi

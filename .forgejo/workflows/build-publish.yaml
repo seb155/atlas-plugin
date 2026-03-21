@@ -20,8 +20,9 @@ jobs:
         shell: sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
-          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@192.168.10.75:3000/${{ github.repository }}.git .
+          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
 
       - name: Install yq
         shell: sh
@@ -58,8 +59,9 @@ jobs:
         shell: sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
-          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@192.168.10.75:3000/${{ github.repository }}.git .
+          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
 
       - name: Install Python + test deps
         shell: sh
@@ -114,8 +116,9 @@ jobs:
         shell: sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
-          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@192.168.10.75:3000/${{ github.repository }}.git .
+          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
 
       - name: Install yq
         shell: sh

@@ -92,20 +92,42 @@ Auto-fix suggestions:
 For each token, check existence AND API validity:
 
 ```bash
+# Config helper — read from ~/.atlas/config.json with fallback
+atlas_config() {
+  local key="$1" fallback="${2:-}"
+  python3 -c "
+import json, os
+try:
+    with open(os.path.expanduser('~/.atlas/config.json')) as f:
+        d = json.load(f)
+    keys = '$key'.split('.')
+    v = d
+    for k in keys: v = v[k]
+    if isinstance(v, list): print(' '.join(v))
+    else: print(v)
+except: print('$fallback')
+" 2>/dev/null || echo "$fallback"
+}
+
+SYNAPSE_URL=$(atlas_config "services.synapse.url" "http://localhost:8001")
+FORGEJO_URL=$(atlas_config "services.forgejo.local_url" "")
+FORGEJO_API_PATH=$(atlas_config "services.forgejo.api_path" "/api/v1")
+AUTHENTIK_URL_CFG=$(atlas_config "services.authentik.url" "")
+
 # SYNAPSE_TOKEN — Backend API access
 [ -n "${SYNAPSE_TOKEN:-}" ] && \
   curl -sf -m 3 -H "Authorization: Bearer $SYNAPSE_TOKEN" \
-  http://localhost:8001/api/v1/health >/dev/null 2>&1
+  "${SYNAPSE_URL}/api/v1/health" >/dev/null 2>&1
 
 # FORGEJO_TOKEN — Git hosting API
-[ -n "${FORGEJO_TOKEN:-}" ] && \
+[ -n "${FORGEJO_TOKEN:-}" ] && [ -n "$FORGEJO_URL" ] && \
   curl -sf -m 3 -H "Authorization: token $FORGEJO_TOKEN" \
-  http://192.168.10.75:3000/api/v1/user >/dev/null 2>&1
+  "${FORGEJO_URL}${FORGEJO_API_PATH}/user" >/dev/null 2>&1
 
 # AUTHENTIK_TOKEN — SSO (optional)
-[ -n "${AUTHENTIK_TOKEN:-}" ] && \
+[ -n "${AUTHENTIK_TOKEN:-}" ] && [ -n "$AUTHENTIK_URL_CFG" ] && \
   curl -sf -m 3 -H "Authorization: Bearer $AUTHENTIK_TOKEN" \
-  "${AUTHENTIK_URL:-https://auth.home.axoiq.com}/api/v3/core/users/me/" >/dev/null 2>&1
+  "${AUTHENTIK_URL:-$AUTHENTIK_URL_CFG}/api/v3/core/users/me/" >/dev/null 2>&1
 
 # GEMINI_API_KEY — existence only
 [ -n "${GEMINI_API_KEY:-}" ]
@@ -123,7 +145,7 @@ curl -sf -m 3 http://localhost:8001/health             # 1. Synapse backend
 docker ps --filter name=synapse -q 2>/dev/null | wc -l  # 2. Synapse containers (>0)
 pg_isready -h localhost -p 5433 2>/dev/null             # 3. PostgreSQL
 docker exec synapse-valkey redis-cli ping 2>/dev/null   # 4. Valkey
-curl -sf -m 3 http://192.168.10.75:3000/api/v1/version # 5. Forgejo
+curl -sf -m 3 "${FORGEJO_URL}${FORGEJO_API_PATH}/version" # 5. Forgejo (URL from config)
 ```
 
 Skip Docker checks if `hostname -s` = `ATL-dev` (VM has no Docker).

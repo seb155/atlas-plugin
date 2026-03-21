@@ -66,12 +66,12 @@ options:
 4. Save to `~/.atlas/wifi-locations.json`:
 ```json
 {
-  "name": "Home — Mont-Saint-Hilaire",
-  "bssids": ["9C:05:D6:64:8C:BD", "AA:05:D6:64:8C:BD"],
+  "name": "Home — {city}",
+  "bssids": ["{BSSID_1}", "{BSSID_2}"],
   "trust": "trusted",
-  "city": "Mont-Saint-Hilaire",
-  "region": "Quebec",
-  "country": "Canada"
+  "city": "{city}",
+  "region": "{region}",
+  "country": "{country}"
 }
 ```
 
@@ -89,10 +89,10 @@ No need for /atlas location add explicitly — natural conversation works.
 ## /atlas location — Show Current
 
 ```
-🏛️ ATLAS │ 📍 LOCATION │ Mont-Saint-Hilaire, QC, Canada
-   └─ Network: local (trusted) │ SSID: SG_Home │ IP: 172.16.4.1
-   └─ Forgejo: forgejo.home.axoiq.com │ Synapse: localhost:8001
-   └─ Geo source: user_config (street precision)
+🏛️ ATLAS │ 📍 LOCATION │ {city}, {region}, {country}
+   └─ Network: {network} ({trust}) │ SSID: {ssid} │ IP: {local_ip}
+   └─ Forgejo: {forgejo_url} │ Synapse: {synapse_url}
+   └─ Geo source: {geo_source} ({geo_precision} precision)
 ```
 
 ## Storage

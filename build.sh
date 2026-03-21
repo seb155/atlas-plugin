@@ -134,7 +134,7 @@ build_tier() {
   done
 
   # Copy runtime scripts (exclude build-only scripts)
-  local runtime_scripts=(parse-features.sh atlas-alert-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh)
+  local runtime_scripts=(parse-features.sh atlas-alert-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh)
   mkdir -p "$output/scripts"
   for script in "${runtime_scripts[@]}"; do
     if [ -f "scripts/$script" ]; then
@@ -145,6 +145,12 @@ build_tier() {
 
   # Copy VERSION file
   cp VERSION "$output/VERSION"
+
+  # Copy config presets
+  if [ -d "scripts/presets" ]; then
+    mkdir -p "$output/scripts/presets"
+    cp scripts/presets/*.json "$output/scripts/presets/" 2>/dev/null || true
+  fi
 
   # Generate tier-specific atlas-assist SKILL.md
   mkdir -p "$output/skills/atlas-assist"

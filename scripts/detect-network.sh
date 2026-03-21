@@ -13,28 +13,59 @@ set -euo pipefail
 
 ATLAS_DIR="${HOME}/.atlas"
 
+# Read value from ~/.atlas/config.json with fallback
+atlas_config() {
+  local key="$1" fallback="${2:-}"
+  python3 -c "
+import json, os
+try:
+    with open(os.path.expanduser('~/.atlas/config.json')) as f:
+        d = json.load(f)
+    keys = '$key'.split('.')
+    v = d
+    for k in keys: v = v[k]
+    if isinstance(v, list): print(' '.join(v))
+    else: print(v)
+except: print('$fallback')
+" 2>/dev/null || echo "$fallback"
+}
+
 detect_network() {
   local network="offline"
   local forgejo_url="" synapse_url="" authentik_url=""
 
+  # Read service URLs from config
+  local forgejo_local forgejo_ext forgejo_api_path
+  local synapse_prod synapse_ext
+  local authentik_local authentik_ext
+  forgejo_local=$(atlas_config "services.forgejo.local_url" "")
+  forgejo_ext=$(atlas_config "services.forgejo.external_url" "")
+  forgejo_api_path=$(atlas_config "services.forgejo.api_path" "/api/v1")
+  synapse_prod=$(atlas_config "services.synapse.prod_url" "")
+  synapse_ext=$(atlas_config "services.synapse.external_url" "")
+  authentik_local=$(atlas_config "services.authentik.url" "")
+  authentik_ext=$(atlas_config "services.authentik.external_url" "")
+
   # ─── Network Detection ────────────────────────────────────────
-  # Priority 1: Local network (home LAN — *.home.axoiq.com)
-  if curl -sf --max-time 2 https://forgejo.home.axoiq.com/api/v1/version >/dev/null 2>&1; then
+  # Priority 1: Local network (home LAN)
+  if [ -n "$forgejo_local" ] && curl -sf --max-time 2 "${forgejo_local}${forgejo_api_path}/version" >/dev/null 2>&1; then
     network="local"
-    forgejo_url="https://forgejo.home.axoiq.com"
-    synapse_url="https://synapse.home.axoiq.com"
-    authentik_url="https://auth.home.axoiq.com"
-  # Priority 2: External (Cloudflare — *.axoiq.com)
-  elif curl -sf --max-time 3 https://forgejo.axoiq.com/api/v1/version >/dev/null 2>&1; then
+    forgejo_url="$forgejo_local"
+    synapse_url="$synapse_prod"
+    authentik_url="$authentik_local"
+  # Priority 2: External (Cloudflare)
+  elif [ -n "$forgejo_ext" ] && curl -sf --max-time 3 "${forgejo_ext}${forgejo_api_path}/version" >/dev/null 2>&1; then
     network="external"
-    forgejo_url="https://forgejo.axoiq.com"
-    synapse_url="https://synapse.axoiq.com"
-    authentik_url="https://auth.axoiq.com"
+    forgejo_url="$forgejo_ext"
+    synapse_url="$synapse_ext"
+    authentik_url="$authentik_ext"
   fi
 
   # Synapse localhost always takes priority if available
-  if curl -sf --max-time 2 http://localhost:8001/health >/dev/null 2>&1; then
-    synapse_url="http://localhost:8001"
+  local synapse_local
+  synapse_local=$(atlas_config "services.synapse.url" "http://localhost:8001")
+  if curl -sf --max-time 2 "${synapse_local}/health" >/dev/null 2>&1; then
+    synapse_url="$synapse_local"
   fi
 
   # ─── Geolocation (3-tier) ─────────────────────────────────────

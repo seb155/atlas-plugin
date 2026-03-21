@@ -19,12 +19,14 @@ Key fields: `project`, `platform` (forgejo|github|gitlab), `environments` (type,
 
 ## Forgejo API
 
-> External URL behind CF Access → 302. ALWAYS use internal IP from config or default `http://192.168.10.75:3000/api/v1`.
+> External URL behind CF Access → 302. ALWAYS use resolved URL from detect-network.sh or config.json.
 > Full patterns: `.claude/references/forgejo-api.md`
 
 ```bash
 source ~/.env  # loads $FORGEJO_TOKEN
-FORGEJO_API="${config_forgejo_api_base:-http://192.168.10.75:3000/api/v1}"
+FORGEJO_LOCAL=$(python3 -c "import json,os; d=json.load(open(os.path.expanduser('~/.atlas/config.json'))); print(d['services']['forgejo']['local_url'])" 2>/dev/null || echo "")
+FORGEJO_API_PATH=$(python3 -c "import json,os; d=json.load(open(os.path.expanduser('~/.atlas/config.json'))); print(d['services']['forgejo']['api_path'])" 2>/dev/null || echo "/api/v1")
+FORGEJO_API="${FORGEJO_LOCAL}${FORGEJO_API_PATH}"
 ```
 
 ## Process (10 Steps)

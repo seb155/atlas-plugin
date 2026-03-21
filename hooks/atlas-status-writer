@@ -13,6 +13,23 @@ set -euo pipefail
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 STATE_FILE="${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
 
+# Read value from ~/.atlas/config.json with fallback
+atlas_config() {
+  local key="$1" fallback="${2:-}"
+  python3 -c "
+import json, os
+try:
+    with open(os.path.expanduser('~/.atlas/config.json')) as f:
+        d = json.load(f)
+    keys = '$key'.split('.')
+    v = d
+    for k in keys: v = v[k]
+    if isinstance(v, list): print(' '.join(v))
+    else: print(v)
+except: print('$fallback')
+" 2>/dev/null || echo "$fallback"
+}
+
 # Bail fast if no state file exists (CShip not configured / first session)
 [ -f "$STATE_FILE" ] || exit 0
 
@@ -65,14 +82,20 @@ else
   BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
   CI_STATUS="unknown"
 
-  # Try Forgejo API (internal IP, 2s timeout)
+  # Try Forgejo API (local URL, 2s timeout)
   if [ -f "$HOME/.env" ]; then
     # shellcheck disable=SC1091
     source "$HOME/.env" 2>/dev/null || true
   fi
   if [ -n "${FORGEJO_TOKEN:-}" ]; then
+    local forgejo_api_url forgejo_owner forgejo_repo
+    forgejo_api_url=$(atlas_config "services.forgejo.local_url" "")
+    forgejo_owner=$(atlas_config "services.forgejo.owner" "atlas")
+    forgejo_repo=$(atlas_config "services.forgejo.repo" "synapse")
+    local forgejo_api_path
+    forgejo_api_path=$(atlas_config "services.forgejo.api_path" "/api/v1")
     CI_STATUS=$(curl -sf --max-time 2 \
-      "http://192.168.10.75:3000/api/v1/repos/atlas/synapse/commits/${BRANCH}/status" \
+      "${forgejo_api_url}${forgejo_api_path}/repos/${forgejo_owner}/${forgejo_repo}/commits/${BRANCH}/status" \
       -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null \
       | jq -r '.state // "unknown"' 2>/dev/null || echo "unreachable")
   fi
