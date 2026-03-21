@@ -8,7 +8,10 @@
 #   Docker:   30s cache (docker ps)
 #   CI:       60s cache (Forgejo API, 2s timeout)
 #   Tier:     read from existing state (set at SessionStart)
-set -euo pipefail
+set -o pipefail
+# NOTE: No -e / -u — this hook is async & informational.
+# A crash here only produces an ugly "hook error" line. Resilience > strictness.
+trap 'exit 0' ERR
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 STATE_FILE="${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"

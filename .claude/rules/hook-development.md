@@ -33,7 +33,7 @@
 | PermissionRequest | Before dangerous cmd | sync | JSON with command |
 
 ## Script Rules
-1. `#!/usr/bin/env bash` + `set -euo pipefail`
+1. `#!/usr/bin/env bash` + `set -euo pipefail` (sync hooks) or `set -o pipefail` + `trap 'exit 0' ERR` (async hooks — resilience over strictness)
 2. Use `${CLAUDE_PLUGIN_ROOT}` for path resolution (with fallback)
 3. Read input from stdin: `INPUT=$(cat)`
 4. Parse JSON with python3 one-liners (portable)
