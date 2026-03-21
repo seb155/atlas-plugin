@@ -231,7 +231,88 @@ If approved, invoke the relevant generation:
 - Rules: extract conventions from existing code patterns
 - Blueprint: create minimal directory structure
 
-## Phase 5: ⚙️ Optional Setup
+## Phase 5: 📊 StatusLine & CC Settings
+
+### 5A: StatusLine Deployment
+
+Check if CShip + Starship are configured:
+```bash
+CSHIP_OK=$(command -v cship &>/dev/null && echo "✅" || echo "❌")
+STARSHIP_OK=$(command -v starship &>/dev/null && echo "✅" || echo "❌")
+SCRIPTS_OK=$([ -x "${HOME}/.local/share/atlas-statusline/atlas-starship-module.sh" ] && echo "✅" || echo "❌")
+```
+
+Present status table:
+```
+| Component         | Status | Detail                     |
+|-------------------|--------|----------------------------|
+| CShip binary      | {ok}   | Rust-based status renderer |
+| Starship prompt   | {ok}   | Terminal prompt framework   |
+| ATLAS scripts     | {ok}   | Module scripts deployed     |
+| settings.json     | {ok}   | statusLine.command wired    |
+```
+
+If any ❌ → AskUserQuestion:
+```
+"StatusLine gives you a rich ATLAS dashboard in your terminal:
+ Row 1: plugin version, model, branch
+ Row 2: tier, Docker, CI, features
+ Row 3: context usage bar
+
+ Set up StatusLine now?"
+ Options: ["Yes, full setup", "Skip for now"]
+```
+
+If yes → invoke `statusline-setup` skill (7-step interactive wizard with HITL gates).
+
+### 5B: CC Settings Validation
+
+Check Claude Code global + project settings:
+```bash
+GLOBAL="${HOME}/.claude/settings.json"
+PROJECT=".claude/settings.json"
+```
+
+Required global settings:
+| Setting | Check | Auto-fix |
+|---------|-------|----------|
+| `permissions.allow` includes Bash,Read,Write,Edit,Skill(*) | parse JSON | Add missing perms |
+| `language` set | check key exists | Add `"language": "francais"` |
+| `hooks.UserPromptSubmit` exists | check key | Copy from ATLAS template |
+| `hooks.PreToolUse` exists | check key | Copy validate-bash.sh |
+| Global commands `~/.claude/commands/a-*.md` | count files | Warn if missing |
+| `~/.claude/CLAUDE.md` exists | file check | Generate from template |
+
+Required project settings:
+| Setting | Check | Auto-fix |
+|---------|-------|----------|
+| ATLAS plugin enabled | check enabledPlugins | Add entry |
+| `env.CLAUDE_CODE_MAX_OUTPUT_TOKENS` | check key | Add default "128000" |
+| `env.CLAUDE_CODE_SPAWN_BACKEND` = "tmux" | check value | Set to "tmux" |
+| `plansDirectory` = ".blueprint/plans" | check value | Set it |
+
+For each issue: AskUserQuestion with before/after preview.
+NEVER auto-modify settings without HITL approval.
+
+### 5C: MCP Servers
+
+Check `.mcp.json` for required servers:
+```bash
+MCP_FILE=".mcp.json"
+[ -f "$MCP_FILE" ] || echo "No .mcp.json found"
+```
+
+Required MCP servers:
+| Server | Required? | Check |
+|--------|-----------|-------|
+| context7 | ✅ Yes | Key in mcpServers |
+| playwright | ✅ Yes (dev+) | Key in mcpServers |
+| figma | ⚠️ Optional | Key in mcpServers |
+| claude-in-chrome | ⚠️ Optional | --chrome flag support |
+
+For missing required servers → AskUserQuestion to add config entry.
+
+## Phase 6: ⚙️ Optional Integrations
 
 AskUserQuestion with multi-select:
 
@@ -239,17 +320,17 @@ AskUserQuestion with multi-select:
 header: "Optional"
 multiSelect: true
 options:
-  - "CShip/Starship status line — terminal integration"
-  - "Browser automation — Chrome MCP or agent-browser"
   - "Forgejo SSH — Git SSH access verification"
   - "Headscale/Tailscale — mesh networking"
+  - "Coder workspace — remote dev environment"
+  - "Ollama local models — offline AI (qwen2.5, deepseek-r1)"
 ```
 
 For each selected:
-- CShip → invoke `statusline-setup` skill
-- Browser → show installation guide for Chrome MCP extension
 - Forgejo SSH → verify `~/.ssh/config` has Forgejo host entry
 - Headscale → run `tailscale status` and report
+- Coder → check `coder agents` status
+- Ollama → check `curl http://192.168.10.55:11434/api/tags` and show available models
 
 ## Completion
 
@@ -260,7 +341,7 @@ python3 -c "
 import json
 with open('$HOME/.atlas/profile.json') as f: p = json.load(f)
 p['onboarding']['completed_at'] = '$(date -u +%Y-%m-%dT%H:%M:%SZ)'
-p['onboarding']['phases_completed'] = ['profile','credentials','environment','context','optional']
+p['onboarding']['phases_completed'] = ['profile','credentials','environment','terminal','context','statusline','optional']
 with open('$HOME/.atlas/profile.json','w') as f: json.dump(p, f, indent=2)
 "
 ```
