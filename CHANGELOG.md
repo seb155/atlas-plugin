@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.10.0 (2026-03-21)
+
+### ✨ Features
+- feat(tests): add smoke/strict test levels — CI skips strict by default
+
+
+
 ## v3.9.0 (2026-03-21)
 
 ### ✨ Features
