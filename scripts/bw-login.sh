@@ -58,9 +58,11 @@ case "$STATUS" in
 esac
 
 if [ -n "${BW_SESSION:-}" ]; then
+  # Cache in cross-platform keyring for subsequent sessions
+  "${SCRIPT_DIR}/atlas-keyring.sh" set bw_session "$BW_SESSION" 2>/dev/null || true
   # Output export command for eval/source
   echo "export BW_SESSION='${BW_SESSION}'"
-  echo "echo '🏛️ ATLAS │ ✅ VAULT │ Vaultwarden session active'" >&2
+  echo "echo '🏛️ ATLAS │ ✅ VAULT │ Session cached in keyring (auto-unlock for 8h)'" >&2
 else
   echo "echo '🏛️ ATLAS │ ❌ VAULT │ Failed to get session'" >&2
   exit 1

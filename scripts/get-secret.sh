@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# ATLAS Secret Resolution — 3-tier fallback
+# ATLAS Secret Resolution — 4-tier fallback
 # Usage: get-secret.sh SECRET_NAME
 # Returns: the secret value (stdout) or exits 1 if not found
 #
 # Tier 1: Environment variable ($SECRET_NAME)
 # Tier 2: Source ~/.env then check again
-# Tier 3: Vaultwarden CLI (bw get password) if configured
+# Tier 3: Keyring-cached BW_SESSION → bw get password
+# Tier 4: Interactive bw unlock (if BW_PASSWORD set)
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SECRET_NAME="${1:?Usage: get-secret.sh SECRET_NAME}"
 
 # Tier 1: Environment variable (already set)
@@ -17,14 +19,14 @@ VALUE="${!SECRET_NAME:-}"
 
 # Tier 2: Source ~/.env and re-check
 if [ -f "${HOME}/.env" ]; then
-  set +u  # .env may reference unset vars
+  set +u
   source "${HOME}/.env" 2>/dev/null || true
   set -u
   VALUE="${!SECRET_NAME:-}"
   [ -n "$VALUE" ] && echo "$VALUE" && exit 0
 fi
 
-# Tier 3: Vaultwarden CLI (if provider configured)
+# Tier 3+4: Vaultwarden CLI (if provider configured)
 PROVIDER=$(python3 -c "
 import json, os
 try:
@@ -34,11 +36,23 @@ except: print('env')
 " 2>/dev/null || echo "env")
 
 if [ "$PROVIDER" = "vaultwarden" ] && command -v bw &>/dev/null; then
-  # Try to unlock if no session
+  # Tier 3: Try keyring-cached BW_SESSION first
+  if [ -z "${BW_SESSION:-}" ]; then
+    BW_SESSION=$("${SCRIPT_DIR}/atlas-keyring.sh" get bw_session 2>/dev/null || true)
+    [ -n "$BW_SESSION" ] && export BW_SESSION
+  fi
+
+  # Tier 4: Try BW_PASSWORD auto-unlock
   if [ -z "${BW_SESSION:-}" ] && [ -n "${BW_PASSWORD:-}" ]; then
     BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw 2>/dev/null || true)
-    export BW_SESSION
+    if [ -n "$BW_SESSION" ]; then
+      export BW_SESSION
+      # Cache for next time
+      "${SCRIPT_DIR}/atlas-keyring.sh" set bw_session "$BW_SESSION" 2>/dev/null || true
+    fi
   fi
+
+  # Resolve secret via bw
   if [ -n "${BW_SESSION:-}" ]; then
     VALUE=$(BW_SESSION="$BW_SESSION" bw get password "$SECRET_NAME" 2>/dev/null || true)
     [ -n "$VALUE" ] && echo "$VALUE" && exit 0

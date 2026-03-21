@@ -10,6 +10,38 @@ AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 # Source user env (tokens, API keys) if available
 [ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
 
+# Auto-resolve secrets via keyring + Vaultwarden (if configured)
+VAULT_MSG=""
+_secrets_provider=$(python3 -c "
+import json, os
+try:
+    with open(os.path.expanduser('~/.atlas/config.json')) as f:
+        print(json.load(f).get('secrets',{}).get('provider','env'))
+except: print('env')
+" 2>/dev/null || echo "env")
+
+if [ "$_secrets_provider" = "vaultwarden" ]; then
+  # Try keyring-cached BW_SESSION
+  if [ -z "${BW_SESSION:-}" ] && [ -x "${PLUGIN_ROOT}/scripts/atlas-keyring.sh" ]; then
+    BW_SESSION=$("${PLUGIN_ROOT}/scripts/atlas-keyring.sh" get bw_session 2>/dev/null || true)
+    [ -n "$BW_SESSION" ] && export BW_SESSION
+  fi
+
+  # If BW_SESSION available, resolve missing core tokens
+  if [ -n "${BW_SESSION:-}" ]; then
+    if [ -z "${FORGEJO_TOKEN:-}" ]; then
+      FORGEJO_TOKEN=$(BW_SESSION="$BW_SESSION" bw get password "FORGEJO_TOKEN" 2>/dev/null || true)
+      [ -n "$FORGEJO_TOKEN" ] && export FORGEJO_TOKEN
+    fi
+    if [ -z "${SYNAPSE_TOKEN:-}" ]; then
+      SYNAPSE_TOKEN=$(BW_SESSION="$BW_SESSION" bw get password "SYNAPSE_TOKEN" 2>/dev/null || true)
+      [ -n "$SYNAPSE_TOKEN" ] && export SYNAPSE_TOKEN
+    fi
+  else
+    VAULT_MSG="🏛️ ATLAS │ 🔐 VAULT LOCKED │ Run: ! eval \$(${PLUGIN_ROOT}/scripts/bw-login.sh)"
+  fi
+fi
+
 # Read value from ~/.atlas/config.json with fallback
 atlas_config() {
   local key="$1" fallback="${2:-}"
@@ -208,6 +240,17 @@ if [ -n "$TIER_WARNING" ]; then
 fi
 if [ -n "$FIRST_RUN_MSG" ]; then
   BADGE+=$'\n'"${FIRST_RUN_MSG}"
+fi
+if [ -n "$VAULT_MSG" ]; then
+  BADGE+=$'\n'"${VAULT_MSG}"
+fi
+# Check for missing core secrets (after all resolution attempts)
+_missing_secrets=""
+[ -z "${FORGEJO_TOKEN:-}" ] && _missing_secrets+="FORGEJO_TOKEN, "
+[ -z "${SYNAPSE_TOKEN:-}" ] && _missing_secrets+="SYNAPSE_TOKEN, "
+if [ -n "$_missing_secrets" ]; then
+  _missing_secrets="${_missing_secrets%, }"
+  BADGE+=$'\n'"🏛️ ATLAS │ 🔐 SECRETS │ Missing: ${_missing_secrets}"
 fi
 
 # Combine badge + feature summary into context
