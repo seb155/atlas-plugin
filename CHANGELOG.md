@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.11.1 (2026-03-21)
+
+### 🐛 Bug Fixes
+- fix(hooks): remove 'local' keyword outside function in atlas-status-writer
+
+### 🔧 Other Changes
+- test(hooks): validate hook file references in dist/ build artifacts
+
+
+
 ## v3.11.0 (2026-03-21)
 
 ### ✨ Features
