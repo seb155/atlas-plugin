@@ -17,6 +17,7 @@ skills:
   - atlas-onboarding
   - atlas-doctor
   - atlas-location
+  - youtube-transcript
 
 refs:
   - web-design-guidelines
@@ -36,6 +37,7 @@ commands:
   - setup
   - doctor
   - location
+  - transcript
 
 agents:
   - context-scanner
