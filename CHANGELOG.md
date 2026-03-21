@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.9.0 (2026-03-21)
+
+### ✨ Features
+- feat(ci): add build artifact caching between jobs
+- feat(plugin): add /atlas ci command + CI integration
+
+### 🐛 Bug Fixes
+- fix(ci): use H1 heading pattern instead of skill reference in ci.md
+- fix(ci): add backticks to invoke pattern in ci.md (test compat)
+- fix(ci): remove template vars from ci.md command (test compat)
+
+### 🔧 Other Changes
+- revert(ci): remove actions/cache — incompatible with manual git clone
+
+
+
 ## v3.8.0 (2026-03-21)
 
 ### ✨ Features
