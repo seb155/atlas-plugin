@@ -28,6 +28,12 @@ jobs:
         shell: sh
         run: ./build.sh all
 
+      - name: Cache build artifacts
+        uses: https://code.forgejo.org/actions/cache@v4
+        with:
+          path: dist/
+          key: build-${{ github.sha }}
+
       - name: Verify outputs
         shell: sh
         run: |
@@ -55,9 +61,20 @@ jobs:
         run: |
           git clone --depth=1 http://oauth2:${GIT_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
 
-      - name: Build for E2E tests
+      - name: Cache build artifacts
+        uses: https://code.forgejo.org/actions/cache@v4
+        with:
+          path: dist/
+          key: build-${{ github.sha }}
+
+      - name: Build for E2E tests (skip if cached)
         shell: sh
-        run: ./build.sh all
+        run: |
+          if [ -d "dist/atlas-admin" ] && [ -d "dist/atlas-dev" ] && [ -d "dist/atlas-user" ]; then
+            echo "Using cached build artifacts"
+          else
+            ./build.sh all
+          fi
 
       - name: Run ALL tests (structural + E2E + regression)
         shell: sh
