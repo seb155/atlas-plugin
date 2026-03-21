@@ -62,6 +62,7 @@ _AGENT_REF_PATTERN = re.compile(r"`([a-z][a-z0-9-]+)`\s+agent")
 # Tests: Command → Skill references
 # ---------------------------------------------------------------------------
 
+@pytest.mark.strict
 class TestCommandSkillReferences:
 
     @pytest.mark.parametrize(

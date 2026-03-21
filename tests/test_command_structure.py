@@ -3,8 +3,11 @@ test_command_structure.py — Validates structure of every command .md file.
 
 Rules:
 - File must be non-empty
-- Must contain at least one H1 heading (# ...)
-- H1 that starts with '/' must match the pattern # /command-name or # command-name
+- Must contain at least one H1 heading (# ...) or Invoke pattern
+- H1 that starts with '/' must match the pattern # /command-name
+- No broken template variables (except known ones)
+
+Marked @strict for tests that validate format details (not build correctness).
 """
 
 from __future__ import annotations
@@ -77,12 +80,15 @@ class TestCommandStructure:
         text = command_md.read_text(encoding="utf-8")
         assert len(text.strip()) > 20, f"Content too short in {command_md}"
 
+    @pytest.mark.strict
     def test_no_broken_template_vars(self, command_md: Path) -> None:
-        """Must not contain unresolved template variables like ${UNDEFINED}."""
+        """Must not contain unresolved template variables like ${UNDEFINED}.
+        Skip code blocks (```...```) which may contain legitimate bash vars."""
         text = command_md.read_text(encoding="utf-8")
-        # Allow known legitimate vars: $ARGUMENTS, $CLAUDE_PLUGIN_ROOT
+        # Strip code blocks before checking
+        text_no_code = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
         known_vars = {"ARGUMENTS", "CLAUDE_PLUGIN_ROOT", "ATLAS_ROLE"}
-        broken = re.findall(r"\$\{([A-Z_]+)\}", text)
+        broken = re.findall(r"\$\{([A-Z_]+)\}", text_no_code)
         unknown = [v for v in broken if v not in known_vars]
         assert not unknown, (
             f"Unknown template vars {unknown} in {command_md}"
