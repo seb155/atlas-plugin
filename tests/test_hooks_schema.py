@@ -177,3 +177,67 @@ class TestHookScripts:
         assert first_line.startswith("#!"), (
             f"Script '{script_path.name}' missing shebang line (got: '{first_line}')"
         )
+
+
+# ---------------------------------------------------------------------------
+# Build artifact validation (dist/)
+# ---------------------------------------------------------------------------
+
+DIST_DIR = PLUGIN_ROOT / "dist"
+
+
+def _collect_dist_hook_refs() -> list[tuple[str, str, Path]]:
+    """
+    Scan each dist/atlas-{tier}/hooks/hooks.json and collect
+    (tier, event, resolved_script_path) for command-type hooks.
+    """
+    if not DIST_DIR.exists():
+        return []
+    results: list[tuple[str, str, Path]] = []
+    for tier_dir in sorted(DIST_DIR.iterdir()):
+        if not tier_dir.is_dir():
+            continue
+        hooks_json = tier_dir / "hooks" / "hooks.json"
+        if not hooks_json.exists():
+            continue
+        data = json.loads(hooks_json.read_text(encoding="utf-8"))
+        for event, entries in data.get("hooks", {}).items():
+            for entry in entries:
+                for hook in entry.get("hooks", []):
+                    cmd = hook.get("command", "")
+                    if "${CLAUDE_PLUGIN_ROOT}" in cmd:
+                        # Resolve against the tier directory (simulates runtime)
+                        resolved = cmd.strip('"').replace(
+                            "${CLAUDE_PLUGIN_ROOT}", str(tier_dir)
+                        )
+                        if "/hooks/" in resolved:
+                            results.append((tier_dir.name, event, Path(resolved)))
+    return results
+
+
+_DIST_HOOK_REFS = _collect_dist_hook_refs()
+
+
+@pytest.mark.skipif(not DIST_DIR.exists(), reason="dist/ not built yet")
+@pytest.mark.parametrize(
+    "tier,event,script_path",
+    _DIST_HOOK_REFS,
+    ids=[f"{t}:{ev}:{p.name}" for t, ev, p in _DIST_HOOK_REFS],
+)
+class TestDistHookScripts:
+    """Validates hook scripts in built dist/ artifacts (catches cache/build bugs)."""
+
+    def test_dist_script_exists(self, tier: str, event: str, script_path: Path) -> None:
+        """Hook script referenced in dist hooks.json must exist in that tier."""
+        assert script_path.exists(), (
+            f"[{tier}] Hook script referenced by '{event}' not found: {script_path}\n"
+            f"The hooks.json references a script that was never created or copied."
+        )
+
+    def test_dist_script_is_executable(self, tier: str, event: str, script_path: Path) -> None:
+        """Hook script in dist must be executable."""
+        if not script_path.exists():
+            pytest.skip("Script missing (tested separately)")
+        assert os.access(str(script_path), os.X_OK), (
+            f"[{tier}] Hook script '{script_path.name}' (event: {event}) is not executable"
+        )
