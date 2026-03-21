@@ -1,0 +1,29 @@
+# ATLAS CI Image — Pre-installed tools for Forgejo Actions
+# Saves ~85s per job by eliminating install steps
+# Build: docker build -f .forgejo/images/Dockerfile.ci-atlas -t ci-atlas:latest .forgejo/images/
+# Push:  docker push 192.168.10.75:3000/atlas/ci-atlas:latest
+
+FROM catthehacker/ubuntu:act-22.04
+
+# Pre-install all CI tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv python3-full \
+    jq curl wget git openssh-client ca-certificates && \
+    pip3 install pytest pyyaml && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# yq (YAML processor for build.sh)
+ARG YQ_VERSION=v4.44.6
+RUN wget -qO /usr/local/bin/yq \
+    "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" && \
+    chmod +x /usr/local/bin/yq
+
+# Verify all tools
+RUN echo "=== CI Image Verification ===" && \
+    python3 --version && \
+    pip3 --version && \
+    pytest --version && \
+    yq --version && \
+    git --version && \
+    jq --version && \
+    echo "=== All tools verified ==="
