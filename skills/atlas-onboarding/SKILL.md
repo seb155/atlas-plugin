@@ -210,6 +210,43 @@ grep -q "ATLAS_ROOT" "$RC_FILE" 2>/dev/null
 ```
 If missing → suggest adding: `export ATLAS_ROOT=$HOME/workspace_atlas`
 
+## Phase 3.6: ⌨️ Shell Completions & DX Tools
+
+Run the terminal setup check:
+```bash
+${PLUGIN_ROOT}/scripts/setup-terminal.sh --check
+```
+
+This checks 12 items: completions, aliases, prompt, fuzzy finder, autosuggestions,
+syntax highlighting, smart cd, diff viewer, bat, direnv, ATLAS_ROOT.
+
+If score < 12 → AskUserQuestion:
+```
+"Terminal DX check: {score}/12. Missing items detected.
+ Install shell completions + recommended tools?"
+ Options: ["Yes, install everything", "Just completions", "Skip"]
+```
+
+If approved → run:
+```bash
+${PLUGIN_ROOT}/scripts/setup-terminal.sh --install
+```
+
+Recommended DX tools (platform-aware installation):
+| Tool | Purpose | Linux (apt) | macOS (brew) |
+|------|---------|-------------|--------------|
+| fzf | Ctrl+R history, Ctrl+T files | `apt install fzf` | `brew install fzf` |
+| bat | Syntax highlighted cat | `apt install bat` | `brew install bat` |
+| zoxide | Frecency-based cd | `apt install zoxide` | `brew install zoxide` |
+| delta | Pretty git diffs | `apt install git-delta` | `brew install git-delta` |
+| fd | Fast file finder | `apt install fd-find` | `brew install fd` |
+| direnv | Auto-load .envrc | `apt install direnv` | `brew install direnv` |
+| jq | JSON processor | `apt install jq` | `brew install jq` |
+
+For zsh users, also check oh-my-zsh plugins:
+- `zsh-autosuggestions` — fish-like autosuggestions
+- `zsh-syntax-highlighting` — command syntax coloring
+
 ## Phase 4: 📄 Project Context
 
 Check current project directory:

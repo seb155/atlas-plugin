@@ -34,12 +34,12 @@ Comprehensive diagnostic of the entire ATLAS ecosystem. Runs bash checks across 
 | 6  | Claude Code      | 5/5   | ✅     |                         |
 | 7  | ATLAS Plugin     | 8/8   | ✅     |                         |
 | 8  | Project Context  | 3/5   | ⚠️     | No rules, memory        |
-| 9  | Terminal & Launch | 5/6   | ⚠️     | No ATLAS_ROOT           |
+| 9  | Terminal & Launch | 6/8   | ⚠️     | No completions, ROOT    |
 | 10 | StatusLine       | 4/5   | ⚠️     | Scripts not deployed    |
 | 11 | CC Settings      | 7/8   | ⚠️     | Missing language config |
 | 12 | MCP & Plugins    | 5/6   | ⚠️     | Figma optional          |
 
-OVERALL: 59/70 (84%) ⚠️
+OVERALL: 61/72 (85%) ⚠️
 ```
 
 Status thresholds: ✅ = 100%, ⚠️ = 50-99%, ❌ = <50%
@@ -192,32 +192,39 @@ When `--fix` is passed:
 7. Show updated status (✅ or still ❌)
 8. Continue to next issue
 
-### Cat 9: Terminal & Launch (6 checks)
+### Cat 9: Terminal & Launch (8 checks)
 
-Run platform detection:
+Run full terminal check via helper script:
 ```bash
-PLATFORM_JSON=$("${PLUGIN_ROOT}/scripts/detect-platform.sh" 2>/dev/null || echo '{}')
+${PLUGIN_ROOT}/scripts/setup-terminal.sh --check
 ```
 
-Checks:
+Individual checks:
 ```bash
-# 1. Claude Code installed + accessible
+# 1. Claude Code installed
 command -v claude
 
 # 2. Claude Code version is recent (2.x)
 claude --version 2>/dev/null | grep -qP '2\.\d+\.\d+'
 
-# 3. Shell RC file exists (for alias installation)
+# 3. Shell RC file exists
 [ -f "${HOME}/.$(basename ${SHELL})rc" ]
 
-# 4. ATLAS aliases configured in shell RC
+# 4. ATLAS aliases configured
 grep -q "atlas()" "${HOME}/.$(basename ${SHELL})rc" 2>/dev/null
 
-# 5. ATLAS_ROOT env var set
+# 5. ATLAS zsh/bash completions installed
+[ -f "${HOME}/.oh-my-zsh/custom/plugins/atlas/_atlas" ] 2>/dev/null || \
+[ -f "${HOME}/.local/share/bash-completion/completions/atlas" ] 2>/dev/null
+
+# 6. ATLAS_ROOT env var set
 [ -n "${ATLAS_ROOT:-}" ]
 
-# 6. Workspace directory exists and is accessible
+# 7. Workspace directory exists
 [ -d "${ATLAS_ROOT:-$HOME/workspace_atlas}" ]
+
+# 8. DX tools (fzf + zoxide + bat minimum)
+command -v fzf && command -v zoxide && (command -v bat || command -v batcat)
 ```
 
 Platform-aware auto-fix suggestions:
