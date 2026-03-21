@@ -1,6 +1,7 @@
 ---
 name: brainstorming
 description: "Collaborative design exploration. 1 question at a time via AskUserQuestion. 2-3 approaches with comparison tables. ASCII mockups. HITL design approval before implementation."
+effort: high
 ---
 
 # Brainstorming Ideas Into Designs

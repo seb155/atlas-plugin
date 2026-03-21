@@ -49,7 +49,7 @@ resolve_field() {
   tier_items=$(yq -r ".${field} // [] | .[]" "$profile" 2>/dev/null || true)
 
   if [ -n "$items" ] && [ -n "$tier_items" ]; then
-    echo -e "${items}\n${tier_items}" | sort -u
+    echo -e "${items}\n${tier_items}" | awk '!seen[$0]++'
   elif [ -n "$items" ]; then
     echo "$items"
   else
@@ -123,14 +123,18 @@ build_tier() {
     fi
   done
 
-  # Copy hooks (all tiers get all hooks)
+  # Copy hooks (all tiers get all hooks — wildcard, auto-includes new hooks)
   cp hooks/hooks.json "$output/hooks/"
-  for hook in session-start session-end-memory-cleanup post-compact permission-request; do
-    cp "hooks/$hook" "$output/hooks/" 2>/dev/null || true
+  for hook_script in hooks/*; do
+    local bname
+    bname=$(basename "$hook_script")
+    [[ "$bname" == "hooks.json" ]] && continue
+    [[ ! -x "$hook_script" ]] && continue
+    cp "$hook_script" "$output/hooks/"
   done
 
   # Copy runtime scripts (exclude build-only scripts)
-  local runtime_scripts=(parse-features.sh)
+  local runtime_scripts=(parse-features.sh atlas-alert-module.sh)
   mkdir -p "$output/scripts"
   for script in "${runtime_scripts[@]}"; do
     if [ -f "scripts/$script" ]; then

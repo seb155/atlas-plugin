@@ -1,6 +1,7 @@
 ---
 name: subagent-dispatch
 description: "Dispatch Sonnet subagents per task. 2-stage review: spec compliance then code quality. Sequential dispatch, not parallel."
+effort: medium
 ---
 
 # Subagent Dispatch

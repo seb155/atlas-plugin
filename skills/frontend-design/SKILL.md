@@ -1,6 +1,7 @@
 ---
 name: frontend-design
 description: "Distinctive, production-grade frontend UI/UX implementation. This skill should be used when the user asks to 'design a page', 'build a UI component', 'create a frontend', 'implement this design', 'make it look better', 'build a web interface', or needs creative, polished UI work that avoids generic AI aesthetics."
+effort: medium
 ---
 
 # Frontend Design
@@ -61,6 +62,15 @@ When building within an existing project:
 - Same design choices across different generations
 - Overused fonts: Space Grotesk, Inter, Roboto, Arial
 - Cliched color schemes (particularly blue/purple gradients)
+
+## Enterprise Requirements (check BEFORE implementation)
+
+- **a11y**: ARIA labels on interactive elements, keyboard navigation, focus management
+- **i18n**: No hardcoded user-facing strings — use constants or future i18n keys
+- **Security**: CSP-compatible (no inline scripts/styles where avoidable)
+- **Error states**: Every view has ErrorBoundary + loading + error + empty states
+- **Performance**: Lazy load routes, memoize expensive computations
+- **Theme**: Only `bg-syn-*`/`text-syn-*` tokens — never hardcode colors
 
 ## HITL Gates
 

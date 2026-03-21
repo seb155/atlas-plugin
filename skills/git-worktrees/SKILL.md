@@ -1,6 +1,7 @@
 ---
 name: git-worktrees
 description: "Isolated feature branch via git worktree. Auto-setup project. Safety: verify .gitignore. 1 worktree per feature."
+effort: low
 ---
 
 # Git Worktrees

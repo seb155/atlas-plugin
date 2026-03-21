@@ -19,7 +19,8 @@ echo "[$TIMESTAMP] Permission: $TOOL $(echo "$COMMAND" | head -c 80)" >> "$LOG_F
 case "$TOOL" in
   Bash)
     if echo "$COMMAND" | grep -qiE '(rm -rf|docker (rm|rmi|system prune)|git (reset --hard|push.*force|clean -fd))'; then
-      echo "⚠️  Destructive command detected — review before approving."
+      echo "🏛️ ATLAS │ ⚠️🛑 DESTRUCTIVE │ Dangerous command detected"
+      echo "   └─ Review carefully before approving"
     fi
     ;;
 esac

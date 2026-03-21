@@ -7,7 +7,7 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && p
 SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"
 AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
-# Detect the plugin's built-in tier from plugin.json
+# Detect the plugin's built-in tier from plugin.json or install path
 detect_plugin_tier() {
   local plugin_name
   plugin_name=$(cat "${PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null \
@@ -15,7 +15,15 @@ detect_plugin_tier() {
 
   case "$plugin_name" in
     admin|dev|user) echo "$plugin_name" ;;
-    *) echo "dev" ;;  # Default to dev for legacy "atlas" plugin name
+    *)
+      # Fallback: infer tier from install path (e.g. .../atlas-admin/3.2.0/)
+      local path_tier
+      path_tier=$(echo "$PLUGIN_ROOT" | grep -o 'atlas-\(admin\|dev\|user\)' | head -1 | sed 's/atlas-//')
+      case "$path_tier" in
+        admin|dev|user) echo "$path_tier" ;;
+        *) echo "admin" ;;  # Default to admin (sole user)
+      esac
+      ;;
   esac
 }
 
@@ -78,10 +86,44 @@ detect_role() {
   echo "$role"
 }
 
-# Main — SessionStart hook: role detection + audit log + feature summary
+# Write session-state.json for CShip/Starship status line consumption
+write_session_state() {
+  local state_dir="${CLAUDE_PLUGIN_DATA:-$HOME/.claude}"
+  local state_file="${state_dir}/session-state.json"
+  mkdir -p "$state_dir"
+
+  local version
+  version=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
+  local host
+  host=$(hostname -s 2>/dev/null || echo "?")
+  local now
+  now=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  local branch
+  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
+
+  # Feature counts (fast awk single-pass) — non-local for badge output
+  feat_total=0; feat_active=0; feat_done=0
+  if [ -f ".blueprint/FEATURES.md" ]; then
+    eval "$(awk '/^## Feature:/{t++} /IN_PROGRESS/{a++} /DONE/{d++} END{printf "feat_total=%d feat_active=%d feat_done=%d",t,a,d}' ".blueprint/FEATURES.md" 2>/dev/null)" || true
+  fi
+
+  # Docker check (skip on ATL-dev or when docker unavailable) — non-local for badge output
+  docker_avail="false"; docker_n=0
+  if [ "$host" != "ATL-dev" ] && command -v docker &>/dev/null; then
+    docker_avail="true"
+    docker_n=$(docker ps --filter name=synapse -q 2>/dev/null | wc -l | tr -d ' ')
+  fi
+
+  cat > "$state_file" <<STATEEOF
+{"version":1,"updated_at":"${now}","tier":"${DETECTED_ROLE}","plugin_version":"${version}","hostname":"${host}","docker":{"available":${docker_avail},"containers":${docker_n},"checked_at":"${now}"},"ci":{"status":"pending","branch":"${branch}","checked_at":"${now}"},"features":{"total":${feat_total},"active":${feat_active},"done":${feat_done},"checked_at":"${now}"}}
+STATEEOF
+}
+
+# Main — SessionStart hook: role detection + audit log + feature summary + state file
 # Skills are loaded on-demand by CC's skill system, NOT injected here.
 TIER_WARNING=""
 DETECTED_ROLE=$(detect_role)
+write_session_state
 
 # Feature Board summary injection (if FEATURES.md exists in current project)
 FEATURE_SUMMARY=""
@@ -90,11 +132,26 @@ if [ -f ".blueprint/FEATURES.md" ] && [ -x "$PARSE_SCRIPT" ]; then
   FEATURE_SUMMARY=$("$PARSE_SCRIPT" ".blueprint/FEATURES.md" 2>/dev/null || true)
 fi
 
-# Output with optional feature context
-if [ -n "$FEATURE_SUMMARY" ]; then
-  # Escape for JSON (newlines → \n, quotes → \")
-  ESCAPED=$(echo "$FEATURE_SUMMARY" | sed ':a;N;$!ba;s/\n/\\n/g;s/"/\\"/g')
-  echo "{\"continue\": true, \"additionalContext\": \"${ESCAPED}\"}"
-else
-  echo '{"continue": true}'
+# Build branded badge (use real newlines, JSON escape at the end)
+PLUGIN_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
+BADGE="🏛️ ATLAS │ ✅ SESSION │ v${PLUGIN_VERSION} ${DETECTED_ROLE}"
+if [ "$docker_avail" = "true" ]; then
+  BADGE+=" │ 🐳 ${docker_n}"
 fi
+BADGE+=" │ Branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+if [ $feat_total -gt 0 ]; then
+  BADGE+=$'\n'"🏛️ ATLAS │ 📋 ${feat_total} features (${feat_active}▶ ${feat_done}✓)"
+fi
+if [ -n "$TIER_WARNING" ]; then
+  BADGE+=$'\n'"🏛️ ATLAS │ ⚠️ ${TIER_WARNING}"
+fi
+
+# Combine badge + feature summary into context
+FULL_CONTEXT="${BADGE}"
+if [ -n "$FEATURE_SUMMARY" ]; then
+  FULL_CONTEXT+=$'\n\n'"${FEATURE_SUMMARY}"
+fi
+
+# Output with branded context — proper JSON escaping via python
+ESCAPED=$(printf '%s' "$FULL_CONTEXT" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+echo "{\"continue\": true, \"additionalContext\": ${ESCAPED}}"

@@ -51,8 +51,11 @@ declare -A EMOJI_MAP=(
   [deep-research]="📚" [document-generator]="📄" [scope-check]="🛡️" [decision-log]="📋"
   [session-retrospective]="🔄" [hookify]="🪝" [browser-automation]="🌐" [skill-management]="🧩"
   [note-capture]="📝" [knowledge-builder]="🧠" [user-profiler]="👤" [reminder-scheduler]="⏰"
-  [morning-brief]="☀️" [infrastructure-ops]="🏗️" [security-audit]="🔐"
+  [morning-brief]="☀️" [infrastructure-ops]="🔧" [security-audit]="🔐"
   [plugin-builder]="🔌"
+  # v3.3.0 additions
+  [statusline-setup]="📟" [feature-board]="📌" [code-analysis]="🔎"
+  [enterprise-audit]="🏢" [knowledge-manager]="📖" [platform-update]="🆙"
 )
 
 # Skill category map
@@ -66,6 +69,9 @@ declare -A CATEGORY_MAP=(
   [note-capture]="Personal" [knowledge-builder]="Personal" [user-profiler]="Personal" [reminder-scheduler]="Personal"
   [morning-brief]="Personal" [infrastructure-ops]="Infrastructure" [security-audit]="Security"
   [plugin-builder]="Meta"
+  # v3.3.0 additions
+  [statusline-setup]="Infrastructure" [feature-board]="Project" [code-analysis]="Quality"
+  [enterprise-audit]="Governance" [knowledge-manager]="Knowledge" [platform-update]="Meta"
 )
 
 # Skill one-liner descriptions
@@ -102,13 +108,21 @@ declare -A DESC_MAP=(
   [infrastructure-ops]="Infrastructure management: VMs, containers, networking, monitoring"
   [security-audit]="Security scanning, RBAC audit, vulnerability assessment, compliance"
   [plugin-builder]="Build Claude Code plugins from scratch with correct structure and validation"
+  # v3.3.0 additions
+  [statusline-setup]="Configure CShip + Starship status line for Claude Code sessions"
+  [feature-board]="Feature registry dashboard — kanban, validation matrix, roadmap"
+  [code-analysis]="Codebase analysis: dead code, dependency graphs, dataflow tracing"
+  [enterprise-audit]="14-dimension enterprise readiness audit for due diligence"
+  [knowledge-manager]="Enterprise knowledge layer — coverage, discovery, search, vault"
+  [platform-update]="SOTA audit + auto-update for ATLAS plugin and CC environment"
 )
 
 # Category header emojis
 declare -A CATEGORY_EMOJI=(
   [Planning]="🏗️" [Implementation]="⚡" [Quality]="📊" [Ship]="📦"
   [Deploy]="🎯" [Optimize]="🧬" [Knowledge]="📚" [Meta]="🛡️"
-  [Personal]="👤" [Infrastructure]="🏗️" [Security]="🔐"
+  [Personal]="👤" [Infrastructure]="🔧" [Security]="🔐"
+  [Project]="📌" [Governance]="🏢"
 )
 
 # Build skill list grouped by category
@@ -173,9 +187,9 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 \`\`\`
-🏛️ ATLAS ${BANNER_LABEL} v${VERSION} online
-${SKILL_COUNT} skills | ${AGENT_COUNT} agents | ${CMD_COUNT} commands | Quality gate 12/15
-Auto-routing active — just tell me what you need.
+🏛️ ATLAS │ ✅ SESSION │ v${VERSION} ${BANNER_LABEL}
+   ${SKILL_COUNT} skills │ ${AGENT_COUNT} agents │ ${CMD_COUNT} commands │ Gate 12/15
+   Auto-routing active — just tell me what you need.
 \`\`\`
 
 This banner is shown ONCE (first response only). All subsequent responses use the persona header below.

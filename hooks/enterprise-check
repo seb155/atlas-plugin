@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Enterprise Check Hook — PostToolUse
+# Detects risky patterns in files written/edited by Claude Code.
+# Returns warnings via stdout (displayed to user).
+#
+# Input: JSON on stdin with tool_name, file_path, etc.
+# Output: Warning messages on stdout (if any)
+
+set -euo pipefail
+
+# Read the tool input (PostToolUse sends JSON)
+INPUT=$(cat)
+FILE_PATH=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path', d.get('input', {}).get('file_path', '')))" 2>/dev/null || echo "")
+
+# Skip if no file path or file doesn't exist
+[[ -z "$FILE_PATH" || ! -f "$FILE_PATH" ]] && exit 0
+
+# Only check relevant file types
+case "$FILE_PATH" in
+  *.py|*.ts|*.tsx|*.yml|*.yaml|*.json|*.env*) ;;
+  *) exit 0 ;;
+esac
+
+WARNINGS=""
+
+# Check 1: CORS wildcard
+if grep -qP 'allow_origins\s*=\s*\[?\s*["\x27]\*["\x27]' "$FILE_PATH" 2>/dev/null; then
+  WARNINGS+="🏛️ ATLAS │ 🛡️⚠️ ENTERPRISE │ CORS wildcard '*' detected\n   └─ ${FILE_PATH} — use explicit origin list\n"
+fi
+
+# Check 2: localStorage with token patterns
+if grep -qP 'localStorage\.(setItem|getItem).*[Tt]oken' "$FILE_PATH" 2>/dev/null; then
+  WARNINGS+="🏛️ ATLAS │ 🛡️⚠️ ENTERPRISE │ Token in localStorage detected\n   └─ ${FILE_PATH} — prefer httpOnly cookies\n"
+fi
+
+# Check 3: print() in backend (not tests)
+if [[ "$FILE_PATH" == *backend/app/* ]] && grep -qP '^\s*print\(' "$FILE_PATH" 2>/dev/null; then
+  WARNINGS+="🏛️ ATLAS │ 🛡️⚠️ ENTERPRISE │ print() in production code\n   └─ ${FILE_PATH} — use structlog.get_logger()\n"
+fi
+
+# Check 4: Hardcoded secret patterns
+if grep -qPi '(password|secret|api_key|token)\s*=\s*["\x27][^$\{]' "$FILE_PATH" 2>/dev/null; then
+  # Exclude test files and config examples
+  if [[ "$FILE_PATH" != *test* && "$FILE_PATH" != *.example* && "$FILE_PATH" != *.md ]]; then
+    WARNINGS+="🏛️ ATLAS │ 🛡️⚠️ ENTERPRISE │ Possible hardcoded secret\n   └─ ${FILE_PATH} — use env vars\n"
+  fi
+fi
+
+# Check 5: DEBUG=true in compose files
+if [[ "$FILE_PATH" == *compose*.yml || "$FILE_PATH" == *compose*.yaml ]]; then
+  if grep -qPi 'DEBUG\s*[:=]\s*["\x27]?true' "$FILE_PATH" 2>/dev/null; then
+    WARNINGS+="🏛️ ATLAS │ 🛡️⚠️ ENTERPRISE │ DEBUG=true in compose file\n   └─ ${FILE_PATH} — ensure not in production\n"
+  fi
+fi
+
+# Output warnings (if any)
+if [[ -n "$WARNINGS" ]]; then
+  echo -e "$WARNINGS"
+fi

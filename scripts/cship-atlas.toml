@@ -1,0 +1,39 @@
+# CShip + ATLAS Plugin — Layout v3 (2 rows + conditional alert)
+# Row 1: 🏛️ version 👑tier  🟣 model  📁 dir  🌿 git  🌳 worktree  📋 session
+# Row 2: context bar  🎯 features  📈 lines
+# Row 3: ⚠️ alert (conditional: context >75%)
+
+[cship]
+lines = [
+  "🏛️ ATLAS $custom.atlas_version 👑$custom.atlas_tier  $cship.model  $directory  $git_branch $git_status  $cship.worktree  $cship.session",
+  "$cship.context_bar  $custom.atlas_features  📈 $cship.cost.total_lines_added $cship.cost.total_lines_removed",
+  "$custom.atlas_alert"
+]
+
+[cship.model]
+symbol = "🟣 "
+style = "bold"
+
+[cship.context_bar]
+width = 15
+style = "green"
+warn_threshold = 60
+warn_style = "yellow"
+critical_threshold = 75
+critical_style = "bold red"
+
+[cship.cost.total_lines_added]
+symbol = "+"
+style = "green"
+
+[cship.cost.total_lines_removed]
+symbol = "-"
+style = "red"
+
+[cship.worktree]
+symbol = "🌳 "
+style = "bold green"
+
+[cship.session]
+symbol = "📋 "
+style = "bold blue"

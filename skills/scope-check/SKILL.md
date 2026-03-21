@@ -1,6 +1,7 @@
 ---
 name: scope-check
 description: "Detect scope drift. Are you touching files outside the original task? Stop and verify before proceeding."
+effort: low
 ---
 
 # Scope Check

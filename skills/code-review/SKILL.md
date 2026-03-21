@@ -1,6 +1,7 @@
 ---
 name: code-review
 description: "Unified code review and PR review. This skill should be used when the user asks to 'review code', 'review this PR', 'code review', 'check for bugs', 'audit changes', 'review pull request', or mentions reviewing diffs, CLAUDE.md compliance, or checking code quality. Two modes: local (working tree diff) and PR (remote pull request)."
+effort: high
 ---
 
 # Code Review
@@ -71,7 +72,22 @@ prompt: "Review this diff for complexity and DRY violations only. Focus on:
   Diff: {diff_content}"
 ```
 
-**Agent 4 — Pattern Consistency** (if project has PATTERNS.md): Check changes follow established project patterns.
+**Agent 4 — Enterprise Compliance Review**
+```
+subagent_type: general-purpose
+model: sonnet
+prompt: "Review this diff for enterprise compliance only. Check:
+  - Multi-tenancy: new endpoints filter by project_id?
+  - Security: new endpoints have RBAC gate (Depends(verify_project_access))? Input validated with Pydantic schema?
+  - Audit trail: mutations call log_audit()?
+  - Data: new tables have project_id FK? Indexes on filtered columns?
+  - Ops: new Docker services have healthcheck? Non-root user?
+  - Frontend: no hardcoded strings? Error boundaries? ARIA labels?
+  Reference: .claude/rules/enterprise-*.md
+  Diff: {diff_content}"
+```
+
+**Agent 5 — Pattern Consistency** (if project has PATTERNS.md): Check changes follow established project patterns.
 
 ### 4. Consolidate Parallel Results
 

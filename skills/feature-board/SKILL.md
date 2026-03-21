@@ -50,6 +50,24 @@ Group features by Epic (from `**Epic**` field). Show progress bars per epic + pe
 
 AG Grid-style table: rows = features, columns = validation layers, cells = status icons.
 
+## DoD Scoring
+
+Each feature is scored using 13 weighted validation layers (see `.blueprint/DEFINITION-OF-DONE.md`):
+
+| Tier | Weight | Layers |
+|------|--------|--------|
+| CODED | 20% | BE Unit (5), BE Integration (3), FE Unit (5), FE Visual (2), Type Check (5) |
+| VALIDATED | 60% | E2E Workflow (10), HITL Review (15), Security (8), Performance (7), Real Data (10), Enterprise (10) |
+| SHIPPED | 20% | Demo Ready (10), Deploy Prod (10) |
+
+**Board display**: Each feature card shows DoD score + tier badge:
+```
+• FEAT-001 SynapseCAD  13% 🔨 CODED  [BE✅ FE⏳ E2E❌]
+• FEAT-002 Rule Engine  28% 🧪 VALIDATING  [BE✅ FE✅ E2E⏳]
+```
+
+**Tiers**: 0-20% = 🔨 CODED, 21-80% = 🧪 VALIDATING, 81-99% = ✅ VALIDATED, 100% = 🚀 SHIPPED
+
 ## Validation Summary Extraction
 
 From each feature's Validation Matrix table, extract first icon per layer:

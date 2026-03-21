@@ -112,6 +112,44 @@ if git diff --cached --name-only | grep -q "^frontend/packages/"; then
 fi
 ```
 
+## DoD Tier Check (after L1-L6)
+
+After completing verification levels, compute the DoD tier from the feature's validation matrix:
+
+| Tier | Score | Meaning |
+|------|-------|---------|
+| CODED (20%) | Only code-level layers pass (BE Unit, FE Unit, Type Check, etc.) | Not ready for review |
+| VALIDATING (21-80%) | Some validation layers pass (E2E, HITL, Security, etc.) | In progress |
+| VALIDATED (81-99%) | Most layers pass but not shipped | Ready for deploy |
+| SHIPPED (100%) | All 13 layers PASS | Production-ready |
+
+**After L1-L6, report DoD tier**:
+```
+DoD Score: {score}/100% → {tier_icon} {tier}
+  CODED:     {tier1_score}/20%
+  VALIDATED: {tier2_score}/60%
+  SHIPPED:   {tier3_score}/20%
+```
+
+NEVER claim a feature is "done" if DoD tier < VALIDATED. NEVER report progress > 20% if only Tier 1 passes.
+
+## File Coverage Check (after DoD)
+
+```bash
+curl -s $BACKEND/api/v1/admin/atlas-dev/features/coverage \
+  -H "X-Admin-Token: $ADMIN_TOKEN" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+pct = data['coverage_pct']['overall']
+orphans = len(data['orphans'].get('backend',[])) + len(data['orphans'].get('frontend',[]))
+print(f'Coverage: {pct}% | Orphans: {orphans}')
+if pct < 80: print('WARNING: File coverage below 80%')
+"
+```
+
+- Source Files section required for features at VALIDATING tier or above
+- Before claiming "BE Unit PASS", verify tests exist for files in Source Files
+
 ## Never Skip
 - NEVER claim "tests pass" without running them
 - NEVER claim "it works" without verifying

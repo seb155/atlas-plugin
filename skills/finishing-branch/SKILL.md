@@ -88,6 +88,55 @@ Format: `<type>(<scope>): <summary>` + `Co-Authored-By: ATLAS AI <atlas@sgagnon.
 
 `git push origin $(git branch --show-current)` — **NEVER force push**. If rejected: `git pull --rebase` then retry.
 
+## DoD Gate (Pre-merge)
+
+Before merging, check DoD Tier 1 (CODED) is complete:
+
+```bash
+# Auth: X-Admin-Token (env: SYNAPSE_ADMIN_TOKEN, Vault-sourced in prod)
+BACKEND="http://localhost:8001"
+ADMIN_TOKEN="${SYNAPSE_ADMIN_TOKEN:-synapse-dev-admin-2026}"
+
+# Verify DoD Tier 1 for the feature being merged
+curl -s "$BACKEND/api/v1/admin/atlas-dev/features/{FEAT_ID}" \
+  -H "X-Admin-Token: $ADMIN_TOKEN" | python3 -c "
+import json, sys
+f = json.load(sys.stdin)
+score, tier = f.get('dod_score', 0), f.get('dod_tier', 'CODED')
+print(f'DoD Score: {score}% → {tier}')
+if score < 20:
+    print('⚠️  Tier 1 (CODED) incomplete — block merge')
+    sys.exit(1)
+print('✅ Tier 1 complete — safe to merge')
+"
+```
+
+| DoD Tier | Merge Policy |
+|----------|-------------|
+| < 20% (Tier 1 incomplete) | BLOCK — code layers must pass before merge |
+| 20-80% (VALIDATING) | Allow merge to dev — validation continues on dev |
+| 81-99% (VALIDATED) | Allow merge to main — ready for deploy |
+| 100% (SHIPPED) | Auto-deploy candidate |
+
+## Enterprise Gate (Pre-merge)
+
+Before creating PR or merging, run quick enterprise audit:
+
+```bash
+python3 -m toolkit.audit --ci --fail-on critical --format json
+```
+
+| Result | Action |
+|--------|--------|
+| 0 CRITICAL | Proceed with merge/PR |
+| 1+ CRITICAL | BLOCK — show findings via AskUserQuestion, fix before proceeding |
+| WARN only | Show summary, proceed with acknowledgment |
+
+This gate catches:
+- Missing project_id on new endpoints (MT-002)
+- Missing healthchecks on new Docker services (DEP-002)
+- Hardcoded secrets or CORS wildcards (SEC-003, SEC-002)
+
 ## HITL Gates
 
 | When | Trigger | Options |

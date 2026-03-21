@@ -1,0 +1,30 @@
+# Starship custom modules for ATLAS Plugin + CShip — Layout v3
+# Append these sections to ~/.config/starship.toml
+
+# Tier badge (admin/dev/user)
+[custom.atlas_tier]
+command = "jq -r '.tier // \"?\"' ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json 2>/dev/null"
+when = "test -f ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
+format = "[$output](bold yellow)"
+disabled = false
+
+# Feature progress (🎯 24/35)
+[custom.atlas_features]
+command = "jq -r '\"🎯 \" + (.features.done // 0 | tostring) + \"/\" + (.features.total // 0 | tostring)' ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json 2>/dev/null"
+when = "test -f ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
+format = "[$output](bold green) "
+disabled = false
+
+# Plugin version
+[custom.atlas_version]
+command = "jq -r '.plugin_version // \"?\"' ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json 2>/dev/null"
+when = "test -f ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
+format = "[$output](bold cyan) "
+disabled = false
+
+# Context alert (only when >75%)
+[custom.atlas_alert]
+command = "~/.local/share/atlas-statusline/atlas-alert-module.sh"
+when = "test -f ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
+format = "[$output](bold red)"
+disabled = false

@@ -1,6 +1,7 @@
 ---
 name: skill-management
 description: "Create, improve, benchmark, and manage Claude Code skills and plugins. This skill should be used when the user asks to 'create a skill', 'write a new skill', 'improve this skill', 'add a skill to the plugin', 'create a plugin', 'benchmark a skill', 'review skill quality', or needs guidance on skill structure, progressive disclosure, SKILL.md format, or plugin development."
+effort: low
 ---
 
 # Skill & Plugin Management

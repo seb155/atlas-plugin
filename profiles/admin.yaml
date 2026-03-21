@@ -6,19 +6,28 @@ inherits: dev
 
 skills:
   # Admin-exclusive
+  - statusline-setup
   - devops-deploy
   - experiment-loop
   - infrastructure-ops
   - security-audit
   - feature-board
+  # Previously orphaned — now assigned
+  - code-analysis
+  - enterprise-audit
+  - knowledge-manager
+  - platform-update
 
 commands:
   - deploy
   - tune
   - infra
   - audit
+  - audit-enterprise
   - board
   - roadmap
+  - knowledge
+  - update
 
 agents: []
 

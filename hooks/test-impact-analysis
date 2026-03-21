@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# Test Impact Analysis Hook — PostToolUse
+# When a source file is edited/written, maps it to associated test files and warns.
+#
+# Input:  JSON on stdin  { tool_name, file_path | input.file_path, ... }
+# Output: JSON on stdout { result: "..." }   — empty string = no warning
+
+set -euo pipefail
+
+# Default plugin root (CC sets this; fallback for standalone testing)
+CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+
+# ---------------------------------------------------------------------------
+# Parse file path from PostToolUse JSON payload
+# Handles both flat { file_path } and nested { input: { file_path } }
+# ---------------------------------------------------------------------------
+INPUT=$(cat)
+FILE_PATH=$(python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print(
+    d.get('file_path', '') or
+    d.get('input', {}).get('file_path', '') or
+    d.get('input', {}).get('path', '')
+)" <<< "$INPUT" 2>/dev/null || echo "")
+
+# Skip if no file path or file doesn't exist
+[[ -z "$FILE_PATH" || ! -f "$FILE_PATH" ]] && echo '{"result":""}' && exit 0
+
+# Skip test files themselves (editing a test doesn't require a test-impact warning)
+if [[ "$FILE_PATH" == *test_*.py || "$FILE_PATH" == *__tests__* || "$FILE_PATH" == *.test.ts || "$FILE_PATH" == *.test.tsx || "$FILE_PATH" == *.spec.ts || "$FILE_PATH" == *.spec.tsx ]]; then
+  echo '{"result":""}' && exit 0
+fi
+
+WARNINGS=""
+
+# ---------------------------------------------------------------------------
+# Mapping: source file path pattern → test location hint
+# ---------------------------------------------------------------------------
+
+# Backend services
+if [[ "$FILE_PATH" == */backend/app/services/*.py ]]; then
+  BASENAME=$(basename "$FILE_PATH" .py)
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ ${BASENAME}.py changed\n   └─ Run: pytest tests/**/test_${BASENAME}.py"
+
+# Backend API routes
+elif [[ "$FILE_PATH" == */backend/app/api/v1/*.py ]]; then
+  BASENAME=$(basename "$FILE_PATH" .py)
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ API route ${BASENAME}.py changed\n   └─ Run: pytest tests/api/test_${BASENAME}.py"
+
+# Backend models / schemas
+elif [[ "$FILE_PATH" == */backend/app/models/*.py || "$FILE_PATH" == */backend/app/schemas/*.py ]]; then
+  BASENAME=$(basename "$FILE_PATH" .py)
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ model/schema ${BASENAME}.py changed\n   └─ Check tests importing this model for type regressions"
+
+# Frontend components
+elif [[ "$FILE_PATH" == */frontend/src/components/*.tsx || "$FILE_PATH" == */frontend/src/components/**/*.tsx ]]; then
+  BASENAME=$(basename "$FILE_PATH" .tsx)
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ component ${BASENAME}.tsx changed\n   └─ Run: vitest src/__tests__/${BASENAME}.test.ts(x)"
+
+# Frontend hooks
+elif [[ "$FILE_PATH" == */frontend/src/hooks/*.ts ]]; then
+  BASENAME=$(basename "$FILE_PATH" .ts)
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ hook ${BASENAME}.ts changed\n   └─ Run: vitest src/hooks/queries/__tests__/${BASENAME}.test.ts"
+
+# Frontend store
+elif [[ "$FILE_PATH" == */frontend/src/store/*.ts ]]; then
+  BASENAME=$(basename "$FILE_PATH" .ts)
+  # strip trailing -store if present for test file lookup
+  TEST_NAME="${BASENAME%-store}"
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ Zustand store ${BASENAME}.ts changed\n   └─ Run: vitest src/__tests__/${TEST_NAME}-store.test.ts"
+
+# Frontend feature hooks (TanStack Query)
+elif [[ "$FILE_PATH" == */frontend/src/features/*/hooks/*.ts ]]; then
+  BASENAME=$(basename "$FILE_PATH" .ts)
+  FEATURE=$(echo "$FILE_PATH" | grep -oP 'features/\K[^/]+')
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ feature hook ${BASENAME}.ts (${FEATURE}) changed\n   └─ Run: vitest src/features/${FEATURE}/hooks/__tests__/${BASENAME}.test.ts"
+
+# Atlas Plugin skills (match via ${CLAUDE_PLUGIN_ROOT} pattern)
+elif [[ "$FILE_PATH" == "${CLAUDE_PLUGIN_ROOT}"/skills/*/SKILL.md || "$FILE_PATH" == */skills/*/SKILL.md ]]; then
+  SKILL_NAME=$(echo "$FILE_PATH" | grep -oP 'skills/\K[^/]+')
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ skill ${SKILL_NAME}/SKILL.md changed\n   └─ Run: cd ${CLAUDE_PLUGIN_ROOT} && pytest tests/test_skill_frontmatter.py -x -q --tb=short"
+
+# Atlas Plugin hooks (match via ${CLAUDE_PLUGIN_ROOT} pattern)
+elif [[ "$FILE_PATH" == "${CLAUDE_PLUGIN_ROOT}"/hooks/* && "$FILE_PATH" != */hooks.json ]]; then
+  HOOK_NAME=$(basename "$FILE_PATH")
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ hook ${HOOK_NAME} changed\n   └─ Run: cd ${CLAUDE_PLUGIN_ROOT} && pytest tests/test_hook_behavior.py tests/test_hooks_schema.py -x -q --tb=short"
+
+# Atlas Plugin hooks.json schema (match via ${CLAUDE_PLUGIN_ROOT} pattern)
+elif [[ "$FILE_PATH" == "${CLAUDE_PLUGIN_ROOT}"/hooks/hooks.json ]]; then
+  WARNINGS="🏛️ ATLAS │ 🧪ℹ️ TEST IMPACT │ hooks.json schema changed\n   └─ Run: cd ${CLAUDE_PLUGIN_ROOT} && pytest tests/test_hooks_schema.py -x -q --tb=short"
+fi
+
+# ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+if [[ -n "$WARNINGS" ]]; then
+  # Escape for JSON: replace " with \" and newlines with \n
+  SAFE=$(printf '%s' "$WARNINGS" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+  echo "{\"result\":${SAFE}}"
+else
+  echo '{"result":""}'
+fi

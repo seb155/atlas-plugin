@@ -17,32 +17,25 @@ echo "[$TIMESTAMP] PostCompact ($TRIGGER)" >> "$LOG_FILE"
 # --- Re-inject critical context that compaction may have lost ---
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 
-echo "=== POST-COMPACTION CONTEXT RELOAD ==="
-echo ""
-echo "Timestamp: $TIMESTAMP"
-echo "Branch: $BRANCH"
-
 # Inject active plans if found
+PLAN_COUNT=0
 for PLAN_DIR in .blueprint/plans .claude/plans; do
   if [ -d "$PLAN_DIR" ]; then
-    PLAN_FILES=$(find "$PLAN_DIR" -name "*.md" -newer "$LOG_FILE" 2>/dev/null | head -5)
-    if [ -n "$PLAN_FILES" ]; then
-      echo ""
-      echo "Active plans ($PLAN_DIR):"
-      echo "$PLAN_FILES"
-    fi
+    DIR_COUNT=$(find "$PLAN_DIR" -name "*.md" -newer "$LOG_FILE" 2>/dev/null | wc -l | tr -d ' ')
+    PLAN_COUNT=$((PLAN_COUNT + DIR_COUNT))
   fi
 done
 
 # Inject recent git activity (last 3 commits)
 RECENT_COMMITS=$(git log --oneline -3 2>/dev/null)
+
+echo -e "🏛️ ATLAS │ 🔄✅ RESTORED │ Branch: ${BRANCH} │ ${PLAN_COUNT} active plans"
+echo "   └─ Re-read current tasks and active plan before continuing"
+
 if [ -n "$RECENT_COMMITS" ]; then
   echo ""
   echo "Recent commits:"
   echo "$RECENT_COMMITS"
 fi
-
-echo ""
-echo "REMINDER: Re-read any plan or task list if work was in progress."
 
 exit 0

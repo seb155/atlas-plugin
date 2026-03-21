@@ -1,6 +1,7 @@
 ---
 name: hookify
 description: "Create and manage Claude Code hooks from conversation analysis or explicit instructions. This skill should be used when the user asks to 'create a hook', 'hookify this behavior', 'prevent this from happening again', 'add a guard rule', 'block dangerous commands', 'warn about bad patterns', or needs to create .claude/hookify.*.local.md rule files."
+effort: medium
 ---
 
 # Hookify — Create Claude Code Hooks

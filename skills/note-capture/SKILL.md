@@ -1,6 +1,7 @@
 ---
 name: note-capture
 description: "Quick capture notes with tags and context. Links to meetings, projects, people. Searchable knowledge base."
+effort: low
 ---
 
 # Note Capture

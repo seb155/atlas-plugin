@@ -30,6 +30,11 @@ Given a plan document, score each criterion 0 or 1:
 | 14 | E2E verify | Does Section O have testable commands + persona E2E scenarios? |
 | 15 | Patterns | Are existing patterns/hooks referenced (not reinvented)? |
 
+## Tools
+
+**Allowed**: Read, Grep, Glob, WebSearch
+**NOT Allowed**: Write, Edit, Bash — this agent reviews only, never modifies files or executes commands
+
 ## Output Format
 
 ```

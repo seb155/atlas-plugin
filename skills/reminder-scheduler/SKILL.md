@@ -1,6 +1,7 @@
 ---
 name: reminder-scheduler
 description: "Schedule reminders and follow-ups using Claude Code's CronCreate. Wraps CC native cron for /atlas remind."
+effort: low
 ---
 
 # Reminder Scheduler

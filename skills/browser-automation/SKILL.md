@@ -1,6 +1,7 @@
 ---
 name: browser-automation
 description: "Browser automation for E2E testing, visual QA, web interaction, and data extraction. This skill should be used when the user asks to 'open a website', 'test this page', 'take a screenshot', 'fill out a form', 'click a button', 'scrape data', 'automate browser actions', 'run visual QA', 'E2E test', or any task requiring programmatic web interaction. Supports both agent-browser CLI and Claude-in-Chrome MCP."
+effort: low
 ---
 
 # Browser Automation

@@ -1,6 +1,7 @@
 ---
 name: morning-brief
 description: "Compile morning brief: today's agenda, important emails, open tasks, active projects, suggestions. The daily command center."
+effort: low
 ---
 
 # Morning Brief

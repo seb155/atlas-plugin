@@ -1,6 +1,7 @@
 ---
 name: code-simplify
 description: "Code simplification and refactoring for clarity, consistency, and maintainability. This skill should be used when the user asks to 'simplify this code', 'refactor for clarity', 'clean up code', 'reduce complexity', 'make this more readable', 'simplify recent changes', or mentions improving code elegance without changing functionality."
+effort: low
 ---
 
 # Code Simplification

@@ -1,6 +1,7 @@
 ---
 name: tdd
 description: "Test-Driven Development. Failing test → minimal implementation → pass → commit. Strict cycle. Never write implementation without a failing test first."
+effort: medium
 ---
 
 # Test-Driven Development

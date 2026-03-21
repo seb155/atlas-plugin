@@ -1,6 +1,7 @@
 ---
 name: document-generator
 description: "Generate PPTX, DOCX, XLSX documents with storytelling structure, visual layouts, and iterative HITL validation at each phase. Templates: 5-act, problem-solution, dashboard, metrics."
+effort: medium
 ---
 
 # Document Generator

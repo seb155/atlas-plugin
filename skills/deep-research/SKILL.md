@@ -1,6 +1,7 @@
 ---
 name: deep-research
 description: "Deep research with multi-query decomposition. Decompose question into 2-3 angles, search + fetch + triangulate, synthesize structured summary (500w max). Sonnet for research, Opus for synthesis."
+effort: high
 ---
 
 # Deep Research

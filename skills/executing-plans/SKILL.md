@@ -1,6 +1,7 @@
 ---
 name: executing-plans
 description: "Execute implementation plans task-by-task. Load plan → TaskCreate per step → execute sequentially → verify after each task. Uses subagents when available."
+effort: medium
 ---
 
 # Executing Plans
