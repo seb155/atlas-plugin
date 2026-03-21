@@ -260,6 +260,17 @@ fi
 if [ -n "$VAULT_MSG" ]; then
   BADGE+=$'\n'"${VAULT_MSG}"
 fi
+# Suggest session name (repo-version-branch)
+_repo_name=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || echo "")
+_repo_ver=$(cat VERSION 2>/dev/null || jq -r '.version // empty' package.json 2>/dev/null || echo "")
+_repo_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+if [ -n "$_repo_name" ]; then
+  _suggested_name="${_repo_name}"
+  [ -n "$_repo_ver" ] && _suggested_name="${_suggested_name}-v${_repo_ver}"
+  [ -n "$_repo_branch" ] && [ "$_repo_branch" != "main" ] && _suggested_name="${_suggested_name}-${_repo_branch}"
+  BADGE+=$'\n'"🏛️ ATLAS │ 💡 SESSION │ /rename ${_suggested_name}"
+fi
+
 # Check for missing core secrets (after all resolution attempts)
 _missing_secrets=""
 [ -z "${FORGEJO_TOKEN:-}" ] && _missing_secrets+="FORGEJO_TOKEN, "
