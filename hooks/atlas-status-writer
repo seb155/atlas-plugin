@@ -88,11 +88,9 @@ else
     source "$HOME/.env" 2>/dev/null || true
   fi
   if [ -n "${FORGEJO_TOKEN:-}" ]; then
-    local forgejo_api_url forgejo_owner forgejo_repo
     forgejo_api_url=$(atlas_config "services.forgejo.local_url" "")
     forgejo_owner=$(atlas_config "services.forgejo.owner" "atlas")
     forgejo_repo=$(atlas_config "services.forgejo.repo" "synapse")
-    local forgejo_api_path
     forgejo_api_path=$(atlas_config "services.forgejo.api_path" "/api/v1")
     CI_STATUS=$(curl -sf --max-time 2 \
       "${forgejo_api_url}${forgejo_api_path}/repos/${forgejo_owner}/${forgejo_repo}/commits/${BRANCH}/status" \
