@@ -106,6 +106,37 @@ jobs:
           test ${AGENTS} -ge 6 || { echo "REGRESSION: agent count dropped below 6"; exit 1; }
           echo "Regression gate passed"
 
+  release:
+    name: Auto-release (SemVer from commits)
+    runs-on: bun
+    needs: [build, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout (full history)
+        shell: sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
+        run: |
+          git clone http://oauth2:${GITHUB_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
+          git fetch --tags
+
+      - name: Configure git
+        shell: sh
+        run: |
+          git config user.name "ATLAS CI"
+          git config user.email "atlas-ci@axoiq.com"
+
+      - name: Auto-release
+        shell: sh
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+          FORGEJO_API_URL: http://${{ vars.FORGEJO_HOST }}/api/v1
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          chmod +x .forgejo/scripts/auto-release.sh
+          .forgejo/scripts/auto-release.sh
+
   publish:
     name: Publish to Forgejo Package Registry
     runs-on: bun
