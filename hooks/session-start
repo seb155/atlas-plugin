@@ -132,6 +132,22 @@ if [ -f ".blueprint/FEATURES.md" ] && [ -x "$PARSE_SCRIPT" ]; then
   FEATURE_SUMMARY=$("$PARSE_SCRIPT" ".blueprint/FEATURES.md" 2>/dev/null || true)
 fi
 
+# First-run detection — check for onboarding profile
+ATLAS_PROFILE="${HOME}/.atlas/profile.json"
+FIRST_RUN_MSG=""
+if [ ! -f "$ATLAS_PROFILE" ]; then
+  MISSING=""
+  [ -z "${SYNAPSE_TOKEN:-}" ] && MISSING+="SYNAPSE_TOKEN, "
+  [ -z "${FORGEJO_TOKEN:-}" ] && MISSING+="FORGEJO_TOKEN, "
+  [ ! -f "CLAUDE.md" ] && MISSING+="CLAUDE.md, "
+  command -v yq &>/dev/null || MISSING+="yq, "
+  FIRST_RUN_MSG="🏛️ ATLAS │ 👋 FIRST RUN │ Welcome! Run /atlas setup to configure"
+  if [ -n "$MISSING" ]; then
+    MISSING="${MISSING%, }"
+    FIRST_RUN_MSG+=$'\n'"   └─ Missing: ${MISSING}"
+  fi
+fi
+
 # Build branded badge (use real newlines, JSON escape at the end)
 PLUGIN_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
 BADGE="🏛️ ATLAS │ ✅ SESSION │ v${PLUGIN_VERSION} ${DETECTED_ROLE}"
@@ -144,6 +160,9 @@ if [ $feat_total -gt 0 ]; then
 fi
 if [ -n "$TIER_WARNING" ]; then
   BADGE+=$'\n'"🏛️ ATLAS │ ⚠️ ${TIER_WARNING}"
+fi
+if [ -n "$FIRST_RUN_MSG" ]; then
+  BADGE+=$'\n'"${FIRST_RUN_MSG}"
 fi
 
 # Combine badge + feature summary into context

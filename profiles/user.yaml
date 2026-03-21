@@ -14,6 +14,8 @@ skills:
   - context-discovery
   - scope-check
   - browser-automation
+  - atlas-onboarding
+  - atlas-doctor
 
 refs:
   - web-design-guidelines
@@ -30,6 +32,8 @@ commands:
   - present
   - context
   - browse
+  - setup
+  - doctor
 
 agents:
   - context-scanner

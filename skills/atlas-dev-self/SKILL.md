@@ -119,6 +119,21 @@ When a user's project is missing context files, ATLAS should help create them:
 - Detect: `[ ! -d .blueprint ]`
 - Action: Create minimal structure: INDEX.md, plans/ directory
 
+## Onboarding & Doctor System (v3.4.0+)
+
+When modifying onboarding or doctor:
+- Onboarding skill: `skills/atlas-onboarding/SKILL.md`
+- Doctor skill: `skills/atlas-doctor/SKILL.md`
+- First-run detection: `hooks/session-start` (checks `~/.atlas/profile.json`)
+- Profile storage: `~/.atlas/profile.json`
+- Doctor report: `~/.atlas/doctor-report.json`
+
+Doctor checks are bash one-liners. To add a new check:
+1. Add to the appropriate category in atlas-doctor SKILL.md
+2. Update the scoring (N+1 checks in that category)
+3. Add auto-fix suggestion if applicable
+4. Run `make test && make dev`
+
 ## Quality Gates
 
 Before any plugin commit:

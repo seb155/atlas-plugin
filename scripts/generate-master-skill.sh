@@ -56,7 +56,7 @@ declare -A EMOJI_MAP=(
   # v3.3.0 additions
   [statusline-setup]="📟" [feature-board]="📌" [code-analysis]="🔎"
   [enterprise-audit]="🏢" [knowledge-manager]="📖" [platform-update]="🆙"
-  [atlas-dev-self]="🔁"
+  [atlas-dev-self]="🔁" [atlas-onboarding]="👋" [atlas-doctor]="🩺"
 )
 
 # Skill category map
@@ -73,7 +73,7 @@ declare -A CATEGORY_MAP=(
   # v3.3.0 additions
   [statusline-setup]="Infrastructure" [feature-board]="Project" [code-analysis]="Quality"
   [enterprise-audit]="Governance" [knowledge-manager]="Knowledge" [platform-update]="Meta"
-  [atlas-dev-self]="Meta"
+  [atlas-dev-self]="Meta" [atlas-onboarding]="Meta" [atlas-doctor]="Meta"
 )
 
 # Skill one-liner descriptions
@@ -118,6 +118,8 @@ declare -A DESC_MAP=(
   [knowledge-manager]="Enterprise knowledge layer — coverage, discovery, search, vault"
   [platform-update]="SOTA audit + auto-update for ATLAS plugin and CC environment"
   [atlas-dev-self]="Self-development workflow for the ATLAS plugin itself"
+  [atlas-onboarding]="Guided 5-phase setup wizard for new users"
+  [atlas-doctor]="System health check with 8-category dashboard and auto-fix"
 )
 
 # Category header emojis

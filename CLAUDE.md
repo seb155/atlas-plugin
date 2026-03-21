@@ -86,6 +86,14 @@ make lint                         # Frontmatter + coverage checks
 1. Create `skills/refs/{name}/SKILL.md`
 2. Add to profile under `refs:` list
 
+## ONBOARDING & DOCTOR
+
+- `/atlas setup` — 5-phase wizard (profile, credentials, env, context, optional)
+- `/atlas doctor` — 8-category health dashboard with auto-fix
+- First-run: SessionStart hook detects missing `~/.atlas/profile.json` → shows `👋 FIRST RUN`
+- Storage: `~/.atlas/` (profile.json, doctor-report.json)
+- Both skills available in ALL tiers (user, dev, admin)
+
 ## SELF-DEVELOPMENT
 
 This plugin develops itself. When modifying atlas-plugin:
