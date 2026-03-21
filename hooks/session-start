@@ -7,6 +7,8 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && p
 SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"
 AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
+export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"  # suppress bw punycode warning
+
 # Source user env (tokens, API keys) if available
 [ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
 
@@ -20,11 +22,25 @@ try:
 except: print('env')
 " 2>/dev/null || echo "env")
 
-if [ "$_secrets_provider" = "vaultwarden" ]; then
+if [ "$_secrets_provider" = "vaultwarden" ] && command -v bw &>/dev/null; then
   # Try keyring-cached BW_SESSION
   if [ -z "${BW_SESSION:-}" ] && [ -x "${PLUGIN_ROOT}/scripts/atlas-keyring.sh" ]; then
     BW_SESSION=$("${PLUGIN_ROOT}/scripts/atlas-keyring.sh" get bw_session 2>/dev/null || true)
     [ -n "$BW_SESSION" ] && export BW_SESSION
+  fi
+
+  # If BW_SESSION expired, try auto-unlock via keyring-stored master password
+  if [ -z "${BW_SESSION:-}" ] && [ -x "${PLUGIN_ROOT}/scripts/atlas-keyring.sh" ]; then
+    _keyring_pw=$("${PLUGIN_ROOT}/scripts/atlas-keyring.sh" get bw_master_password 2>/dev/null || true)
+    if [ -n "$_keyring_pw" ]; then
+      BW_SESSION=$(BW_PASSWORD="$_keyring_pw" bw unlock --passwordenv BW_PASSWORD --raw 2>/dev/null || true)
+      if [ -n "$BW_SESSION" ]; then
+        export BW_SESSION
+        # Re-cache session in volatile keyring (8h TTL)
+        "${PLUGIN_ROOT}/scripts/atlas-keyring.sh" set bw_session "$BW_SESSION" 2>/dev/null || true
+      fi
+    fi
+    unset _keyring_pw
   fi
 
   # If BW_SESSION available, resolve missing core tokens
@@ -38,7 +54,7 @@ if [ "$_secrets_provider" = "vaultwarden" ]; then
       [ -n "$SYNAPSE_TOKEN" ] && export SYNAPSE_TOKEN
     fi
   else
-    VAULT_MSG="🏛️ ATLAS │ 🔐 VAULT LOCKED │ Run: ! eval \$(${PLUGIN_ROOT}/scripts/bw-login.sh)"
+    VAULT_MSG="🏛️ ATLAS │ 🔐 VAULT LOCKED │ Run: ! eval \$(${PLUGIN_ROOT}/scripts/bw-login.sh --store-password)"
   fi
 fi
 

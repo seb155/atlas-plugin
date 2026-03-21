@@ -43,12 +43,20 @@ if [ "$PROVIDER" = "vaultwarden" ] && command -v bw &>/dev/null; then
     [ -n "$BW_SESSION" ] && export BW_SESSION
   fi
 
-  # Tier 4: Try BW_PASSWORD auto-unlock
-  if [ -z "${BW_SESSION:-}" ] && [ -n "${BW_PASSWORD:-}" ]; then
-    BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw 2>/dev/null || true)
+  # Tier 4: Try auto-unlock via keyring master password or BW_PASSWORD env
+  if [ -z "${BW_SESSION:-}" ]; then
+    # Try keyring-stored master password first
+    _keyring_pw=$("${SCRIPT_DIR}/atlas-keyring.sh" get bw_master_password 2>/dev/null || true)
+    if [ -n "$_keyring_pw" ]; then
+      BW_SESSION=$(BW_PASSWORD="$_keyring_pw" bw unlock --passwordenv BW_PASSWORD --raw 2>/dev/null || true)
+    elif [ -n "${BW_PASSWORD:-}" ]; then
+      # Fallback: BW_PASSWORD from env
+      BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw 2>/dev/null || true)
+    fi
+    unset _keyring_pw
     if [ -n "$BW_SESSION" ]; then
       export BW_SESSION
-      # Cache for next time
+      # Cache session for next time
       "${SCRIPT_DIR}/atlas-keyring.sh" set bw_session "$BW_SESSION" 2>/dev/null || true
     fi
   fi

@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 # ATLAS Cross-Platform Keyring Helper
-# Usage: atlas-keyring.sh get|set|delete KEY [VALUE]
+# Usage: atlas-keyring.sh get|set|set-persistent|delete KEY [VALUE]
+#
+# Actions:
+#   set            — store in fastest available backend (keyctl > python > file)
+#   set-persistent — store in encrypted OS keyring only (survives reboot, no TTL)
+#   get            — read from all backends (keyctl → python → file)
+#   delete         — remove from all backends
 #
 # Backends (auto-detected, priority order):
 #   1. keyctl (Linux kernel keyring — RAM only, fast, no popup, 8h TTL)
-#   2. Python keyring (macOS Keychain / WinCred / GNOME)
+#   2. Python keyring (macOS Keychain / WinCred / GNOME Keyring — persistent, encrypted)
 #   3. File-based (~/.atlas/.secrets/, chmod 600) — last resort
 
 set -euo pipefail
 
-ACTION="${1:?Usage: atlas-keyring.sh get|set|delete KEY [VALUE]}"
+ACTION="${1:?Usage: atlas-keyring.sh get|set|set-persistent|delete KEY [VALUE]}"
 KEY="${2:?Key required}"
 VALUE="${3:-}"
 SERVICE="atlas-plugin"
@@ -56,6 +62,21 @@ print(v or '', end='')
     printf '%s' "$RESULT"
     ;;
 
+  set-persistent)
+    # Persistent storage only (survives reboot). For secrets like master passwords.
+    # Skips keyctl (volatile) — uses Python keyring (OS-encrypted) or file fallback.
+    if python3 -c "import keyring" 2>/dev/null; then
+      python3 << PYEOF
+import keyring
+keyring.set_password("${SERVICE}", "${KEY}", """${VALUE}""")
+PYEOF
+    else
+      mkdir -p "${HOME}/.atlas/.secrets" && chmod 700 "${HOME}/.atlas/.secrets"
+      printf '%s' "$VALUE" > "${HOME}/.atlas/.secrets/${KEY}"
+      chmod 600 "${HOME}/.atlas/.secrets/${KEY}"
+    fi
+    ;;
+
   delete)
     # Clean ALL backends
     python3 -c "
@@ -70,7 +91,7 @@ except: pass
     ;;
 
   *)
-    echo "Usage: atlas-keyring.sh get|set|delete KEY [VALUE]" >&2
+    echo "Usage: atlas-keyring.sh get|set|set-persistent|delete KEY [VALUE]" >&2
     exit 1
     ;;
 esac
