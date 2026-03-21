@@ -134,7 +134,7 @@ build_tier() {
   done
 
   # Copy runtime scripts (exclude build-only scripts)
-  local runtime_scripts=(parse-features.sh atlas-alert-module.sh)
+  local runtime_scripts=(parse-features.sh atlas-alert-module.sh detect-platform.sh shell-aliases.sh)
   mkdir -p "$output/scripts"
   for script in "${runtime_scripts[@]}"; do
     if [ -f "scripts/$script" ]; then

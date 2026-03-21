@@ -188,6 +188,48 @@ When `--fix` is passed:
 7. Show updated status (✅ or still ❌)
 8. Continue to next issue
 
+### Cat 9: Terminal & Launch (6 checks)
+
+Run platform detection:
+```bash
+PLATFORM_JSON=$("${PLUGIN_ROOT}/scripts/detect-platform.sh" 2>/dev/null || echo '{}')
+```
+
+Checks:
+```bash
+# 1. Claude Code installed + accessible
+command -v claude
+
+# 2. Claude Code version is recent (2.x)
+claude --version 2>/dev/null | grep -qP '2\.\d+\.\d+'
+
+# 3. Shell RC file exists (for alias installation)
+[ -f "${HOME}/.$(basename ${SHELL})rc" ]
+
+# 4. ATLAS aliases configured in shell RC
+grep -q "atlas()" "${HOME}/.$(basename ${SHELL})rc" 2>/dev/null
+
+# 5. ATLAS_ROOT env var set
+[ -n "${ATLAS_ROOT:-}" ]
+
+# 6. Workspace directory exists and is accessible
+[ -d "${ATLAS_ROOT:-$HOME/workspace_atlas}" ]
+```
+
+Platform-aware auto-fix suggestions:
+| Issue | Linux/WSL | macOS |
+|-------|-----------|-------|
+| CC missing | `curl -fsSL https://claude.ai/install \| sh` | same |
+| Aliases missing | `/atlas setup` or `scripts/shell-aliases.sh >> ~/.zshrc` | `>> ~/.zshrc` |
+| ATLAS_ROOT missing | `echo 'export ATLAS_ROOT=...' >> ~/.zshrc` | same |
+| Workspace missing | `mkdir -p ~/workspace_atlas` | same |
+
+Display platform summary:
+```
+🏛️ ATLAS │ 🖥️ PLATFORM │ {os} {version} │ {shell} │ {terminal}
+   └─ Arch: {arch} │ Docker: {bool} │ Starship: {bool} │ CShip: {bool}
+```
+
 ## Report Persistence
 
 After running doctor, save report to `~/.atlas/doctor-report.json`:

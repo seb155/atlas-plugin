@@ -156,6 +156,60 @@ Present table. For missing tools, offer installation commands:
 
 AskUserQuestion for each missing tool: "Install {tool}?"
 
+## Phase 3.5: 🖥️ Terminal & Aliases
+
+Auto-detect platform:
+```bash
+PLATFORM_JSON=$("${PLUGIN_ROOT}/scripts/detect-platform.sh" 2>/dev/null || echo '{}')
+```
+
+Present detected info as table:
+```
+| Property     | Value                    |
+|--------------|--------------------------|
+| OS           | {os} {os_version}        |
+| Architecture | {arch}                   |
+| Shell        | {shell}                  |
+| Terminal     | {terminal}               |
+| Hostname     | {hostname}               |
+```
+
+Platform-specific notes:
+- **WSL**: Warn about Docker Desktop integration, path differences
+- **macOS**: Note Homebrew for tool installation, no snap
+- **Linux**: Standard flow
+- **Windows (MSYS/Cygwin)**: Experimental, recommend WSL
+
+Check if ATLAS aliases exist:
+```bash
+RC_FILE="${HOME}/.$(basename $SHELL)rc"
+grep -q "atlas()" "$RC_FILE" 2>/dev/null
+```
+
+If aliases missing → AskUserQuestion:
+```
+"ATLAS terminal aliases not found in your shell config.
+ These give you quick session launchers:
+ - atlas [topic] → CC session in atlas repo
+ - atlas-synapse [topic] → CC session in synapse repo
+ - atlas-w / atlas-synapse-w → worktree variants
+
+ Install aliases to {RC_FILE}?"
+ Options: ["Yes, install aliases", "No, I'll configure manually"]
+```
+
+If approved:
+```bash
+${PLUGIN_ROOT}/scripts/shell-aliases.sh ${ATLAS_ROOT:-$HOME/workspace_atlas} >> "$RC_FILE"
+```
+Remind user: `source ~/.zshrc` (or restart terminal) to activate.
+
+Also check `ATLAS_ROOT` env var:
+```bash
+grep -q "ATLAS_ROOT" "$RC_FILE" 2>/dev/null
+```
+If missing → suggest adding: `export ATLAS_ROOT=$HOME/workspace_atlas`
+
 ## Phase 4: 📄 Project Context
 
 Check current project directory:

@@ -141,7 +141,19 @@ if [ ! -f "$ATLAS_PROFILE" ]; then
   [ -z "${FORGEJO_TOKEN:-}" ] && MISSING+="FORGEJO_TOKEN, "
   [ ! -f "CLAUDE.md" ] && MISSING+="CLAUDE.md, "
   command -v yq &>/dev/null || MISSING+="yq, "
+  # Platform detection for first-run info
+  PLATFORM_OS="?"
+  PLATFORM_SHELL=$(basename "${SHELL:-?}")
+  PLATFORM_TERM="?"
+  if [ -x "${PLUGIN_ROOT}/scripts/detect-platform.sh" ]; then
+    PJSON=$("${PLUGIN_ROOT}/scripts/detect-platform.sh" 2>/dev/null || true)
+    if [ -n "$PJSON" ]; then
+      PLATFORM_OS=$(echo "$PJSON" | python3 -c "import sys,json; print(json.load(sys.stdin).get('os','?'))" 2>/dev/null || echo "?")
+      PLATFORM_TERM=$(echo "$PJSON" | python3 -c "import sys,json; print(json.load(sys.stdin).get('terminal','?'))" 2>/dev/null || echo "?")
+    fi
+  fi
   FIRST_RUN_MSG="🏛️ ATLAS │ 👋 FIRST RUN │ Welcome! Run /atlas setup to configure"
+  FIRST_RUN_MSG+=$'\n'"   └─ Platform: ${PLATFORM_OS} │ Shell: ${PLATFORM_SHELL} │ Terminal: ${PLATFORM_TERM}"
   if [ -n "$MISSING" ]; then
     MISSING="${MISSING%, }"
     FIRST_RUN_MSG+=$'\n'"   └─ Missing: ${MISSING}"
