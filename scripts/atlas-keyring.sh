@@ -3,8 +3,8 @@
 # Usage: atlas-keyring.sh get|set|delete KEY [VALUE]
 #
 # Backends (auto-detected, priority order):
-#   1. Python keyring (all OS: GNOME Keyring / macOS Keychain / WinCred)
-#   2. keyctl (Linux kernel keyring, RAM-only, 8h TTL)
+#   1. keyctl (Linux kernel keyring — RAM only, fast, no popup, 8h TTL)
+#   2. Python keyring (macOS Keychain / WinCred / GNOME)
 #   3. File-based (~/.atlas/.secrets/, chmod 600) — last resort
 
 set -euo pipefail
@@ -21,15 +21,12 @@ case "$ACTION" in
     if command -v keyctl &>/dev/null; then
       KID=$(keyctl add user "atlas_${KEY}" "$VALUE" @u)
       keyctl timeout "$KID" "$KEYCTL_TTL"
-    # Backend 2: Python keyring (macOS Keychain / WinCred / file)
+    # Backend 2: Python keyring (macOS Keychain / WinCred)
     elif python3 -c "import keyring" 2>/dev/null; then
       python3 << PYEOF
 import keyring
 keyring.set_password("${SERVICE}", "${KEY}", """${VALUE}""")
 PYEOF
-    # Backend 3: keyctl was here, now file-based
-      KID=$(keyctl add user "atlas_${KEY}" "$VALUE" @u)
-      keyctl timeout "$KID" "$KEYCTL_TTL"
     # Backend 3: File-based (chmod 600)
     else
       mkdir -p "${HOME}/.atlas/.secrets" && chmod 700 "${HOME}/.atlas/.secrets"
@@ -51,11 +48,6 @@ import keyring
 v = keyring.get_password('${SERVICE}', '${KEY}')
 print(v or '', end='')
 " 2>/dev/null || true)
-    fi
-    # Backend 3: file fallback
-    if [ -z "$RESULT" ] && command -v keyctl &>/dev/null; then
-      : # keyctl already tried above
-      RESULT=$(keyctl print "$(keyctl search @u user "atlas_${KEY}" 2>/dev/null)" 2>/dev/null || true)
     fi
     # Backend 3: File fallback
     if [ -z "$RESULT" ] && [ -f "${HOME}/.atlas/.secrets/${KEY}" ]; then

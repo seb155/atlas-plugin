@@ -10,6 +10,7 @@
 
 set -euo pipefail
 
+export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"  # suppress bw punycode warning
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SECRET_NAME="${1:?Usage: get-secret.sh SECRET_NAME}"
 
