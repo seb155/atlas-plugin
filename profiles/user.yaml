@@ -16,6 +16,7 @@ skills:
   - browser-automation
   - atlas-onboarding
   - atlas-doctor
+  - atlas-location
 
 refs:
   - web-design-guidelines
@@ -34,6 +35,7 @@ commands:
   - browse
   - setup
   - doctor
+  - location
 
 agents:
   - context-scanner

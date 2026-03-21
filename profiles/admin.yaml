@@ -18,6 +18,7 @@ skills:
   - knowledge-manager
   - platform-update
   - atlas-dev-self
+  - atlas-vault
 
 commands:
   - deploy
@@ -30,6 +31,7 @@ commands:
   - knowledge
   - update
   - dev-self
+  - vault
 
 agents: []
 

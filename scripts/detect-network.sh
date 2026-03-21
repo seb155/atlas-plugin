@@ -113,6 +113,42 @@ except: pass
     fi
   fi
 
+  # ─── Trust Level (from WiFi BSSID mapping) ─────────────────────
+  local trust="standard"  # safe default
+  local current_ssid="" current_bssid="" location_name=""
+  if command -v nmcli &>/dev/null; then
+    current_ssid=$(nmcli -t -f active,ssid dev wifi 2>/dev/null | grep "^yes" | sed 's/^yes://' || true)
+    # nmcli escapes colons with backslashes in -t mode — use python for clean parsing
+    current_bssid=$(nmcli -t -f active,bssid dev wifi 2>/dev/null | grep "^yes" | python3 -c "
+import sys
+line = sys.stdin.read().strip()
+print(line.replace('yes:', '').replace(chr(92), ''))
+" 2>/dev/null || true)
+  fi
+  if [ -f "${ATLAS_DIR}/wifi-locations.json" ] && [ -n "$current_bssid" ]; then
+    local trust_line
+    trust_line=$(echo "$current_bssid" | python3 -c "
+import json, sys, os
+bssid = sys.stdin.read().strip().upper()
+result = 'unknown|'
+try:
+    with open(os.path.expanduser('~/.atlas/wifi-locations.json')) as f:
+        db = json.load(f)
+    for loc in db.get('locations', []):
+        for b in loc.get('bssids', []):
+            if b.upper() == bssid:
+                name = loc.get('name', '').encode('ascii', 'replace').decode()
+                result = loc.get('trust', 'standard') + '|' + name
+                break
+        else: continue
+        break
+except: pass
+print(result)
+" 2>/dev/null || echo "unknown|")
+    trust=$(echo "$trust_line" | cut -d'|' -f1)
+    location_name=$(echo "$trust_line" | cut -d'|' -f2)
+  fi
+
   # ─── Connectivity ─────────────────────────────────────────────
   local tailscale_status="disconnected"
   if command -v tailscale &>/dev/null; then
@@ -128,9 +164,15 @@ except: pass
   cat <<EOF
 {
   "network": "${network}",
+  "trust": "${trust}",
   "forgejo_url": "${forgejo_url}",
   "synapse_url": "${synapse_url}",
   "authentik_url": "${authentik_url}",
+  "wifi": {
+    "ssid": "${current_ssid}",
+    "bssid": "${current_bssid}",
+    "location_name": "${location_name}"
+  },
   "connectivity": {
     "local_ip": "${local_ip}",
     "public_ip": "${public_ip}",
