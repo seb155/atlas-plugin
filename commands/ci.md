@@ -3,7 +3,7 @@ name: ci
 description: "Check CI status, view logs, rerun failed jobs, manage runners"
 ---
 
-Invoke the ci-feedback-loop skill with: $ARGUMENTS
+Invoke the `ci-feedback-loop` skill with: $ARGUMENTS
 
 This command manages the Forgejo Actions CI/CD pipeline.
 
