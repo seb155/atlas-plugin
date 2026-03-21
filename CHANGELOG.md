@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.11.2 (2026-03-21)
+
+### 🐛 Bug Fixes
+- fix(hooks): make async atlas-status-writer resilient to transient errors
+
+
+
 ## v3.11.1 (2026-03-21)
 
 ### 🐛 Bug Fixes
