@@ -19,10 +19,10 @@ jobs:
       - name: Checkout
         shell: sh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
-          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
+          git clone --depth=1 http://oauth2:${FORGEJO_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
 
       - name: Install yq
         shell: sh
@@ -58,10 +58,10 @@ jobs:
       - name: Checkout
         shell: sh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
-          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
+          git clone --depth=1 http://oauth2:${FORGEJO_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
 
       - name: Install Python + test deps
         shell: sh
@@ -115,10 +115,10 @@ jobs:
       - name: Checkout (full history)
         shell: sh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
-          git clone http://oauth2:${GITHUB_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
+          git clone http://oauth2:${FORGEJO_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
           git fetch --tags
 
       - name: Configure git
@@ -146,10 +146,10 @@ jobs:
       - name: Checkout
         shell: sh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
-          git clone --depth=1 http://oauth2:${GITHUB_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
+          git clone --depth=1 http://oauth2:${FORGEJO_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
 
       - name: Install yq
         shell: sh
