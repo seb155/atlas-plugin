@@ -17,6 +17,7 @@ skills:
   - enterprise-audit
   - knowledge-manager
   - platform-update
+  - atlas-dev-self
 
 commands:
   - deploy
@@ -28,6 +29,7 @@ commands:
   - roadmap
   - knowledge
   - update
+  - dev-self
 
 agents: []
 
