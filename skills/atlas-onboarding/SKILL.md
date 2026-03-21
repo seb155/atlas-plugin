@@ -340,6 +340,7 @@ Required global settings:
 | `language` set | check key exists | Add `"language": "francais"` |
 | `hooks.UserPromptSubmit` exists | check key | Copy from ATLAS template |
 | `hooks.PreToolUse` exists | check key | Copy validate-bash.sh |
+| `showClearContextOnPlanAccept` = true | check key+value | Set to `true` |
 | Global commands `~/.claude/commands/a-*.md` | count files | Warn if missing |
 | `~/.claude/CLAUDE.md` exists | file check | Generate from template |
 

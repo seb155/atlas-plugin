@@ -345,6 +345,13 @@ ls "${HOME}/.claude/commands/a-"*.md 2>/dev/null | wc -l
 
 # 8. Global CLAUDE.md exists
 [ -f "${HOME}/.claude/CLAUDE.md" ]
+
+# 9. Plan mode shows clear context option (CC 2.1.81+)
+cat "$GLOBAL" | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+v=d.get('showClearContextOnPlanAccept', False)
+print('ok' if v else 'MISSING showClearContextOnPlanAccept')
+"
 ```
 
 Auto-fix suggestions:
@@ -355,6 +362,7 @@ Auto-fix suggestions:
 | Missing hooks | Copy hook templates from ATLAS plugin |
 | Missing global commands | Copy from `~/.claude/commands/` templates |
 | Missing language | Add `"language": "francais"` to global settings |
+| Missing showClearContextOnPlanAccept | Add `"showClearContextOnPlanAccept": true` to global settings |
 
 ### Cat 12: MCP Servers & Plugins (6 checks)
 
