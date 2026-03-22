@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.16.0 (2026-03-22)
+
+### ✨ Features
+- feat(hooks): add version check notification on session start
+
+### 🔧 Other Changes
+- refactor(tests): replace hardcoded count thresholds with structural checks
+
+
+
 ## v3.15.2 (2026-03-22)
 
 ### 🐛 Bug Fixes
