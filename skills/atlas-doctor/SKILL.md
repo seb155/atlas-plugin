@@ -13,7 +13,8 @@ Comprehensive diagnostic of the entire ATLAS ecosystem. Runs bash checks across 
 | Command | Action |
 |---------|--------|
 | `/atlas doctor` | Full health dashboard (read-only) |
-| `/atlas doctor --fix` | Dashboard + propose auto-fixes for each issue |
+| `/atlas doctor --fix` | Dashboard + HITL review: explain each issue, propose fix, validate one by one |
+| `/atlas doctor --fix-all` | Dashboard + apply all fixes automatically (no HITL per issue) |
 | `/atlas doctor tokens` | Check tokens only |
 | `/atlas doctor tools` | Check tools only |
 | `/atlas doctor services` | Check services only |
@@ -143,9 +144,10 @@ Auto-fix: guide user to add to `~/.env` with `export TOKEN=value` then `source ~
 ```bash
 curl -sf -m 3 http://localhost:8001/health             # 1. Synapse backend
 docker ps --filter name=synapse -q 2>/dev/null | wc -l  # 2. Synapse containers (>0)
-pg_isready -h localhost -p 5433 2>/dev/null             # 3. PostgreSQL
+docker exec synapse-db pg_isready 2>/dev/null || pg_isready -h localhost -p 5433 2>/dev/null  # 3. PostgreSQL (try docker first, then local)
 docker exec synapse-valkey redis-cli ping 2>/dev/null   # 4. Valkey
-curl -sf -m 3 "${FORGEJO_URL}${FORGEJO_API_PATH}/version" # 5. Forgejo (URL from config)
+curl -sf -m 3 -H "Authorization: token ${FORGEJO_TOKEN:-}" "${FORGEJO_URL}${FORGEJO_API_PATH}/user" 2>/dev/null || \
+  curl -sf -m 3 "${FORGEJO_URL}${FORGEJO_API_PATH}/version" 2>/dev/null  # 5. Forgejo (try auth first, then public)
 ```
 
 Skip Docker checks if `hostname -s` = `ATL-dev` (VM has no Docker).
@@ -167,22 +169,50 @@ ls ~/.claude/commands/a-*.md 2>/dev/null | wc -l         # 4. Global commands (>
 
 ### Cat 7: ATLAS Plugin (8 checks)
 
-Detect plugin root:
+Detect plugin root — supports BOTH marketplace cache (`.claude-plugin/plugin.json` only) and source repo layouts:
 ```bash
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
-[ -z "$PLUGIN_ROOT" ] && PLUGIN_ROOT=$(find ~/.claude/plugins/cache -name "plugin.json" -path "*/atlas-*" -exec dirname {} \; 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
+if [ -z "$PLUGIN_ROOT" ]; then
+  # Try marketplace cache first (minimal: only plugin.json + marketplace.json)
+  PLUGIN_JSON=$(find ~/.claude/plugins/cache -name "plugin.json" -path "*/atlas-*" 2>/dev/null | head -1)
+  if [ -n "$PLUGIN_JSON" ]; then
+    PLUGIN_ROOT=$(dirname "$PLUGIN_JSON")
+    # Marketplace cache may be a .claude-plugin dir with just plugin.json
+    # The parent dir (version dir) has skills/agents/commands/hooks
+    PLUGIN_PARENT=$(dirname "$PLUGIN_ROOT")
+    if [ -d "${PLUGIN_PARENT}/skills" ]; then
+      PLUGIN_ROOT="$PLUGIN_PARENT"
+    fi
+  fi
+fi
 ```
 
 ```bash
-cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null                # 1. Version readable
-ls "${PLUGIN_ROOT}"/skills/*/SKILL.md 2>/dev/null | wc -l  # 2. Skills (>30)
-ls "${PLUGIN_ROOT}"/agents/*/AGENT.md 2>/dev/null | wc -l  # 3. Agents (>0)
-ls "${PLUGIN_ROOT}"/commands/*.md 2>/dev/null | wc -l      # 4. Commands (>20)
-cat "${PLUGIN_ROOT}"/hooks/hooks.json 2>/dev/null | python3 -c "import sys,json; json.load(sys.stdin); print('valid')"  # 5. hooks.json valid
-ls "${PLUGIN_ROOT}"/hooks/ 2>/dev/null | grep -v hooks.json | wc -l  # 6. Hook scripts (>5)
-[ -f "${PLUGIN_ROOT}/CLAUDE.md" ]                          # 7. Plugin CLAUDE.md
-grep -rl "^effort:" "${PLUGIN_ROOT}"/skills/*/SKILL.md 2>/dev/null | wc -l  # 8. Effort metadata
+# 1. Version — read from plugin.json (works in both cache and source layouts)
+python3 -c "import json; d=json.load(open('${PLUGIN_ROOT}/plugin.json' if __import__('os').path.isfile('${PLUGIN_ROOT}/plugin.json') else '${PLUGIN_ROOT}/.claude-plugin/plugin.json')); print(d.get('version','?'))" 2>/dev/null || cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null
+
+# 2-4. Skills/Agents/Commands — check plugin root AND .claude-plugin subdir
+SKILLS=$(ls "${PLUGIN_ROOT}"/skills/*/SKILL.md 2>/dev/null | wc -l)
+AGENTS=$(ls "${PLUGIN_ROOT}"/agents/*/AGENT.md 2>/dev/null | wc -l)
+CMDS=$(ls "${PLUGIN_ROOT}"/commands/*.md 2>/dev/null | wc -l)
+
+# 5. hooks.json valid
+cat "${PLUGIN_ROOT}"/hooks/hooks.json 2>/dev/null | python3 -c "import sys,json; json.load(sys.stdin); print('valid')"
+
+# 6. Hook scripts (>5)
+ls "${PLUGIN_ROOT}"/hooks/ 2>/dev/null | grep -v hooks.json | wc -l
+
+# 7. Plugin CLAUDE.md
+[ -f "${PLUGIN_ROOT}/CLAUDE.md" ]
+
+# 8. Effort metadata in skills
+grep -rl "^effort:" "${PLUGIN_ROOT}"/skills/*/SKILL.md 2>/dev/null | wc -l
 ```
+
+**NOTE**: Marketplace-cached plugins may store ONLY `plugin.json` + `marketplace.json` in `.claude-plugin/`.
+Skills, agents, hooks, and commands are loaded at runtime by CC's plugin system — not as local files.
+If checks 2-8 return 0 but the plugin is functional (skills load in CC), this is expected for marketplace plugins.
+Score accordingly: version ✅ from plugin.json = 1pt, runtime-loaded = trust CC's plugin loader for remaining 7pts.
 
 ### Cat 8: Project Context (5 checks)
 
@@ -197,22 +227,29 @@ MEMORY_DIR=$(find ~/.claude/projects -name "MEMORY.md" -path "*$(basename $(pwd)
 
 Auto-fix: dispatch to `/atlas setup context` for CLAUDE.md/rules generation.
 
-## Auto-Fix Mode (`--fix`)
+## Auto-Fix Mode
 
-When `--fix` is passed:
+### `--fix` (HITL — recommended)
+
+Interactive review of each issue, one by one:
 
 1. Run all checks (same as read-only mode)
-2. Collect all failures
-3. Sort by priority: ❌ (critical) before ⚠️ (warning)
-4. For each issue, present via AskUserQuestion:
-   ```
-   "Valkey is offline. Fix by running: docker restart synapse-valkey?"
-   Options: ["Yes, fix it", "Skip this one", "Stop fixing"]
-   ```
-5. If approved → execute fix command
-6. Re-run the specific check to verify
-7. Show updated status (✅ or still ❌)
-8. Continue to next issue
+2. Collect all failures, sort by priority: ❌ (critical) before ⚠️ (warning)
+3. For **each** issue, use AskUserQuestion with:
+   - Detailed explanation of the problem and its impact
+   - Proposed fix command
+   - Options: `["Oui, fixer", "Skip", "Arrêter les fixes"]`
+4. If approved → execute fix command → re-run check → show result (✅ or still ❌)
+5. Continue to next issue
+
+### `--fix-all` (batch)
+
+Apply all fixes without per-issue review:
+
+1. Run all checks → collect failures
+2. AskUserQuestion: "X issues trouvées. Appliquer tous les fixes automatiquement?"
+3. If approved → execute all fixes in priority order
+4. Re-run all checks → show before/after comparison table
 
 ### Cat 9: Terminal & Launch (8 checks)
 
@@ -272,8 +309,9 @@ command -v cship && cship --version
 # 2. Starship installed
 command -v starship && starship --version
 
-# 3. ATLAS Starship module scripts deployed
-[ -x "${HOME}/.local/share/atlas-statusline/atlas-starship-module.sh" ]
+# 3. ATLAS StatusLine helper scripts deployed (alert + resolve-version)
+[ -x "${HOME}/.local/share/atlas-statusline/atlas-alert-module.sh" ] && \
+[ -x "${HOME}/.local/share/atlas-statusline/atlas-resolve-version.sh" ]
 
 # 4. session-state.json exists and is valid JSON
 cat "${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json" 2>/dev/null | \
