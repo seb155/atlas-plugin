@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.15.0 (2026-03-22)
+
+### ✨ Features
+- feat(skills): add frontend-workflow skill + UX architecture gate
+
+
+
 ## v3.14.0 (2026-03-22)
 
 ### ✨ Features
