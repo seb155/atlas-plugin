@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.19.1 (2026-03-22)
+
+### 🐛 Bug Fixes
+- fix: assign frontend-workflow and test-orchestrator to dev tier
+
+### 🔧 Other Changes
+- docs: add .blueprint/ + rules + memory for AI maintainability
+
+
+
 ## v3.19.0 (2026-03-22)
 
 ### ✨ Features
