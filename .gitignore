@@ -4,3 +4,4 @@ dist/
 # OS files
 .DS_Store
 tests/__pycache__/
+__pycache__/
