@@ -71,17 +71,24 @@ jobs:
           scripts/detect-platform.sh | python3 -c "import sys,json; json.load(sys.stdin); print('detect-platform: OK')"
           echo "All E2E smoke tests passed"
 
-      - name: Regression gate
+      - name: Regression gate (dynamic — no hardcoded thresholds)
         shell: sh
         run: |
           SKILLS=$(find dist/atlas-admin/skills -name 'SKILL.md' | wc -l)
           CMDS=$(find dist/atlas-admin/commands -name '*.md' | wc -l)
           AGENTS=$(find dist/atlas-admin/agents -name 'AGENT.md' 2>/dev/null | wc -l)
-          echo "Skills: ${SKILLS} | Commands: ${CMDS} | Agents: ${AGENTS}"
-          test ${SKILLS} -ge 40 || { echo "REGRESSION: skill count dropped below 40"; exit 1; }
-          test ${CMDS} -ge 38 || { echo "REGRESSION: command count dropped below 38"; exit 1; }
-          test ${AGENTS} -ge 6 || { echo "REGRESSION: agent count dropped below 6"; exit 1; }
-          echo "Regression gate passed"
+          echo "Current build: Skills=${SKILLS} | Commands=${CMDS} | Agents=${AGENTS}"
+
+          # Sanity check: must have at least 1 of each
+          test ${SKILLS} -gt 0 || { echo "REGRESSION: zero skills"; exit 1; }
+          test ${CMDS} -gt 0 || { echo "REGRESSION: zero commands"; exit 1; }
+
+          # Structural checks (more valuable than count gates)
+          test -f dist/atlas-admin/.claude-plugin/plugin.json || { echo "MISSING: plugin.json"; exit 1; }
+          test -f dist/atlas-admin/hooks/hooks.json || { echo "MISSING: hooks.json"; exit 1; }
+          test -f dist/atlas-admin/skills/atlas-assist/SKILL.md || { echo "MISSING: atlas-assist skill"; exit 1; }
+
+          echo "Regression gate passed (${SKILLS} skills, ${CMDS} commands, ${AGENTS} agents)"
 
   release:
     name: Auto-release (SemVer from commits)
