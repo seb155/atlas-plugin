@@ -22,13 +22,39 @@ Present 2-3 approaches with comparison tables. Get approval before implementing.
 - Read recent commits for relevant context
 - Identify affected personas
 
-### 2. Ask Questions (ONE at a time)
+### 2. UX Architecture Gate (MANDATORY for UI/frontend work)
+If the task involves UI components, pages, or visual elements, ask these BEFORE any design:
+
+**Q1: Where does this component live?**
+- Shared library (`@axoiq/atlas-components`) → reusable across apps
+- App-specific (e.g., `frontend/src/pages/`) → single consumer
+- New standalone app → separate deployment
+
+**Q2: What existing components can we reuse?**
+- Search the codebase for similar patterns (AG Grid, modals, drawers, data providers)
+- Check `atlas-components/src/` for existing shared components
+- Check `frontend/src/components/` for app-specific patterns
+- Present findings via AskUserQuestion: "Reuse X or build new?"
+
+**Q3: How will data flow?**
+- Data provider pattern (Context injection) → for shared components
+- Direct API calls → for app-specific components
+- Props drilling → for small, contained components
+
+**Q4: Who consumes this?**
+- Synapse only → app-specific page
+- Multiple apps (Synapse + Enterprise Hub + standalone) → shared library
+- Present consumer wiring plan with ASCII diagram
+
+Skip this gate ONLY for non-UI work (backend, infra, data).
+
+### 3. Ask Questions (ONE at a time)
 - Use AskUserQuestion for EVERY question (never free text)
 - Prefer multiple choice when possible
 - Open-ended only when choices can't be enumerated
 - Focus on: purpose, constraints, success criteria, personas affected
 
-### 3. Explore Approaches
+### 4. Explore Approaches
 - Propose 2-3 different approaches
 - For EACH approach, present:
 
@@ -48,7 +74,7 @@ Present 2-3 approaches with comparison tables. Get approval before implementing.
 - Lead with your recommendation and explain WHY
 - Use AskUserQuestion for the choice
 
-### 4. Present Design
+### 5. Present Design
 - Break into sections of 200-300 words max
 - Ask after each section: "Does this look right?"
 - Include:
@@ -58,7 +84,7 @@ Present 2-3 approaches with comparison tables. Get approval before implementing.
   - Error handling approach
   - Testing strategy
 
-### 5. Visual Companion (when helpful)
+### 6. Visual Companion (when helpful)
 For UI/UX decisions, always include ASCII mockups:
 
 ```
@@ -69,7 +95,7 @@ For UI/UX decisions, always include ASCII mockups:
 └──────────────────────────────────────┘
 ```
 
-### 6. After Design Approval
+### 7. After Design Approval
 - Write design doc to `docs/plans/YYYY-MM-DD-{topic}-design.md` (or project convention)
 - Ask: "Ready to create the implementation plan?"
 - Invoke `plan-builder` skill for the detailed engineering plan
