@@ -1,14 +1,10 @@
-name: Build & Publish
+name: CI
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - "v*"
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -55,7 +51,7 @@ jobs:
         run: |
           git clone --depth=1 http://oauth2:${GIT_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
 
-      - name: Build for E2E tests
+      - name: Build for tests
         shell: sh
         run: ./build.sh all
 
@@ -117,53 +113,3 @@ jobs:
         run: |
           chmod +x .forgejo/scripts/auto-release.sh
           .forgejo/scripts/auto-release.sh
-
-  publish:
-    name: Publish to Forgejo Package Registry
-    runs-on: ci-atlas
-    needs: [build, test]
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: Checkout
-        shell: sh
-        env:
-          GIT_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
-          FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
-        run: |
-          git clone --depth=1 http://oauth2:${GIT_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
-
-      - name: Build all tiers
-        shell: sh
-        run: ./build.sh all
-
-      - name: Package and publish tiers
-        shell: sh
-        env:
-          FORGEJO_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
-          FORGEJO_URL: ${{ github.server_url }}
-          OWNER: ${{ github.repository_owner }}
-        run: |
-          set -eu
-          VERSION=$(cat VERSION | tr -d '[:space:]')
-          echo "Publishing version ${VERSION}"
-
-          for tier in admin dev user; do
-            pkg="atlas-${tier}"
-            tarball="${pkg}-${VERSION}.tar.gz"
-
-            echo "Packaging ${pkg} v${VERSION}..."
-            tar -czf "${tarball}" -C dist "${pkg}"
-
-            echo "Publishing ${tarball}..."
-            curl --fail-with-body \
-              --silent --show-error \
-              -X PUT \
-              -H "Authorization: token ${FORGEJO_TOKEN}" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary "@${tarball}" \
-              "${FORGEJO_URL}/api/packages/${OWNER}/generic/${pkg}/${VERSION}/${tarball}"
-
-            echo "  Published: ${FORGEJO_URL}/${OWNER}/-/packages/generic/${pkg}/${VERSION}"
-          done
-
-          echo "All 3 tiers published for v${VERSION}"
