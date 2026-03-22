@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.19.0 (2026-03-22)
+
+### ✨ Features
+- feat(onboarding,doctor): add Opus 4.6 CC settings validation (15 checks)
+
+
+
 ## v3.18.1 (2026-03-22)
 
 ### 🐛 Bug Fixes
