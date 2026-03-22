@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.15.1 (2026-03-22)
+
+### 🐛 Bug Fixes
+- fix(release): auto-release now updates plugin.json version
+
+
+
 ## v3.15.0 (2026-03-22)
 
 ### ✨ Features
