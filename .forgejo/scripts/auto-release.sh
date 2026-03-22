@@ -150,6 +150,20 @@ if [ -f "VERSION" ]; then
   echo "$NEXT_VERSION" > VERSION
   echo "📄 Updated VERSION → ${NEXT_VERSION}"
   VERSION_FILE="VERSION"
+
+  # Also update plugin.json if it exists (Claude Code plugin convention)
+  PLUGIN_JSON=".claude-plugin/plugin.json"
+  if [ -f "$PLUGIN_JSON" ]; then
+    python3 -c "
+import json
+with open('${PLUGIN_JSON}') as f: d = json.load(f)
+d['version'] = '${NEXT_VERSION}'
+with open('${PLUGIN_JSON}', 'w') as f: json.dump(d, f, indent=2)
+f.write('\n')
+print('ok')
+" && echo "📄 Updated ${PLUGIN_JSON} version → ${NEXT_VERSION}"
+    git add "$PLUGIN_JSON"
+  fi
 elif [ -f "package.json" ]; then
   # Update version in package.json using python3 (no jq dependency)
   python3 -c "
