@@ -59,6 +59,7 @@ declare -A EMOJI_MAP=(
   [atlas-dev-self]="🔁" [atlas-onboarding]="👋" [atlas-doctor]="🩺"
   [atlas-vault]="🔐" [atlas-location]="📍"
   [youtube-transcript]="🎬"
+  [plan-review]="🔍"
 )
 
 # Skill category map
@@ -78,6 +79,7 @@ declare -A CATEGORY_MAP=(
   [atlas-dev-self]="Meta" [atlas-onboarding]="Meta" [atlas-doctor]="Meta"
   [atlas-vault]="Security" [atlas-location]="Meta"
   [youtube-transcript]="Knowledge"
+  [plan-review]="Quality"
 )
 
 # Skill one-liner descriptions
@@ -127,6 +129,7 @@ declare -A DESC_MAP=(
   [atlas-vault]="Ingest user vault for personalized behavior and trust-based access"
   [atlas-location]="Location profiles, WiFi network trust, and security adaptation"
   [youtube-transcript]="Extract YouTube video transcripts to timestamped markdown files"
+  [plan-review]="Iterative plan review with simulation, consolidation, and HITL gates"
 )
 
 # Category header emojis

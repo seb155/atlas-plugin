@@ -19,6 +19,7 @@ skills:
   - platform-update
   - atlas-dev-self
   - atlas-vault
+  - plan-review
 
 commands:
   - deploy
@@ -33,6 +34,7 @@ commands:
   - dev-self
   - vault
   - ci
+  - review-plan
 
 agents: []
 

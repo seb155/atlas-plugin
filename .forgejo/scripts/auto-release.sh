@@ -164,6 +164,21 @@ print('ok')
 " && echo "📄 Updated ${PLUGIN_JSON} version → ${NEXT_VERSION}"
     git add "$PLUGIN_JSON"
   fi
+
+  # Also update marketplace.json version (Claude Code marketplace discovery)
+  MARKETPLACE_JSON=".claude-plugin/marketplace.json"
+  if [ -f "$MARKETPLACE_JSON" ]; then
+    python3 -c "
+import json
+with open('${MARKETPLACE_JSON}') as f: d = json.load(f)
+for p in d.get('plugins', []):
+    p['version'] = '${NEXT_VERSION}'
+with open('${MARKETPLACE_JSON}', 'w') as f: json.dump(d, f, indent=2)
+f.write('\n')
+print('ok')
+" && echo "📄 Updated ${MARKETPLACE_JSON} version → ${NEXT_VERSION}"
+    git add "$MARKETPLACE_JSON"
+  fi
 elif [ -f "package.json" ]; then
   # Update version in package.json using python3 (no jq dependency)
   python3 -c "
