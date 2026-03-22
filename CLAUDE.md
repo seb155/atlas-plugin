@@ -23,12 +23,12 @@ dist/atlas-{user,dev,user}/      ← Self-contained artifacts (no runtime deps)
 
 | Component | Location | Count (admin) |
 |-----------|----------|---------------|
-| Skills | `skills/*/SKILL.md` | ~40 |
+| Skills | `skills/*/SKILL.md` | 48 (43 profile + atlas-assist) |
 | Agents | `agents/*/AGENT.md` | 6 |
-| Commands | `commands/*.md` | ~37 |
-| Hooks | `hooks/hooks.json` + scripts | 8 |
+| Commands | `commands/*.md` | 45 |
+| Hooks | `hooks/hooks.json` + scripts | 7 |
 | Refs | `skills/refs/*/SKILL.md` | 5 |
-| Tests | `tests/test_*.py` | 14 |
+| Tests | `tests/test_*.py` | 16 |
 
 ## COMMANDS
 
@@ -57,7 +57,7 @@ make lint                         # Frontmatter + coverage checks
 1. **Self-Contained Tiers** — Each `dist/atlas-{tier}/` is independent. No runtime inheritance.
 2. **Build-Time Resolution** — `resolve_field()` in build.sh resolves YAML inheritance recursively.
 3. **Dynamic Generation** — `generate-master-skill.sh` builds atlas-assist per tier with real counts.
-4. **Test Everything** — 14 test types validate structure, frontmatter, cross-refs, build output, hooks.
+4. **Test Everything** — 16 test types validate structure, frontmatter, cross-refs, build output, hooks.
 5. **Version SSoT** — `VERSION` file → propagated to all JSON manifests by build.sh.
 6. **Visual Identity** — All hook outputs use `🏛️ ATLAS │` prefix. See `skills/refs/atlas-visual-identity/`.
 
@@ -114,11 +114,24 @@ This plugin develops itself. When modifying atlas-plugin:
 | `Makefile` | Dev workflow shortcuts |
 | `VERSION` | Semver SSoT |
 | `tests/conftest.py` | Test fixtures + constants |
-| `.forgejo/workflows/build-publish.yaml` | CI/CD |
+| `.forgejo/workflows/ci.yaml` | CI (test on push/PR) |
+| `.forgejo/workflows/publish.yaml` | Release (build on tag) |
+
+## CONTEXT LOADING (Lazy)
+
+| Need | Read |
+|------|------|
+| AXOIQ vision + Synapse concepts | `.blueprint/VISION.md` |
+| Build system deep dive | `.blueprint/ARCHITECTURE.md` |
+| Skill catalog (48 skills) | `.blueprint/SKILL-CATALOG.md` |
+| Integration mapping | `.blueprint/INTEGRATION-MAP.md` |
+| Copy-paste patterns | `.blueprint/PATTERNS.md` |
+| Test strategy | `.blueprint/TESTING.md` |
+| All docs index | `.blueprint/INDEX.md` |
 
 ## TESTING
 
-14 test files covering:
+16 test files covering:
 - `test_skill_frontmatter` — name, description, effort in every SKILL.md
 - `test_skill_coverage` — no orphan skills (except atlas-assist source)
 - `test_command_structure` — command routing validity
@@ -132,3 +145,10 @@ This plugin develops itself. When modifying atlas-plugin:
 - `test_manifest` — plugin.json validity
 - `test_no_hardcoded_paths` — portability
 - `test_skill_quality` — documentation quality
+
+## COMPACTION
+
+Preserve: modified file paths, VERSION, branch, tier being built, test failures,
+build.sh changes, skill frontmatter changes, hook additions.
+SSoT = VERSION file. Always `make test` before commit.
+Memory: `~/.claude/projects/-home-sgagnon-workspace-atlas-projects-atlas-dev-plugin/memory/`
