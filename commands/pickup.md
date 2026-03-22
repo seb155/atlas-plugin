@@ -6,30 +6,40 @@ Resume work from a handoff file. Loads context, reads referenced files, presents
 
 ### Step 1: Find handoff files
 
+Search ALL 3 locations, sorted by modification time (most recent first):
+
 ```bash
-ls -t handoff-*.md 2>/dev/null   # Project root, sorted by date desc
-ls -t .claude/handoffs/*.json 2>/dev/null  # Structured format
+ls -t .blueprint/handoffs/handoff-*.md 2>/dev/null   # Primary (gold standard location)
+ls -t handoff-*.md 2>/dev/null                        # Legacy (project root)
+ls -t .claude/handoffs/*.json 2>/dev/null              # Structured format
 ```
 
-**If multiple found** → Read the first 30 lines of each handoff to extract summary, then present a comparison table via AskUserQuestion:
+**If multiple found** → Read the first 30 lines of each handoff to extract summary. Present a comparison table via AskUserQuestion sorted by **date DESC** (most recent first), with age and priority indicators:
 
 ```
 🏛️ ATLAS │ PICKUP — {N} sessions disponibles
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-| # | Date       | Focus                      | Livré             | Next Step        |
-|---|------------|----------------------------|--------------------|------------------|
-| 1 | 2026-03-19 | Plugin v3.1 + Feature Mgmt | P0-P3 ✅ board     | P4 Backend API   |
-| 2 | 2026-03-18 | SynapseCAD Sprint 1.5      | 587 WIDs ✅        | Loop diagrams    |
-| 3 | 2026-03-17 | Identity Platform          | Headscale ✅       | RBAC sync        |
+| # | Date       | Age | Focus                      | Livré             | Next Step        |
+|---|------------|-----|----------------------------|--------------------|------------------|
+| 1 | 2026-03-21 | 2h  | NetBird SSO + Mesh         | 6/6 nodes P2P ✅   | P2.7 DNS Fix     |
+| 2 | 2026-03-21 | 5h  | IaC Phase 1 + NetBird      | PR #1 merged ✅    | P2.4 Authentik    |
+| 3 | 2026-03-20 | 1d  | Test Coverage Phase 3      | 32 tests ✅        | FE visual tests  |
 
 Quel session reprendre?
 ```
+
+**Sorting rules**:
+- Primary sort: date DESC (most recent first)
+- If handoff has pending tasks with "CRITICAL" or "BLOCKER" → add 🔴 indicator
+- Show "Age" column: `2h`, `5h`, `1d`, `3d` for quick scanning
+- Handoffs older than 7 days → show as `⚠️ stale` (context may have drifted)
 
 Extract from each handoff: the "Focus" line (header or first summary), "What was done" (first 2-3 bullets), and "Next Steps" (first item). Keep the table to 1 line per handoff for scannability.
 
 **If only 1** → auto-load, no prompt.
 **If none** → check `git log --oneline -5` + `.blueprint/plans/INDEX.md` + `.blueprint/FEATURES.md` to suggest what to work on.
+**If argument provided** (e.g., `/pickup handoff-2026-03-21-netbird.md`) → load that specific file directly.
 
 ### Step 2: Read handoff + Context Reload files
 
