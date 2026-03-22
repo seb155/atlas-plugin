@@ -1,5 +1,5 @@
 {
-  "name": "atlas",
+  "name": "atlas-admin",
   "description": "ATLAS \u2014 AXOIQ's unified AI engineering assistant. Multi-tier co-pilot with skills, agents, commands, and lifecycle hooks. HITL gates.",
   "version": "3.19.1",
   "author": {

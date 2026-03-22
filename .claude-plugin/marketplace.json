@@ -1,5 +1,5 @@
 {
-  "name": "atlas-marketplace",
+  "name": "atlas-admin-marketplace",
   "description": "AXOIQ marketplace for the ATLAS unified AI engineering assistant plugin",
   "owner": {
     "name": "Seb Gagnon",
@@ -7,7 +7,7 @@
   },
   "plugins": [
     {
-      "name": "atlas",
+      "name": "atlas-admin",
       "description": "ATLAS \u2014 AXOIQ unified AI engineering assistant. 44 commands + 44 skills + 6 agents + 4 hooks. Gold standard handoff/pickup. Auto-routing co-pilot with HITL gates.",
       "version": "3.19.1",
       "source": {
