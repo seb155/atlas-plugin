@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.13.0 (2026-03-22)
+
+### ✨ Features
+- feat(pickup): search .blueprint/handoffs/ first, sort by date DESC, add Age column and priority indicators
+
+
+
 ## v3.12.0 (2026-03-21)
 
 ### ✨ Features
