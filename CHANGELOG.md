@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.18.0 (2026-03-22)
+
+### ✨ Features
+- feat(statusline): dynamic version from CC marketplace registry
+
+
+
 ## v3.17.0 (2026-03-22)
 
 ### ✨ Features
