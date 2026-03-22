@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.19.2 (2026-03-22)
+
+### 🐛 Bug Fixes
+- fix(marketplace): rename to atlas-admin for system-wide CC install
+
+
+
 ## v3.19.1 (2026-03-22)
 
 ### 🐛 Bug Fixes
