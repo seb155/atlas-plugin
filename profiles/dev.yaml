@@ -11,9 +11,11 @@ skills:
   - subagent-dispatch
   - git-worktrees
   - frontend-design
+  - frontend-workflow
   # Quality
   - systematic-debugging
   - verification
+  - test-orchestrator
   - code-review
   - code-simplify
   # Ship

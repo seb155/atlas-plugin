@@ -60,6 +60,8 @@ declare -A EMOJI_MAP=(
   [atlas-vault]="🔐" [atlas-location]="📍"
   [youtube-transcript]="🎬"
   [plan-review]="🔍"
+  [frontend-workflow]="🎨"
+  [test-orchestrator]="🧪"
 )
 
 # Skill category map
@@ -80,6 +82,8 @@ declare -A CATEGORY_MAP=(
   [atlas-vault]="Security" [atlas-location]="Meta"
   [youtube-transcript]="Knowledge"
   [plan-review]="Quality"
+  [frontend-workflow]="Planning"
+  [test-orchestrator]="Quality"
 )
 
 # Skill one-liner descriptions
@@ -130,6 +134,8 @@ declare -A DESC_MAP=(
   [atlas-location]="Location profiles, WiFi network trust, and security adaptation"
   [youtube-transcript]="Extract YouTube video transcripts to timestamped markdown files"
   [plan-review]="Iterative plan review with simulation, consolidation, and HITL gates"
+  [frontend-workflow]="6-phase iterative UX development with architectural gates and HITL"
+  [test-orchestrator]="Test pyramid orchestration: unit, integration, E2E, security, coverage"
 )
 
 # Category header emojis

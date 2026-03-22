@@ -17,11 +17,10 @@
 | Tier | Skills | Agents | Refs | Persona |
 |------|--------|--------|------|---------|
 | user | 14 | 1 | 2 | helpful assistant |
-| dev | +18 (=32) | +5 (=6) | +3 (=5) | senior engineering architect |
-| admin | +13 (=45) | — | — | infrastructure architect |
-| unassigned | 3 | — | — | — |
+| dev | +20 (=34) | +5 (=6) | +3 (=5) | senior engineering architect |
+| admin | +13 (=47) | — | — | infrastructure architect |
 
-*atlas-assist is generated per tier, not in profiles.*
+*atlas-assist is generated per tier (not in profiles). 47 profile + 1 generated = 48 total.*
 
 ---
 
@@ -52,7 +51,7 @@
 | 21 | feature-board | admin | Project | 📌 | low | `/board` |
 | 22 | finishing-branch | dev | Ship | 📦 | medium | `/ship` |
 | 23 | frontend-design | dev | Planning | 🎨 | medium | `/design` |
-| 24 | frontend-workflow | — | Planning | 🎨 | high | — |
+| 24 | frontend-workflow | dev | Planning | 🎨 | high | — |
 | 25 | git-worktrees | dev | Implement | 🌿 | low | — |
 | 26 | hookify | dev | Meta | 🪝 | medium | `/hooks` |
 | 27 | infrastructure-ops | admin | Infra | 🔧 | high | `/infra` |
@@ -73,7 +72,7 @@
 | 42 | subagent-dispatch | dev | Implement | 🤖 | medium | — |
 | 43 | systematic-debugging | dev | Quality | 🔬 | medium | `/debug` |
 | 44 | tdd | dev | Implement | 🧪 | medium | `/tdd` |
-| 45 | test-orchestrator | — | Quality | 🧪 | — | — |
+| 45 | test-orchestrator | dev | Quality | 🧪 | medium | — |
 | 46 | user-profiler | user | Personal | 👤 | medium | `/profile` |
 | 47 | verification | dev | Quality | 📊 | medium | `/verify` |
 | 48 | youtube-transcript | user | Knowledge | 🎬 | — | `/transcript` |
@@ -88,7 +87,7 @@
 | brainstorming | dev | Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval |
 | context-discovery | user | Auto-scan project context + CLAUDE.md audit + codemap generation |
 | frontend-design | dev | Distinctive, production-grade UI/UX implementation |
-| frontend-workflow | — | 6-phase iterative UX development (NEW) |
+| frontend-workflow | dev | 6-phase iterative UX development with architectural gates |
 | plan-builder | dev | Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15 |
 | plan-review | admin | Review plans against 15 criteria. Gate: 12/15 |
 
@@ -107,7 +106,7 @@
 | code-review | dev | Review PR/diffs with confidence filtering |
 | code-simplify | dev | Refactoring for clarity and maintainability |
 | systematic-debugging | dev | Observe → hypothesize → test → fix (max 2 attempts) |
-| test-orchestrator | — | Test pyramid orchestration (NEW) |
+| test-orchestrator | dev | Test pyramid orchestration: unit, integration, E2E, security |
 | verification | dev | L1-L6 tests + security + perf benchmarks |
 
 ### 📚 Knowledge (4 skills)
