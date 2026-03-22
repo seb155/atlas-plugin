@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.15.2 (2026-03-22)
+
+### 🐛 Bug Fixes
+- fix(ci): replace hardcoded skill count gates with structural checks
+- fix(release): auto-sync marketplace.json + plugin.json + VERSION on release
+
+
+
 ## v3.15.1 (2026-03-22)
 
 ### 🐛 Bug Fixes
