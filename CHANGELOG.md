@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.18.1 (2026-03-22)
+
+### 🐛 Bug Fixes
+- fix(build): add Forgejo repo URL to marketplace.json source
+
+
+
 ## v3.18.0 (2026-03-22)
 
 ### ✨ Features
