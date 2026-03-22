@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.14.0 (2026-03-22)
+
+### ✨ Features
+- feat(hooks): add code-quality-check hook for dead imports and antipatterns
+
+### 🔧 Other Changes
+- chore(release): bump to v3.14.0 — sync marketplace + plugin.json versions [skip ci]
+
+
+
 ## v3.13.1 (2026-03-22)
 
 ### 🐛 Bug Fixes
