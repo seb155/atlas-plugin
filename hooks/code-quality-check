@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# Code Quality Check Hook — PostToolUse (Edit|Write)
+# Detects common antipatterns and dead code imports in written/edited files.
+# Catches patterns from Synapse gotchas + lessons learned.
+#
+# Input: JSON on stdin with file_path
+# Output: Warning messages on stdout
+# Exit: 0 always (warnings only, never blocks)
+
+set -uo pipefail
+# Note: no -e because grep returns 1 on no match (expected behavior)
+
+INPUT=$(cat)
+FILE_PATH=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path', d.get('input', {}).get('file_path', '')))" 2>/dev/null || echo "")
+
+[[ -z "$FILE_PATH" || ! -f "$FILE_PATH" ]] && exit 0
+
+WARNINGS=""
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TypeScript / React checks
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if [[ "$FILE_PATH" == *.ts || "$FILE_PATH" == *.tsx ]]; then
+
+  # Check 1: Zustand store without selector (infinite re-render)
+  # Bad:  useAppStore()  or  useEditorStore()
+  # Good: useAppStore((s) => s.field) or useAppStore.getState()
+  if grep -qP 'use\w+Store\(\s*\)' "$FILE_PATH" 2>/dev/null; then
+    WARNINGS+="🏛️ ATLAS │ ♻️⚠️ QUALITY │ Zustand store called without selector\n"
+    WARNINGS+="   └─ ${FILE_PATH##*/} — use useStore((s) => s.field) to prevent infinite re-renders\n"
+  fi
+
+  # Check 2: Dead imports — import from files that don't exist
+  if [[ -n "$PROJECT_ROOT" ]]; then
+    FRONTEND_SRC="$PROJECT_ROOT/frontend/src"
+    if [[ -d "$FRONTEND_SRC" && "$FILE_PATH" == *frontend/src/* ]]; then
+      FILE_DIR=$(dirname "$FILE_PATH")
+      while IFS= read -r import_line; do
+        # Extract the full import specifier (relative ./ or ../ or project alias @/)
+        # Skip package imports like @tanstack/*, @radix-ui/*, etc.
+        import_spec=$(echo "$import_line" | grep -oP "from ['\"]\\K(\\.{1,2}/[^'\"]+|@/[^'\"]+)")
+        [[ -z "$import_spec" ]] && continue
+
+        # Resolve to absolute path
+        if [[ "$import_spec" == @/* ]]; then
+          resolved=$(realpath -m "$FRONTEND_SRC/${import_spec#@/}" 2>/dev/null || echo "")
+        else
+          resolved=$(realpath -m "$FILE_DIR/$import_spec" 2>/dev/null || echo "")
+        fi
+        [[ -z "$resolved" ]] && continue
+
+        # Check if resolved path exists (with common extensions)
+        found=false
+        for ext in "" ".ts" ".tsx" ".js" ".jsx" "/index.ts" "/index.tsx"; do
+          if [[ -f "${resolved}${ext}" || -d "$resolved" ]]; then
+            found=true
+            break
+          fi
+        done
+
+        if [[ "$found" == "false" ]]; then
+          WARNINGS+="🏛️ ATLAS │ 🔗❌ QUALITY │ Import from non-existent module\n"
+          WARNINGS+="   └─ ${FILE_PATH##*/}: $import_spec\n"
+          break  # Only report first dead import per file
+        fi
+      done < <(grep -P "^import .+ from ['\"]" "$FILE_PATH" 2>/dev/null || true)
+    fi
+  fi
+
+  # Check 3: Hardcoded Tailwind colors (not syn-* theme tokens)
+  if grep -qP '(bg|text|border)-(zinc|gray|slate|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d' "$FILE_PATH" 2>/dev/null; then
+    # Exclude UI primitives and config files
+    if [[ "$FILE_PATH" != *components/ui/* && "$FILE_PATH" != *config* && "$FILE_PATH" != *tokens* ]]; then
+      WARNINGS+="🏛️ ATLAS │ 🎨⚠️ QUALITY │ Hardcoded Tailwind color detected\n"
+      WARNINGS+="   └─ ${FILE_PATH##*/} — use bg-syn-*/text-syn-*/border-syn-* theme tokens\n"
+    fi
+  fi
+
+  # Check 4: npm/yarn instead of bun
+  if grep -qP '(npm (install|run|exec|ci)|yarn (add|install|run)|npx )' "$FILE_PATH" 2>/dev/null; then
+    if [[ "$FILE_PATH" != *.md && "$FILE_PATH" != *CLAUDE* ]]; then
+      WARNINGS+="🏛️ ATLAS │ 📦⚠️ QUALITY │ npm/yarn/npx reference detected\n"
+      WARNINGS+="   └─ ${FILE_PATH##*/} — project uses bun (bun install, bunx, bun run)\n"
+    fi
+  fi
+
+  # Check 5: useEffect with Zustand action in dependency array
+  if grep -qP 'useEffect\([^)]*\[.*use\w+Store' "$FILE_PATH" 2>/dev/null; then
+    WARNINGS+="🏛️ ATLAS │ ♻️⚠️ QUALITY │ Zustand action in useEffect deps\n"
+    WARNINGS+="   └─ ${FILE_PATH##*/} — use useStore.getState().action() for fire-and-forget\n"
+  fi
+
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Python checks
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if [[ "$FILE_PATH" == *.py ]]; then
+
+  # Check 6: Missing project_id filter on query (multi-tenant safety)
+  if [[ "$FILE_PATH" == *service*.py || "$FILE_PATH" == *endpoint*.py ]]; then
+    if grep -qP '\.query\(|\.filter\(|\.select\(' "$FILE_PATH" 2>/dev/null; then
+      if ! grep -qP 'project_id' "$FILE_PATH" 2>/dev/null; then
+        WARNINGS+="🏛️ ATLAS │ 🏢⚠️ QUALITY │ Query without project_id filter\n"
+        WARNINGS+="   └─ ${FILE_PATH##*/} — multi-tenant: every data query needs project_id\n"
+      fi
+    fi
+  fi
+
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Output
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if [[ -n "$WARNINGS" ]]; then
+  echo -e "$WARNINGS"
+fi
+
+exit 0

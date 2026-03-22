@@ -60,6 +60,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/test-impact-analysis\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/code-quality-check\"",
+            "async": true,
+            "timeout": 5
           }
         ]
       }
