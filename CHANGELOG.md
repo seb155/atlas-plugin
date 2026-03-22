@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.17.0 (2026-03-22)
+
+### ✨ Features
+- feat(skills): add test-orchestrator skill + gitignore pycache
+
+
+
 ## v3.16.0 (2026-03-22)
 
 ### ✨ Features
