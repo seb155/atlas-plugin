@@ -23,6 +23,7 @@ skills:
   # Planning
   - plan-builder
   - brainstorming
+  - vision-alignment
   # Meta
   - decision-log
   - session-retrospective
@@ -47,6 +48,7 @@ commands:
   - ship
   - plan
   - brainstorm
+  - idea
   - design
   - eng
   - estimate

@@ -62,6 +62,7 @@ declare -A EMOJI_MAP=(
   [plan-review]="🔍"
   [frontend-workflow]="🎨"
   [test-orchestrator]="🧪"
+  [vision-alignment]="🧭"
 )
 
 # Skill category map
@@ -84,6 +85,7 @@ declare -A CATEGORY_MAP=(
   [plan-review]="Quality"
   [frontend-workflow]="Planning"
   [test-orchestrator]="Quality"
+  [vision-alignment]="Planning"
 )
 
 # Skill one-liner descriptions
@@ -136,6 +138,7 @@ declare -A DESC_MAP=(
   [plan-review]="Iterative plan review with simulation, consolidation, and HITL gates"
   [frontend-workflow]="6-phase iterative UX development with architectural gates and HITL"
   [test-orchestrator]="Test pyramid orchestration: unit, integration, E2E, security, coverage"
+  [vision-alignment]="Strategic idea intake — scan mega plan, sub-plans, features, backlog before deciding"
 )
 
 # Category header emojis
