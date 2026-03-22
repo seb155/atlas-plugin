@@ -179,7 +179,7 @@ EOF
       "name": "atlas-${tier}",
       "description": "ATLAS ${tier_upper} — AXOIQ AI Engineering Assistant (${tier} tier)",
       "version": "${VERSION}",
-      "source": "./",
+      "source": { "source": "url", "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }
   ]
