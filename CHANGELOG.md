@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.13.1 (2026-03-22)
+
+### 🐛 Bug Fixes
+- fix(ci): split workflow into ci.yaml + publish.yaml — fixes false failure status from skipped publish job
+
+
+
 ## v3.13.0 (2026-03-22)
 
 ### ✨ Features
