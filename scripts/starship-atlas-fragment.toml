@@ -15,10 +15,10 @@ when = "test -f ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
 format = "[$output](bold green) "
 disabled = false
 
-# Plugin version
+# Plugin version (resolved via shared contract script — bidirectional awareness)
 [custom.atlas_version]
-command = "jq -r '.plugin_version // \"?\"' ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json 2>/dev/null"
-when = "test -f ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
+command = "~/.local/share/atlas-statusline/atlas-resolve-version.sh"
+when = "test -x ~/.local/share/atlas-statusline/atlas-resolve-version.sh"
 format = "[$output](bold cyan) "
 disabled = false
 

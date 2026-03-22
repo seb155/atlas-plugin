@@ -63,6 +63,7 @@ mkdir -p ~/.local/share/atlas-statusline/
 PLUGIN_SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"
 cp "$PLUGIN_SCRIPTS/atlas-starship-module.sh" ~/.local/share/atlas-statusline/
 cp "$PLUGIN_SCRIPTS/atlas-alert-module.sh" ~/.local/share/atlas-statusline/
+cp "$PLUGIN_SCRIPTS/atlas-resolve-version.sh" ~/.local/share/atlas-statusline/
 chmod +x ~/.local/share/atlas-statusline/*.sh
 ```
 
@@ -133,6 +134,7 @@ Present results via AskUserQuestion for visual confirmation.
 | Empty status line | Check `cship explain` for missing modules |
 | No ATLAS row | Verify session-state.json exists |
 | Stale data | Check atlas-status-writer hook in hooks.json |
+| Stale version | Run: `~/.local/share/atlas-statusline/atlas-resolve-version.sh` to verify |
 | VM 560 no Docker | Expected — Docker segment auto-hides |
 
 ## Uninstall
