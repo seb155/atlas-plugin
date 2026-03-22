@@ -36,7 +36,7 @@ Comprehensive diagnostic of the entire ATLAS ecosystem. Runs bash checks across 
 | 8  | Project Context  | 3/5   | ⚠️     | No rules, memory        |
 | 9  | Terminal & Launch | 6/8   | ⚠️     | No completions, ROOT    |
 | 10 | StatusLine       | 4/5   | ⚠️     | Scripts not deployed    |
-| 11 | CC Settings      | 7/8   | ⚠️     | Missing language config |
+| 11 | CC Settings      | 13/15 | ⚠️     | Missing language config |
 | 12 | MCP & Plugins    | 5/6   | ⚠️     | Figma optional          |
 
 OVERALL: 61/72 (85%) ⚠️
@@ -293,7 +293,7 @@ Display:
    └─ Scripts: {deployed?} │ State: {valid?} │ Config: {wired?}
 ```
 
-### Cat 11: CC Settings (8 checks)
+### Cat 11: CC Settings (15 checks)
 
 Check Claude Code global + project settings for ATLAS-required configuration:
 
@@ -346,11 +346,61 @@ ls "${HOME}/.claude/commands/a-"*.md 2>/dev/null | wc -l
 # 8. Global CLAUDE.md exists
 [ -f "${HOME}/.claude/CLAUDE.md" ]
 
-# 9. Plan mode shows clear context option (CC 2.1.81+)
+# 9. Plan mode shows clear context option (CC 2.1.75+)
 cat "$GLOBAL" | python3 -c "
 import sys,json; d=json.load(sys.stdin)
 v=d.get('showClearContextOnPlanAccept', False)
 print('ok' if v else 'MISSING showClearContextOnPlanAccept')
+"
+
+# 10. includeGitInstructions = false (ATLAS manages git via skills)
+cat "$GLOBAL" | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+v=d.get('includeGitInstructions', True)
+print('ok' if not v else 'WARN includeGitInstructions should be false')
+"
+
+# 11. Global env: MAX_OUTPUT_TOKENS (Opus 4.6 = 128K)
+cat "$GLOBAL" | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+v=d.get('env',{}).get('CLAUDE_CODE_MAX_OUTPUT_TOKENS','')
+print('ok' if v else 'MISSING CLAUDE_CODE_MAX_OUTPUT_TOKENS in global env')
+"
+
+# 12. Global env: MAX_THINKING_TOKENS (Opus 4.6 1M context)
+cat "$GLOBAL" | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+v=d.get('env',{}).get('CLAUDE_CODE_MAX_THINKING_TOKENS','')
+print('ok' if v else 'MISSING CLAUDE_CODE_MAX_THINKING_TOKENS in global env')
+"
+
+# 13. Global env: FILE_READ_MAX_OUTPUT_TOKENS
+cat "$GLOBAL" | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+v=d.get('env',{}).get('CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS','')
+print('ok' if v else 'MISSING CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS in global env')
+"
+
+# 14. Security deny rules include Read(~/.ssh/**) and Read(/etc/shadow)
+cat "$GLOBAL" | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+deny=d.get('permissions',{}).get('deny',[])
+ssh_ok='Read(~/.ssh/**)' in deny
+shadow_ok='Read(/etc/shadow)' in deny
+missing=[]
+if not ssh_ok: missing.append('Read(~/.ssh/**)')
+if not shadow_ok: missing.append('Read(/etc/shadow)')
+print('ok' if not missing else f'MISSING deny rules: {missing}')
+"
+
+# 15. PostCompact + StopFailure hooks configured
+cat "$GLOBAL" | python3 -c "
+import sys,json; d=json.load(sys.stdin)
+hooks=d.get('hooks',{})
+missing=[]
+if 'PostCompact' not in hooks: missing.append('PostCompact')
+if 'StopFailure' not in hooks: missing.append('StopFailure')
+print('ok' if not missing else f'MISSING hooks: {missing}')
 "
 ```
 
@@ -363,6 +413,13 @@ Auto-fix suggestions:
 | Missing global commands | Copy from `~/.claude/commands/` templates |
 | Missing language | Add `"language": "francais"` to global settings |
 | Missing showClearContextOnPlanAccept | Add `"showClearContextOnPlanAccept": true` to global settings |
+| includeGitInstructions not false | Set `"includeGitInstructions": false` — ATLAS manages git via skills |
+| Missing MAX_OUTPUT_TOKENS | Add `"CLAUDE_CODE_MAX_OUTPUT_TOKENS": "128000"` to global env (Opus 4.6) |
+| Missing MAX_THINKING_TOKENS | Add `"CLAUDE_CODE_MAX_THINKING_TOKENS": "250000"` to global env (1M context) |
+| Missing FILE_READ_MAX | Add `"CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS": "50000"` to global env |
+| Missing deny Read(~/.ssh/**) | Add `"Read(~/.ssh/**)"` and `"Read(/etc/shadow)"` to permissions.deny |
+| Missing PostCompact hook | Wire `$HOME/.claude/hooks/post-compact.sh` in global hooks |
+| Missing StopFailure hook | Add API error logging hook to global settings |
 
 ### Cat 12: MCP Servers & Plugins (6 checks)
 
