@@ -20,6 +20,7 @@ skills:
   - atlas-dev-self
   - atlas-vault
   - plan-review
+  - marketplace-manager
 
 commands:
   - deploy
