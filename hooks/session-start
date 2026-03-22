@@ -9,6 +9,31 @@ AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
 export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"  # suppress bw punycode warning
 
+# ─── Version Check: notify if newer version available ─────────────────
+# Lightweight check (~200ms). Uses Forgejo API to compare versions.
+# Actual update done via CC native: /plugin → Discover → toggle update.
+# Set ATLAS_NO_VERSION_CHECK=1 to skip.
+_auto_update_msg=""
+if [ "${ATLAS_NO_VERSION_CHECK:-}" != "1" ]; then
+  _INSTALLED_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "0.0.0")
+  _FORGEJO_API="${ATLAS_FORGEJO_API:-http://192.168.10.75:3000/api/v1}"
+
+  # Source token early for API call
+  [ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
+
+  if [ -n "${FORGEJO_TOKEN:-}" ]; then
+    _LATEST_TAG=$(curl -sf --connect-timeout 2 --max-time 2 \
+      "${_FORGEJO_API}/repos/atlas/atlas-plugin/releases?limit=1" \
+      -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null \
+      | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['tag_name'])" 2>/dev/null || echo "")
+    _LATEST_VERSION="${_LATEST_TAG#v}"
+
+    if [ -n "$_LATEST_VERSION" ] && [ "$_LATEST_VERSION" != "$_INSTALLED_VERSION" ] && [ "$_LATEST_VERSION" != "0.0.0" ]; then
+      _auto_update_msg="🆙 ATLAS v${_LATEST_VERSION} available (installed: v${_INSTALLED_VERSION}) — run /plugin to update"
+    fi
+  fi
+fi
+
 # Source user env (tokens, API keys) if available
 [ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
 
@@ -278,6 +303,11 @@ _missing_secrets=""
 if [ -n "$_missing_secrets" ]; then
   _missing_secrets="${_missing_secrets%, }"
   BADGE+=$'\n'"🏛️ ATLAS │ 🔐 SECRETS │ Missing: ${_missing_secrets}"
+fi
+
+# Add update notification if available
+if [ -n "$_auto_update_msg" ]; then
+  BADGE+=$'\n'"${_auto_update_msg}"
 fi
 
 # Combine badge + feature summary into context
