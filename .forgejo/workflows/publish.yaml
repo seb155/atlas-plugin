@@ -53,3 +53,37 @@ jobs:
           done
 
           echo "All 3 tiers published for v${VERSION}"
+
+      - name: Create Forgejo Release
+        shell: sh
+        env:
+          FORGEJO_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
+          FORGEJO_URL: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -eu
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+
+          # Generate release notes from git log since last tag
+          PREV_TAG=$(git tag --sort=-version:refname | grep '^v' | sed -n '2p' || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            NOTES=$(git log --pretty=format:"- %s" "${PREV_TAG}..HEAD" | head -20)
+          else
+            NOTES="Initial release"
+          fi
+
+          # Count skills/commands/agents from built dist
+          SKILLS=$(find dist/atlas-admin/skills -name "SKILL.md" 2>/dev/null | wc -l)
+          COMMANDS=$(find dist/atlas-admin/commands -name "*.md" 2>/dev/null | wc -l)
+
+          BODY="## ATLAS v${VERSION}\n\n${SKILLS} skills | ${COMMANDS} commands\n\n### Changes\n${NOTES}"
+
+          curl --fail-with-body --silent --show-error \
+            -X POST \
+            -H "Authorization: token ${FORGEJO_TOKEN}" \
+            -H "Content-Type: application/json" \
+            "${FORGEJO_URL}/api/v1/repos/${REPO}/releases" \
+            -d "{\"tag_name\":\"${TAG}\",\"name\":\"v${VERSION}\",\"body\":\"${BODY}\",\"draft\":false,\"prerelease\":false}"
+
+          echo "Release v${VERSION} created"
