@@ -62,3 +62,27 @@ Score against 15 criteria (0 or 1 each):
 - **Bold** for recommendations
 - **Code blocks** with language tags for SQL, Python, TypeScript (syntax highlighted)
 - Plans render in Atlas Dev dashboard via MarkdownRenderer (Mermaid + highlight.js)
+
+## Mega Plan Mode
+
+When creating mega plans (programme-level, M1-M16):
+
+### Discovery Phase (before drafting)
+1. Scan `.blueprint/plans/INDEX.md` for existing sub-plans
+2. Read Section A (Vision) of each sub-plan for: title, effort, deps, status
+3. Identify gaps: are there sub-plans needed but not yet created?
+4. Check for dependency cycles (topological sort)
+
+### Strategy Selection
+Present 2-3 phasing strategies via AskUserQuestion:
+- **Option A: Critical Path First** — minimize total programme duration
+- **Option B: Quick Wins First** — maximize early business value
+- **Option C: Risk First** — tackle hardest sub-plans early
+
+Each option shows: Mermaid dependency graph + phase assignments + estimated timeline.
+
+### Integration Point Discovery
+For each pair of sub-plans that share DB tables, APIs, or auth:
+- Create an Integration Point (IP-N)
+- Document the shared contract
+- Assign risk level (HAUT if schema change, MOYEN if API only, BAS if config)

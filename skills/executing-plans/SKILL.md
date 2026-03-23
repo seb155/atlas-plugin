@@ -112,3 +112,42 @@ STOP and AskUserQuestion if:
 ```
 
 Update this table as you progress.
+
+## Mega Plan Orchestration
+
+When executing a mega plan (M1-M16 format detected):
+
+### Phase-Level Execution (not task-level)
+
+1. **Load** mega plan -> parse M5 Phase Timeline
+2. **For each phase** (P0, P1, ...):
+   a. Identify sub-plans assigned to this phase (from M2)
+   b. Verify dependencies (M3): all predecessor phases DONE?
+   c. Create TaskCreate for each sub-plan in phase
+   d. Execute sub-plans (parallel if independent per M3, sequential if dependent)
+   e. After each sub-plan completes -> append to MEGA-STATUS.jsonl
+3. **Phase gate**: All sub-plans in phase at target DoD tier -> HITL approval
+4. Proceed to next phase
+
+### MEGA-STATUS.jsonl Format
+
+Append-only file (git-friendly, one line per status update):
+```jsonl
+{"date":"YYYY-MM-DD","plan":"sp{nn}","phase":"P{n}","status":"{STATUS}","effort_done_h":{n},"effort_total_h":{n},"note":"{description}"}
+```
+
+Status values: `PLANNING` | `IN_PROGRESS` | `CODED` | `VALIDATED` | `DONE`
+
+### Progress Rollup
+
+Programme progress = weighted sum of sub-plan progress by effort:
+```
+progress = sum(sub_plan_progress * sub_plan_effort) / sum(sub_plan_effort)
+```
+
+### Stop Conditions (mega-specific)
+
+- Phase dependency violated -> STOP, show which phases must complete first
+- Sub-plan quality < 12/15 -> STOP, invoke plan-review before continuing
+- Integration point conflict (IP-N) -> STOP, resolve cross-plan contract
+- Programme progress < expected burndown -> warn (not stop)

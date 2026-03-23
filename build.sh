@@ -156,16 +156,18 @@ build_tier() {
   mkdir -p "$output/skills/atlas-assist"
   ./scripts/generate-master-skill.sh "$tier" "$output/skills/atlas-assist/SKILL.md"
 
-  # Generate tier-specific plugin.json
-  local tier_upper
+  # Generate tier-specific plugin.json (with buildTimestamp for CC cache invalidation)
+  local tier_upper build_ts
   tier_upper=$(echo "${tier}" | sed 's/./\U&/')
+  build_ts=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   cat > "$output/.claude-plugin/plugin.json" <<EOF
 {
   "name": "atlas-${tier}",
   "version": "${VERSION}",
   "description": "ATLAS ${tier_upper} — AXOIQ AI Engineering Assistant (${tier} tier)",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "buildTimestamp": "${build_ts}"
 }
 EOF
 

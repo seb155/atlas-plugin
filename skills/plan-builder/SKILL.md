@@ -87,3 +87,21 @@ Load full plan → update relevant sections only → keep untouched intact → r
 ## Commit
 
 `plan({subsystem}): {description}`
+
+## Mega Plans (`/atlas plan --mega`)
+
+When `--mega` flag detected OR user says "programme", "mega plan", "multi-plan":
+
+1. Switch to `templates/MEGA-PLAN-TEMPLATE.md` (M1-M16) instead of A-O format
+2. Read `.blueprint/plans/INDEX.md` to discover existing sub-plans
+3. For each sub-plan found: extract Section A (vision) + dependencies + effort
+4. Auto-generate M2 Sub-Plan Registry from discovered sub-plans
+5. Build M3 Dependency Graph (Mermaid + ASCII) from sub-plan dependencies
+6. Calculate M6 Critical Path (longest weighted path through DAG)
+7. Populate M5 Phase Timeline from existing mega plan phases
+8. Score against 16 criteria (gate >=10/16)
+9. Verify bidirectional links: every sub-plan references mega, mega references every sub-plan
+
+**Quality gate**: 10/16 for programme + ALL sub-plans >= 12/15 individually.
+
+**Output**: Save to `.blueprint/plans/{adjective-verb-noun}.md` (same naming convention).

@@ -5,3 +5,4 @@ dist/
 .DS_Store
 tests/__pycache__/
 __pycache__/
+tests/__pycache__/

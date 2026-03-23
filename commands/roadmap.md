@@ -1,10 +1,12 @@
 # /roadmap — Project Roadmap
 
-Show high-level roadmap: Objectives → Epics → Features with progress bars.
-Groups features by Epic from `.blueprint/FEATURES.md`.
+Show Theme > Epic > Feature hierarchy with progress bars and dependency graph.
+Reads `.blueprint/THEMES.md`, `.blueprint/EPICS.md`, `.blueprint/FEATURES.md`.
 
 **Usage**: `/atlas roadmap`
 
-Invoke Skill 'feature-board' with roadmap view mode.
+Invoke Skill 'feature-board' with themes view mode.
 
 ARGUMENTS: $ARGUMENTS
+
+Equivalent to `/atlas board themes` — strategic roadmap view.

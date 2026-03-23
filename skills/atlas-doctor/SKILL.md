@@ -141,16 +141,38 @@ Auto-fix: guide user to add to `~/.env` with `export TOKEN=value` then `source ~
 
 ### Cat 5: Services (5 checks)
 
+#### Environment Detection (before Cat 5)
+
+Before running Cat 5 checks, detect environment:
 ```bash
-curl -sf -m 3 http://localhost:8001/health             # 1. Synapse backend
-docker ps --filter name=synapse -q 2>/dev/null | wc -l  # 2. Synapse containers (>0)
-docker exec synapse-db pg_isready 2>/dev/null || pg_isready -h localhost -p 5433 2>/dev/null  # 3. PostgreSQL (try docker first, then local)
-docker exec synapse-valkey redis-cli ping 2>/dev/null   # 4. Valkey
-curl -sf -m 3 -H "Authorization: token ${FORGEJO_TOKEN:-}" "${FORGEJO_URL}${FORGEJO_API_PATH}/user" 2>/dev/null || \
-  curl -sf -m 3 "${FORGEJO_URL}${FORGEJO_API_PATH}/version" 2>/dev/null  # 5. Forgejo (try auth first, then public)
+HOSTNAME=$(hostname -s)
 ```
 
-Skip Docker checks if `hostname -s` = `ATL-dev` (VM has no Docker).
+- If `$HOSTNAME` = `ATL-dev` or `dev` → Skip Docker + localhost checks. Show: "⏭️ Remote environment — Docker checks skipped (coding-only VM)"
+- If `$HOSTNAME` = `sgagnon` (laptop) → Run all checks with localhost URLs
+- Otherwise → Attempt checks, warn if they fail with "Unknown environment"
+
+```bash
+HOSTNAME=$(hostname -s)
+
+if [ "$HOSTNAME" = "ATL-dev" ] || [ "$HOSTNAME" = "dev" ]; then
+  echo "⏭️ Remote environment — Docker checks skipped (coding-only VM)"
+  # Only check Forgejo (remote-accessible)
+  curl -sf -m 3 -H "Authorization: token ${FORGEJO_TOKEN:-}" "${FORGEJO_URL}${FORGEJO_API_PATH}/user" 2>/dev/null || \
+    curl -sf -m 3 "${FORGEJO_URL}${FORGEJO_API_PATH}/version" 2>/dev/null  # 5. Forgejo
+else
+  curl -sf -m 3 http://localhost:8001/health             # 1. Synapse backend
+  docker ps --filter name=synapse -q 2>/dev/null | wc -l  # 2. Synapse containers (>0)
+  docker exec synapse-db pg_isready 2>/dev/null || pg_isready -h localhost -p 5433 2>/dev/null  # 3. PostgreSQL (try docker first, then local)
+  docker exec synapse-valkey redis-cli ping 2>/dev/null   # 4. Valkey
+  curl -sf -m 3 -H "Authorization: token ${FORGEJO_TOKEN:-}" "${FORGEJO_URL}${FORGEJO_API_PATH}/user" 2>/dev/null || \
+    curl -sf -m 3 "${FORGEJO_URL}${FORGEJO_API_PATH}/version" 2>/dev/null  # 5. Forgejo (try auth first, then public)
+
+  if [ "$HOSTNAME" != "sgagnon" ]; then
+    echo "⚠️ Unknown environment ($HOSTNAME) — service checks may be inaccurate"
+  fi
+fi
+```
 
 Auto-fix:
 - Backend offline → `docker compose up -d` (if compose.yml found)

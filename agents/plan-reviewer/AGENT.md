@@ -54,3 +54,27 @@ Given a plan document, score each criterion 0 or 1:
 ### Recommendations (advisory)
 1. {suggestion to improve even if PASS}
 ```
+
+## Mega Plan Quality Criteria (M1-M16)
+
+When reviewing mega plans, apply these additional criteria:
+
+| # | Criterion | Check |
+|---|-----------|-------|
+| 16 | Sub-plan registry complete | Every SP-NN in INDEX.md has M2 entry |
+| 17 | Bidirectional links verified | Mega plan refs each SP, each SP refs mega |
+| 18 | No dependency cycles | Topological sort succeeds on M3 graph |
+| 19 | Integration points documented | Every shared resource has IP-N entry in M4 |
+| 20 | Phase effort sums match total | sum(phase effort) = M2 total effort +/-5% |
+
+### Dual Gate Logic
+
+Mega plans require BOTH gates to pass:
+1. **Programme gate**: >=10/16 on M1-M16 criteria
+2. **Sub-plan gate**: ALL sub-plans >=12/15 on A-O criteria
+
+If programme gate passes but sub-plan gate fails:
+-> Identify failing sub-plans, suggest which A-O sections need enrichment
+
+If sub-plan gate passes but programme gate fails:
+-> Identify weak M-sections, suggest improvements

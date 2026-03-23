@@ -21,6 +21,7 @@ skills:
   - atlas-vault
   - plan-review
   - marketplace-manager
+  - programme-manager
 
 commands:
   - deploy
@@ -36,6 +37,8 @@ commands:
   - vault
   - ci
   - review-plan
+  - programme
+  - plan-status
 
 agents: []
 

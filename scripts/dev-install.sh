@@ -17,7 +17,9 @@ echo "🔨 Building atlas-admin v${VERSION}..."
 
 echo ""
 echo "📦 Installing to CC cache..."
-rm -rf "$CACHE_DIR"
+# Clear ALL cached versions (not just current) to avoid stale version confusion
+rm -rf "$HOME/.claude/plugins/cache/atlas-admin-marketplace/"
+mkdir -p "$(dirname "$CACHE_DIR")"
 cp -r dist/atlas-admin "$CACHE_DIR"
 
 echo ""
