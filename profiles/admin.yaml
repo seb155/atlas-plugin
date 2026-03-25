@@ -22,6 +22,7 @@ skills:
   - plan-review
   - marketplace-manager
   - programme-manager
+  - memory-dream
 
 commands:
   - deploy
@@ -39,6 +40,8 @@ commands:
   - review-plan
   - programme
   - plan-status
+  - dream
+  - ultrathink
 
 agents: []
 

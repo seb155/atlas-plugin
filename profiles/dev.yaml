@@ -37,6 +37,7 @@ refs:
   - composition-patterns
   - react-best-practices
   - gmining-excel
+  - cc-native-features
 
 commands:
   - dev

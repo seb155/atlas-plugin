@@ -63,6 +63,7 @@ declare -A EMOJI_MAP=(
   [frontend-workflow]="🎨"
   [test-orchestrator]="🧪"
   [vision-alignment]="🧭"
+  [memory-dream]="🌙"
 )
 
 # Skill category map
@@ -86,6 +87,7 @@ declare -A CATEGORY_MAP=(
   [frontend-workflow]="Planning"
   [test-orchestrator]="Quality"
   [vision-alignment]="Planning"
+  [memory-dream]="Meta"
 )
 
 # Skill one-liner descriptions
@@ -139,6 +141,7 @@ declare -A DESC_MAP=(
   [frontend-workflow]="6-phase iterative UX development with architectural gates and HITL"
   [test-orchestrator]="Test pyramid orchestration: unit, integration, E2E, security, coverage"
   [vision-alignment]="Strategic idea intake — scan mega plan, sub-plans, features, backlog before deciding"
+  [memory-dream]="Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather, consolidate, prune"
 )
 
 # Category header emojis
