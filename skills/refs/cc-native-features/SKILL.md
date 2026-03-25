@@ -156,14 +156,34 @@ permissionMode: default|plan|acceptEdits
 
 ## Keyboard Shortcuts (v2.1.18)
 
-**File**: `~/.claude/keybindings.json`
+**File**: `~/.claude/keybindings.json` — auto-detected on change, no restart needed.
 
-| Action | Default | Rebindable |
-|--------|---------|------------|
-| `chat:fastMode` | — | v2.1.83 |
-| `chat:killAgents` | Ctrl+X Ctrl+K | v2.1.83 |
-| `voice:pushToTalk` | Space | v2.1.71 |
-| `chat:newline` | Shift+Enter | v2.1.47 |
+**Format**: context-based binding blocks (NOT `{ key, command }` objects):
+```json
+{
+  "$schema": "https://www.schemastore.org/claude-code-keybindings.json",
+  "bindings": [
+    { "context": "Chat", "bindings": { "ctrl+shift+f": "chat:fastMode" } }
+  ]
+}
+```
+
+**Contexts**: `Global`, `Chat`, `Autocomplete`, `Confirmation`, `Transcript`, `HistorySearch`, `Task`, `ThemePicker`, `Attachments`, `Footer`, `MessageSelector`, `DiffDialog`, `ModelPicker`, `Select`, `Plugin`, `Settings`, `Help`, `Tabs`
+
+**Key rebindable actions**:
+
+| Action | Context | Default | Since |
+|--------|---------|---------|-------|
+| `chat:fastMode` | Chat | — | v2.1.83 |
+| `chat:killAgents` | Chat | Ctrl+X Ctrl+K | v2.1.83 |
+| `voice:pushToTalk` | Chat | Space | v2.1.71 |
+| `chat:newline` | Chat | Shift+Enter | v2.1.47 |
+| `chat:submit` | Chat | Enter | v2.1.18 |
+| `chat:externalEditor` | Chat | Ctrl+G | v2.1.18 |
+| `app:toggleTodos` | Global | Ctrl+T | v2.1.18 |
+| `app:toggleTranscript` | Global | Ctrl+O | v2.1.18 |
+
+Set to `null` to unbind. Chords: `"ctrl+k ctrl+s"` (space-separated). Reserved: Ctrl+C, Ctrl+D, Ctrl+M.
 
 ## Statusline
 
