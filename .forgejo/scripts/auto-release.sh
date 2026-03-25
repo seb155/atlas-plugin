@@ -233,8 +233,13 @@ if [ "$NO_PUSH" = "true" ]; then
 fi
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-git push origin "$BRANCH" --tags
-echo "🚀 Pushed ${NEXT_TAG} to origin"
+# Push commit first ([skip ci] only affects this push)
+git push origin "$BRANCH"
+echo "🚀 Pushed commit to origin/${BRANCH}"
+# Push tag separately so publish.yaml triggers (not affected by [skip ci])
+sleep 2
+git push origin "$NEXT_TAG"
+echo "🏷️  Pushed tag ${NEXT_TAG} to origin"
 
 # ─── Create Forgejo Release (if API available) ───────────────────────
 FORGEJO_TOKEN="${FORGEJO_TOKEN:-}"
