@@ -127,7 +127,7 @@ All endpoints come from config preset.
 ```json
 {
   "preset": "axoiq",
-  "synapse_url": "https://synapse.home.axoiq.com",
+  "synapse_url": "https://synapse.axoiq.com",
   "forgejo_url": "http://192.168.10.75:3000",
   "vault_url": "https://vault.axoiq.com"
 }

@@ -4,7 +4,7 @@
   "organization": "AXOIQ Inc.",
   "services": {
     "forgejo": {
-      "local_url": "https://forgejo.home.axoiq.com",
+      "local_url": "https://forgejo.axoiq.com",
       "external_url": "https://forgejo.axoiq.com",
       "api_path": "/api/v1"
     },
@@ -13,7 +13,7 @@
       "enabled": true
     },
     "authentik": {
-      "url": "https://auth.home.axoiq.com",
+      "url": "https://auth.axoiq.com",
       "enabled": true
     },
     "cloud": {
@@ -21,7 +21,7 @@
       "enabled": true
     },
     "hub": {
-      "local_url": "https://synapse.home.axoiq.com",
+      "local_url": "https://synapse.axoiq.com",
       "external_url": "https://synapse.axoiq.com"
     }
   },
@@ -32,7 +32,7 @@
   },
   "secrets": {
     "provider": "vaultwarden",
-    "vaultwarden_server": "https://vaultwarden.home.s-gagnon.com"
+    "vaultwarden_server": "https://vaultwarden.s-gagnon.com"
   },
   "identity": {
     "co_author_name": "ATLAS AI",
