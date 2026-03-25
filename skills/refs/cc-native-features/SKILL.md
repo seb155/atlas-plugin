@@ -121,9 +121,11 @@ description: "Claude Code v2.1.83 native features reference — effort system, s
 - Plugins ship `settings.json` at root for CC defaults
 - Priority: managed > user > project > plugin (lowest)
 - Plugin settings auto-applied on install/update
-- `${CLAUDE_PLUGIN_ROOT}` = absolute path to plugin
-- `${CLAUDE_PLUGIN_DATA}` = persistent state dir (v2.1.78)
-- `${CLAUDE_SKILL_DIR}` = skill's own directory (v2.1.69)
+| Variable | Purpose | Since |
+|----------|---------|-------|
+| `${CLAUDE_PLUGIN_ROOT}` | Absolute path to plugin | v2.1.x |
+| `${CLAUDE_PLUGIN_DATA}` | Persistent state dir | v2.1.78 |
+| `${CLAUDE_SKILL_DIR}` | Skill's own directory | v2.1.69 |
 
 ## Agent Frontmatter (v2.1.78+)
 

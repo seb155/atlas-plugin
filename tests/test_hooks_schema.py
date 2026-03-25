@@ -21,7 +21,7 @@ from conftest import HOOKS_DIR, PLUGIN_ROOT
 
 HOOKS_JSON = HOOKS_DIR / "hooks.json"
 
-# Known Claude Code event types (as of CC 2.x)
+# Known Claude Code event types (as of CC v2.1.83)
 KNOWN_EVENT_TYPES = {
     "SessionStart",
     "SessionEnd",
@@ -34,6 +34,9 @@ KNOWN_EVENT_TYPES = {
     "Stop",
     "SubagentStop",
     "Notification",
+    "StopFailure",
+    "InstructionsLoaded",
+    "ConfigChange",
 }
 
 
