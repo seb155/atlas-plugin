@@ -1,0 +1,14 @@
+{
+  "showClearContextOnPlanAccept": true,
+  "showTurnDuration": true,
+  "spinnerTipsOverride": {
+    "tips": [
+      "AskUserQuestion = OBLIGATOIRE. Jamais de question en texte libre.",
+      "Reuse > Create: chercher hooks/utils existants AVANT d'en créer.",
+      "Max 2 fix attempts → escalate to human. Pas de boucle.",
+      "Opus 4.6 1M = PAS de limite. JAMAIS suggérer handoff.",
+      "/effort auto|low|medium|high — 'ultrathink' = max pour un tour."
+    ],
+    "excludeDefault": false
+  }
+}

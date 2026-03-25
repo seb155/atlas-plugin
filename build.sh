@@ -146,6 +146,11 @@ build_tier() {
   # Copy VERSION file
   cp VERSION "$output/VERSION"
 
+  # Copy plugin settings.json (CC v2.1.49+ — plugins ship default settings)
+  if [ -f "settings.json" ]; then
+    cp settings.json "$output/settings.json"
+  fi
+
   # Copy config presets
   if [ -d "scripts/presets" ]; then
     mkdir -p "$output/scripts/presets"

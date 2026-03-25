@@ -266,6 +266,17 @@ if [ ! -f "$ATLAS_PROFILE" ]; then
   fi
 fi
 
+# ─── CC Version Detection (self-improvement loop) ─────────────────────
+# Compare running CC version with the version this plugin was audited for.
+# If CC is newer, suggest running /atlas platform-update for SOTA sync.
+KNOWN_CC_VERSION="2.1.83"
+CC_VERSION_NOTICE=""
+_cc_ver=$(claude --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
+if [ -n "$_cc_ver" ] && [ "$_cc_ver" != "$KNOWN_CC_VERSION" ]; then
+  # Simple version comparison: if CC version string is different, notify
+  CC_VERSION_NOTICE="⚡ CC v${_cc_ver} detected (plugin audited for v${KNOWN_CC_VERSION}). Consider /atlas platform-update"
+fi
+
 # Build branded badge (use real newlines, JSON escape at the end)
 PLUGIN_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
 BADGE="🏛️ ATLAS │ ✅ SESSION │ v${PLUGIN_VERSION} ${DETECTED_ROLE}"
@@ -308,6 +319,11 @@ fi
 # Add update notification if available
 if [ -n "$_auto_update_msg" ]; then
   BADGE+=$'\n'"${_auto_update_msg}"
+fi
+
+# Add CC version mismatch notice
+if [ -n "$CC_VERSION_NOTICE" ]; then
+  BADGE+=$'\n'"🏛️ ATLAS │ ${CC_VERSION_NOTICE}"
 fi
 
 # Combine badge + feature summary into context
