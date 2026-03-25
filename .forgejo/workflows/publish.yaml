@@ -10,13 +10,14 @@ jobs:
     name: Publish to Forgejo Package Registry
     runs-on: ci-atlas
     steps:
-      - name: Checkout
+      - name: Checkout tag
         shell: sh
         env:
           GIT_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
           FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
-          git clone --depth=1 http://oauth2:${GIT_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
+          git clone --depth=1 --branch ${{ github.ref_name }} http://oauth2:${GIT_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
+          git fetch --tags --depth=10
 
       - name: Build all tiers
         shell: sh
@@ -26,7 +27,7 @@ jobs:
         shell: sh
         env:
           FORGEJO_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
-          FORGEJO_URL: ${{ github.server_url }}
+          FORGEJO_URL: http://${{ vars.FORGEJO_HOST }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -eu
@@ -58,7 +59,7 @@ jobs:
         shell: sh
         env:
           FORGEJO_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
-          FORGEJO_URL: ${{ github.server_url }}
+          FORGEJO_URL: http://${{ vars.FORGEJO_HOST }}
           REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |

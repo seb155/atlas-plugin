@@ -26,6 +26,7 @@ jobs:
           FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
         run: |
           git clone --depth=50 http://oauth2:${GIT_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
+          git fetch --tags
           git config user.name "atlas-ci"
           git config user.email "ci@axoiq.com"
 
