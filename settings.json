@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "92"
+  },
   "showClearContextOnPlanAccept": true,
   "showTurnDuration": true,
   "spinnerTipsOverride": {

@@ -277,6 +277,17 @@ if [ -n "$_cc_ver" ] && [ "$_cc_ver" != "$KNOWN_CC_VERSION" ]; then
   CC_VERSION_NOTICE="⚡ CC v${_cc_ver} detected (plugin audited for v${KNOWN_CC_VERSION}). Consider /atlas platform-update"
 fi
 
+# ─── Auto-deploy statusline script ─────────────────────────────────────
+# Ship the ATLAS statusline from plugin to ~/.claude/ if outdated or missing.
+_plugin_statusline="${PLUGIN_ROOT}/scripts/statusline-command.sh"
+_user_statusline="${HOME}/.claude/statusline-command.sh"
+if [ -f "$_plugin_statusline" ]; then
+  if [ ! -f "$_user_statusline" ] || ! diff -q "$_plugin_statusline" "$_user_statusline" &>/dev/null; then
+    cp "$_plugin_statusline" "$_user_statusline"
+    chmod +x "$_user_statusline"
+  fi
+fi
+
 # Build branded badge (use real newlines, JSON escape at the end)
 PLUGIN_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
 BADGE="🏛️ ATLAS │ ✅ SESSION │ v${PLUGIN_VERSION} ${DETECTED_ROLE}"
