@@ -1,0 +1,41 @@
+# CShip + ATLAS Plugin — Layout v4 (SOTA v2.1.83)
+# Shipped via ATLAS plugin. Deployed by session-start hook.
+# Row 1: 🏛️ version 👑tier  🟣 model  📁 dir  🌿 git  🌳 worktree  📋 session
+# Row 2: context bar  📈 lines
+# Row 3: ⚠️ alert (conditional: context >75%)
+# TODO: Add rate_limits + effort modules when CShip upstream supports them
+
+[cship]
+lines = [
+  "🏛️ ATLAS $custom.atlas_version 👑$custom.atlas_tier  $cship.model  $directory  $git_branch $git_status  $cship.worktree  $cship.session",
+  "$cship.context_bar  📈 $cship.cost.total_lines_added $cship.cost.total_lines_removed",
+  "$custom.atlas_alert"
+]
+
+[cship.model]
+symbol = "🟣 "
+style = "bold"
+
+[cship.context_bar]
+width = 15
+style = "green"
+warn_threshold = 60
+warn_style = "yellow"
+critical_threshold = 75
+critical_style = "bold red"
+
+[cship.cost.total_lines_added]
+symbol = "+"
+style = "green"
+
+[cship.cost.total_lines_removed]
+symbol = "-"
+style = "red"
+
+[cship.worktree]
+symbol = "🌳 "
+style = "bold green"
+
+[cship.session]
+symbol = "📋 "
+style = "bold blue"

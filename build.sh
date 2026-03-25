@@ -157,6 +157,9 @@ build_tier() {
     cp scripts/presets/*.json "$output/scripts/presets/" 2>/dev/null || true
   fi
 
+  # Copy CShip config (statusline)
+  [ -f "scripts/cship.toml" ] && cp "scripts/cship.toml" "$output/scripts/"
+
   # Generate tier-specific atlas-assist SKILL.md
   mkdir -p "$output/skills/atlas-assist"
   ./scripts/generate-master-skill.sh "$tier" "$output/skills/atlas-assist/SKILL.md"

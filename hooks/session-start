@@ -277,8 +277,23 @@ if [ -n "$_cc_ver" ] && [ "$_cc_ver" != "$KNOWN_CC_VERSION" ]; then
   CC_VERSION_NOTICE="⚡ CC v${_cc_ver} detected (plugin audited for v${KNOWN_CC_VERSION}). Consider /atlas platform-update"
 fi
 
-# ─── Auto-deploy statusline script ─────────────────────────────────────
-# Ship the ATLAS statusline from plugin to ~/.claude/ if outdated or missing.
+# ─── Auto-deploy statusline (CShip + bash fallback) ───────────────────
+# 1. Deploy CShip config if outdated or missing
+_plugin_cship_toml="${PLUGIN_ROOT}/scripts/cship.toml"
+_user_cship_toml="${HOME}/.config/cship.toml"
+if [ -f "$_plugin_cship_toml" ]; then
+  if [ ! -f "$_user_cship_toml" ] || ! diff -q "$_plugin_cship_toml" "$_user_cship_toml" &>/dev/null; then
+    mkdir -p "${HOME}/.config"
+    cp "$_plugin_cship_toml" "$_user_cship_toml"
+  fi
+fi
+
+# 2. Install CShip binary if missing (cargo install, background, non-blocking)
+if ! command -v cship &>/dev/null && command -v cargo &>/dev/null; then
+  (cargo install cship --quiet &>/dev/null &)
+fi
+
+# 3. Deploy bash fallback statusline if outdated
 _plugin_statusline="${PLUGIN_ROOT}/scripts/statusline-command.sh"
 _user_statusline="${HOME}/.claude/statusline-command.sh"
 if [ -f "$_plugin_statusline" ]; then
