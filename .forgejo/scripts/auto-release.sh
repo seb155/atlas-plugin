@@ -219,7 +219,7 @@ git add "${CHANGELOG_FILE}"
 
 # Only commit if there are staged changes
 if ! git diff --cached --quiet; then
-  git commit -m "chore(release): ${NEXT_TAG} [skip ci]"
+  git commit -m "chore(release): ${NEXT_TAG}"
   echo "📦 Committed release changes"
 fi
 
