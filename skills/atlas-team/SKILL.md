@@ -50,12 +50,26 @@ Every team follows this exact lifecycle:
 
 ### Critical Rules
 
-- **ALWAYS** `subagent_type: "general-purpose"` — Explore agents can't SendMessage
+- **ALWAYS** use named `subagent_type` when available (e.g., `"atlas-admin:team-engineer"`)
+- **ALWAYS** pass `model:` explicitly — AGENT.md frontmatter is NOT respected by CC
 - **ALWAYS** `run_in_background: true` — don't block the lead
 - **ALWAYS** create tasks AFTER TeamCreate (task scope resets per team)
 - **ALWAYS** shutdown ALL workers BEFORE TeamDelete
-- **NEVER** use Explore-type agents as team members
+- **NEVER** use Explore-type agents as team members (can't SendMessage)
 - **NEVER** spawn more than 4 workers (RAM: ~1-2 GB per agent)
+
+### Named Agent Mapping
+
+| Agent Definition | Model | Capabilities |
+|-----------------|-------|-------------|
+| `atlas-admin:team-researcher` | haiku | Read-only: web, docs, git, memory |
+| `atlas-admin:team-engineer` | sonnet | Full: code, tests, fixes |
+| `atlas-admin:team-tester` | sonnet | Full: test writing + running |
+| `atlas-admin:team-reviewer` | sonnet | Read-only: diff review, quality |
+| `atlas-admin:team-coordinator` | haiku | Read-only: CI, Docker, ops status |
+| `atlas-admin:team-security` | sonnet | Read-only: OWASP, secrets, RBAC |
+
+Fallback: if named agent not found, use `subagent_type: "general-purpose"` with the same prompt.
 
 ## Blueprints
 
@@ -78,13 +92,17 @@ Every team follows this exact lifecycle:
 TeamCreate(team_name: "jarvis")
 
 # Spawn 4 workers in ONE message (parallel):
-Agent(name: "researcher", team_name: "jarvis", model: "haiku",
+Agent(name: "researcher", subagent_type: "atlas-admin:team-researcher",
+      team_name: "jarvis", model: "haiku", run_in_background: true,
       prompt: "Research: {user's question}. Read memory files, search web, check git log. SendMessage results to team lead.")
-Agent(name: "engineer", team_name: "jarvis", model: "sonnet",
+Agent(name: "engineer", subagent_type: "atlas-admin:team-engineer",
+      team_name: "jarvis", model: "sonnet", run_in_background: true,
       prompt: "Analyze: {codebase area}. Read relevant files, identify patterns. SendMessage findings to team lead.")
-Agent(name: "analyst", team_name: "jarvis", model: "sonnet",
+Agent(name: "analyst", subagent_type: "atlas-admin:team-engineer",
+      team_name: "jarvis", model: "sonnet", run_in_background: true,
       prompt: "Metrics: Read .blueprint/FEATURES.md, check test coverage, DoD status. SendMessage summary to team lead.")
-Agent(name: "coordinator", team_name: "jarvis", model: "haiku",
+Agent(name: "coordinator", subagent_type: "atlas-admin:team-coordinator",
+      team_name: "jarvis", model: "haiku", run_in_background: true,
       prompt: "Status: Check docker ps, git status, CI pipeline. SendMessage report to team lead.")
 ```
 
@@ -110,6 +128,21 @@ Agent(name: "coordinator", team_name: "jarvis", model: "haiku",
 **Usage**:
 ```
 /atlas team feature "SP-XX Phase N: {description}"
+```
+
+**Spawn pattern**:
+```
+TeamCreate(team_name: "feature-{name}")
+
+Agent(name: "backend", subagent_type: "atlas-admin:team-engineer",
+      team_name: "feature-{name}", model: "sonnet", run_in_background: true,
+      prompt: "Backend: {task}. Read plan file + existing code. Implement API/service/DB changes. SendMessage results to team lead.")
+Agent(name: "frontend", subagent_type: "atlas-admin:team-engineer",
+      team_name: "feature-{name}", model: "sonnet", run_in_background: true,
+      prompt: "Frontend: {task}. Read plan file + existing components. Implement UI changes. SendMessage results to team lead.")
+Agent(name: "tester", subagent_type: "atlas-admin:team-tester",
+      team_name: "feature-{name}", model: "sonnet", run_in_background: true,
+      prompt: "Tests: {scope}. Write unit + integration tests for BE + FE changes. SendMessage results to team lead.")
 ```
 
 **Lead responsibilities**:
@@ -138,6 +171,21 @@ Agent(name: "coordinator", team_name: "jarvis", model: "haiku",
 /atlas team debug "Bug: {description}. Steps to reproduce: {steps}"
 ```
 
+**Spawn pattern**:
+```
+TeamCreate(team_name: "debug-{bug-id}")
+
+Agent(name: "researcher", subagent_type: "atlas-admin:team-researcher",
+      team_name: "debug-{bug-id}", model: "sonnet", run_in_background: true,
+      prompt: "Investigate: {bug}. Check git log, error logs, related code. Find when/where bug was introduced. SendMessage findings to team lead.")
+Agent(name: "fixer", subagent_type: "atlas-admin:team-engineer",
+      team_name: "debug-{bug-id}", model: "sonnet", run_in_background: true,
+      prompt: "Fix: {bug}. Implement minimal targeted fix based on lead's hypothesis. SendMessage changes to team lead.")
+Agent(name: "tester", subagent_type: "atlas-admin:team-tester",
+      team_name: "debug-{bug-id}", model: "sonnet", run_in_background: true,
+      prompt: "Test: {bug}. Write regression test that reproduces the bug, verify fix passes. SendMessage results to team lead.")
+```
+
 **Debug cycle**:
 1. Lead forms hypothesis
 2. Researcher investigates (logs, git history, related code)
@@ -158,6 +206,18 @@ Agent(name: "coordinator", team_name: "jarvis", model: "haiku",
 | code-reviewer | Sonnet | Patterns, bugs, style | CLAUDE.md compliance, code quality |
 | security-auditor | Sonnet | OWASP, secrets, RBAC | Security scan, vulnerability check |
 
+**Spawn pattern**:
+```
+TeamCreate(team_name: "review")
+
+Agent(name: "code-reviewer", subagent_type: "atlas-admin:team-reviewer",
+      team_name: "review", model: "sonnet", run_in_background: true,
+      prompt: "Review: Check diff for bugs, patterns, CLAUDE.md compliance. SendMessage findings to team lead.")
+Agent(name: "security-auditor", subagent_type: "atlas-admin:team-security",
+      team_name: "review", model: "sonnet", run_in_background: true,
+      prompt: "Security: Scan diff for OWASP vulnerabilities, secrets, RBAC issues. SendMessage findings to team lead.")
+```
+
 **Usage**:
 ```
 /atlas team review             # Review working tree diff
@@ -177,10 +237,51 @@ Agent(name: "coordinator", team_name: "jarvis", model: "haiku",
 | api-tester | Sonnet | API endpoints | Health endpoints, response times, error rates |
 | log-analyzer | Sonnet | Log patterns | Error patterns, anomalies, warnings |
 
+**Spawn pattern**:
+```
+TeamCreate(team_name: "audit")
+
+Agent(name: "docker-checker", subagent_type: "atlas-admin:team-coordinator",
+      team_name: "audit", model: "sonnet", run_in_background: true,
+      prompt: "Docker: Check container status, health, resource usage, stale images. SendMessage report to team lead.")
+Agent(name: "api-tester", subagent_type: "atlas-admin:team-engineer",
+      team_name: "audit", model: "sonnet", run_in_background: true,
+      prompt: "API: Test health endpoints, response times, error rates. SendMessage report to team lead.")
+Agent(name: "log-analyzer", subagent_type: "atlas-admin:team-researcher",
+      team_name: "audit", model: "sonnet", run_in_background: true,
+      prompt: "Logs: Analyze error patterns, anomalies, warnings in docker logs and system logs. SendMessage report to team lead.")
+```
+
 **Usage**:
 ```
 /atlas team audit              # Full infrastructure audit
 ```
+
+## Pre-Spawn Complexity Routing
+
+Before spawning a full team, assess task complexity:
+
+| Complexity | Signal | Action |
+|------------|--------|--------|
+| **Trivial** | < 2 files, single concern, quick fix | Skip team — do it yourself |
+| **Moderate** | 2-5 files, BE only or FE only | 2 workers max (engineer + tester) |
+| **Complex** | BE + FE + tests, multi-service, > 5 files | Full blueprint (3-4 workers) |
+
+**Rule**: NEVER spawn a 4-worker team for a 1-file fix. Ask yourself: "Would I finish this faster alone?"
+
+## Scratchpad Protocol
+
+Workers record findings in a shared scratchpad to avoid re-work and enable cross-worker awareness:
+
+```bash
+SCRATCHPAD="/tmp/atlas-team-${TEAM_NAME}-scratchpad.md"
+```
+
+**Rules**:
+- Workers APPEND findings (never overwrite): `echo "## {worker-name}\n{findings}\n---" >> $SCRATCHPAD`
+- Lead reads scratchpad before synthesizing final report: `cat $SCRATCHPAD`
+- Scratchpad is ephemeral — auto-deleted after TeamDelete or session end
+- Keep entries concise (< 200 words per worker)
 
 ## Subcommands
 

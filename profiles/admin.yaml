@@ -36,7 +36,14 @@ skills:
 hooks:
   - enterprise-check
 
-agents: []
+agents:
+  # v3.30.0: Agent Teams specialized workers
+  - team-researcher
+  - team-engineer
+  - team-tester
+  - team-reviewer
+  - team-coordinator
+  - team-security
 
 persona: "infrastructure architect"
 pipeline: "DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFRA"
