@@ -1,6 +1,6 @@
 ---
 name: feature-board
-description: "Feature registry dashboard. Parse FEATURES.md, render kanban board + validation matrix. /atlas board for status, /atlas roadmap for drill-down. Proactive suggestions at session start."
+description: "Feature registry dashboard with WIP audit. Parse FEATURES.md, render kanban board + validation matrix + WIP health analysis. /atlas board for status, /atlas board wip for WIP audit + reset. Proactive suggestions at session start."
 effort: low
 ---
 
@@ -12,6 +12,7 @@ Multi-view CLI dashboard from `.blueprint/FEATURES.md`, `.blueprint/THEMES.md`, 
 
 - User says "board", "features", "show features", "what's the status", "feature status"
 - User says "roadmap", "project status", "progress", "how's the project"
+- User says "wip", "work in progress", "what's active", "stale features", "wip audit", "wip reset"
 - At session start (auto-injected by SessionStart hook — summary only)
 - After completing a feature task (show updated board)
 
@@ -35,6 +36,8 @@ Read these 3 files from project root:
 | `/atlas board matrix` | **Matrix** | Validation matrix table (all features × all layers) |
 | `/atlas board FEAT-NNN` | **Detail** | Single feature deep-dive |
 | `/atlas board suggest` | **Suggest** | Sprint packs + dependency graph only |
+| `/atlas board wip` | **WIP Audit** | Categorize IN_PROGRESS → KEEP / DEMOTE / DECIDE |
+| `/atlas board reset` | **WIP Reset** | Apply demotions from WIP audit with HITL gates |
 | `/atlas roadmap` | **Themed** | Alias for `/atlas board themes` |
 
 **ALL views** append Sprint Pack Suggestions at the bottom (except `matrix` and single `FEAT-NNN`).
@@ -356,3 +359,139 @@ When a task reveals new info:
 2. If blocked → create prerequisite task + `addBlockedBy`
 3. If scope change → update FEATURES.md + plan file
 4. If architectural decision → AskUserQuestion + decision-log
+
+---
+
+## VIEW 6: WIP Audit (`/atlas board wip`)
+
+Analyze ALL `IN_PROGRESS` features and categorize each into actionable buckets.
+This is the "honest mirror" — it tells you what's really active vs. parked.
+
+### WIP Audit Pipeline
+
+```
+PARSE → SCORE → CLASSIFY → REPORT → RECOMMEND
+```
+
+### WIP Health Criteria (per feature)
+
+For each IN_PROGRESS feature, compute a **WIP Health Score** (0-100):
+
+| Criterion | Weight | Score Logic |
+|-----------|--------|-------------|
+| **Momentum** | 30% | Days since last activity: 0-3d=100, 4-7d=70, 8-14d=40, 15-30d=15, >30d=0 |
+| **DoD Coverage** | 25% | Count of PASS layers ÷ applicable layers × 100 |
+| **FE Exists** | 15% | Has UI that loads and works: 100=yes, 50=partial, 0=BE-only |
+| **Progress vs Age** | 15% | progress% ÷ weeks_since_started. High ratio=good velocity |
+| **Test Coverage** | 15% | Has dedicated tests: 100=yes+passing, 50=exists, 0=none |
+
+### Classification Buckets
+
+| Bucket | Criteria | Icon | Action |
+|--------|----------|------|--------|
+| **KEEP** | WIP Score ≥ 60 AND last activity < 14 days | 🟢 | Continue — has real momentum |
+| **ALMOST** | WIP Score ≥ 60 AND progress ≥ 80% | 🔵 | Sprint to finish — almost done |
+| **STALE** | WIP Score 30-59 OR last activity 14-30 days | 🟡 | Decide: push to finish or park |
+| **DEMOTE** | WIP Score < 30 OR last activity > 30 days OR 0 DoD PASS | 🔴 | Recommend → BACKLOG |
+| **DECIDE** | Ambiguous: mixed signals (high progress but stale, or low score but critical) | ⚪ | Needs human decision via AskUserQuestion |
+
+### WIP Audit Output Format
+
+```
+🏛️ ATLAS │ Feature Board — WIP Audit — {date}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 {N} features IN_PROGRESS │ WIP Health: {avg_score}/100
+
+🟢 KEEP ({N}) — Real momentum, continue
+──────────────────────────────────────────────────────────
+🟢 FEAT-NNN {Name}        {prog}%  Score:{score}  Last:{date}  DoD:{pass}/{total}
+   └─ {Theme} › {Epic}
+
+🔵 ALMOST DONE ({N}) — Sprint to finish
+──────────────────────────────────────────────────────────
+🔵 FEAT-NNN {Name}        {prog}%  Score:{score}  Last:{date}  DoD:{pass}/{total}
+   └─ Remaining: {list of TODO DoD layers}
+
+🟡 STALE ({N}) — Decide: push or park
+──────────────────────────────────────────────────────────
+🟡 FEAT-NNN {Name}        {prog}%  Score:{score}  Last:{date}  DoD:{pass}/{total}
+   └─ Stale {N} days │ {reason for low score}
+
+🔴 DEMOTE ({N}) — Recommend → BACKLOG
+──────────────────────────────────────────────────────────
+🔴 FEAT-NNN {Name}        {prog}%  Score:{score}  Last:{date}  DoD:{pass}/{total}
+   └─ Reason: {no momentum | no tests | no FE | 0 DoD PASS}
+
+⚪ DECIDE ({N}) — Needs your input
+──────────────────────────────────────────────────────────
+⚪ FEAT-NNN {Name}        {prog}%  Score:{score}  Last:{date}  DoD:{pass}/{total}
+   └─ Mixed signals: {description of ambiguity}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 WIP Summary
+  Target WIP: ≤15 features │ Current: {N} │ {over_under} target
+  Avg momentum: {avg_days_since_activity} days since last touch
+  Top velocity: FEAT-NNN ({velocity_ratio})
+  Biggest stall: FEAT-NNN ({days_stale} days)
+
+🎯 Recommendation: Demote {N} features → WIP drops to {new_count}
+   Use `/atlas board reset` to apply with HITL confirmation.
+```
+
+After rendering the audit, ALWAYS use AskUserQuestion to ask:
+- "Do you agree with the DEMOTE recommendations?"
+- Options: "Accept all", "Review one by one", "Keep all — skip reset"
+
+---
+
+## VIEW 7: WIP Reset (`/atlas board reset`)
+
+Apply WIP audit demotions to FEATURES.md. HITL-gated — every change requires confirmation.
+
+### Reset Pipeline
+
+```
+AUDIT → CONFIRM → APPLY → VERIFY → REPORT
+```
+
+### Process
+
+1. **Run WIP audit** (same as `/atlas board wip`) to get classifications
+2. **Present DEMOTE list** via AskUserQuestion:
+   - Show each feature to demote with reason
+   - Options: "Demote all", "Review one by one", "Cancel"
+3. **If "Review one by one"**: Loop through each DEMOTE feature with AskUserQuestion:
+   - "FEAT-NNN {Name} ({prog}%, stale {N}d) — Demote to BACKLOG?"
+   - Options: "Demote", "Keep IN_PROGRESS", "Move to CODED"
+4. **Apply changes** to `.blueprint/FEATURES.md`:
+   - Change `**Status**: 🟡 IN_PROGRESS` → `**Status**: 📋 BACKLOG` (or chosen status)
+   - Add note: `> ℹ️ Demoted from IN_PROGRESS on {date} — WIP audit reset`
+5. **Verify**: Re-read FEATURES.md, count new WIP, confirm target met
+6. **Report**: Show before/after WIP count + list of changes made
+
+### Reset Output Format
+
+```
+🏛️ ATLAS │ Feature Board — WIP Reset Applied — {date}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 WIP: {before} → {after} features │ Target: ≤15 │ {status_icon}
+
+Changes Applied:
+  🔴→📋 FEAT-NNN {Name} — BACKLOG (was {prog}%, stale {N}d)
+  🔴→🔨 FEAT-NNN {Name} — CODED (was {prog}%, no FE)
+  🟢   FEAT-NNN {Name} — KEPT (confirmed by user)
+  ...
+
+Next: Run `/atlas board` to see updated chronological view.
+```
+
+### Safety Rules
+
+- NEVER auto-demote without AskUserQuestion confirmation
+- NEVER change DONE or SHIPPED features
+- NEVER delete feature blocks — only change status field
+- Always add audit trail note when changing status
+- If WIP is already ≤ 15, report "WIP healthy" and skip reset
