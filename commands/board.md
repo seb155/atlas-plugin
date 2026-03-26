@@ -16,3 +16,5 @@ Subcommands:
 - `/atlas board matrix` — Validation matrix (all features × all layers)
 - `/atlas board FEAT-NNN` — Detail for specific feature
 - `/atlas board suggest` — Sprint packs + dependency graph only
+- `/atlas board wip` — WIP audit: categorize IN_PROGRESS features → KEEP / DEMOTE / DECIDE
+- `/atlas board reset` — Apply WIP demotions with HITL confirmation gates

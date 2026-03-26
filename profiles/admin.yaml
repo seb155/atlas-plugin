@@ -12,6 +12,8 @@ skills:
   - infrastructure-ops
   - security-audit
   - feature-board
+  - product-health
+  - onboarding-check
   # Previously orphaned — now assigned
   - code-analysis
   - enterprise-audit
@@ -42,6 +44,8 @@ commands:
   - plan-status
   - dream
   - ultrathink
+  - health
+  - onboard
 
 agents: []
 
