@@ -32,34 +32,15 @@ skills:
   - plugin-builder
   # Domain
   - engineering-ops
+  # v3.26.0: migrated from commands
+  - session-pickup
+  - ci-management
 
 refs:
   - composition-patterns
   - react-best-practices
   - gmining-excel
   - cc-native-features
-
-commands:
-  - dev
-  - tdd
-  - debug
-  - review
-  - simplify
-  - verify
-  - ship
-  - plan
-  - brainstorm
-  - idea
-  - design
-  - eng
-  - estimate
-  - scope
-  - hooks
-  - skill
-  - end
-  - handoff
-  - pickup
-  - ci
 
 agents:
   - plan-architect

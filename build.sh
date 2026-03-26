@@ -70,7 +70,7 @@ build_tier() {
   echo "🔨 Building atlas-${tier} v${VERSION}..."
 
   rm -rf "$output"
-  mkdir -p "$output"/{.claude-plugin,commands,skills,agents,hooks}
+  mkdir -p "$output"/{.claude-plugin,skills,agents,hooks}
 
   # Resolve inherited skills
   local skills
@@ -98,18 +98,6 @@ build_tier() {
       fi
     done
   fi
-
-  # Resolve inherited commands
-  local commands
-  commands=$(resolve_field "$tier" "commands")
-
-  for cmd in $commands; do
-    if [ -f "commands/${cmd}.md" ]; then
-      cp "commands/${cmd}.md" "$output/commands/"
-    else
-      echo "  ⚠️  Command not found: ${cmd}.md (skipped)"
-    fi
-  done
 
   # Resolve inherited agents
   local agents
@@ -199,13 +187,11 @@ EOF
   # Count results
   local skill_count
   skill_count=$(find "$output/skills" -maxdepth 2 -name "SKILL.md" | wc -l)
-  local cmd_count
-  cmd_count=$(find "$output/commands" -name "*.md" | wc -l)
   local agent_count
   agent_count=$(find "$output/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
 
   echo "✅ Built atlas-${tier} v${VERSION} → ${output}/"
-  echo "   ${skill_count} skills | ${cmd_count} commands | ${agent_count} agents"
+  echo "   ${skill_count} skills | ${agent_count} agents"
 }
 
 # Main

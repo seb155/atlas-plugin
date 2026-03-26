@@ -1,8 +1,7 @@
 """
-test_cross_references.py — Validate cross-references between skills, commands, agents.
+test_cross_references.py — Validate cross-references between skills and agents.
 
 Checks:
-- Commands referencing skills point to existing skills
 - Skills referencing agents point to existing agents
 - Profile refs entries have corresponding skills/refs/{name}/ directories
 """
@@ -16,7 +15,7 @@ import pytest
 import yaml
 
 from conftest import (
-    SKILLS_DIR, COMMANDS_DIR, AGENTS_DIR, PROFILES_DIR,
+    SKILLS_DIR, AGENTS_DIR, PROFILES_DIR,
     SKILL_CONTAINER_DIRS, parse_frontmatter, resolved_tier,
 )
 
@@ -45,41 +44,12 @@ def _all_agent_names() -> set[str]:
     return {d.name for d in AGENTS_DIR.iterdir() if d.is_dir()}
 
 
-def _all_command_files() -> list[Path]:
-    """All command .md files."""
-    return sorted(COMMANDS_DIR.glob("*.md"))
-
-
 _SKILL_NAMES = _all_skill_names()
 _AGENT_NAMES = _all_agent_names()
 
 # Regex to find skill references in markdown (e.g., `skill-name` or "skill-name" skill)
 _SKILL_REF_PATTERN = re.compile(r"`([a-z][a-z0-9-]+)`\s+skill")
 _AGENT_REF_PATTERN = re.compile(r"`([a-z][a-z0-9-]+)`\s+agent")
-
-
-# ---------------------------------------------------------------------------
-# Tests: Command → Skill references
-# ---------------------------------------------------------------------------
-
-@pytest.mark.strict
-class TestCommandSkillReferences:
-
-    @pytest.mark.parametrize(
-        "cmd_path",
-        _all_command_files(),
-        ids=[p.stem for p in _all_command_files()],
-    )
-    def test_command_referenced_skills_exist(self, cmd_path: Path) -> None:
-        """Commands that reference skills via `skill-name` skill must point to existing skills."""
-        text = cmd_path.read_text(encoding="utf-8")
-        refs = _SKILL_REF_PATTERN.findall(text)
-        for ref in refs:
-            assert ref in _SKILL_NAMES, (
-                f"Command '{cmd_path.stem}' references skill '{ref}' "
-                f"which does not exist on disk. "
-                f"Available: {sorted(_SKILL_NAMES)[:10]}..."
-            )
 
 
 # ---------------------------------------------------------------------------
@@ -149,11 +119,3 @@ class TestTierInheritance:
             f"Dev tier is missing user skills: {sorted(missing)}"
         )
 
-    def test_admin_includes_all_dev_commands(self) -> None:
-        """Admin tier must include all dev tier commands."""
-        admin = resolved_tier("admin")
-        dev = resolved_tier("dev")
-        missing = dev["commands"] - admin["commands"]
-        assert not missing, (
-            f"Admin tier is missing dev commands: {sorted(missing)}"
-        )

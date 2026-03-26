@@ -39,9 +39,6 @@ ALL_SKILLS=$(resolve_field "$TIER" "skills")
 SKILL_COUNT=$(echo "$ALL_SKILLS" | grep -c . || echo 0)
 ALL_AGENTS=$(resolve_field "$TIER" "agents")
 AGENT_COUNT=$(echo "$ALL_AGENTS" | grep -c . || echo 0)
-ALL_COMMANDS=$(resolve_field "$TIER" "commands")
-CMD_COUNT=$(echo "$ALL_COMMANDS" | grep -c . || echo 0)
-
 # Skill emoji map (static — add new skills here)
 declare -A EMOJI_MAP=(
   [context-discovery]="🔭" [plan-builder]="🏗️" [brainstorming]="💡" [frontend-design]="🎨"
@@ -64,6 +61,10 @@ declare -A EMOJI_MAP=(
   [test-orchestrator]="🧪"
   [vision-alignment]="🧭"
   [memory-dream]="🌙"
+  # v3.26.0 additions (commands→skills migration)
+  [session-pickup]="🔄" [ultrathink]="🧠" [ci-management]="🔧"
+  [product-health]="🏥" [onboarding-check]="✅" [session-spawn]="🚀"
+  [marketplace-manager]="🏪" [programme-manager]="📊" [knowledge-engine]="🗂️"
 )
 
 # Skill category map
@@ -88,6 +89,10 @@ declare -A CATEGORY_MAP=(
   [test-orchestrator]="Quality"
   [vision-alignment]="Planning"
   [memory-dream]="Meta"
+  # v3.26.0 additions
+  [session-pickup]="Meta" [ultrathink]="Meta" [ci-management]="Deploy"
+  [product-health]="Quality" [onboarding-check]="Meta" [session-spawn]="Meta"
+  [marketplace-manager]="Meta" [programme-manager]="Project" [knowledge-engine]="Knowledge"
 )
 
 # Skill one-liner descriptions
@@ -142,6 +147,16 @@ declare -A DESC_MAP=(
   [test-orchestrator]="Test pyramid orchestration: unit, integration, E2E, security, coverage"
   [vision-alignment]="Strategic idea intake — scan mega plan, sub-plans, features, backlog before deciding"
   [memory-dream]="Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather, consolidate, prune"
+  # v3.26.0 additions
+  [session-pickup]="Resume from handoff file — context reload, rich briefing, scope-locked drill-in"
+  [ultrathink]="Deep reasoning mode — maximum thinking budget for complex architectural decisions"
+  [ci-management]="CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet"
+  [product-health]="Application reality audit — live validation via API, browser, and tests"
+  [onboarding-check]="Team readiness audit — 12-check grade A-F with auto-fix mode"
+  [session-spawn]="Multi-session orchestration — spawn/continue/list CC sessions in tmux"
+  [marketplace-manager]="Marketplace plugin management — publish, version, distribute"
+  [programme-manager]="Programme management — mega plan tracking, sub-plan coordination"
+  [knowledge-engine]="Enterprise knowledge layer — search, ingest, discover, vectorize"
 )
 
 # Category header emojis
@@ -199,7 +214,7 @@ EMOJI_TABLE=$(build_emoji_table)
 cat > "$OUTPUT" <<SKILLEOF
 ---
 name: atlas-assist
-description: "Master skill for ATLAS ${BANNER_LABEL} — AXOIQ's unified AI engineering assistant. ${SKILL_COUNT} skills, ${AGENT_COUNT} agents, ${CMD_COUNT} commands. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS ${BANNER_LABEL} — AXOIQ's unified AI engineering assistant. ${SKILL_COUNT} skills, ${AGENT_COUNT} agents. Auto-routing co-pilot with HITL gates."
 ---
 
 # ATLAS — AXOIQ's Unified AI Engineering Assistant (${BANNER_LABEL} Tier)
@@ -215,7 +230,7 @@ in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 \`\`\`
 🏛️ ATLAS │ ✅ SESSION │ v${VERSION} ${BANNER_LABEL}
-   ${SKILL_COUNT} skills │ ${AGENT_COUNT} agents │ ${CMD_COUNT} commands │ Gate 12/15
+   ${SKILL_COUNT} skills │ ${AGENT_COUNT} agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 \`\`\`
 

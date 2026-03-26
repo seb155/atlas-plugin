@@ -23,22 +23,6 @@ refs:
   - web-design-guidelines
   - atlas-visual-identity
 
-commands:
-  - atlas
-  - notes
-  - brief
-  - learn
-  - profile
-  - remind
-  - research
-  - present
-  - context
-  - browse
-  - setup
-  - doctor
-  - location
-  - transcript
-
 agents:
   - context-scanner
 

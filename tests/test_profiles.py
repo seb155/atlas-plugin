@@ -2,9 +2,8 @@
 test_profiles.py — Profile YAML integrity and inheritance chain validation.
 
 Validates:
-- Each profile has required fields: tier, skills, commands
+- Each profile has required fields: tier, skills
 - All skill names resolve to directories on disk
-- All command names resolve to .md files in commands/
 - Inheritance chain: dev inherits user, admin inherits dev
 - Resolved (merged) tiers contain all expected items
 """
@@ -20,7 +19,6 @@ import yaml
 from conftest import (
     PROFILES_DIR,
     SKILLS_DIR,
-    COMMANDS_DIR,
     AGENTS_DIR,
     SKILL_CONTAINER_DIRS,
     resolved_tier,
@@ -51,16 +49,11 @@ def _skills_on_disk() -> set[str]:
     return names
 
 
-def _commands_on_disk() -> set[str]:
-    return {p.stem for p in COMMANDS_DIR.glob("*.md")}
-
-
 def _agents_on_disk() -> set[str]:
     return {d.name for d in AGENTS_DIR.iterdir() if d.is_dir()}
 
 
 SKILLS_ON_DISK = _skills_on_disk()
-COMMANDS_ON_DISK = _commands_on_disk()
 AGENTS_ON_DISK = _agents_on_disk()
 KNOWN_TIERS = ["user", "dev", "admin"]
 
@@ -88,11 +81,6 @@ class TestProfileRequiredFields:
         data = _load_profile(tier)
         assert "skills" in data, f"Missing 'skills' in {tier}.yaml"
         assert isinstance(data["skills"], list), f"'skills' must be a list in {tier}.yaml"
-
-    def test_has_commands_list(self, tier: str) -> None:
-        data = _load_profile(tier)
-        assert "commands" in data, f"Missing 'commands' in {tier}.yaml"
-        assert isinstance(data["commands"], list), f"'commands' must be a list in {tier}.yaml"
 
     def test_has_description(self, tier: str) -> None:
         data = _load_profile(tier)
@@ -123,15 +111,6 @@ def _collect_skill_params() -> list[tuple[str, str]]:
     return params
 
 
-def _collect_command_params() -> list[tuple[str, str]]:
-    params = []
-    for tier in KNOWN_TIERS:
-        data = _load_profile(tier)
-        for cmd in data.get("commands", []):
-            params.append((tier, cmd))
-    return params
-
-
 def _collect_agent_params() -> list[tuple[str, str]]:
     params = []
     for tier in KNOWN_TIERS:
@@ -142,7 +121,6 @@ def _collect_agent_params() -> list[tuple[str, str]]:
 
 
 _SKILL_PARAMS = _collect_skill_params()
-_COMMAND_PARAMS = _collect_command_params()
 _AGENT_PARAMS = _collect_agent_params()
 
 
@@ -156,19 +134,6 @@ def test_profile_skill_exists_on_disk(tier: str, skill_name: str) -> None:
     assert skill_name in SKILLS_ON_DISK, (
         f"Profile '{tier}' references skill '{skill_name}' "
         f"but it was not found under skills/"
-    )
-
-
-@pytest.mark.parametrize(
-    "tier,cmd_name",
-    _COMMAND_PARAMS,
-    ids=[f"{t}/{c}" for t, c in _COMMAND_PARAMS],
-)
-def test_profile_command_exists_on_disk(tier: str, cmd_name: str) -> None:
-    """Every command declared in a profile must have a .md file in commands/."""
-    assert cmd_name in COMMANDS_ON_DISK, (
-        f"Profile '{tier}' references command '{cmd_name}' "
-        f"but commands/{cmd_name}.md does not exist"
     )
 
 
@@ -231,14 +196,6 @@ class TestProfileInheritance:
                 f"Resolved dev tier missing user skill '{skill}'"
             )
 
-    def test_resolved_dev_contains_user_commands(self) -> None:
-        user_data = _load_profile("user")
-        resolved = resolved_tier("dev")
-        for cmd in user_data.get("commands", []):
-            assert cmd in resolved["commands"], (
-                f"Resolved dev tier missing user command '{cmd}'"
-            )
-
     def test_resolved_admin_contains_dev_skills(self) -> None:
         dev_data = _load_profile("dev")
         resolved = resolved_tier("admin")
@@ -255,15 +212,6 @@ class TestProfileInheritance:
                 f"Resolved admin tier missing user skill '{skill}'"
             )
 
-    def test_resolved_admin_contains_all_commands(self) -> None:
-        """Admin should have the broadest command set (superset of dev and user)."""
-        dev_resolved = resolved_tier("dev")
-        admin_resolved = resolved_tier("admin")
-        missing = dev_resolved["commands"] - admin_resolved["commands"]
-        assert not missing, (
-            f"Admin resolved tier is missing commands from dev: {missing}"
-        )
-
     def test_no_duplicate_skills_in_profile_lists(self) -> None:
         """Each profile's own skill list should have no duplicates."""
         for tier in KNOWN_TIERS:
@@ -274,11 +222,3 @@ class TestProfileInheritance:
                 f"{[s for s in skills if skills.count(s) > 1]}"
             )
 
-    def test_no_duplicate_commands_in_profile_lists(self) -> None:
-        """Each profile's own command list should have no duplicates."""
-        for tier in KNOWN_TIERS:
-            data = _load_profile(tier)
-            commands = data.get("commands", [])
-            assert len(commands) == len(set(commands)), (
-                f"Duplicate commands in {tier}.yaml"
-            )

@@ -63,9 +63,9 @@ class TestBuildStructure:
 
     @pytest.mark.parametrize("tier", ["admin", "dev", "user"])
     def test_tier_has_required_dirs(self, build_output: Path, tier: str) -> None:
-        """Each tier dist must have skills/, commands/, agents/, hooks/."""
+        """Each tier dist must have skills/, agents/, hooks/."""
         tier_dir = build_output / f"atlas-{tier}"
-        for subdir in ["skills", "commands", "agents", "hooks", ".claude-plugin"]:
+        for subdir in ["skills", "agents", "hooks", ".claude-plugin"]:
             assert (tier_dir / subdir).is_dir(), (
                 f"dist/atlas-{tier}/{subdir}/ missing"
             )
@@ -134,16 +134,3 @@ class TestBuildCounts:
             f"expected >= {expected_count} from profile"
         )
 
-    @pytest.mark.parametrize("tier", ["admin", "dev", "user"])
-    def test_command_count_matches_profile(self, build_output: Path, tier: str) -> None:
-        """Dist command count should match resolved profile."""
-        resolved = resolved_tier(tier)
-        expected_count = len(resolved["commands"])
-
-        tier_dir = build_output / f"atlas-{tier}" / "commands"
-        actual = len(list(tier_dir.glob("*.md")))
-
-        assert actual >= expected_count, (
-            f"dist/atlas-{tier} has {actual} commands, "
-            f"expected >= {expected_count} from profile"
-        )

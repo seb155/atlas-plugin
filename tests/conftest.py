@@ -19,7 +19,6 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).parent.parent
 SKILLS_DIR = PLUGIN_ROOT / "skills"
-COMMANDS_DIR = PLUGIN_ROOT / "commands"
 AGENTS_DIR = PLUGIN_ROOT / "agents"
 HOOKS_DIR = PLUGIN_ROOT / "hooks"
 PROFILES_DIR = PLUGIN_ROOT / "profiles"
@@ -68,12 +67,6 @@ def all_skill_dirs() -> list[Path]:
 def all_skill_mds(all_skill_dirs: list[Path]) -> list[Path]:
     """All SKILL.md file paths."""
     return [d / "SKILL.md" for d in all_skill_dirs]
-
-
-@pytest.fixture(scope="session")
-def all_command_mds() -> list[Path]:
-    """All command .md file paths."""
-    return sorted(COMMANDS_DIR.glob("*.md"))
 
 
 @pytest.fixture(scope="session")
@@ -129,11 +122,11 @@ def parse_frontmatter_fn():
 def resolved_tier(tier: str) -> dict[str, set[str]]:
     """
     Recursively resolve profile inheritance and return combined
-    skills, commands, and agents for a given tier.
+    skills and agents for a given tier.
     """
     profile_path = PROFILES_DIR / f"{tier}.yaml"
     if not profile_path.exists():
-        return {"skills": set(), "commands": set(), "agents": set()}
+        return {"skills": set(), "agents": set()}
 
     data = yaml.safe_load(profile_path.read_text(encoding="utf-8"))
 
@@ -142,11 +135,10 @@ def resolved_tier(tier: str) -> dict[str, set[str]]:
     if parent:
         base = resolved_tier(parent)
     else:
-        base = {"skills": set(), "commands": set(), "agents": set()}
+        base = {"skills": set(), "agents": set()}
 
     combined: dict[str, set[str]] = {
         "skills": base["skills"] | set(data.get("skills", [])),
-        "commands": base["commands"] | set(data.get("commands", [])),
         "agents": base["agents"] | set(data.get("agents", [])),
     }
     return combined
@@ -182,7 +174,3 @@ def skills_on_disk() -> set[str]:
     return names
 
 
-@pytest.fixture(scope="session")
-def commands_on_disk() -> set[str]:
-    """All command names on disk (stem of .md files in commands/)."""
-    return {p.stem for p in COMMANDS_DIR.glob("*.md")}

@@ -5,7 +5,7 @@
 
 ## IDENTITY
 
-**ATLAS** is AXOIQ's unified Claude Code plugin — a multi-tier AI engineering assistant with skills, agents, commands, and lifecycle hooks. It replaces 18+ individual plugins with one cohesive system.
+**ATLAS** is AXOIQ's unified Claude Code plugin — a multi-tier AI engineering assistant with skills, agents, and lifecycle hooks. It replaces 18+ individual plugins with one cohesive system.
 
 **Key insight**: ATLAS develops itself using ATLAS. The plugin-builder, skill-management, and atlas-dev-self skills are used to extend the plugin.
 
@@ -23,12 +23,11 @@ dist/atlas-{user,dev,user}/      ← Self-contained artifacts (no runtime deps)
 
 | Component | Location | Count (admin) |
 |-----------|----------|---------------|
-| Skills | `skills/*/SKILL.md` | 48 (43 profile + atlas-assist) |
+| Skills | `skills/*/SKILL.md` | ~58 (profile + atlas-assist) |
 | Agents | `agents/*/AGENT.md` | 6 |
-| Commands | `commands/*.md` | 45 |
 | Hooks | `hooks/hooks.json` + scripts | 7 |
 | Refs | `skills/refs/*/SKILL.md` | 5 |
-| Tests | `tests/test_*.py` | 16 |
+| Tests | `tests/test_*.py` | 15 |
 
 ## COMMANDS
 
@@ -67,8 +66,7 @@ make lint                         # Frontmatter + coverage checks
 1. Create `skills/{name}/SKILL.md` with frontmatter: `name`, `description`, `effort`
 2. Add to appropriate profile (`profiles/{tier}.yaml`)
 3. Add to `EMOJI_MAP`, `DESC_MAP`, `CATEGORY_MAP` in `scripts/generate-master-skill.sh`
-4. Create command `commands/{name}.md`: `Invoke the {name} skill with: $ARGUMENTS`
-5. Run `make test` — validates frontmatter, coverage, cross-refs
+4. Run `make test` — validates frontmatter, coverage, cross-refs
 
 ### Adding an Agent
 1. Create `agents/{name}/AGENT.md` with frontmatter: `name`, `description`, `model`
@@ -131,14 +129,14 @@ This plugin develops itself. When modifying atlas-plugin:
 
 ## TESTING
 
-16 test files covering:
+15 test files covering:
 - `test_skill_frontmatter` — name, description, effort in every SKILL.md
 - `test_skill_coverage` — no orphan skills (except atlas-assist source)
-- `test_command_structure` — command routing validity
 - `test_profiles` — YAML inheritance chain
 - `test_build_output` — dist/ artifact completeness
 - `test_version_sync` — VERSION matches all manifests
-- `test_cross_references` — skills ↔ commands ↔ profiles aligned
+- `test_cross_references` — skills ↔ profiles aligned
+- `test_regression_gate` — structural integrity (no commands/ dir)
 - `test_hooks_schema` — hooks.json validity
 - `test_hook_behavior` — hook script execution
 - `test_agent_frontmatter` — agent spec completeness

@@ -26,30 +26,8 @@ skills:
   - marketplace-manager
   - programme-manager
   - memory-dream
-
-commands:
-  - deploy
-  - tune
-  - infra
-  - audit
-  - audit-enterprise
-  - board
-  - roadmap
-  - knowledge
-  - update
-  - dev-self
-  - vault
-  - ci
-  - review-plan
-  - programme
-  - plan-status
-  - dream
+  # v3.26.0: migrated from commands
   - ultrathink
-  - health
-  - onboard
-  - continue
-  - spawn
-  - sessions
 
 agents: []
 

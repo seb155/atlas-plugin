@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import PLUGIN_ROOT, SKILLS_DIR, COMMANDS_DIR, AGENTS_DIR, HOOKS_DIR
+from conftest import PLUGIN_ROOT, SKILLS_DIR, AGENTS_DIR, HOOKS_DIR
 
 
 class TestRegressionGate:
@@ -24,11 +24,13 @@ class TestRegressionGate:
         assert len(skills) > 0, "REGRESSION: zero skills found"
         print(f"Skills: {len(skills)}")
 
-    def test_has_commands(self):
-        """Plugin must have at least one command."""
-        commands = list(COMMANDS_DIR.glob("*.md"))
-        assert len(commands) > 0, "REGRESSION: zero commands found"
-        print(f"Commands: {len(commands)}")
+    def test_no_commands_dir(self):
+        """commands/ directory should NOT exist (migrated to skills in v3.26.0)."""
+        commands_dir = PLUGIN_ROOT / "commands"
+        assert not commands_dir.exists(), (
+            "REGRESSION: commands/ directory re-introduced. "
+            "All commands were migrated to skills/ in v3.26.0."
+        )
 
     def test_has_agents(self):
         """Plugin must have at least one agent."""
