@@ -65,6 +65,8 @@ declare -A EMOJI_MAP=(
   [session-pickup]="🔄" [ultrathink]="🧠" [ci-management]="🔧"
   [product-health]="🏥" [onboarding-check]="✅" [session-spawn]="🚀"
   [marketplace-manager]="🏪" [programme-manager]="📊" [knowledge-engine]="🗂️"
+  # v3.28.0: Agent Teams
+  [atlas-team]="👥"
 )
 
 # Skill category map
@@ -93,6 +95,8 @@ declare -A CATEGORY_MAP=(
   [session-pickup]="Meta" [ultrathink]="Meta" [ci-management]="Deploy"
   [product-health]="Quality" [onboarding-check]="Meta" [session-spawn]="Meta"
   [marketplace-manager]="Meta" [programme-manager]="Project" [knowledge-engine]="Knowledge"
+  # v3.28.0: Agent Teams
+  [atlas-team]="Implementation"
 )
 
 # Skill one-liner descriptions
@@ -157,6 +161,8 @@ declare -A DESC_MAP=(
   [marketplace-manager]="Marketplace plugin management — publish, version, distribute"
   [programme-manager]="Programme management — mega plan tracking, sub-plan coordination"
   [knowledge-engine]="Enterprise knowledge layer — search, ingest, discover, vectorize"
+  # v3.28.0: Agent Teams
+  [atlas-team]="Agent Teams blueprints — spawn coordinated worker squads in tmux panes (jarvis, feature, debug, review, audit)"
 )
 
 # Category header emojis
