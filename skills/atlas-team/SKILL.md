@@ -582,7 +582,46 @@ Tmux panes can outlive agent processes. This sequence prevents stuck teams:
 
 **Why panes linger**: CC creates a shell inside each tmux pane. The agent runs inside that shell. When the agent exits, the shell may stay alive. Usually auto-closes in 5-15s, but occasionally persists.
 
+## Session Status Dashboard
+
+When user runs `/atlas team status` during a session team, present:
+
+```
+🏛️ SESSION TEAM: {team-name}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+| Worker     | Model  | Status | Tasks | Est. Ctx | Compacts | Relays |
+|------------|--------|--------|-------|----------|----------|--------|
+| engineer   | Sonnet | idle   | 7     | ~62%     | 1        | 0      |
+| tester     | Sonnet | busy   | 3     | ~35%     | 0        | 0      |
+| researcher | Haiku  | idle   | 2     | ~22%     | 0        | 0      |
+| (frontend) | —      | cold   | 0     | —        | —        | —      |
+
+📊 Session: 12 tasks routed, 1 compact, 0 relays
+📁 Scratchpad: .claude/scratchpad/{team}/ (12 task files)
+⏱️  Uptime: 47 min
+```
+
+**Field definitions**:
+- **Status**: `busy` (executing), `idle` (alive, waiting), `cold` (not spawned yet)
+- **Est. Ctx**: `base_overhead + (tasks × 20K) - (compacts × 40K)` as % of 200K
+- **Compacts**: Number of times Lead sent /compact instruction
+- **Relays**: Number of relay handoffs (worker replaced)
+
+**Lead tracks** this in memory (no persistent file needed):
+
+```
+POOL = {
+  "backend": {name: "engineer", model: "sonnet", status: "idle",
+              tasks: 7, compacts: 1, relays: 0, spawned_at: "17:05"},
+  "test":    {name: "tester", model: "sonnet", status: "busy",
+              tasks: 3, compacts: 0, relays: 0, spawned_at: "17:20"},
+}
+```
+
 ## Error Recovery
+
+### Batch Teams
 
 | Situation | Action |
 |-----------|--------|
@@ -593,7 +632,19 @@ Tmux panes can outlive agent processes. This sequence prevents stuck teams:
 | Too many panes | Max 4 workers. `tmux kill-pane -t :1.N` for emergency |
 | Out of memory | Stop team, reduce worker count, use Haiku for simple tasks |
 
+### Session Teams (additional)
+
+| Situation | Action |
+|-----------|--------|
+| Worker crashed (no response 30s) | Check relay/ for checkpoint → respawn with relay file. If no relay → respawn fresh with scratchpad context |
+| Worker context bloated (slow responses) | Trigger relay handoff immediately (don't wait for threshold) |
+| Wrong worker got task | SendMessage correction to worker: "Cancel current task. Wait." Re-route to correct worker |
+| Need to add new role mid-session | Spawn new worker, add to pool. No team restart needed |
+| User wants to switch focus | Compact all workers, update scratchpad/context.md with new focus |
+| Session too long (2h+) | Relay all workers, clean scratchpad/tasks/ (keep relay/ files) |
+
 ## Playbook Reference
 
 Full onboarding guide: `.blueprint/AGENT-TEAMS-PLAYBOOK.md`
 Session orchestration gotchas: `memory/feedback_session_orchestration.md`
+Session architecture analysis: `.blueprint/plans/cosmic-mapping-flame.md`
