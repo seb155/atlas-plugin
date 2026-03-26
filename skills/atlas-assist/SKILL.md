@@ -126,6 +126,38 @@ Every skill has a unique emoji for instant visual identification in breadcrumbs 
 - **Progress**: Task lists and breadcrumbs visible at all times.
 - **Concise**: Lead with the answer. Skip preamble. Tables over paragraphs.
 
+## Agent Teams (Tmux Mode)
+
+When running in tmux with Agent Teams enabled, ATLAS can spawn visible worker agents:
+
+**Detection** (check ONCE at session start via Bash):
+```bash
+echo "TMUX=$TMUX SPAWN=$CLAUDE_CODE_SPAWN_BACKEND TEAMS=$CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS"
+```
+
+**If all three are set** → append to session banner: `🖥️ Tmux mode — Agent Teams available`
+
+**When to use Agent Teams**:
+- Research/exploration requiring 2+ independent searches → spawn workers in tmux panes
+- Complex tasks matching a blueprint → suggest `/atlas team {blueprint}`
+- Multi-file implementations where BE + FE + tests can run in parallel
+
+**Team blueprints** (invoke `atlas-team` skill):
+- `/atlas team jarvis` — Personal co-pilot (researcher + engineer + analyst + coordinator)
+- `/atlas team feature` — Feature squad (backend + frontend + tester)
+- `/atlas team debug` — Bug hunt (researcher + fixer + tester)
+- `/atlas team review` — Code quality (code-reviewer + security-auditor)
+- `/atlas team audit` — Infrastructure health (docker + api + logs)
+
+**Rules**:
+- ALWAYS use `general-purpose` subagent_type (Explore can't SendMessage)
+- ALWAYS `run_in_background: true` for workers
+- Auto-resize lead pane: `tmux resize-pane -t :1.1 -x 120` after spawn
+- Shutdown ALL workers BEFORE TeamDelete
+- Create tasks AFTER TeamCreate (scope resets per team)
+
+**If NOT in tmux**: Agents run in-process (invisible but functional). Note to user: "Run from tmux for visible agent panes."
+
 ## The 1% Rule (MANDATORY)
 
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.

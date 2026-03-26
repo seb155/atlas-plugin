@@ -30,6 +30,8 @@ skills:
   - ultrathink
   # v3.27.0: workspace multi-session
   - atlas-workspace-setup
+  # v3.28.0: Agent Teams blueprints
+  - atlas-team
 
 agents: []
 
