@@ -336,6 +336,108 @@ SCRATCHPAD="/tmp/atlas-team-${TEAM_NAME}-scratchpad.md"
 # Auto-deleted on session end
 ```
 
+## Context Management (Session Teams)
+
+### Proactive Compaction
+
+Every 5 tasks per worker, Lead sends a compact instruction to prevent context bloat:
+
+```
+# Lead checks after each worker task completion:
+if worker.task_count % 5 == 0:
+  SendMessage(to: worker.name, message:
+    "You've completed {N} tasks. Please compact your context now.
+     KEEP: file locations, import patterns, module architecture, test fixtures.
+     DROP: old task details, error traces, file contents already committed.
+     After compacting, reply 'compacted' and wait for next task.")
+```
+
+**Why 5 tasks?** Each task adds ~20K tokens of context. After 5 tasks = ~100K accumulated. Without compaction, a 200K context window fills by task 7-8.
+
+### Relay Handoff
+
+When a worker's estimated context exceeds 70% capacity, Lead triggers a relay: the worker writes a structured checkpoint, gets shut down, and a fresh worker reads the checkpoint.
+
+**Context estimation heuristic** (no CC API available):
+
+```
+estimated_context = base_overhead + (task_count × 20K)
+base_overhead ≈ 140K (system prompt + plugins + MCP + CLAUDE.md)
+threshold = 70% of 200K ≈ 140K usable → triggers at ~7 tasks without compaction
+with compaction every 5 tasks → triggers at ~12 tasks
+```
+
+**Relay flow**:
+
+```
+1. Lead detects: worker.task_count > threshold (7 without compact, 12 with)
+
+2. Lead sends relay instruction:
+   SendMessage(to: worker.name, message:
+     "RELAY CHECKPOINT: Write a comprehensive summary to
+      .claude/scratchpad/{team}/relay/{role}.md
+      Include:
+      - Files you've touched and their current state
+      - Patterns you've learned about this codebase
+      - Decisions you've made and why
+      - Current work state (what's done, what's pending)
+      - Gotchas/errors to avoid
+      Keep it under 500 words. Confirm when written.")
+
+3. Worker writes relay file, confirms
+
+4. Lead shuts down old worker:
+   SendMessage shutdown_request → wait 15s → verify pane closed
+
+5. Lead spawns fresh worker with relay context:
+   Agent(name: same_name, subagent_type: same_type, model: same_model,
+     prompt: "You are replacing a previous worker. Read your relay file at
+      .claude/scratchpad/{team}/relay/{role}.md for full context.
+      Then execute: {next_task}")
+
+6. Lead updates pool: reset task_count to 0
+```
+
+**Decision matrix: compact vs relay**:
+
+```
+if task_count % 5 == 0 AND task_count < threshold:
+    → COMPACT (cheaper — keeps worker alive, resets growth rate)
+if task_count >= threshold:
+    → RELAY (fresh context, guaranteed clean state)
+if worker unresponsive for 30s:
+    → RELAY (crash recovery — respawn with relay if exists)
+```
+
+### Relay File Format
+
+```markdown
+## Relay: {role} Worker — {date}
+**Tasks completed**: {N} | **Context reason**: {threshold exceeded / crash recovery}
+
+### Files Touched
+- `backend/services/auth.py` — added OAuth PKCE flow
+- `backend/routes/auth.py` — 3 new endpoints (/login, /callback, /logout)
+
+### Patterns Learned
+- All services use `get_db()` dependency injection
+- Tests use `test_client` fixture from conftest.py
+- Routes follow `/api/v1/{resource}/` convention
+
+### Decisions Made
+- PKCE over implicit flow (security requirement)
+- httpOnly cookies for token storage (XSS prevention)
+
+### Current State
+- OAuth flow: DONE, tested with 3 unit tests
+- Frontend hook: NOT STARTED
+- Migration: DONE (alembic revision abc123)
+
+### Gotchas
+- `import_service.py` is 2,527 lines — avoid touching it
+- Alembic `downgrade()` must match `upgrade()` exactly
+```
+
 ## Session Teams (Persistent Workers)
 
 When invoked as `/atlas team session {blueprint}`, workers persist for the entire session instead of shutting down after one task batch. Workers are spawned **on demand** (warm pool) and reused via SendMessage.
