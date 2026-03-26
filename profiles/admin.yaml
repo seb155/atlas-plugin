@@ -28,6 +28,8 @@ skills:
   - memory-dream
   # v3.26.0: migrated from commands
   - ultrathink
+  # v3.27.0: workspace multi-session
+  - atlas-workspace-setup
 
 agents: []
 
