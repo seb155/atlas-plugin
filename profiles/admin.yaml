@@ -14,6 +14,7 @@ skills:
   - feature-board
   - product-health
   - onboarding-check
+  - session-spawn
   # Previously orphaned — now assigned
   - code-analysis
   - enterprise-audit
@@ -46,6 +47,9 @@ commands:
   - ultrathink
   - health
   - onboard
+  - continue
+  - spawn
+  - sessions
 
 agents: []
 
