@@ -8,7 +8,7 @@ effort: medium
 
 Spawn pre-configured teams of AI agents that collaborate via shared task lists and visible tmux panes.
 
-**Commands**: `/atlas team jarvis|feature|debug|review|audit|status|stop`
+**Commands**: `/atlas team jarvis|feature|debug|review|audit|session|status|stop`
 
 ## Environment Detection (FIRST — Before Any Spawn)
 
@@ -283,15 +283,97 @@ SCRATCHPAD="/tmp/atlas-team-${TEAM_NAME}-scratchpad.md"
 - Scratchpad is ephemeral — auto-deleted after TeamDelete or session end
 - Keep entries concise (< 200 words per worker)
 
+## Session Teams (Persistent Workers)
+
+When invoked as `/atlas team session {blueprint}`, workers persist for the entire session instead of shutting down after one task batch. Workers are spawned **on demand** (warm pool) and reused via SendMessage.
+
+**Usage**: `/atlas team session feature|debug|jarvis`
+
+### Session Lifecycle
+
+```
+1. DETECT   → Check tmux/env
+2. CREATE   → TeamCreate("session-{blueprint}-{date}")
+3. LOOP     → Receive user tasks → Classify → Route
+   3a. Classify task by domain keywords
+   3b. Worker alive for role? → REUSE via SendMessage
+   3c. No worker? → SPAWN new (on demand)
+   3d. Worker reports back → Present to user
+   3e. Repeat for each user task
+4. MANAGE   → Every 5 tasks per worker: suggest compact
+5. RELAY    → Context > 70%: worker writes relay file → respawn
+6. STOP     → User: "done" or /atlas team stop → Shutdown all
+7. DELETE   → TeamDelete + scratchpad cleanup
+```
+
+### Task Classification (Lead-side routing)
+
+Classify each user task by keywords to pick the right worker:
+
+| Domain | Keywords | Worker Agent |
+|--------|----------|-------------|
+| **backend** | api, endpoint, service, model, migration, route, db, sql, fastapi | team-engineer |
+| **frontend** | component, hook, page, ui, form, grid, chart, react, tsx | team-engineer |
+| **test** | test, spec, e2e, assertion, coverage, fixture, pytest, vitest | team-tester |
+| **research** | search, find, investigate, docs, analyze, audit | team-researcher |
+| **ops** | docker, ci, deploy, health, status, logs | team-coordinator |
+
+**Trivial tasks** (< 2 files, quick answer): Lead handles directly — no worker spawn.
+
+### Worker Reuse Protocol
+
+```
+# Lead maintains in-memory routing:
+POOL = {}
+
+on_task(task):
+  role = classify(task)
+  if role in POOL and POOL[role].alive:
+    # REUSE: send task to existing worker
+    SendMessage(to: POOL[role].name, message: task_prompt)
+    POOL[role].task_count += 1
+  else:
+    # SPAWN: create new worker
+    worker = Agent(name: role_name, subagent_type: role_agent, ...)
+    POOL[role] = {name: worker, alive: true, task_count: 1}
+```
+
+### Context Management
+
+```
+Every 5 tasks per worker:
+  SendMessage(to: worker, message: "Compact context. KEEP: file locations,
+  patterns, current state. DROP: old task details, error traces.")
+
+When estimated context > 70% (heuristic: > 7 tasks without compact):
+  1. SendMessage relay instruction → worker writes relay/role.md
+  2. Shutdown old worker
+  3. Spawn new worker with: "Read .claude/scratchpad/relay/{role}.md for context."
+  4. Update POOL with new worker reference
+```
+
+### Session vs Batch (when to use which)
+
+| | **Batch** (`/atlas team feature`) | **Session** (`/atlas team session feature`) |
+|---|---|---|
+| Workers | Spawn all → task → shutdown | Spawn on demand → reuse → shutdown at end |
+| Lifetime | Single task batch (~5 min) | Entire session (~1-2h) |
+| Cost per task | ~140K spawn overhead each | ~0 after first spawn |
+| Best for | One-off parallel tasks | Sprint of 5-15 related tasks |
+| Context | Fresh each time | Accumulates (managed by compact/relay) |
+
 ## Subcommands
 
 | Command | Action |
 |---------|--------|
-| `/atlas team jarvis` | Spawn personal co-pilot team |
-| `/atlas team feature "desc"` | Spawn feature dev team with context |
-| `/atlas team debug "desc"` | Spawn bug hunt team |
-| `/atlas team review` | Spawn code review team |
-| `/atlas team audit` | Spawn infrastructure audit team |
+| `/atlas team jarvis` | Spawn personal co-pilot team (batch) |
+| `/atlas team feature "desc"` | Spawn feature dev team (batch) |
+| `/atlas team debug "desc"` | Spawn bug hunt team (batch) |
+| `/atlas team review` | Spawn code review team (batch) |
+| `/atlas team audit` | Spawn infrastructure audit team (batch) |
+| `/atlas team session feature` | Start persistent feature team (session) |
+| `/atlas team session debug` | Start persistent debug team (session) |
+| `/atlas team session jarvis` | Start persistent co-pilot (session) |
 | `/atlas team status` | Show active team: members, tasks, pane layout |
 | `/atlas team stop` | Graceful shutdown: shutdown workers → TeamDelete |
 
