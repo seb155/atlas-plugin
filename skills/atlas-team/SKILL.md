@@ -269,19 +269,72 @@ Before spawning a full team, assess task complexity:
 
 **Rule**: NEVER spawn a 4-worker team for a 1-file fix. Ask yourself: "Would I finish this faster alone?"
 
-## Scratchpad Protocol
+## Scratchpad Bus (Session Teams)
 
-Workers record findings in a shared scratchpad to avoid re-work and enable cross-worker awareness:
+Shared file-based coordination layer for session teams. Workers write structured outputs, Lead reads for synthesis and cross-worker routing.
+
+### Directory Structure
+
+```bash
+# Lead creates at team start:
+SCRATCHPAD=".claude/scratchpad/${TEAM_NAME}"
+mkdir -p "$SCRATCHPAD/tasks" "$SCRATCHPAD/relay"
+```
+
+```
+.claude/scratchpad/{team-name}/
+├── context.md         # Lead writes: current focus, project context
+├── decisions.jsonl    # Append-only: architectural decisions (all workers)
+├── tasks/
+│   ├── task-001.md    # Worker structured output
+│   ├── task-002.md    # Worker structured output
+│   └── ...
+├── relay/
+│   ├── backend.md     # Relay checkpoint for backend worker
+│   └── frontend.md    # Relay checkpoint for frontend worker
+└── errors.md          # Known errors/gotchas to avoid
+```
+
+### Worker Output Format
+
+Workers MUST write results to `$SCRATCHPAD/tasks/task-{NNN}.md`:
+
+```markdown
+## Task: {description}
+**Worker**: {name} | **Model**: {model} | **Status**: done
+
+### Changes
+- `path/to/file.py` — {what changed and why}
+
+### Decisions
+- {non-obvious decision with rationale}
+
+### For Next Worker
+- {context that would help a related follow-up task}
+
+### Tests
+- {commands run + pass/fail}
+```
+
+### Lead Protocol
+
+**After each worker completes**:
+1. Read `$SCRATCHPAD/tasks/task-{N}.md` for structured output
+2. Present key results to user
+3. If next task is related, include `"Read .claude/scratchpad/{team}/tasks/task-{N}.md for prior context"` in worker prompt
+
+**On team stop**: `rm -rf .claude/scratchpad/{team-name}/` (cleanup)
+
+### Batch Mode Scratchpad (simpler)
+
+For batch teams (non-session), use the lightweight version:
 
 ```bash
 SCRATCHPAD="/tmp/atlas-team-${TEAM_NAME}-scratchpad.md"
+# Workers APPEND: echo "## {worker-name}\n{findings}\n---" >> $SCRATCHPAD
+# Lead reads: cat $SCRATCHPAD
+# Auto-deleted on session end
 ```
-
-**Rules**:
-- Workers APPEND findings (never overwrite): `echo "## {worker-name}\n{findings}\n---" >> $SCRATCHPAD`
-- Lead reads scratchpad before synthesizing final report: `cat $SCRATCHPAD`
-- Scratchpad is ephemeral — auto-deleted after TeamDelete or session end
-- Keep entries concise (< 200 words per worker)
 
 ## Session Teams (Persistent Workers)
 
@@ -294,16 +347,18 @@ When invoked as `/atlas team session {blueprint}`, workers persist for the entir
 ```
 1. DETECT   → Check tmux/env
 2. CREATE   → TeamCreate("session-{blueprint}-{date}")
-3. LOOP     → Receive user tasks → Classify → Route
-   3a. Classify task by domain keywords
-   3b. Worker alive for role? → REUSE via SendMessage
-   3c. No worker? → SPAWN new (on demand)
-   3d. Worker reports back → Present to user
-   3e. Repeat for each user task
-4. MANAGE   → Every 5 tasks per worker: suggest compact
-5. RELAY    → Context > 70%: worker writes relay file → respawn
-6. STOP     → User: "done" or /atlas team stop → Shutdown all
-7. DELETE   → TeamDelete + scratchpad cleanup
+3. SCRATCH  → mkdir -p .claude/scratchpad/{team}/tasks .claude/scratchpad/{team}/relay
+4. LOOP     → Receive user tasks → Classify → Route
+   4a. Classify task by domain keywords
+   4b. Worker alive for role? → REUSE via SendMessage
+   4c. No worker? → SPAWN new (on demand)
+   4d. Worker executes + writes scratchpad/tasks/task-{N}.md
+   4e. Worker reports back → Lead reads scratchpad → Present to user
+   4f. Repeat for each user task
+5. MANAGE   → Every 5 tasks per worker: suggest compact
+6. RELAY    → Context > 70%: worker writes relay file → respawn
+7. STOP     → User: "done" or /atlas team stop → Shutdown all
+8. CLEANUP  → TeamDelete + rm -rf .claude/scratchpad/{team}/
 ```
 
 ### Task Classification (Lead-side routing)
