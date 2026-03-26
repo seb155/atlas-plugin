@@ -87,6 +87,11 @@ set -g escape-time 10
 set -g focus-events on
 set -g renumber-windows on
 
+# Mouse Scroll Speed (1 line per tick — default 3 is too fast)
+bind -T copy-mode-vi WheelUpPane send-keys -X scroll-up
+bind -T copy-mode-vi WheelDownPane send-keys -X scroll-down
+bind -T root WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'copy-mode -et='"
+
 # Status Bar (Synapse navy/gold)
 set -g status-style 'bg=#1B3A5C fg=#E4C200'
 set -g status-left '#[fg=#1B3A5C,bg=#E4C200,bold] #S #[default] '

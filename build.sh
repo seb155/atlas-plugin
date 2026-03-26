@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Build 3 tier plugins from atlas-core
-# Usage: ./build.sh [admin|dev|user|all]
+# Build 4 tier plugins from atlas-core
+# Usage: ./build.sh [admin|dev|user|worker|all]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -111,15 +111,23 @@ build_tier() {
     fi
   done
 
-  # Copy hooks (all tiers get all hooks — wildcard, auto-includes new hooks)
-  cp hooks/hooks.json "$output/hooks/"
-  for hook_script in hooks/*; do
-    local bname
-    bname=$(basename "$hook_script")
-    [[ "$bname" == "hooks.json" ]] && continue
-    [[ ! -x "$hook_script" ]] && continue
-    cp "$hook_script" "$output/hooks/"
-  done
+  # Copy hooks (profile-resolved — each tier gets only its declared hooks)
+  local hooks
+  hooks=$(resolve_field "$tier" "hooks")
+
+  if [ -z "$hooks" ]; then
+    # Empty hooks list (e.g., worker tier) → write empty hooks.json
+    echo '{"hooks":{}}' > "$output/hooks/hooks.json"
+  else
+    # Filter master hooks.json to include only resolved hook scripts
+    # shellcheck disable=SC2086
+    python3 scripts/filter-hooks-json.py hooks/hooks.json $hooks > "$output/hooks/hooks.json"
+    for hook_name in $hooks; do
+      if [ -x "hooks/$hook_name" ]; then
+        cp "hooks/$hook_name" "$output/hooks/"
+      fi
+    done
+  fi
 
   # Copy runtime scripts (exclude build-only scripts)
   local runtime_scripts=(parse-features.sh atlas-alert-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh)
@@ -170,7 +178,7 @@ EOF
   # Generate marketplace.json (valid marketplace manifest — no extra keys)
   cat > "$output/.claude-plugin/marketplace.json" <<EOF
 {
-  "name": "atlas-${tier}-marketplace",
+  "name": "atlas-admin-marketplace",
   "owner": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "plugins": [
     {
@@ -201,12 +209,12 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 if [ "$TIERS" = "all" ]; then
-  for t in admin dev user; do
+  for t in admin dev user worker; do
     build_tier "$t"
     echo ""
   done
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  All 3 tiers built successfully!"
+  echo "  All 4 tiers built successfully!"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 else
   build_tier "$TIERS"

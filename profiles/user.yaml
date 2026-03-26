@@ -23,6 +23,11 @@ refs:
   - web-design-guidelines
   - atlas-visual-identity
 
+hooks:
+  - session-start
+  - permission-request
+  - stop-failure
+
 agents:
   - context-scanner
 

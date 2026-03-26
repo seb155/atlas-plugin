@@ -225,6 +225,11 @@ write_session_state() {
 STATEEOF
 }
 
+# ─── Auto-reload tmux config (if inside tmux session) ─────────────────
+if [ -n "${TMUX:-}" ] && [ -f "${HOME}/.tmux.conf" ]; then
+  tmux source-file "${HOME}/.tmux.conf" 2>/dev/null || true
+fi
+
 # Main — SessionStart hook: role detection + audit log + feature summary + state file
 # Skills are loaded on-demand by CC's skill system, NOT injected here.
 TIER_WARNING=""

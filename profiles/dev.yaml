@@ -36,6 +36,16 @@ skills:
   - session-pickup
   - ci-management
 
+hooks:
+  - session-end-memory-cleanup
+  - post-compact
+  - atlas-status-writer
+  - code-quality-check
+  - test-impact-analysis
+  - frontend-ux-gate
+  - instructions-loaded
+  - config-change
+
 refs:
   - composition-patterns
   - react-best-practices

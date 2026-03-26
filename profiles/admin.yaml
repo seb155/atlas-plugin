@@ -33,6 +33,9 @@ skills:
   # v3.28.0: Agent Teams blueprints
   - atlas-team
 
+hooks:
+  - enterprise-check
+
 agents: []
 
 persona: "infrastructure architect"

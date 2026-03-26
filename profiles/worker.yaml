@@ -1,0 +1,13 @@
+# ATLAS Worker Tier — Agent Teams Worker
+# Zero overhead: no skills, no hooks, no agents. Minimal atlas-assist only.
+tier: worker
+description: "Agent Teams worker — zero overhead, task-focused executor"
+
+skills: []
+refs: []
+agents: []
+hooks: []
+
+persona: "focused task executor"
+pipeline: "EXECUTE"
+banner_label: "Worker"
