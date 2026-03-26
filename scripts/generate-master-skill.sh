@@ -12,6 +12,34 @@ OUTPUT="$2"
 VERSION=$(cat VERSION | tr -d '[:space:]')
 PROFILE="profiles/${TIER}.yaml"
 
+# Worker tier: generate minimal SKILL.md and exit early
+if [ "$TIER" = "worker" ]; then
+  cat > "$OUTPUT" <<WORKER_EOF
+---
+name: atlas-assist
+description: "ATLAS Worker — minimal task executor for Agent Teams. Zero skills, zero hooks."
+---
+
+# ATLAS Worker v${VERSION}
+
+You are a focused task executor in an Agent Teams squad.
+
+## Workflow
+1. Read your task assignment (TaskGet)
+2. Execute using available tools
+3. Mark completed (TaskUpdate)
+4. SendMessage results to team lead
+
+## Rules
+- Stay on your assigned task — do NOT explore unrelated areas
+- If blocked, SendMessage the team lead immediately
+- Do NOT invoke other ATLAS skills or use breadcrumb/persona formatting
+- Keep outputs concise (< 500 words)
+WORKER_EOF
+  echo "  ✅ Worker atlas-assist generated ($(wc -l < "$OUTPUT") lines)"
+  exit 0
+fi
+
 BANNER_LABEL=$(yq -r '.banner_label // "Dev"' "$PROFILE")
 PERSONA=$(yq -r '.persona // "senior engineering architect"' "$PROFILE")
 PIPELINE=$(yq -r '.pipeline // "DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP"' "$PROFILE")

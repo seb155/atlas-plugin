@@ -6,7 +6,7 @@
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-build: ## Build all 3 tiers (admin/dev/user)
+build: ## Build all 4 tiers (admin/dev/user/worker)
 	./build.sh all
 
 build-admin: ## Build admin tier only
@@ -18,10 +18,13 @@ test: ## Run full test suite
 test-v: ## Run tests with verbose output
 	python3 -m pytest tests/ -x --tb=short -v
 
-install: ## Build admin + install to CC plugin cache
+install: ## Build all 4 + install to CC plugin cache
 	./scripts/dev-install.sh
 
-dev: build-admin install ## Build admin + install (alias for quick iteration)
+dev: install ## Build all 4 + install (standard workflow)
+
+dev-admin: ## Quick admin-only build + install
+	./scripts/dev-install.sh --admin-only
 
 lint: ## Validate plugin structure (frontmatter, refs, profiles)
 	@echo "Running structural checks..."
