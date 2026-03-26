@@ -222,13 +222,34 @@ tmux capture-pane -t :1.2 -p | tail -20   # Read worker 1 output
 tmux capture-pane -t :1.3 -p | tail -20   # Read worker 2 output
 ```
 
+## Shutdown Sequence (CRITICAL — follow this exact order)
+
+Tmux panes can outlive agent processes. This sequence prevents stuck teams:
+
+```
+1. SendMessage shutdown_request to EACH worker (parallel OK)
+2. Wait 15 seconds (agents need time to wake up + process shutdown)
+3. Check: tmux list-panes -a
+   → If only lead pane remains → proceed to TeamDelete ✅
+   → If worker panes linger (idle ❯ prompt) → wait 10 more seconds
+   → If still lingering after 25s total → force cleanup (step 4)
+4. Force cleanup (only if step 3 failed):
+   a. tmux kill-pane -t %{pane_id}  (for each stuck pane)
+   b. rm -rf ~/.claude/teams/{name} ~/.claude/tasks/{name}
+   c. Skip TeamDelete (manual cleanup replaces it)
+5. TeamDelete (only if panes closed naturally in step 3)
+```
+
+**Why panes linger**: CC creates a shell inside each tmux pane. The agent runs inside that shell. When the agent exits, the shell may stay alive. Usually auto-closes in 5-15s, but occasionally persists.
+
 ## Error Recovery
 
 | Situation | Action |
 |-----------|--------|
 | Worker not responding | `SendMessage(to: "worker-name", message: "status?")` |
 | Worker stuck | `SendMessage shutdown_request` + spawn replacement |
-| TeamDelete fails | `rm -rf ~/.claude/teams/{name} ~/.claude/tasks/{name}` |
+| TeamDelete blocked | Panes killed before agents fully exited. `rm -rf ~/.claude/teams/{name} ~/.claude/tasks/{name}` |
+| Panes linger after shutdown | Wait 15-25s. If still there: `tmux kill-pane -t %{id}` then manual cleanup |
 | Too many panes | Max 4 workers. `tmux kill-pane -t :1.N` for emergency |
 | Out of memory | Stop team, reduce worker count, use Haiku for simple tasks |
 
