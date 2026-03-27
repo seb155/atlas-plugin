@@ -322,6 +322,25 @@ for _mod in atlas-resolve-version.sh atlas-alert-module.sh atlas-context-size-mo
   fi
 done
 
+# 5. Deploy ATLAS CLI shell launcher + wizard (if outdated)
+_cli_target="${HOME}/.atlas/shell"
+_scripts_target="${HOME}/.atlas/scripts"
+mkdir -p "$_cli_target" "$_scripts_target" 2>/dev/null
+for _pair in "atlas-cli.sh:${_cli_target}/atlas.sh" "setup-wizard.sh:${_cli_target}/setup-wizard.sh" "load-secrets.sh:${_scripts_target}/load-secrets.sh" "fix-cc-settings.sh:${_scripts_target}/fix-cc-settings.sh"; do
+  _src="${PLUGIN_ROOT}/scripts/${_pair%%:*}"
+  _dst="${_pair#*:}"
+  if [ -f "$_src" ]; then
+    if [ ! -f "$_dst" ] || ! diff -q "$_src" "$_dst" &>/dev/null; then
+      cp "$_src" "$_dst"
+      chmod +x "$_dst"
+    fi
+  fi
+done
+# Ensure .zshrc sources atlas.sh (idempotent)
+if ! grep -q 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null; then
+  echo '[ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"' >> "${HOME}/.zshrc"
+fi
+
 # ─── Skill & Agent Counts ─────────────────────────────────────────────
 _SKILL_COUNT=$(find "${PLUGIN_ROOT}/skills" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
 _AGENT_COUNT=$(find "${PLUGIN_ROOT}/agents" -name "AGENT.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
