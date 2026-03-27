@@ -401,7 +401,9 @@ _atlas_doctor() {
   [[ "$ATLAS_OS" == "macos" ]] && _pkg="brew install"
   [[ "$ATLAS_OS" == "wsl" ]] && _pkg="sudo apt install"
 
-  _check "Claude Code" "command -v claude" "v${ATLAS_CC_VERSION}" "NOT INSTALLED — see code.claude.com"
+  _check "PATH has /usr/bin" "echo \$PATH | grep -q '/usr/bin'" "/usr/bin in PATH" "BROKEN! Run: export PATH=/usr/bin:/bin:\$PATH"
+  _check "PATH has /bin" "echo \$PATH | grep -q ':/bin'" "/bin in PATH" "BROKEN! Check ~/.zshenv"
+  _check "Claude Code" "[ -x ${HOME}/.local/bin/claude ]" "v${ATLAS_CC_VERSION}" "NOT INSTALLED — see code.claude.com"
   _check "gum (TUI)" "command -v gum" "$(gum --version 2>/dev/null | head -1)" "Install: ${_pkg} gum (or go install github.com/charmbracelet/gum@latest)"
   _check "fzf (fuzzy)" "command -v fzf" "$(fzf --version 2>/dev/null)" "Install: ${_pkg} fzf"
   _check "tmux" "command -v tmux" "$(tmux -V 2>/dev/null)" "Install: ${_pkg} tmux"
@@ -689,8 +691,10 @@ atlas() {
   [ -f "${HOME}/.atlas/scripts/load-secrets.sh" ] && source "${HOME}/.atlas/scripts/load-secrets.sh"
   unset ATLAS_INTERACTIVE
 
-  # Build claude command
-  local -a cmd=(claude)
+  # Resolve claude binary path (don't depend on PATH in subshell)
+  local claude_bin="${HOME}/.local/bin/claude"
+  [ ! -x "$claude_bin" ] && claude_bin=$(command -v claude 2>/dev/null || echo "claude")
+  local -a cmd=("$claude_bin")
 
   # Worktree
   [[ "$worktree" == "true" ]] && cmd+=(-w)
@@ -724,12 +728,13 @@ atlas() {
   # Extra passthrough args
   [ ${#extra_args[@]} -gt 0 ] && cmd+=("${extra_args[@]}")
 
-  # Launch — use subshell + cd (NOT exec) to preserve PATH and ensure correct cwd
-  # exec replaces the shell and loses PATH context; subshell ( cd && cmd ) is safer
+  # Launch with full PATH guaranteed
+  local _full_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin"
+
   if [[ "$split" == "true" ]] && ! $bare; then
     _atlas_split_launch "$project" "$path" "$topic" "${cmd[@]}"
   else
-    (cd "$path" && "${cmd[@]}")
+    cd "$path" && PATH="$_full_path" "${cmd[@]}"
   fi
 }
 
