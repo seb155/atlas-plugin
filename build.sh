@@ -135,7 +135,7 @@ build_tier() {
   fi
 
   # Copy runtime scripts (exclude build-only scripts)
-  local runtime_scripts=(parse-features.sh atlas-alert-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh)
+  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh)
   mkdir -p "$output/scripts"
   for script in "${runtime_scripts[@]}"; do
     if [ -f "scripts/$script" ]; then
