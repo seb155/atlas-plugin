@@ -734,7 +734,7 @@ atlas() {
   if [[ "$split" == "true" ]] && ! $bare; then
     _atlas_split_launch "$project" "$path" "$topic" "${cmd[@]}"
   else
-    cd "$path" && PATH="$_full_path" "${cmd[@]}"
+    cd "$path" && export PATH="$_full_path" && "${cmd[@]}"
   fi
 }
 
