@@ -83,6 +83,7 @@ except: pass
   val=$(bw get password "forgejo-api-token" --session "$bw_session" 2>/dev/null) && export FORGEJO_TOKEN="$val"
   val=$(bw get password "synapse-api-token" --session "$bw_session" 2>/dev/null) && export SYNAPSE_TOKEN="$val"
   val=$(bw get password "forgejo-ci-bot-token" --session "$bw_session" 2>/dev/null) && export FORGEJO_CI_BOT_TOKEN="$val"
+  val=$(bw get password "stitch-api-key" --session "$bw_session" 2>/dev/null) && export STITCH_API_KEY="$val"
 
   # Report success in interactive mode
   if [ "${ATLAS_INTERACTIVE:-0}" = "1" ] && command -v gum &>/dev/null; then
@@ -90,6 +91,7 @@ except: pass
     [ -n "${FORGEJO_TOKEN:-}" ] && count=$((count + 1))
     [ -n "${SYNAPSE_TOKEN:-}" ] && count=$((count + 1))
     [ -n "${FORGEJO_CI_BOT_TOKEN:-}" ] && count=$((count + 1))
+    [ -n "${STITCH_API_KEY:-}" ] && count=$((count + 1))
     gum style --foreground 46 "  ✓ Vault unlocked — ${count} tokens loaded"
   fi
 
@@ -103,6 +105,7 @@ _atlas_try_keyring() {
   local val
   val=$(secret-tool lookup service forgejo key api-token 2>/dev/null) && export FORGEJO_TOKEN="$val"
   val=$(secret-tool lookup service synapse key api-token 2>/dev/null) && export SYNAPSE_TOKEN="$val"
+  val=$(secret-tool lookup service stitch key api-key 2>/dev/null) && export STITCH_API_KEY="$val"
 
   [ -n "${FORGEJO_TOKEN:-}" ]
 }

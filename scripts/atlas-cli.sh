@@ -270,7 +270,7 @@ _atlas_resume() {
   if [ -n "$project" ]; then
     local path=$(_atlas_resolve_project "$project")
     [ -z "$path" ] && { echo "Project '$project' not found."; return 1; }
-    cd "$path" && claude -c --chrome
+    builtin cd "$path" && claude -c --chrome
   else
     claude -c --chrome
   fi
@@ -575,7 +575,7 @@ _atlas_split_launch() {
   if ! $ATLAS_HAS_TMUX; then
     echo "tmux required for split mode. Install: ${_pkg:-sudo apt install} tmux"
     echo "Falling back to inline mode..."
-    (cd "$path" && "${cmd[@]}")
+    (builtin cd "$path" && "${cmd[@]}")
     return
   fi
 
@@ -734,7 +734,11 @@ atlas() {
   if [[ "$split" == "true" ]] && ! $bare; then
     _atlas_split_launch "$project" "$path" "$topic" "${cmd[@]}"
   else
-    cd "$path" && export PATH="$_full_path" && "${cmd[@]}"
+    # builtin cd bypasses zoxide wrapper; direnv export loads .envrc silently
+    builtin cd "$path" \
+      && eval "$(DIRENV_LOG_FORMAT= direnv export zsh 2>/dev/null)" \
+      && export PATH="$_full_path" \
+      && "${cmd[@]}"
   fi
 }
 
