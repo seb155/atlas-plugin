@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: "Execute implementation plans task-by-task. Load plan → TaskCreate per step → execute sequentially → verify after each task. Uses subagents when available."
+description: "Execute implementation plans using execution strategy manifests. Load plan → load/generate strategy → TaskCreate per step → execute with optimal model/mode per task → verify. Supports solo, subagent, team (tmux), and hybrid modes."
 effort: medium
 ---
 
@@ -8,8 +8,8 @@ effort: medium
 
 ## Overview
 
-Execute an engineering plan by working through tasks sequentially.
-Each task is tracked with TaskCreate/TaskUpdate. Verification after each task.
+Execute an engineering plan using the **execution strategy manifest** for optimal model allocation,
+parallelism, and cost efficiency. Falls back to sequential execution if no manifest exists.
 
 ## Process
 
@@ -18,18 +18,82 @@ Each task is tracked with TaskCreate/TaskUpdate. Verification after each task.
 - Review critically — raise concerns BEFORE starting
 - If concerns: AskUserQuestion before proceeding
 
+### Step 1.5: Load or Generate Execution Strategy (NEW)
+
+Check for an execution manifest:
+
+```
+IF .claude/execution-manifest.json exists AND matches current plan:
+  → Load manifest, display strategy summary
+ELSE:
+  → Invoke execution-strategy skill to generate manifest
+  → Display strategy summary (model allocation, parallel groups, cost estimate)
+```
+
+**Override flags** (passed through from user):
+- `--force-opus`: Override all model allocations to Opus
+- `--sequential`: Disable parallel groups
+- `--no-team`: Use subagents instead of Agent Teams
+- `--budget $X`: Regenerate strategy with cost cap
+
+If user provides overrides → regenerate manifest with flags applied.
+
 ### Step 2: Create Task List
 - TaskCreate for EACH task in the plan
-- Set dependencies (blockedBy) where applicable
+- Set dependencies (blockedBy) from manifest dependency DAG
+- Set metadata: `{ model: "sonnet", mode: "team", group: "G1" }` from manifest
 - Mark overall progress visible
 
-### Step 3: Execute Tasks (sequentially)
-For each task:
-1. `TaskUpdate(status: "in_progress")` — BEFORE starting
-2. Follow the plan's steps exactly
-3. Run verification as specified in the plan
-4. `TaskUpdate(status: "completed")` — AFTER verified
-5. If blocked: create new task for the blocker, keep current in_progress
+### Step 3: Execute Tasks (manifest-driven)
+
+For each task (respecting dependency order from manifest):
+
+**Mode: SOLO** (task.mode == "solo")
+1. `TaskUpdate(status: "in_progress")`
+2. Execute directly in current session
+3. Run verification
+4. `TaskUpdate(status: "completed")`
+
+**Mode: SUBAGENT** (task.mode == "subagent")
+1. `TaskUpdate(status: "in_progress")`
+2. Dispatch via Agent tool with `model: task.model` from manifest
+3. Provide full task text + context (don't make subagent read plan)
+4. Review output, run verification
+5. `TaskUpdate(status: "completed")`
+
+**Mode: TEAM** (task.mode == "team", requires tmux)
+1. For the parallel group: create all tasks as `in_progress`
+2. Spawn Agent Teams with workers per task
+3. Each worker gets: `model: task.model`, `name: task.id`
+4. Monitor completion via TaskUpdate notifications
+5. After all workers complete: run integration verification
+6. Mark all group tasks as `completed`
+
+**Mode: DET** (task.mode == "det")
+1. `TaskUpdate(status: "in_progress")`
+2. Execute bash command directly (no AI needed)
+3. Check exit code
+4. `TaskUpdate(status: "completed")`
+
+**HITL Gates** (from manifest):
+- After each HITL gate task: pause and AskUserQuestion
+- Show progress so far + what's next
+- Wait for user approval before continuing
+
+### Step 4: Verify All
+- Run full test suite (backend + frontend + type-check)
+- Run E2E if specified in plan Section O
+- If failures: systematic-debugging skill (max 2 attempts)
+
+### Step 5: Track Costs
+- After execution completes, calculate actual token usage
+- Compare estimated vs actual costs
+- Append to `.claude/strategy-history.jsonl`
+- Display cost report
+
+### Step 6: Finish
+- Invoke `finishing-branch` skill
+- Update .blueprint/plans/INDEX.md if plan was modified
 
 ### Step 4: Verify All
 - Run full test suite (backend + frontend + type-check)

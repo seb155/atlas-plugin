@@ -1,6 +1,6 @@
 ---
 name: plan-builder
-description: "Generate ultra-detailed 15-section engineering plans (A-O) with quality gate 12/15. Replaces superpowers:writing-plans. Uses context discovery report to pre-fill enterprise sections."
+description: "Generate ultra-detailed 15+5 section engineering plans (A-O + execution strategy) with quality gate 16/20. Replaces superpowers:writing-plans. Uses context discovery report to pre-fill enterprise sections."
 effort: high
 ---
 
@@ -17,7 +17,8 @@ effort: high
 | 2. Research | WebSearch (2026+ best practices) + Context7 (lib docs) → feed Section C | - |
 | 3. Brainstorm | AskUserQuestion with 2-3 approaches + comparison table | YES |
 | 4. Draft | Fill all 15 sections (see below). N/A sections get 1-line justification | - |
-| 5. Quality Gate | Score 15 criteria (gate >= 12/15). If < 12: enrich weak sections, max 2 iterations | - |
+| 4.5 Exec Strategy | For plans > 10 tasks: add execution strategy sections (task types, model alloc, parallelism, cost) | - |
+| 5. Quality Gate | Score 20 criteria (gate >= 16/20). If < 16: enrich weak sections, max 2 iterations. Legacy /15 plans: gate >= 12/15 | - |
 | 6. Save | `.blueprint/plans/{subsystem}.md` + update INDEX.md + present score. Wait: "go" or "change X" | YES |
 
 ## 15 Sections (A-O)
@@ -52,7 +53,9 @@ effort: high
 | 📅 N | PHASES | Table: phase, content, files, duration, dependencies. Mermaid gantt. |
 | ✅ O | VERIFICATION | Backend + frontend + E2E persona + DB + perf + security commands |
 
-## Quality Gate (15 criteria, gate >= 12)
+## Quality Gate (20 criteria, gate >= 16)
+
+### Core Criteria (1-15) — same as before
 
 | # | 1 pt if... | # | 1 pt if... |
 |---|-----------|---|-----------|
@@ -64,6 +67,24 @@ effort: high
 | 6 | UX convergent (refs ux-rules) | 14 | E2E verification with commands |
 | 7 | Research done (Context7/WebSearch) | 15 | Patterns reused (refs existing code) |
 | 8 | Security + RBAC covered | | |
+
+### Execution Strategy Criteria (16-20) — NEW
+
+| # | 1 pt if... |
+|---|-----------|
+| 16 | **Task Classification**: Each task in Section N has a type (architecture/implementation/testing/validation/lint/search) |
+| 17 | **Parallelization**: Independent task groups identified with justification (no shared files/deps) |
+| 18 | **Model Allocation**: Opus/Sonnet/Haiku/DET assigned per task with rationale (not "all Opus") |
+| 19 | **Coordination Plan**: Dependency DAG documented, critical path identified, HITL gates placed |
+| 20 | **Cost Estimate**: Token budget per model tier with total and vs-all-Opus comparison |
+
+### Scoring Rules
+
+- **New plans (2026-03-27+)**: Score on /20. Gate >= 16/20.
+- **Legacy plans (pre-2026-03-27)**: Score on /15. Gate >= 12/15. Remain valid.
+- **Plans < 10 tasks**: Criteria 16-20 optional (mark N/A with justification). Gate remains 12/15.
+- **Plans >= 10 tasks**: Criteria 16-20 required. Gate >= 16/20.
+- **Migration**: Existing plans do NOT need retroactive update. Only new/extended plans use /20.
 
 ## Plan Types (section depth by type)
 

@@ -1,6 +1,6 @@
 ---
 name: subagent-dispatch
-description: "Dispatch Sonnet subagents per task. 2-stage review: spec compliance then code quality. Sequential dispatch, not parallel."
+description: "Dispatch subagents per task with manifest-driven model allocation. 2-stage review: spec compliance then code quality. Supports parallel dispatch for independent tasks. Cost-aware."
 effort: medium
 ---
 
@@ -8,14 +8,38 @@ effort: medium
 
 ## Overview
 
-Execute plan tasks by dispatching specialized subagents. Each task gets its own Sonnet subagent for implementation, followed by 2-stage review.
+Execute plan tasks by dispatching specialized subagents. Each task gets a subagent with the
+**model specified by the execution manifest** (default: Sonnet), followed by 2-stage review.
 
-## Model Strategy
+## Model Strategy (Manifest-Driven)
 
+When an execution manifest is available (from `execution-strategy` skill):
+- **Read task.model from manifest** → use that model for the subagent
+- **Opus**: Architecture, DB migration, cross-system design tasks
+- **Sonnet**: Implementation, bug fixes, tests, code review (default)
+- **Haiku**: Validation, search, spec checklists (read-only tasks)
+- **DET**: Lint, format, type-check (bash command, no subagent needed)
+
+When NO manifest is available (legacy fallback):
 - **Implementation subagents**: Sonnet 4.6 (efficient, high quality)
 - **Review subagents**: Sonnet 4.6 (spec + quality review)
 - **Never**: Haiku for implementation (too shallow)
-- **Never**: Opus for implementation (too expensive for routine coding)
+
+### Cost Awareness
+
+Before dispatching a subagent, estimate the cost:
+```
+estimated_tokens = task_files_count * avg_lines * 4 (input) + output_ratio * input
+estimated_cost = tokens * model.price_per_token (from ~/.atlas/model-pricing.json)
+```
+
+If estimated_cost > $2 (configurable threshold):
+- Log warning: "Task {id} estimated at ${cost} with {model}"
+- If --budget flag active and would exceed budget: downgrade model or ask user
+
+After subagent completes:
+- Log actual token usage (from Agent tool result)
+- Append to cost tracking for strategy-history.jsonl
 
 ## Per-Task Workflow
 
@@ -23,7 +47,7 @@ Execute plan tasks by dispatching specialized subagents. Each task gets its own 
 ```
 Agent tool:
   subagent_type: general-purpose
-  model: sonnet
+  model: task.model  # FROM MANIFEST (was hardcoded "sonnet")
   prompt: "{full task text from plan + context + constraints}"
 ```
 

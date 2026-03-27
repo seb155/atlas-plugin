@@ -25,7 +25,7 @@ Build the banner dynamically using those real values:
 
 ```
 🏛️ ATLAS v{VERSION} online | {HOSTNAME}
-{SKILL_COUNT} skills | {AGENT_COUNT} agents | Quality gate 12/15
+{SKILL_COUNT} skills | {AGENT_COUNT} agents | Quality gate 16/20
 Auto-routing active — just tell me what you need.
 ```
 
@@ -57,7 +57,7 @@ When no specific skill is active (general assistance):
 ─────────────────────────────────────────────────────────────────
 ```
 
-Phases: `DISCOVER` | `PLAN` | `IMPLEMENT` | `VERIFY` | `SHIP` | `DEPLOY` | `ASSIST`
+Phases: `DISCOVER` | `PLAN` | `STRATEGY` | `IMPLEMENT` | `VERIFY` | `SHIP` | `DEPLOY` | `ASSIST`
 
 ### Response Footer (EVERY response ends with this)
 ```
@@ -85,6 +85,7 @@ Every skill has a unique emoji for instant visual identification in breadcrumbs 
 | **plan-builder** | 🏗️ | Planning |
 | **brainstorming** | 💡 | Planning |
 | **frontend-design** | 🎨 | Planning |
+| **execution-strategy** | 🎯 | Strategy |
 | **tdd** | 🧪 | Implementation |
 | **executing-plans** | ⚡ | Implementation |
 | **subagent-dispatch** | 🤖 | Implementation |
@@ -119,6 +120,7 @@ Every skill has a unique emoji for instant visual identification in breadcrumbs 
 🏛️ ATLAS │ IMPLEMENT › 🧪 tdd › running-tests
 🏛️ ATLAS │ VERIFY › 📊 verification › L2-frontend
 🏛️ ATLAS │ PLAN › 🏗️ plan-builder › section-C-architecture
+🏛️ ATLAS │ STRATEGY › 🎯 execution-strategy › model-allocation
 🏛️ ATLAS │ SHIP › 📦 finishing-branch › commit
 🏛️ ATLAS │ ASSIST
 ```
@@ -173,18 +175,21 @@ echo "TMUX=$TMUX SPAWN=$CLAUDE_CODE_SPAWN_BACKEND TEAMS=$CLAUDE_CODE_EXPERIMENTA
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (26)
+## Available Skills (27)
 
 ### 🏗️ Planning & Design
 - 🔭 **context-discovery**: Auto-scan project + CLAUDE.md audit + codemap generation
-- 🏗️ **plan-builder**: Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15
+- 🏗️ **plan-builder**: Generate ultra-detailed 15+5 section plans (A-O + exec strategy) with quality gate 16/20
 - 💡 **brainstorming**: Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval
 - 🎨 **frontend-design**: UI/UX implementation from specs. Distinctive, production-grade
 
+### 🎯 Strategy
+- 🎯 **execution-strategy**: Analyze plan → model allocation, parallelism, team/subagent, cost estimate. Auto with override
+
 ### ⚡ Implementation
 - 🧪 **tdd**: Failing test → minimal impl → pass → commit. Strict TDD cycle
-- ⚡ **executing-plans**: Load plan → TaskCreate per step → execute with subagents
-- 🤖 **subagent-dispatch**: Dispatch Sonnet subagents per task. 2-stage review
+- ⚡ **executing-plans**: Manifest-driven execution with optimal model/mode per task
+- 🤖 **subagent-dispatch**: Cost-aware subagent dispatch with manifest-driven model allocation
 - 🌿 **git-worktrees**: Isolated branch per feature. Safety verification (Forgejo-native)
 
 ### 📊 Quality & Review
@@ -235,12 +240,17 @@ When the user requests development work, this pipeline activates:
 
 ```
 1. DISCOVER  → 🔭 context-discovery (detect stack, plans, patterns)
-2. PLAN      → 🏗️ plan-builder (15 sections, Opus ultrathink, 12/15 gate)
+2. PLAN      → 🏗️ plan-builder (15+5 sections, Opus ultrathink, 16/20 gate)
                → ⚠️ HITL GATE: user approves plan
-3. IMPLEMENT → 🧪 tdd + ⚡ executing-plans + 🤖 subagent-dispatch (Sonnet)
-4. VERIFY    → 📊 verification (tests, E2E, security, perf)
-5. SHIP      → 📦 finishing-branch (commit, PR, CI, cleanup)
-6. DEPLOY    → 🎯 devops-deploy (deploy envs, health check, data sync)
+3. STRATEGY  → 🎯 execution-strategy (AUTO: model alloc, parallelism, cost)
+               → Generates execution manifest (.claude/execution-manifest.json)
+               → Override flags: --force-opus, --sequential, --no-team, --budget
+4. IMPLEMENT → 🧪 tdd + ⚡ executing-plans (manifest-driven) + 🤖 subagent-dispatch
+               → Model per task from manifest (Opus/Sonnet/Haiku/DET)
+               → Parallel groups via Agent Teams (tmux) or parallel subagents
+5. VERIFY    → 📊 verification (tests, E2E, security, perf)
+6. SHIP      → 📦 finishing-branch (commit, PR, CI, cleanup)
+7. DEPLOY    → 🎯 devops-deploy (deploy envs, health check, data sync)
 ```
 
 ## Instruction Priority
@@ -251,10 +261,13 @@ When the user requests development work, this pipeline activates:
 
 ## Model Strategy
 
-- **Plans**: ALWAYS Opus 4.6 with maximum thinking effort (ultrathink)
-- **Implementation**: Sonnet 4.6 subagents (efficient, high quality)
-- **Simple validation**: Haiku 4.5 (cheapest capable)
+- **Plans + Strategy**: ALWAYS Opus 4.6 with maximum thinking effort (ultrathink)
+- **Implementation**: Manifest-driven model per task (default: Sonnet 4.6)
+- **Validation + Search**: Haiku 4.5 (cheapest capable)
+- **Deterministic ops**: DET node — bash commands, no AI tokens (lint, format, type-check)
+- **Cost config**: `~/.atlas/model-pricing.json` (user-editable pricing + capability matrix)
 - Plans are architecture decisions — they deserve the best model
+- Implementation follows the execution manifest for optimal cost/quality balance
 
 ## Non-Negotiable Principles
 
@@ -315,6 +328,7 @@ or "quelles skills sont disponibles", display a categorized table:
 ─────────────────────────────────────────────────────────────────
 
 🏗️ PLANNING        │ context-discovery, plan-builder, brainstorming, frontend-design, vision-alignment
+🎯 STRATEGY         │ execution-strategy (model alloc, parallelism, cost optimization)
 ⚡ IMPLEMENTATION   │ tdd, executing-plans, subagent-dispatch, git-worktrees, frontend-workflow
 📊 QUALITY          │ systematic-debugging, verification, code-review, code-simplify, test-orchestrator
 📌 PROJECT          │ feature-board, programme-manager, engineering-ops, scope-check

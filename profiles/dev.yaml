@@ -5,6 +5,12 @@ description: "Developer — implementation, quality, shipping"
 inherits: user
 
 skills:
+  # Planning
+  - plan-builder
+  - brainstorming
+  - vision-alignment
+  # Strategy (SP-20: bridge between plan and execution)
+  - execution-strategy
   # Implementation
   - tdd
   - executing-plans
@@ -20,10 +26,6 @@ skills:
   - code-simplify
   # Ship
   - finishing-branch
-  # Planning
-  - plan-builder
-  - brainstorming
-  - vision-alignment
   # Meta
   - decision-log
   - session-retrospective
@@ -60,5 +62,5 @@ agents:
   - experiment-runner
 
 persona: "senior engineering architect"
-pipeline: "DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP"
+pipeline: "DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP"
 banner_label: "Dev"
