@@ -326,7 +326,7 @@ done
 _cli_target="${HOME}/.atlas/shell"
 _scripts_target="${HOME}/.atlas/scripts"
 mkdir -p "$_cli_target" "$_scripts_target" 2>/dev/null
-for _pair in "atlas-cli.sh:${_cli_target}/atlas.sh" "setup-wizard.sh:${_cli_target}/setup-wizard.sh" "load-secrets.sh:${_scripts_target}/load-secrets.sh" "fix-cc-settings.sh:${_scripts_target}/fix-cc-settings.sh"; do
+for _pair in "atlas-cli.sh:${_cli_target}/atlas.sh" "setup-wizard.sh:${_cli_target}/setup-wizard.sh" "starship-atlas-fragment.toml:${_cli_target}/starship-atlas-fragment.toml" "cship.toml:${_cli_target}/cship.toml" "load-secrets.sh:${_scripts_target}/load-secrets.sh" "fix-cc-settings.sh:${_scripts_target}/fix-cc-settings.sh"; do
   _src="${PLUGIN_ROOT}/scripts/${_pair%%:*}"
   _dst="${_pair#*:}"
   if [ -f "$_src" ]; then
@@ -339,6 +339,12 @@ done
 # Ensure .zshrc sources atlas.sh (idempotent)
 if ! grep -q 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null; then
   echo '[ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"' >> "${HOME}/.zshrc"
+fi
+
+# 6. Check if starship custom modules are missing → badge warning
+_starship_warning=""
+if [ -f "${HOME}/.config/starship.toml" ] && ! grep -q 'custom.atlas_version' "${HOME}/.config/starship.toml" 2>/dev/null; then
+  _starship_warning="⚠️ Starship ATLAS modules missing — run: atlas setup sync"
 fi
 
 # ─── Skill & Agent Counts ─────────────────────────────────────────────
@@ -393,6 +399,9 @@ fi
 # Add CC version mismatch notice
 if [ -n "$CC_VERSION_NOTICE" ]; then
   BADGE+=$'\n'"🏛️ ATLAS │ ${CC_VERSION_NOTICE}"
+fi
+if [ -n "${_starship_warning:-}" ]; then
+  BADGE+=$'\n'"🏛️ ATLAS │ ${_starship_warning}"
 fi
 
 # ─── R1: Auto-detect recent handoffs ────────────────────────────────────

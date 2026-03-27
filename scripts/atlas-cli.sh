@@ -381,10 +381,14 @@ HELP
 
 # atlas doctor
 _atlas_doctor() {
+  local fix_mode=false
+  [[ "${1:-}" == "--fix" ]] && fix_mode=true
+
   _atlas_header
   printf "  ${ATLAS_BOLD}Health Check${ATLAS_RESET}\n\n"
 
   local checks=0 passed=0
+  local -a failures=()
 
   _check() {
     checks=$((checks + 1))
@@ -392,6 +396,7 @@ _atlas_doctor() {
       passed=$((passed + 1))
       printf "    ${ATLAS_CYAN}✓${ATLAS_RESET} %-30s %s\n" "$1" "$3"
     else
+      failures+=("$1")
       printf "    \033[1;31m✗\033[0m %-30s %s\n" "$1" "$4"
     fi
   }
@@ -401,6 +406,7 @@ _atlas_doctor() {
   [[ "$ATLAS_OS" == "macos" ]] && _pkg="brew install"
   [[ "$ATLAS_OS" == "wsl" ]] && _pkg="sudo apt install"
 
+  printf "    ${ATLAS_BOLD}Tools${ATLAS_RESET}\n"
   _check "PATH has /usr/bin" "echo \$PATH | grep -q '/usr/bin'" "/usr/bin in PATH" "BROKEN! Run: export PATH=/usr/bin:/bin:\$PATH"
   _check "PATH has /bin" "echo \$PATH | grep -q ':/bin'" "/bin in PATH" "BROKEN! Check ~/.zshenv"
   _check "Claude Code" "[ -x ${HOME}/.local/bin/claude ]" "v${ATLAS_CC_VERSION}" "NOT INSTALLED — see code.claude.com"
@@ -417,9 +423,60 @@ _atlas_doctor() {
   _check "starship" "command -v starship" "installed" "Optional: prompt — curl -sS https://starship.rs/install.sh | sh"
 
   echo ""
+  printf "    ${ATLAS_BOLD}ATLAS Platform${ATLAS_RESET}\n"
   _check "ATLAS config" "[ -f $ATLAS_CONFIG ]" "$ATLAS_CONFIG" "Run: atlas setup"
   _check "ATLAS plugin" "[ -d ${HOME}/.claude/plugins/cache/atlas-admin-marketplace ]" "v$(_atlas_plugin_version)" "Install in CC: /plugin install atlas-admin"
   _check "Workspace" "[ -d $ATLAS_WORKSPACE_ROOT ]" "$ATLAS_WORKSPACE_ROOT" "Set launcher.workspace_root in config"
+
+  echo ""
+  printf "    ${ATLAS_BOLD}User Config${ATLAS_RESET}\n"
+
+  # Check 1: .zshrc sources atlas.sh
+  _check ".zshrc sources atlas.sh" \
+    "grep -q 'atlas/shell/atlas.sh' '${HOME}/.zshrc'" \
+    "atlas.sh sourced" \
+    "Add: [ -f \"\\\$HOME/.atlas/shell/atlas.sh\" ] && source \"\\\$HOME/.atlas/shell/atlas.sh\""
+
+  # Check 2: .zshrc ordering — direnv+zoxide must come AFTER atlas.sh source
+  _check_zshrc_ordering() {
+    [ ! -f "${HOME}/.zshrc" ] && return 1
+    local atlas_line direnv_line zoxide_line
+    atlas_line=$(grep -n 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
+    direnv_line=$(grep -n 'direnv hook' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
+    zoxide_line=$(grep -n 'zoxide init' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
+    [ -z "$atlas_line" ] && return 1
+    # If direnv/zoxide exist, they must come after atlas.sh
+    [ -n "$direnv_line" ] && [ "$direnv_line" -lt "$atlas_line" ] && return 1
+    [ -n "$zoxide_line" ] && [ "$zoxide_line" -lt "$atlas_line" ] && return 1
+    return 0
+  }
+  _check ".zshrc ordering" "_check_zshrc_ordering" \
+    "direnv+zoxide after atlas.sh" \
+    "Move direnv/zoxide to END of ~/.zshrc — run: atlas setup sync"
+
+  # Check 3: cship.toml configured
+  _check "cship.toml" \
+    "grep -q 'atlas_version' '${HOME}/.config/cship.toml'" \
+    "ATLAS modules present" \
+    "Run: atlas setup sync"
+
+  # Check 4: starship.toml ATLAS modules
+  _check "starship.toml" \
+    "grep -q 'custom.atlas_version' '${HOME}/.config/starship.toml'" \
+    "ATLAS modules present" \
+    "Run: atlas setup sync"
+
+  # Check 5: Statusline scripts deployed
+  _check "Statusline scripts" \
+    "[ -x '${HOME}/.local/share/atlas-statusline/atlas-resolve-version.sh' ]" \
+    "deployed" \
+    "Start a CC session to auto-deploy"
+
+  # Check 6: atlas.sh deployed to ~/.atlas/shell/
+  _check "atlas.sh deployed" \
+    "[ -f '${HOME}/.atlas/shell/atlas.sh' ]" \
+    "$(date -r "${HOME}/.atlas/shell/atlas.sh" '+%Y-%m-%d' 2>/dev/null || echo 'present')" \
+    "Start a CC session to auto-deploy"
 
   echo ""
   printf "    ${ATLAS_BOLD}Score: ${passed}/${checks}${ATLAS_RESET}\n"
@@ -427,7 +484,29 @@ _atlas_doctor() {
   if [ "$passed" -eq "$checks" ]; then
     printf "    ${ATLAS_CYAN}All checks passed!${ATLAS_RESET}\n"
   else
-    printf "    \033[1;33mSome checks failed. Run 'atlas setup' to fix.${ATLAS_RESET}\n"
+    printf "    \033[1;33m${#failures[@]} issue(s). Run 'atlas doctor --fix' or 'atlas setup sync'.${ATLAS_RESET}\n"
+  fi
+
+  # --fix mode: offer to fix known issues
+  if $fix_mode && [ ${#failures[@]} -gt 0 ] && $ATLAS_HAS_GUM; then
+    echo ""
+    printf "    ${ATLAS_BOLD}Auto-fix${ATLAS_RESET}\n"
+    for fail in "${failures[@]}"; do
+      case "$fail" in
+        ".zshrc sources atlas.sh")
+          if gum confirm "Add atlas.sh source to ~/.zshrc?" 2>/dev/null; then
+            cp "${HOME}/.zshrc" "${HOME}/.zshrc.atlas-backup.$(date +%s)"
+            echo '[ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"' >> "${HOME}/.zshrc"
+            printf "    ${ATLAS_CYAN}✓${ATLAS_RESET} Added atlas.sh source to ~/.zshrc\n"
+          fi ;;
+        ".zshrc ordering")
+          printf "    → Run 'atlas setup sync' to fix ordering\n" ;;
+        "cship.toml"|"starship.toml")
+          printf "    → Run 'atlas setup sync' to sync config\n" ;;
+        "Statusline scripts"|"atlas.sh deployed")
+          printf "    → Start a Claude Code session to auto-deploy\n" ;;
+      esac
+    done
   fi
 
   _atlas_footer
@@ -568,7 +647,7 @@ _atlas_basic_menu() {
 
 # ─── Tmux Split Launcher ─────────────────────────────────────
 _atlas_split_launch() {
-  local project="$1" path="$2" topic="$3"
+  local project="$1" path="$2" session_name="$3"
   shift 3
   local cmd=("$@")
 
@@ -579,10 +658,33 @@ _atlas_split_launch() {
     return
   fi
 
-  local session_name="cc-${project}${topic:+-$topic}"
-
-  # Kill stale session if exists
-  /usr/bin/tmux kill-session -t "$session_name" 2>/dev/null
+  # Collision handler: session already exists → ask user
+  if /usr/bin/tmux has-session -t "$session_name" 2>/dev/null; then
+    if $ATLAS_HAS_GUM; then
+      local action
+      action=$(gum choose --header "Session '${session_name}' exists:" \
+        "📎 Attach (resume existing)" \
+        "🔄 Kill & Replace" \
+        "✏️  Rename" 2>/dev/null || echo "")
+      case "$action" in
+        *Attach*)
+          /usr/bin/tmux attach-session -t "$session_name"
+          return ;;
+        *Kill*)
+          /usr/bin/tmux kill-session -t "$session_name" 2>/dev/null ;;
+        *Rename*)
+          local new_label
+          new_label=$(gum input --header "New session name:" --width 40 2>/dev/null || echo "")
+          [ -z "$new_label" ] && return 1
+          session_name="cc-${project}-${new_label}" ;;
+        *)
+          return 0 ;;  # User cancelled
+      esac
+    else
+      echo "Session '${session_name}' already exists. Kill it first or use a different name."
+      return 1
+    fi
+  fi
 
   # Build the claude command string with full PATH export prefix
   local path_export="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\${HOME}/.local/bin:\${HOME}/.bun/bin:\${HOME}/.cargo/bin:\${HOME}/.npm-global/bin:/usr/local/go/bin:\${HOME}/go/bin:\${PATH}"
@@ -610,7 +712,7 @@ atlas() {
     resume)  shift; _atlas_resume "$@"; return ;;
     status)  _atlas_status; return ;;
     setup)   shift; _atlas_setup "$@"; return ;;
-    doctor)  _atlas_doctor; return ;;
+    doctor)  shift; _atlas_doctor "$@"; return ;;
     help|-h|--help) _atlas_help; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
   esac
@@ -721,8 +823,36 @@ atlas() {
   $cont && cmd+=(-c)
   [ -n "$resume_name" ] && cmd+=(-r "$resume_name")
 
-  # Session name
+  # Session name — interactive prompt for split mode, auto for inline
   local name="${session_name:-$(_cc_session_name "$path" "$topic")}"
+  local tmux_session_name="cc-${project}${topic:+-$topic}"
+
+  # Multi-session: prompt for name in split mode (skip if -n was passed)
+  if [[ "$split" == "true" ]] && ! $bare && [ -z "$session_name" ] && $ATLAS_HAS_GUM && $ATLAS_HAS_TMUX; then
+    local base_name="cc-${project}"
+    local default_suffix=""
+    local n=1
+    # Auto-incremental: find next available number
+    while /usr/bin/tmux has-session -t "${base_name}${default_suffix:+-$default_suffix}" 2>/dev/null; do
+      default_suffix="$n"
+      n=$((n + 1))
+    done
+
+    local user_label
+    user_label=$(gum input --header "📋 Session name:" \
+      --placeholder "${default_suffix:-"Enter=auto, or type a name"}" \
+      --width 40 2>/dev/null || echo "")
+
+    if [ -n "$user_label" ]; then
+      tmux_session_name="${base_name}-${user_label}"
+      name="${project}-${user_label}"
+    elif [ -n "$default_suffix" ]; then
+      tmux_session_name="${base_name}-${default_suffix}"
+      name="${project}-${default_suffix}"
+    fi
+    # else: first session, use default cc-project
+  fi
+
   cmd+=(-n "$name")
 
   # Extra passthrough args
@@ -732,7 +862,7 @@ atlas() {
   local _full_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin"
 
   if [[ "$split" == "true" ]] && ! $bare; then
-    _atlas_split_launch "$project" "$path" "$topic" "${cmd[@]}"
+    _atlas_split_launch "$project" "$path" "$tmux_session_name" "${cmd[@]}"
   else
     # builtin cd bypasses zoxide wrapper; direnv export loads .envrc silently
     builtin cd "$path" \

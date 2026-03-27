@@ -50,3 +50,8 @@ fi
 echo "   Cache: ${MARKETPLACE_DIR}/"
 echo ""
 echo "⚠️  Restart Claude Code to apply changes."
+echo ""
+echo "📋 Next steps:"
+echo "   1. Restart Claude Code      (picks up plugin changes)"
+echo "   2. atlas setup sync         (sync user configs: starship, cship, zshrc)"
+echo "   3. source ~/.zshrc          (reload shell with new atlas.sh)"

@@ -566,6 +566,191 @@ _setup_plugins() {
 }
 
 # ═══════════════════════════════════════════════════════════════
+# SECTION 10: USER CONFIG SYNC
+# ═══════════════════════════════════════════════════════════════
+_setup_sync() {
+  _setup_header "User Config Sync"
+  local synced=0
+
+  # ─── 1. .zshrc ordering: direnv+zoxide must be AFTER atlas.sh source ───
+  echo ""
+  gum style --foreground 111 --bold "  1/4 — .zshrc ordering"
+  if [ -f "${HOME}/.zshrc" ]; then
+    local atlas_line direnv_line zoxide_line
+    atlas_line=$(grep -n 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
+    direnv_line=$(grep -n 'direnv hook' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
+    zoxide_line=$(grep -n 'zoxide init' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
+
+    local needs_fix=false
+    [ -n "$direnv_line" ] && [ -n "$atlas_line" ] && [ "$direnv_line" -lt "$atlas_line" ] && needs_fix=true
+    [ -n "$zoxide_line" ] && [ -n "$atlas_line" ] && [ "$zoxide_line" -lt "$atlas_line" ] && needs_fix=true
+
+    if $needs_fix; then
+      _setup_info "direnv/zoxide are BEFORE atlas.sh source — they must be LAST"
+      _setup_info "atlas.sh: line ${atlas_line}, direnv: line ${direnv_line:-N/A}, zoxide: line ${zoxide_line:-N/A}"
+      if gum confirm "Fix ordering? (backup + move direnv/zoxide to end)" 2>/dev/null; then
+        cp "${HOME}/.zshrc" "${HOME}/.zshrc.atlas-backup.$(date +%s)"
+        # Use Python for safe TOML-like block manipulation
+        python3 -c "
+import re, os
+with open(os.path.expanduser('~/.zshrc'), 'r') as f:
+    lines = f.readlines()
+# Find and extract direnv+zoxide blocks (including surrounding comments)
+direnv_block = []
+zoxide_block = []
+other_lines = []
+i = 0
+while i < len(lines):
+    line = lines[i]
+    # Detect direnv block (comment + if + eval + fi)
+    if 'direnv' in line and ('hook' in line or 'MUST be LAST' in line.lower()):
+        block = []
+        # Look back for section comment
+        while other_lines and (other_lines[-1].startswith('#') or other_lines[-1].strip() == ''):
+            if 'direnv' in other_lines[-1].lower() or 'zoxide' in other_lines[-1].lower() or other_lines[-1].strip() == '':
+                block.insert(0, other_lines.pop())
+            else:
+                break
+        block.append(line)
+        i += 1
+        # Grab the rest of the if block
+        while i < len(lines) and not (lines[i].strip() == 'fi' and 'direnv' not in lines[i]):
+            block.append(lines[i])
+            i += 1
+            if i > 0 and lines[i-1].strip() == 'fi':
+                break
+        direnv_block = block
+        continue
+    # Detect zoxide block
+    elif 'zoxide' in line and ('init' in line or 'smart cd' in line.lower()):
+        block = []
+        while other_lines and (other_lines[-1].startswith('#') or other_lines[-1].strip() == ''):
+            if 'zoxide' in other_lines[-1].lower() or other_lines[-1].strip() == '':
+                block.insert(0, other_lines.pop())
+            else:
+                break
+        block.append(line)
+        i += 1
+        while i < len(lines) and not (lines[i].strip() == 'fi' and 'zoxide' not in lines[i]):
+            block.append(lines[i])
+            i += 1
+            if i > 0 and lines[i-1].strip() == 'fi':
+                break
+        zoxide_block = block
+        continue
+    else:
+        other_lines.append(line)
+    i += 1
+# Rebuild: other lines + blank + comment + direnv + zoxide
+result = other_lines
+if result and result[-1].strip():
+    result.append('\n')
+result.append('# direnv + zoxide — MUST be LAST (after all PATH changes and plugin sources)\n')
+result.extend(direnv_block)
+result.extend(zoxide_block)
+with open(os.path.expanduser('~/.zshrc'), 'w') as f:
+    f.writelines(result)
+print('OK')
+" 2>/dev/null && synced=$((synced + 1)) && _setup_success ".zshrc ordering fixed" || \
+          gum style --foreground 196 "  ✗ Failed to fix .zshrc ordering"
+      fi
+    else
+      _setup_success ".zshrc ordering OK"
+    fi
+  else
+    _setup_info "~/.zshrc not found — skipping"
+  fi
+
+  # ─── 2. Starship custom modules ───
+  echo ""
+  gum style --foreground 111 --bold "  2/4 — Starship ATLAS modules"
+  local starship_cfg="${HOME}/.config/starship.toml"
+  local starship_fragment="${HOME}/.atlas/shell/starship-atlas-fragment.toml"
+  if [ -f "$starship_cfg" ]; then
+    if ! grep -q 'custom.atlas_version' "$starship_cfg" 2>/dev/null; then
+      if [ -f "$starship_fragment" ]; then
+        _setup_info "ATLAS custom modules missing from starship.toml"
+        echo ""
+        gum style --foreground 245 "$(cat "$starship_fragment" | head -20)"
+        echo ""
+        if gum confirm "Append ATLAS modules to starship.toml?" 2>/dev/null; then
+          cp "$starship_cfg" "${starship_cfg}.atlas-backup.$(date +%s)"
+          echo "" >> "$starship_cfg"
+          echo "# ─── ATLAS Plugin Custom Modules (managed by atlas setup sync) ───" >> "$starship_cfg"
+          cat "$starship_fragment" >> "$starship_cfg"
+          synced=$((synced + 1))
+          _setup_success "Starship ATLAS modules added"
+        fi
+      else
+        _setup_info "Starship fragment not deployed yet — start a CC session first"
+      fi
+    else
+      _setup_success "Starship ATLAS modules present"
+    fi
+  else
+    _setup_info "~/.config/starship.toml not found — skipping"
+  fi
+
+  # ─── 3. CShip config sync ───
+  echo ""
+  gum style --foreground 111 --bold "  3/4 — CShip config"
+  local cship_cfg="${HOME}/.config/cship.toml"
+  local cship_src="${HOME}/.atlas/shell/cship.toml"
+  if [ -f "$cship_src" ]; then
+    if [ ! -f "$cship_cfg" ] || ! diff -q "$cship_src" "$cship_cfg" &>/dev/null; then
+      _setup_info "CShip config outdated or missing"
+      if [ -f "$cship_cfg" ]; then
+        diff --color "$cship_cfg" "$cship_src" 2>/dev/null | head -30 || true
+      fi
+      echo ""
+      if gum confirm "Update cship.toml from plugin?" 2>/dev/null; then
+        [ -f "$cship_cfg" ] && cp "$cship_cfg" "${cship_cfg}.atlas-backup.$(date +%s)"
+        mkdir -p "${HOME}/.config"
+        cp "$cship_src" "$cship_cfg"
+        synced=$((synced + 1))
+        _setup_success "CShip config updated"
+      fi
+    else
+      _setup_success "CShip config in sync"
+    fi
+  else
+    _setup_info "CShip source not deployed yet — start a CC session first"
+  fi
+
+  # ─── 4. Statusline scripts ───
+  echo ""
+  gum style --foreground 111 --bold "  4/4 — Statusline scripts"
+  local sl_dir="${HOME}/.local/share/atlas-statusline"
+  local sl_src="${HOME}/.atlas/shell"
+  local sl_synced=0
+  for mod in atlas-resolve-version.sh atlas-alert-module.sh atlas-context-size-module.sh; do
+    if [ -f "${sl_src}/${mod}" ]; then
+      if [ ! -f "${sl_dir}/${mod}" ] || ! diff -q "${sl_src}/${mod}" "${sl_dir}/${mod}" &>/dev/null; then
+        mkdir -p "$sl_dir"
+        cp "${sl_src}/${mod}" "${sl_dir}/${mod}"
+        chmod +x "${sl_dir}/${mod}"
+        sl_synced=$((sl_synced + 1))
+      fi
+    fi
+  done
+  if [ $sl_synced -gt 0 ]; then
+    synced=$((synced + sl_synced))
+    _setup_success "${sl_synced} statusline script(s) updated"
+  else
+    _setup_success "Statusline scripts in sync"
+  fi
+
+  # ─── Summary ───
+  echo ""
+  if [ $synced -gt 0 ]; then
+    gum style --foreground 46 --bold "  ✓ ${synced} item(s) synced"
+    gum style --foreground 214 "  → Run: source ~/.zshrc"
+  else
+    gum style --foreground 46 --bold "  ✓ Everything in sync — no changes needed"
+  fi
+}
+
+# ═══════════════════════════════════════════════════════════════
 # MAIN WIZARD ROUTER
 # ═══════════════════════════════════════════════════════════════
 _atlas_setup() {
@@ -585,6 +770,7 @@ _atlas_setup() {
     statusline)  _setup_statusline; _atlas_footer; return ;;
     performance) _setup_performance; _atlas_footer; return ;;
     plugins)     _setup_plugins; _atlas_footer; return ;;
+    sync)        _setup_sync; _atlas_footer; return ;;
     all)         _setup_run_all; _atlas_footer; return ;;
     cc)          _setup_run_cc; _atlas_footer; return ;;
     terminal)    _setup_run_terminal; _atlas_footer; return ;;
@@ -593,7 +779,7 @@ _atlas_setup() {
 
   # Interactive section picker
   echo ""
-  local choice=$(printf '🚀 Quick Setup (Identity + Model + Projects)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🤖 CLAUDE CODE\n  👤 1. Identity — Forgejo/vault auto-detect\n  🧠 2. AI Model — model, effort, thinking budget\n  🔒 3. Permissions — presets, auto mode\n  🔑 5. Secrets — Vaultwarden, keyring, tokens\n🐚 TERMINAL\n  🐚 4. Shell — zsh plugins, tools, completion\n📁 PROJECTS\n  📁 6. Projects — workspace, defaults, worktree\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚙️  ADVANCED\n  📊 7. Status Line — Starship, CShip\n  ⚡ 8. Performance — memory, timeouts\n  🧩 9. Plugins — CC plugins, MCP\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🌟 Full Setup (all 9 sections)' | \
+  local choice=$(printf '🚀 Quick Setup (Identity + Model + Projects)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🤖 CLAUDE CODE\n  👤 1. Identity — Forgejo/vault auto-detect\n  🧠 2. AI Model — model, effort, thinking budget\n  🔒 3. Permissions — presets, auto mode\n  🔑 5. Secrets — Vaultwarden, keyring, tokens\n🐚 TERMINAL\n  🐚 4. Shell — zsh plugins, tools, completion\n📁 PROJECTS\n  📁 6. Projects — workspace, defaults, worktree\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚙️  ADVANCED\n  📊 7. Status Line — Starship, CShip\n  ⚡ 8. Performance — memory, timeouts\n  🧩 9. Plugins — CC plugins, MCP\n  🔄 10. Sync — User config sync (zshrc, starship, cship)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🌟 Full Setup (all 9 sections)' | \
     gum choose --header "ATLAS Setup — Select what to configure:" \
     --cursor "→ " --cursor.foreground 214 --height 22)
 
@@ -611,6 +797,7 @@ _atlas_setup() {
     *"7. Status"*)    _setup_statusline ;;
     *"8. Performance"*) _setup_performance ;;
     *"9. Plugins"*)   _setup_plugins ;;
+    *"10. Sync"*)     _setup_sync ;;
     *"CLAUDE CODE"*)  _setup_run_cc ;;
     *"TERMINAL"*)     _setup_run_terminal ;;
     *"PROJECTS"*)     _setup_projects ;;
