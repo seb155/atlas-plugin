@@ -282,3 +282,96 @@ Rules:
 - Display most recent first.
 - Delta is relative to the previous entry.
 - If only 1 entry, delta = `—`.
+
+---
+
+## v3 Additions
+
+### Relevance Coverage (Quality Indicator — not scored)
+
+Track `relevance: HIGH|MED|LOW` distribution across topic files:
+```bash
+grep -rl "relevance: HIGH" "$MEMORY_DIR"/*.md | wc -l  # target: 20-30%
+grep -rl "relevance: MED" "$MEMORY_DIR"/*.md | wc -l   # target: 40-60%
+grep -rl "relevance: LOW" "$MEMORY_DIR"/*.md | wc -l   # target: 20-30%
+```
+
+Include distribution in dream report but not in health score (metadata, not quality).
+
+### Knowledge Type Distribution (Quality Indicator — not scored)
+
+Track `knowledge: propositional|prescriptive` split:
+```bash
+grep -rl "knowledge: propositional" "$MEMORY_DIR"/*.md | wc -l
+grep -rl "knowledge: prescriptive" "$MEMORY_DIR"/*.md | wc -l
+```
+
+Healthy ratio: 60-70% propositional (facts) / 30-40% prescriptive (rules).
+
+### Context Failure Mode Count (feeds D5)
+
+V4 from validate-phase.md feeds into D5 (Content Freshness):
+- Each POISONING or CLASH detected reduces D5 by 1 point
+- Each CONFUSION detected reduces D5 by 0.5 points
+- DISTRACTION detected feeds into D6 (File Size Balance) instead
+
+### Temporal Window Coverage (feeds D5)
+
+V5 from validate-phase.md:
+- COMPLETE/DONE items WITHOUT `(since ...)` → penalty of 0.5 per missing item on D5
+- Items with `(since ...)` older than 60d still in ACTIVE WORK → penalty of 1.0 per item on D5
+
+### GRAPH.md Freshness (Quality Indicator — not scored)
+
+Track entity-relationship index staleness:
+```bash
+stat -c '%Y' "$MEMORY_DIR/GRAPH.md" 2>/dev/null
+```
+
+If GRAPH.md >14d old, display `⚠️ GRAPH.md stale — regenerate with dream cycle` in report.
+
+### Enhanced dream-history.jsonl Schema (v3)
+
+```json
+{
+  "timestamp": "2026-03-26T20:36:00-04:00",
+  "project": "synapse",
+  "version": "v3",
+  "score": 8.4,
+  "grade": "B",
+  "dimensions": {
+    "index_capacity": 8.0,
+    "orphan_rate": 10.0,
+    "staleness": 9.0,
+    "ref_integrity": 9.0,
+    "content_freshness": 9.0,
+    "file_size_balance": 7.0,
+    "type_coverage": 10.0,
+    "cross_project": null,
+    "docs_freshness": null,
+    "tech_accuracy": null
+  },
+  "metadata": {
+    "files_total": 138,
+    "memory_lines": 161,
+    "orphans": 0,
+    "oversized": 1,
+    "feedback_files": 28,
+    "relevance_distribution": {"HIGH": 35, "MED": 68, "LOW": 35},
+    "knowledge_distribution": {"propositional": 96, "prescriptive": 42},
+    "failure_modes": {"poisoning": 0, "distraction": 1, "confusion": 0, "clash": 0},
+    "graph_md_age_days": 0
+  },
+  "actions_taken": ["split lessons.md", "merged 2 feedback", "resolved 7 orphans"],
+  "mode": "standard",
+  "duration_minutes": 12
+}
+```
+
+New v3 fields:
+- `version`: Schema version (`"v3"`)
+- `metadata.relevance_distribution`: Count per relevance level
+- `metadata.knowledge_distribution`: Count per knowledge type
+- `metadata.failure_modes`: Count per V4 failure mode category
+- `metadata.graph_md_age_days`: Days since GRAPH.md last modified
+- `actions_taken`: Array of strings (replaces count)

@@ -201,6 +201,121 @@ Summary: 18 refs checked — 15 EXISTS, 2 MISSING, 1 TIMEOUT
 
 ---
 
+## V4 — Context Failure Mode Detection (NEW — v3)
+
+> Source: Anthropic Context Engineering Guide + LangChain failure taxonomy.
+> Detects 4 failure modes that degrade AI context quality.
+
+### Step V4.1 — Poisoning Detection
+
+Status claims in memory that contradict current git/test reality.
+
+```bash
+# Find COMPLETE/DONE claims, cross-ref with git branches still open
+for claim_file in $(grep -rl "COMPLETE\|ALL.*DONE" "$MEMORY_DIR"/*.md); do
+  topic=$(grep -m1 "name:" "$claim_file" | sed 's/name: //')
+  # Check if a feature branch still exists for this "done" topic
+  git branch -a 2>/dev/null | grep -i "${topic// /-}" && echo "POISONED? $claim_file has DONE but branch exists"
+done
+```
+
+### Step V4.2 — Distraction Detection
+
+Files >50KB that inflate context without proportional value.
+
+```bash
+du -k "$MEMORY_DIR"/*.md | awk '$1 > 50 {print "DISTRACTION:", $1, "KB —", $2}'
+```
+
+Action: Flag for split (Phase 3.6 split wizard).
+
+### Step V4.3 — Confusion Detection (Entity Duplication)
+
+Same entity (IP, version, URL, port) described differently in 2+ files.
+
+```bash
+# Extract versioned claims: "vX.Y.Z" with surrounding context
+grep -rn "v[0-9]\+\.[0-9]\+\.[0-9]\+" "$MEMORY_DIR"/*.md | \
+  awk -F: '{print $3, "→", FILENAME}' | sort | \
+  # Group by entity name, flag conflicts
+  # Example: "NetBird v0.67.0" in file A but "v0.66.2" in file B
+```
+
+For IPs, ports, URLs — extract and compare across files:
+```bash
+# Build entity→value map from all files
+for entity in "Authentik" "Forgejo" "NetBird" "Caddy" "Synapse"; do
+  grep -rn "$entity" "$MEMORY_DIR"/*.md | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+" | sort -u
+done
+```
+
+If same entity has >1 IP/version → flag as CONFUSION.
+
+### Step V4.4 — Clash Detection (Contradictions)
+
+Direct contradictions between memory files.
+
+Patterns to detect:
+- Same feature: `DONE` in file A, `BACKLOG` in file B
+- Same service: `port 8001` in file A, `port 8002` in file B
+- Same decision: "chose X over Y" in file A, "chose Y over X" in file B
+
+```bash
+# Extract status per topic across files
+grep -rn "COMPLETE\|DONE\|BACKLOG\|PLANNING\|LIVE\|BLOCKED" "$MEMORY_DIR"/*.md | \
+  awk -F: '{gsub(/.*\//, "", $1); print $1, $3}' | sort
+# Manual review: same topic with conflicting status = CLASH
+```
+
+### V4 Output Template
+
+```
+V4 — Context Failure Modes
+┌──────────────┬───────────────────────────┬─────────────────────────────────┬────────────────────────────────┐
+│ Mode         │ Finding                   │ Files                           │ Suggestion                     │
+├──────────────┼───────────────────────────┼─────────────────────────────────┼────────────────────────────────┤
+│ POISONING    │ SP-XX marked DONE but     │ sp-xx.md, MEMORY.md             │ Verify: tests pass? branch     │
+│              │ branch still open         │                                 │ merged?                        │
+│ DISTRACTION  │ session-log.md = 60KB     │ session-log.md                  │ Archive entries >60d           │
+│ CONFUSION    │ NetBird version: v0.67.0  │ netbird-mesh.md vs              │ Which is current? Update one   │
+│              │ vs v0.66.2                │ netbird-migration.md            │                                │
+│ CLASH        │ SP-AGENT-OPT: DONE in    │ agent-teams.md vs MEMORY.md     │ Reconcile status               │
+│              │ one file, P0-P4 in other  │                                 │                                │
+└──────────────┴───────────────────────────┴─────────────────────────────────┴────────────────────────────────┘
+
+Summary: 2 POISONING, 1 DISTRACTION, 1 CONFUSION, 0 CLASH
+```
+
+### HITL Gate (H18 — NEW)
+
+Present all detected failure modes as batch. User decides:
+- **Fix** — Update the conflicting file(s)
+- **Ignore** — Known intentional (e.g., version on different branch)
+- **Defer** — Add to next dream cycle
+
+---
+
+## V5 — Temporal Window Audit (NEW — v3)
+
+> Source: Zep/Graphiti temporal knowledge graphs.
+> Checks `(since YYYY-MM-DD)` annotations in ACTIVE WORK.
+
+### Step V5.1 — Extract temporal windows
+
+```bash
+grep -oP "\(since \d{4}-\d{2}-\d{2}\)" "$MEMORY_DIR/MEMORY.md"
+```
+
+### Step V5.2 — Flag aged items
+
+Items with `(since ...)` older than 60 days → propose moving from ACTIVE WORK to COMPLETED WORK archive section.
+
+### Step V5.3 — Missing temporal windows
+
+COMPLETE/DONE items WITHOUT `(since ...)` → propose adding based on file modification date.
+
+---
+
 ## Execution Flow
 
 ```
@@ -209,14 +324,18 @@ Phase 2.5 — Validate
 │   └── Output: staleness table
 ├── V2: Status claims (DONE/LIVE/SHIPPED)
 │   └── HITL H3: batch review stale claims
-└── V3: External references (files, plans, URLs)
-    └── Output: reference table
+├── V3: External references (files, plans, URLs)
+│   └── Output: reference table
+├── V4: Context failure modes (poisoning, distraction, confusion, clash) [NEW v3]
+│   └── HITL H18: batch review failure modes
+└── V5: Temporal window audit (aged items, missing annotations) [NEW v3]
+    └── Output: temporal audit table
 ```
 
 **Model**: Opus (code understanding + semantic verification)
-**Time estimate**: ~5 min standalone (`--validate`), ~3 min as part of `--deep`
+**Time estimate**: ~7 min standalone (`--validate`), ~5 min as part of `--deep`
 **Safety**: Read-only analysis. No files modified during this phase. Modifications happen in Phase 3 after HITL approval.
 
 ---
 
-*Reference: validate-phase | Skill: memory-dream v2 | Phase: 2.5*
+*Reference: validate-phase | Skill: memory-dream v3 | Phase: 2.5*
