@@ -127,6 +127,11 @@ build_tier() {
         cp "hooks/$hook_name" "$output/hooks/"
       fi
     done
+    # Copy hook shared libraries (sourced by multiple hooks)
+    if [ -d "hooks/lib" ]; then
+      mkdir -p "$output/hooks/lib"
+      cp hooks/lib/*.sh "$output/hooks/lib/" 2>/dev/null || true
+    fi
   fi
 
   # Copy runtime scripts (exclude build-only scripts)

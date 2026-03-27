@@ -5,6 +5,10 @@
 # Checks if the file is a UI component/page and the brainstorming skill
 # hasn't been invoked in this session.
 
+# Throttle: max 1 reminder per session (5 min cooldown)
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true
+
 FILE_PATH="${CLAUDE_TOOL_INPUT_FILE_PATH:-${CLAUDE_TOOL_INPUT_file_path:-}}"
 
 # Skip if no file path (shouldn't happen for Write|Edit)
@@ -26,5 +30,7 @@ case "$FILE_PATH" in
     ;;
 esac
 
-# Output a gentle reminder (system-reminder format)
-echo "UI file detected: $(basename "$FILE_PATH"). If you haven't discussed UX architecture with the user (where this lives, what to reuse, who consumes it), invoke the frontend-workflow or brainstorming skill first. Skip this reminder if design was already approved."
+# Output a gentle reminder — throttled to 1 per 5 minutes
+if type throttle_check &>/dev/null && throttle_check "ux-gate" 300; then
+  echo "UI file detected: $(basename "$FILE_PATH"). If you haven't discussed UX architecture with the user (where this lives, what to reuse, who consumes it), invoke the frontend-workflow or brainstorming skill first. Skip this reminder if design was already approved."
+fi

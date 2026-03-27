@@ -58,6 +58,12 @@ done
 
 echo -e "🏛️ ATLAS │ 🏛️ℹ️ SESSION END │ ${TOTAL_FILES} files │ ${TOTAL_ORPHANED} orphans │ ${TOTAL_STALE} stale"
 
+# ─── R3: Auto-dream suggestion after 5+ sessions today ──────────────────
+_today_sessions=$(grep -c "$(date '+%Y-%m-%d')" "$HOME/.claude/atlas-audit.log" 2>/dev/null || echo "0")
+if [ "$_today_sessions" -ge 5 ]; then
+  echo "💭 ATLAS │ 5+ sessions today — consider /atlas dream for memory consolidation"
+fi
+
 cat <<EOF
 {
   "memoryStats": {

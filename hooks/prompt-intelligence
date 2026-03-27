@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — Prompt Intelligence Hook (UserPromptSubmit)
+# Proactive suggestions based on user prompt content.
+# Runs async, stdout = shown to user as system-reminder.
+#
+# R7: Feature-board proactive — suggest /atlas board when working on features
+# R8: Pipeline enforcement — remind when skipping steps
+#
+# Input: JSON on stdin with prompt text
+# Must complete in <3s
+
+set -o pipefail
+trap 'exit 0' ERR
+
+# Throttle: avoid repeating the same suggestion
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true
+
+# Read prompt from stdin
+INPUT=$(cat 2>/dev/null || echo '{}')
+PROMPT=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prompt', d.get('message', '')))" 2>/dev/null || echo "")
+
+[ -z "$PROMPT" ] && exit 0
+
+# Lowercase for matching
+PROMPT_LC=$(echo "$PROMPT" | tr '[:upper:]' '[:lower:]')
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# R7: Feature-board proactive
+# When user mentions features, check WIP count
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if echo "$PROMPT_LC" | grep -qP '(new feature|add feature|feat\(|feature request|nouvelle fonctionnalit)'; then
+  if [ -f ".blueprint/FEATURES.md" ]; then
+    WIP=$(grep -c "IN_PROGRESS" ".blueprint/FEATURES.md" 2>/dev/null || echo 0)
+    if [ "$WIP" -gt 10 ] && type throttle_check &>/dev/null && throttle_check "feature-board-suggest" 600; then
+      echo "📌 ATLAS │ WIP=${WIP} features in progress. Consider /atlas board wip to check capacity before adding more."
+    fi
+  fi
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# R8: Pipeline enforcement
+# Detect when user skips planning or verification steps
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Pattern: "implement X" / "code X" / "build X" without plan
+if echo "$PROMPT_LC" | grep -qP '(implement|code|build|create|add)\s+(the|a|this|new)?\s*\w+' ; then
+  # Check if there's an active plan in .blueprint/plans/
+  RECENT_PLAN=$(find .blueprint/plans/ -name "*.md" -mmin -120 2>/dev/null | head -1)
+  if [ -z "$RECENT_PLAN" ] && type throttle_check &>/dev/null && throttle_check "pipeline-plan-remind" 1800; then
+    echo "🏗️ ATLAS │ No recent plan found. Consider context-discovery + plan-builder before implementing. Skip if this is a quick fix."
+  fi
+fi
+
+# Pattern: "push" / "ship" / "merge" / "deploy" without verify
+if echo "$PROMPT_LC" | grep -qP '(push|ship|merge|deploy|release|publish)'; then
+  # Check if verification was run recently (look for test results in current dir)
+  RECENT_TEST=$(find . -name "*.test-results" -o -name "test-output.txt" -mmin -60 2>/dev/null | head -1)
+  if [ -z "$RECENT_TEST" ] && type throttle_check &>/dev/null && throttle_check "pipeline-verify-remind" 1800; then
+    echo "📊 ATLAS │ Shipping without recent test run? Consider /atlas verify first."
+  fi
+fi
+
+exit 0

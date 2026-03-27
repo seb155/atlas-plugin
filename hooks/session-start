@@ -357,6 +357,41 @@ if [ -n "$CC_VERSION_NOTICE" ]; then
   BADGE+=$'\n'"🏛️ ATLAS │ ${CC_VERSION_NOTICE}"
 fi
 
+# ─── R1: Auto-detect recent handoffs ────────────────────────────────────
+# Scan .blueprint/handoffs/ and memory dirs for handoff files < 24h old.
+# Shows max 2 entries. Non-blocking (|| true on everything).
+_handoff_files=""
+if [ -d ".blueprint/handoffs" ]; then
+  _handoff_files=$(find .blueprint/handoffs/ -name "handoff-*.md" -mtime -1 2>/dev/null | head -2 || true)
+fi
+# Also check memory dir for handoff files
+_memory_base="${HOME}/.claude/projects"
+if [ -d "$_memory_base" ]; then
+  _mem_handoffs=$(find "$_memory_base" -maxdepth 3 -path "*/memory/handoff-*.md" -mtime -1 2>/dev/null | head -2 || true)
+  if [ -n "$_mem_handoffs" ]; then
+    _handoff_files="${_handoff_files:+${_handoff_files}$'\n'}${_mem_handoffs}"
+  fi
+fi
+if [ -n "$_handoff_files" ]; then
+  _hcount=0
+  while IFS= read -r _hf; do
+    [ -z "$_hf" ] && continue
+    [ "$_hcount" -ge 2 ] && break
+    _hname=$(basename "$_hf")
+    BADGE+=$'\n'"📋 ATLAS │ Recent handoff detected: ${_hname} — say \"/pickup\" to resume"
+    _hcount=$((_hcount + 1))
+  done <<< "$_handoff_files"
+fi
+
+# ─── R4: Morning brief auto-suggest ─────────────────────────────────────
+# Weekday + morning (7-9 local) → suggest /atlas morning
+if [ "$(date +%u)" -le 5 ] 2>/dev/null; then
+  _hour=$(date +%H 2>/dev/null || echo "0")
+  if [ "$_hour" -ge 7 ] && [ "$_hour" -le 9 ]; then
+    BADGE+=$'\n'"☀️ ATLAS │ Good morning! Say \"/atlas morning\" for your daily brief"
+  fi
+fi
+
 # Combine badge + feature summary into context
 FULL_CONTEXT="${BADGE}"
 if [ -n "$FEATURE_SUMMARY" ]; then

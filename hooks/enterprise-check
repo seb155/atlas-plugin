@@ -8,6 +8,10 @@
 
 set -euo pipefail
 
+# Throttle: max 1 warning per type per 60s
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true
+
 # Read the tool input (PostToolUse sends JSON)
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path', d.get('input', {}).get('file_path', '')))" 2>/dev/null || echo "")
@@ -53,7 +57,9 @@ if [[ "$FILE_PATH" == *compose*.yml || "$FILE_PATH" == *compose*.yaml ]]; then
   fi
 fi
 
-# Output warnings (if any)
+# Output warnings (if any) — throttled to avoid noise
 if [[ -n "$WARNINGS" ]]; then
-  echo -e "$WARNINGS"
+  if type throttle_check &>/dev/null && throttle_check "enterprise-$(basename "$FILE_PATH")" 60; then
+    echo -e "$WARNINGS"
+  fi
 fi

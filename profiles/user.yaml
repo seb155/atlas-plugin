@@ -23,10 +23,11 @@ refs:
   - web-design-guidelines
   - atlas-visual-identity
 
-hooks:
+hooks:  # Hook scripts — run automatically on CC lifecycle events
   - session-start
   - permission-request
   - stop-failure
+  - prompt-intelligence
 
 agents:
   - context-scanner

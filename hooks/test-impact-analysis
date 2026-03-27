@@ -7,6 +7,10 @@
 
 set -euo pipefail
 
+# Throttle: max 1 warning per source file per 60s
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true
+
 # Default plugin root (CC sets this; fallback for standalone testing)
 CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 
@@ -95,6 +99,11 @@ fi
 # Output
 # ---------------------------------------------------------------------------
 if [[ -n "$WARNINGS" ]]; then
+  # Throttle: skip if same file warned recently
+  if type throttle_check &>/dev/null && ! throttle_check "test-impact-$(basename "$FILE_PATH")" 60; then
+    echo '{"result":""}'
+    exit 0
+  fi
   # Escape for JSON: replace " with \" and newlines with \n
   SAFE=$(printf '%s' "$WARNINGS" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
   echo "{\"result\":${SAFE}}"

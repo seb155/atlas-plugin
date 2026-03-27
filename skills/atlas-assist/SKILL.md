@@ -295,6 +295,33 @@ elements that render in the Dev Explorer dashboard via MarkdownRenderer:
 - Extend existing plans, don't replace
 - Reference `.blueprint/PLAN-TEMPLATE.md` for structure
 
+## Skill Discovery (`/atlas skills` or `/atlas help`)
+
+When the user says `/atlas skills`, `/atlas help`, "what can you do", "list skills",
+or "quelles skills sont disponibles", display a categorized table:
+
+```
+🏛️ ATLAS │ ASSIST › Skill Directory
+─────────────────────────────────────────────────────────────────
+
+🏗️ PLANNING        │ context-discovery, plan-builder, brainstorming, frontend-design, vision-alignment
+⚡ IMPLEMENTATION   │ tdd, executing-plans, subagent-dispatch, git-worktrees, frontend-workflow
+📊 QUALITY          │ systematic-debugging, verification, code-review, code-simplify, test-orchestrator
+📌 PROJECT          │ feature-board, programme-manager, engineering-ops, scope-check
+📦 SHIP & DEPLOY   │ finishing-branch, ci-management, devops-deploy
+📚 KNOWLEDGE        │ deep-research, document-generator, knowledge-engine, knowledge-manager, youtube-transcript
+🛡️ SECURITY & OPS  │ security-audit, enterprise-audit, infrastructure-ops, product-health
+🧬 OPTIMIZE         │ experiment-loop, platform-update, code-analysis, memory-dream
+👤 PERSONAL         │ note-capture, morning-brief, knowledge-builder, user-profiler, reminder-scheduler
+🔧 META             │ atlas-doctor, atlas-dev-self, hookify, skill-management, plugin-builder, marketplace-manager
+🖥️ WORKSPACE       │ atlas-workspace-setup, atlas-team, session-spawn, session-pickup, session-retrospective
+🌐 BROWSER          │ browser-automation
+
+Invoke with: /atlas-admin:{skill-name} or just describe what you need.
+```
+
+If the user provides a search query (e.g., `/atlas skills deploy`), filter and show only matching skills with their one-line description.
+
 ## Intercepting Plan Mode
 
 When the model is about to enter Claude's native plan mode (EnterPlanMode):
@@ -313,3 +340,24 @@ When the model is about to enter Claude's native plan mode (EnterPlanMode):
 | "This doesn't need a formal plan" | plan-quality rules say otherwise |
 | "I'll just do this one thing first" | Check BEFORE doing anything |
 | "The skill is overkill" | Use it. Simple things become complex |
+
+## Skill Name Priority (MANDATORY)
+
+When both a built-in CC skill AND an `atlas-admin:*` plugin skill exist with similar names,
+**ALWAYS invoke the `atlas-admin:*` version**. The plugin versions are enhanced with ATLAS
+persona, HITL gates, visual formatting, and project-specific context.
+
+| Built-in (NEVER use) | Plugin (ALWAYS use) |
+|----------------------|---------------------|
+| `brainstorming` | `atlas-admin:brainstorming` |
+| `scope-check` | `atlas-admin:scope-check` |
+| `decision-log` | `atlas-admin:decision-log` |
+| `systematic-debugging` | `atlas-admin:systematic-debugging` |
+| `session-retrospective` | `atlas-admin:session-retrospective` |
+| `executing-plans` | `atlas-admin:executing-plans` |
+| `writing-plans` | `atlas-admin:plan-builder` |
+| `code-review:code-review` | `atlas-admin:code-review` |
+| `using-git-worktrees` | `atlas-admin:git-worktrees` |
+| `test-driven-development` | `atlas-admin:tdd` |
+| `dispatching-parallel-agents` | `atlas-admin:subagent-dispatch` |
+| `finishing-a-development-branch` | `atlas-admin:finishing-branch` |
