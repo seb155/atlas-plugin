@@ -308,6 +308,10 @@ if [ -f "$_plugin_statusline" ]; then
   fi
 fi
 
+# ─── Skill & Agent Counts ─────────────────────────────────────────────
+_SKILL_COUNT=$(find "${PLUGIN_ROOT}/skills" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
+_AGENT_COUNT=$(find "${PLUGIN_ROOT}/agents" -name "AGENT.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
+
 # Build branded badge (use real newlines, JSON escape at the end)
 PLUGIN_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
 BADGE="🏛️ ATLAS │ ✅ SESSION │ v${PLUGIN_VERSION} ${DETECTED_ROLE}"
@@ -315,6 +319,7 @@ if [ "$docker_avail" = "true" ]; then
   BADGE+=" │ 🐳 ${docker_n}"
 fi
 BADGE+=" │ Branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+BADGE+=$'\n'"🏛️ ATLAS │ 🧩 ${_SKILL_COUNT} skills | 🤖 ${_AGENT_COUNT} agents"
 if [ $feat_total -gt 0 ]; then
   BADGE+=$'\n'"🏛️ ATLAS │ 📋 ${feat_total} features (${feat_active}▶ ${feat_done}✓)"
 fi

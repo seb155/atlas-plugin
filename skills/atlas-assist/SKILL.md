@@ -13,13 +13,23 @@ You have ATLAS installed. This plugin is the SINGLE unified interface for all de
 ## Session Start Banner (FIRST response only)
 
 When this skill is injected at session start (via SessionStart hook), your VERY FIRST response
-in the conversation MUST begin with this banner to confirm the plugin is loaded:
+in the conversation MUST begin with a banner to confirm the plugin is loaded.
+
+**Read the values from the session-start hook's `additionalContext`** (injected automatically).
+The additionalContext contains lines like:
+- `🏛️ ATLAS │ ✅ SESSION │ v{VERSION} {ROLE}` — extract the version
+- `🏛️ ATLAS │ 🧩 {N} skills | 🤖 {N} agents` — extract skill and agent counts
+- Hostname is in the session state or can be read from the badge line
+
+Build the banner dynamically using those real values:
 
 ```
-🏛️ ATLAS v2.1 online
-26 skills | 6 agents | 28 subcommands | Quality gate 12/15
+🏛️ ATLAS v{VERSION} online | {HOSTNAME}
+{SKILL_COUNT} skills | {AGENT_COUNT} agents | Quality gate 12/15
 Auto-routing active — just tell me what you need.
 ```
+
+**NEVER hardcode version or counts.** Always use the values from additionalContext.
 
 This banner is shown ONCE (first response only). All subsequent responses use the persona header below.
 
