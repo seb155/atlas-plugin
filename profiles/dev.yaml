@@ -47,6 +47,7 @@ hooks:
   - frontend-ux-gate
   - instructions-loaded
   - config-change
+  - post-edit-lint
 
 refs:
   - composition-patterns

@@ -1,0 +1,79 @@
+#!/bin/bash
+# Hook UserPromptSubmit — Auto-detect feedback/preferences in user messages
+# POST to Synapse PA Knowledge API for persistent learning.
+# Non-blocking (background), timeout 2s.
+# Migrated from ~/.claude/hooks/auto-learn.sh
+#
+# Patterns detected:
+#   - Corrections: "non", "pas comme ca", "plutot", "jamais", "stop", "arrete"
+#   - Preferences: "je prefere", "toujours", "utilise", "never", "always"
+#   - Context: "je travaille sur", "mon role", "mon client", "je suis"
+#   - Technical: "on utilise", "notre stack", "le projet"
+
+set -euo pipefail
+
+INPUT=$(cat)
+PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty')
+
+# Skip empty or very short prompts
+if [ -z "$PROMPT" ] || [ ${#PROMPT} -lt 10 ]; then
+  exit 0
+fi
+
+SYNAPSE_URL="${SYNAPSE_URL:-http://localhost:8001}"
+SYNAPSE_TOKEN="${SYNAPSE_TOKEN:-}"
+
+# --- Pattern Detection (regex-based, fast) ---
+
+detect_category() {
+  local prompt_lower
+  prompt_lower=$(echo "$PROMPT" | tr '[:upper:]' '[:lower:]')
+
+  if echo "$prompt_lower" | grep -qE "(non[, ]|pas comme|plutôt|jamais |stop |arrête|don.?t |never |instead |not that)"; then
+    echo "feedback"
+    return 0
+  fi
+
+  if echo "$prompt_lower" | grep -qE "(je préfère|toujours |utilise |always |i prefer|use .* instead|on devrait)"; then
+    echo "preference"
+    return 0
+  fi
+
+  if echo "$prompt_lower" | grep -qE "(je travaille|mon rôle|mon client|je suis |i am a |i work on|notre projet)"; then
+    echo "context"
+    return 0
+  fi
+
+  if echo "$prompt_lower" | grep -qE "(on utilise|notre stack|le projet utilise|we use |our stack)"; then
+    echo "technical"
+    return 0
+  fi
+
+  return 1
+}
+
+extract_key() {
+  echo "$PROMPT" | head -c 80 | tr '\n' ' ' | sed 's/[^a-zA-Z0-9àâéèêëïîôùûüÿçÀÂÉÈÊ_ -]//g' | xargs
+}
+
+# --- Main ---
+
+CATEGORY=$(detect_category) || exit 0
+KEY=$(extract_key)
+VALUE="$PROMPT"
+
+# POST to PA Knowledge API (background, non-blocking)
+{
+  curl -sf --max-time 2 \
+    -X POST "${SYNAPSE_URL}/api/v1/pa/knowledge/learn" \
+    -H "Content-Type: application/json" \
+    ${SYNAPSE_TOKEN:+-H "Authorization: Bearer ${SYNAPSE_TOKEN}"} \
+    -d "$(jq -n \
+      --arg category "$CATEGORY" \
+      --arg key "$KEY" \
+      --arg value "$VALUE" \
+      '{category: $category, key: $key, value: $value, confidence: 0.6, source: "auto-learn-hook"}'
+    )" > /dev/null 2>&1
+} &
+
+exit 0

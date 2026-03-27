@@ -28,6 +28,10 @@ hooks:  # Hook scripts — run automatically on CC lifecycle events
   - permission-request
   - stop-failure
   - prompt-intelligence
+  - timestamp-injector
+  - validate-bash
+  - pre-compact-context
+  - auto-learn
 
 agents:
   - context-scanner

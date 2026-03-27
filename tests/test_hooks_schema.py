@@ -21,7 +21,7 @@ from conftest import HOOKS_DIR, PLUGIN_ROOT
 
 HOOKS_JSON = HOOKS_DIR / "hooks.json"
 
-# Known Claude Code event types (as of CC v2.1.83)
+# Known Claude Code event types (as of CC v2.1.85)
 KNOWN_EVENT_TYPES = {
     "SessionStart",
     "SessionEnd",
@@ -32,11 +32,13 @@ KNOWN_EVENT_TYPES = {
     "PermissionRequest",
     "UserPromptSubmit",
     "Stop",
+    "SubagentStart",
     "SubagentStop",
     "Notification",
     "StopFailure",
     "InstructionsLoaded",
     "ConfigChange",
+    "Setup",
 }
 
 
@@ -49,8 +51,12 @@ def _resolve_hook_command(command: str) -> Path:
     """
     Resolve a hook command string to a real path.
     Commands use: "${CLAUDE_PLUGIN_ROOT}/hooks/script-name"
+    Also handles: "${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh" arg1 arg2
     """
-    resolved = command.strip('"').replace("${CLAUDE_PLUGIN_ROOT}", str(PLUGIN_ROOT))
+    # Split on '" ' to separate quoted path from arguments
+    parts = command.split('" ')
+    script_part = parts[0].strip('"')
+    resolved = script_part.replace("${CLAUDE_PLUGIN_ROOT}", str(PLUGIN_ROOT))
     return Path(resolved)
 
 
@@ -210,7 +216,10 @@ def _collect_dist_hook_refs() -> list[tuple[str, str, Path]]:
                     cmd = hook.get("command", "")
                     if "${CLAUDE_PLUGIN_ROOT}" in cmd:
                         # Resolve against the tier directory (simulates runtime)
-                        resolved = cmd.strip('"').replace(
+                        # Handle commands with args: "path/script" arg1 arg2
+                        parts = cmd.split('" ')
+                        script_part = parts[0].strip('"')
+                        resolved = script_part.replace(
                             "${CLAUDE_PLUGIN_ROOT}", str(tier_dir)
                         )
                         if "/hooks/" in resolved:

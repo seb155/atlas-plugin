@@ -132,6 +132,13 @@ build_tier() {
       mkdir -p "$output/hooks/lib"
       cp hooks/lib/*.sh "$output/hooks/lib/" 2>/dev/null || true
     fi
+    # Copy TypeScript hook runner and hooks (if present)
+    if [ -x "hooks/run-hook.sh" ]; then
+      cp "hooks/run-hook.sh" "$output/hooks/"
+    fi
+    if [ -d "hooks/ts" ]; then
+      cp -r "hooks/ts" "$output/hooks/"
+    fi
   fi
 
   # Copy runtime scripts (exclude build-only scripts)
