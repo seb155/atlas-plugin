@@ -106,7 +106,9 @@ This plugin develops itself. When modifying atlas-plugin:
 | File | Purpose |
 |------|---------|
 | `build.sh` | Multi-tier builder with inheritance |
+| `scripts/atlas-cli.sh` | Shell launcher (tmux, sessions). See `.blueprint/LAUNCHER-PLAYBOOK.md` |
 | `scripts/generate-master-skill.sh` | Dynamic atlas-assist generator |
+| `scripts/dev-install.sh` | Build + install to CC cache + sync shell launcher |
 | `profiles/*.yaml` | Tier definitions |
 | `hooks/hooks.json` | Hook registry |
 | `Makefile` | Dev workflow shortcuts |

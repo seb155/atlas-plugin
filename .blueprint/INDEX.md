@@ -11,6 +11,8 @@
 | 1 | `PATTERNS.md` | Copy-paste templates for new skills/agents/hooks/commands — _pattern change_ |
 | 2 | `INTEGRATION-MAP.md` | Plugin ↔ Synapse/Hub/Cloud/Forgejo connections — _integration change_ |
 | 2 | `TESTING.md` | Test strategy, pyramid, coverage goals — _test strategy change_ |
+| 1 | `LAUNCHER-PLAYBOOK.md` | CLI launcher (tmux, sessions, install pipeline) — _atlas-cli.sh change_ |
+| 2 | `AGENT-TEAMS-PLAYBOOK.md` | Agent Teams blueprints + tmux pane management — _team skill change_ |
 
 ## Plans
 

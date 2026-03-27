@@ -48,10 +48,19 @@ else
 fi
 
 echo "   Cache: ${MARKETPLACE_DIR}/"
+
+# ─── Sync shell launcher ──────────────────────────────────────
+SHELL_SRC="${SCRIPT_DIR}/atlas-cli.sh"
+SHELL_DST="${HOME}/.atlas/shell/atlas.sh"
+if [ -f "$SHELL_SRC" ]; then
+  mkdir -p "$(dirname "$SHELL_DST")"
+  cp "$SHELL_SRC" "$SHELL_DST"
+  echo "  ✅ atlas-cli.sh → ${SHELL_DST}"
+fi
+
 echo ""
 echo "⚠️  Restart Claude Code to apply changes."
 echo ""
 echo "📋 Next steps:"
 echo "   1. Restart Claude Code      (picks up plugin changes)"
-echo "   2. atlas setup sync         (sync user configs: starship, cship, zshrc)"
-echo "   3. source ~/.zshrc          (reload shell with new atlas.sh)"
+echo "   2. source ~/.zshrc          (reload shell with new atlas.sh)"

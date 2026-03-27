@@ -668,7 +668,11 @@ _atlas_split_launch() {
         "✏️  Rename" 2>/dev/null || echo "")
       case "$action" in
         *Attach*)
-          /usr/bin/tmux attach-session -t "$session_name"
+          if [ -n "$TMUX" ]; then
+            /usr/bin/tmux switch-client -t "$session_name"
+          else
+            /usr/bin/tmux attach-session -t "$session_name"
+          fi
           return ;;
         *Kill*)
           /usr/bin/tmux kill-session -t "$session_name" 2>/dev/null ;;
@@ -687,11 +691,21 @@ _atlas_split_launch() {
   fi
 
   # Build the claude command string with full PATH export prefix
+  # Append "; exit" so the tmux shell auto-closes when claude exits
   local path_export="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\${HOME}/.local/bin:\${HOME}/.bun/bin:\${HOME}/.cargo/bin:\${HOME}/.npm-global/bin:/usr/local/go/bin:\${HOME}/go/bin:\${PATH}"
   local cmd_str="${cmd[*]}"
+  local full_cmd="${path_export} && ${cmd_str}; exit"
 
-  /usr/bin/tmux new-session -s "$session_name" -n "${project}" -c "$path" \; \
-    send-keys "${path_export} && ${cmd_str}" C-m
+  if [ -n "$TMUX" ]; then
+    # Already inside tmux → create detached session, then switch to it
+    /usr/bin/tmux new-session -d -s "$session_name" -n "${project}" -c "$path"
+    /usr/bin/tmux send-keys -t "$session_name" "$full_cmd" C-m
+    /usr/bin/tmux switch-client -t "$session_name"
+  else
+    # Outside tmux → create and attach directly
+    /usr/bin/tmux new-session -s "$session_name" -n "${project}" -c "$path" \; \
+      send-keys "$full_cmd" C-m
+  fi
 }
 
 # ─── Main Entry Point ────────────────────────────────────────
