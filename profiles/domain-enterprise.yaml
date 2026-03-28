@@ -1,0 +1,31 @@
+# ATLAS Enterprise Domain — Governance, Knowledge, Programme Management
+# Enterprise audit, knowledge engine, agent teams, programme dashboard
+# NO inherits — standalone domain plugin
+tier: domain-enterprise
+description: "Enterprise — governance, knowledge engine, agent teams, programme management."
+
+skills:
+  - enterprise-audit
+  - knowledge-engine
+  - knowledge-manager
+  - programme-manager
+  - vision-alignment
+  - feature-board
+  - onboarding-check
+  - plan-review
+  - experiment-loop
+  - platform-update
+  - atlas-dev-self
+  - marketplace-manager
+  - atlas-team
+
+agents:
+  - team-coordinator
+  - team-researcher
+  - team-engineer
+  - team-tester
+  - team-reviewer
+
+persona: "enterprise programme manager"
+pipeline: "AUDIT → PLAN → COORDINATE → REVIEW → GOVERN"
+banner_label: "Enterprise"

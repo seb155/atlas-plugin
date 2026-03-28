@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Generate tier-specific atlas-assist SKILL.md
-# Usage: ./scripts/generate-master-skill.sh <tier> <output_path>
+# Generate tier-specific or domain-specific atlas-assist SKILL.md
+# Usage: ./scripts/generate-master-skill.sh <tier|domain> <output_path> [--domain]
+#
+# Tier mode (default): generates atlas-assist for tier profiles (admin, dev, user, worker)
+# Domain mode (--domain): generates atlas-{domain}-assist for domain profiles (core, dev, frontend, ...)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -9,14 +12,23 @@ cd "$ROOT_DIR"
 
 TIER="$1"
 OUTPUT="$2"
+DOMAIN_MODE="${3:-}"
 VERSION=$(cat VERSION | tr -d '[:space:]')
-PROFILE="profiles/${TIER}.yaml"
+
+# Domain mode uses domain profiles, tier mode uses tier profiles
+if [ "$DOMAIN_MODE" = "--domain" ]; then
+  PROFILE="profiles/domains/${TIER}.yaml"
+  SKILL_NAME="atlas-${TIER}-assist"
+else
+  PROFILE="profiles/${TIER}.yaml"
+  SKILL_NAME="atlas-assist"
+fi
 
 # Worker tier: generate minimal SKILL.md and exit early
 if [ "$TIER" = "worker" ]; then
   cat > "$OUTPUT" <<WORKER_EOF
 ---
-name: atlas-assist
+name: ${SKILL_NAME}
 description: "ATLAS Worker — minimal task executor for Agent Teams. Zero skills, zero hooks."
 ---
 
@@ -247,7 +259,7 @@ EMOJI_TABLE=$(build_emoji_table)
 
 cat > "$OUTPUT" <<SKILLEOF
 ---
-name: atlas-assist
+name: ${SKILL_NAME}
 description: "Master skill for ATLAS ${BANNER_LABEL} — AXOIQ's unified AI engineering assistant. ${SKILL_COUNT} skills, ${AGENT_COUNT} agents. Auto-routing co-pilot with HITL gates."
 ---
 

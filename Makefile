@@ -1,7 +1,7 @@
 # ATLAS Plugin — Developer Makefile
 # Usage: make [target]
 
-.PHONY: build test install dev lint sync publish clean help
+.PHONY: build test install dev dev-domains lint sync publish clean help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -25,6 +25,21 @@ dev: install ## Build all 4 + install (standard workflow)
 
 dev-admin: ## Quick admin-only build + install
 	./scripts/dev-install.sh --admin-only
+
+dev-domains: ## Build all 6 domain plugins + install to CC cache
+	./build.sh domains
+	@VERSION=$$(cat VERSION | tr -d '[:space:]'); \
+	CACHE_DIR="$$HOME/.claude/plugins/cache"; \
+	echo ""; \
+	echo "📦 Installing domain plugins to CC cache..."; \
+	for name in core dev frontend infra enterprise experiential; do \
+		dir="$$CACHE_DIR/atlas-$${name}-marketplace/atlas-$${name}/$$VERSION"; \
+		mkdir -p "$$dir"; \
+		cp -r "dist/atlas-$${name}/." "$$dir/"; \
+		echo "  ✅ atlas-$${name} → $$dir"; \
+	done; \
+	echo ""; \
+	echo "✅ Installed 6 domain plugins v$$VERSION"
 
 lint: ## Validate plugin structure (frontmatter, refs, profiles)
 	@echo "Running structural checks..."

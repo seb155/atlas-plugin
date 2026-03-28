@@ -1,0 +1,22 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    }
+  },
+  "atlas-admin-marketplace": {
+    "source": {
+      "source": "git",
+      "url": "ssh://forgejo/atlas/atlas-plugin.git"
+    },
+    "autoUpdate": true
+  },
+  "atlas-marketplace": {
+    "source": {
+      "source": "git",
+      "url": "ssh://forgejo/atlas/atlas-plugin.git"
+    },
+    "autoUpdate": true
+  }
+}

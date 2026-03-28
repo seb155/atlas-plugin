@@ -14,7 +14,17 @@ import sys
 
 
 def extract_script_name(command: str) -> str | None:
-    """Extract script name from hook command string."""
+    """Extract script name from hook command string.
+
+    Handles two formats:
+    1. Direct: "${CLAUDE_PLUGIN_ROOT}/hooks/session-start"  → "session-start"
+    2. Wrapper: "${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh" inject-datetime  → "inject-datetime"
+    """
+    # Format 2: run-hook.sh wrapper with subcommand
+    m = re.search(r'/hooks/run-hook\.sh["\s]+(\S+)', command)
+    if m:
+        return m.group(1)
+    # Format 1: direct hook script
     m = re.search(r'/hooks/([^"]+)"?$', command)
     return m.group(1) if m else None
 
@@ -30,7 +40,7 @@ def filter_hooks(master: dict, allowed: set[str]) -> dict:
                 cmd = entry.get("command", "")
                 script = extract_script_name(cmd)
                 if script is None:
-                    # Inline command (e.g., PreCompact echo) — always keep
+                    # True inline command (e.g., PreCompact echo) — always keep
                     filtered_entries.append(entry)
                 elif script in allowed:
                     filtered_entries.append(entry)

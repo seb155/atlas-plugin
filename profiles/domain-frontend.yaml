@@ -1,0 +1,26 @@
+# ATLAS Frontend Domain — UI/UX & Visual QA
+# Design, browser automation, visual testing
+# NO inherits — standalone domain plugin
+tier: domain-frontend
+description: "Frontend — UI design, browser automation, visual QA, product health."
+
+skills:
+  - frontend-design
+  - frontend-workflow
+  - browser-automation
+  - product-health
+  - statusline-setup
+
+hooks:
+  - frontend-ux-gate
+
+refs:
+  - composition-patterns
+  - react-best-practices
+
+agents:
+  - design-implementer
+
+persona: "frontend specialist"
+pipeline: "DESIGN → IMPLEMENT → VISUAL QA → SHIP"
+banner_label: "Frontend"

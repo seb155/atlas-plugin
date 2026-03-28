@@ -1,0 +1,28 @@
+# ATLAS Infra Domain — Infrastructure, DevOps, Security, Network
+# VM/container ops, deploy, security audit, network diagnostics
+# Includes network skills (NetBird, Tailscale, DNS, VLAN)
+# NO inherits — standalone domain plugin
+tier: domain-infra
+description: "Infrastructure — deploy, security, network, DevOps, engineering ops."
+
+skills:
+  - infrastructure-ops
+  - devops-deploy
+  - security-audit
+  - engineering-ops
+  # Network skills (fusionnés — mêmes utilisateurs que infra)
+  # - mesh-diagnostics    # TODO: Phase 5 — NEW
+  # - network-audit       # TODO: Phase 5 — NEW
+
+hooks:
+  - enterprise-check
+
+refs:
+  - gmining-excel
+
+agents:
+  - team-security
+
+persona: "infrastructure architect"
+pipeline: "AUDIT → PLAN → DEPLOY → VERIFY → MONITOR"
+banner_label: "Infra"
