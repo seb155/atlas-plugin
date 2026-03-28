@@ -45,6 +45,7 @@ effort: high
 | `/atlas dream --experiential` | 1+2+2.6+3.7 | ~10 min | Experiential audit + synthesis |
 | `/atlas dream --reflection` | 1+2+4.5 | ~5 min | Generate monthly reflection |
 | `/atlas dream --full` | ALL 11 phases | ~25 min | Complete cycle including experiential |
+| `/atlas dream --topic {name}` | topic consolidation | ~3 min | Consolidate topic memory into summary |
 | `/atlas episode create` | standalone | ~3 min | Create episode file for current session |
 | `/atlas intuition log` | standalone | ~2 min | Capture a gut feeling or emerging pattern |
 | `/atlas relationship {person}` | standalone | ~3 min | Create/update relationship file |
@@ -54,7 +55,7 @@ effort: high
 | Tier | Invocation | Phases Run | Writes? |
 |------|------------|------------|---------|
 | Report | `dream report`, `dream health`, `dream trends`, `dream status` | Read-only subset | No |
-| Standard | `dream`, `dream --docs`, `dream --handoffs`, `dream journal` | 1 through 4 (subset varies) | Yes (HITL) |
+| Standard | `dream`, `dream --docs`, `dream --handoffs`, `dream journal`, `dream --topic` | 1 through 4 (subset varies) | Yes (HITL) |
 | Experiential | `dream --experiential`, `dream --reflection`, `episode create`, `intuition log`, `relationship` | 1+2.6+3.7 or standalone | Yes (HITL) |
 | Deep | `dream --deep`, `dream --full`, `dream --validate`, `dream --cross-project` | 1 through 5 (all phases) | Yes (HITL) |
 
@@ -305,6 +306,29 @@ Regenerate MEMORY.md and compute health.
 1. **Generate proposed MEMORY.md**: Group by category, tables for compact representation, 200-line hard limit (180-line soft target).
 2. **Show proposed structure** via AskUserQuestion (H14): "Write as-is" / "Adjust" / "Cancel".
 3. **Write MEMORY.md** if approved.
+3b. **Topics INDEX generation** (if `.claude/topics/` exists):
+   ```bash
+   TOPICS_DIR=".claude/topics"
+   if [ -d "$TOPICS_DIR" ]; then
+     # Generate INDEX.md
+     echo "# Topic Memory Index" > "$TOPICS_DIR/INDEX.md"
+     echo "" >> "$TOPICS_DIR/INDEX.md"
+     echo "| Topic | Status | Created | Decisions | Sessions | Summary |" >> "$TOPICS_DIR/INDEX.md"
+     echo "|-------|--------|---------|-----------|----------|---------|" >> "$TOPICS_DIR/INDEX.md"
+
+     for topic_dir in "$TOPICS_DIR"/*/; do
+       [ -d "$topic_dir" ] || continue
+       topic_name=$(basename "$topic_dir")
+       decisions=$(grep -c "^## Decision:" "$topic_dir/decisions.md" 2>/dev/null || echo "0")
+       sessions=$(ls "$topic_dir/handoffs/" 2>/dev/null | wc -l)
+       has_summary=$([ -f "$topic_dir/topic-summary.md" ] && echo "yes" || echo "—")
+       # Get status from topics.json
+       status=$(python3 -c "import json,os; t=json.load(open(os.path.expanduser('~/.atlas/topics.json'))); print(t.get('$topic_name',{}).get('status','?'))" 2>/dev/null || echo "?")
+       created=$(python3 -c "import json,os; t=json.load(open(os.path.expanduser('~/.atlas/topics.json'))); print(t.get('$topic_name',{}).get('created','?')[:10])" 2>/dev/null || echo "?")
+       echo "| $topic_name | $status | $created | $decisions | $sessions | $has_summary |" >> "$TOPICS_DIR/INDEX.md"
+     done
+   fi
+   ```
 4. **Health score computation** (v4): Calculate 15 dimensions (10 structural + 5 experiential), display dashboard.
    For details, read `${SKILL_DIR}/references/health-scoring.md`
 
@@ -479,6 +503,68 @@ For template details, read `${SKILL_DIR}/references/relationship-template.md`
    c. If migrate: create relationship file, rename old to `_archived-team_{person}.md`
 5. **Write**: Save to `memory/relationship-{person-slug}.md`
 6. **Index**: Update MEMORY.md EXPERIENTIAL CONTEXT table
+
+### `/atlas dream --topic {name}`
+
+Consolidate a topic's accumulated memory into a summary. Use when a topic is completed (branch merged) or when topic memory needs cleanup.
+
+#### Steps
+
+1. **Read topic directory**: Check `.claude/topics/{name}/` exists
+   ```bash
+   TOPIC_DIR=".claude/topics/${name}"
+   [ -d "$TOPIC_DIR" ] || { echo "Topic not found: ${name}"; exit 1; }
+   ```
+
+2. **Read topic files**:
+   - `decisions.md` — all decisions made during this topic
+   - `lessons.md` — lessons learned (if exists)
+   - `context.md` — last known technical context
+   - `handoffs/` — count handoff files (number of sessions)
+
+3. **Generate topic summary**: Synthesize into `topic-summary.md`:
+   ```markdown
+   # Topic Summary: {name}
+
+   **Project**: {from topics.json}
+   **Duration**: {created} to {completed/now}
+   **Sessions**: {handoff count}
+   **Decisions**: {decision count}
+
+   ## Key Decisions
+   {Summarize top 3-5 decisions with rationale}
+
+   ## Lessons Learned
+   {Extract from lessons.md or synthesize from decisions}
+
+   ## Technical Outcome
+   {From context.md: what was built, which files, which patterns}
+
+   ## What Would I Do Differently
+   {Retrospective insight based on decision confidence and outcomes}
+   ```
+
+4. **HITL gate**: Present topic-summary.md via AskUserQuestion
+   - Options: "Write as-is" / "Edit" / "Skip"
+
+5. **Write**: Save to `.claude/topics/{name}/topic-summary.md`
+
+6. **Update topics.json**: Set status to "archived", add summaryPath
+   ```bash
+   python3 -c "
+   import json, os
+   from datetime import datetime
+   topics_file = os.path.expanduser('~/.atlas/topics.json')
+   with open(topics_file) as f:
+       topics = json.load(f)
+   if '${name}' in topics:
+       topics['${name}']['status'] = 'archived'
+       topics['${name}']['archivedAt'] = datetime.now().isoformat()
+       topics['${name}']['summaryPath'] = '.claude/topics/${name}/topic-summary.md'
+       with open(topics_file, 'w') as f:
+           json.dump(topics, f, indent=2)
+   "
+   ```
 
 ## Schedule Mode
 

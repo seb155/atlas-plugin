@@ -110,14 +110,55 @@ When generating a handoff, if `ATLAS_TOPIC` env var is set (injected by session-
 
 2. **Copy handoff to topic memory**: Copy the handoff to `.claude/topics/{topic}/handoffs/`:
    ```bash
-   TOPIC_DIR=".claude/topics/${ATLAS_TOPIC}"
-   [ -d "$TOPIC_DIR/handoffs" ] && cp "{handoff_file}" "$TOPIC_DIR/handoffs/"
+   TOPIC="${ATLAS_TOPIC}"
+   TOPIC_DIR=".claude/topics/${TOPIC}"
+   HANDOFF_FILE="{handoff_file_path}"
+
+   if [ -n "$TOPIC" ] && [ -d "$TOPIC_DIR" ]; then
+     # Create handoffs dir if it doesn't exist
+     mkdir -p "$TOPIC_DIR/handoffs"
+     # Copy the handoff file
+     cp "$HANDOFF_FILE" "$TOPIC_DIR/handoffs/"
+     echo "✅ Handoff copied to $TOPIC_DIR/handoffs/$(basename $HANDOFF_FILE)"
+   fi
    ```
 
 3. **Include topic in handoff header**: Add to the handoff file:
    ```markdown
    **Topic**: {ATLAS_TOPIC} (from topics.json)
    ```
+
+### Topic Context File
+
+After handoff generation, if `ATLAS_TOPIC` is set, create/update `.claude/topics/${ATLAS_TOPIC}/context.md`.
+This file is **overwritten** (not appended) — it represents the CURRENT state of the topic.
+
+```bash
+TOPIC="${ATLAS_TOPIC}"
+TOPIC_DIR=".claude/topics/${TOPIC}"
+
+if [ -n "$TOPIC" ] && [ -d "$TOPIC_DIR" ]; then
+  cat > "$TOPIC_DIR/context.md" << CONTEXT
+# Topic Context: ${TOPIC}
+Updated: $(date '+%Y-%m-%d %H:%M %Z')
+
+## Technical Context
+- **Stack**: {relevant tech from this topic's work}
+- **Key files**: {main files modified during this topic}
+- **APIs used**: {endpoints touched}
+- **Patterns**: {architectural patterns chosen}
+
+## Current State
+- **Branch**: $(git branch --show-current 2>/dev/null || echo 'unknown')
+- **Phase**: {current plan phase if applicable}
+- **Last action**: {what was just done}
+- **Next action**: {what to do next}
+CONTEXT
+  echo "✅ Topic context updated: $TOPIC_DIR/context.md"
+fi
+```
+
+The `{...}` placeholders should be filled by the agent from session context (git diff, task list, decisions made). The branch and date are auto-populated from shell.
 
 ---
 

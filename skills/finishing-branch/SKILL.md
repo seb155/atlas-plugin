@@ -38,6 +38,70 @@ If tests FAIL → stop. Fix first.
 | 3. Keep as-is | No action, branch and worktree stay |
 | 4. Discard | Require "discard" confirmation → delete branch + worktree |
 
+### Step 2.5: Topic Memory Preservation (SP-ECO v4)
+
+**Before** any worktree cleanup or branch deletion, preserve topic memory:
+
+```bash
+# Check if we're in a worktree with topic memory
+TOPIC="${ATLAS_TOPIC:-}"
+WORKTREE_TOPIC_DIR=".claude/topics/${TOPIC}"
+MAIN_REPO=$(git worktree list --porcelain 2>/dev/null | head -1 | awk '{print $2}')
+
+if [ -n "$TOPIC" ] && [ -d "$WORKTREE_TOPIC_DIR" ] && [ -n "$MAIN_REPO" ]; then
+  MAIN_TOPIC_DIR="${MAIN_REPO}/.claude/topics/${TOPIC}"
+
+  echo "Preserving topic memory: ${TOPIC}"
+  mkdir -p "$MAIN_TOPIC_DIR"
+
+  # Copy topic files to main repo (merge, don't overwrite)
+  for f in decisions.md lessons.md context.md; do
+    if [ -f "$WORKTREE_TOPIC_DIR/$f" ]; then
+      if [ -f "$MAIN_TOPIC_DIR/$f" ]; then
+        # Append new content (avoid duplication with header check)
+        echo "" >> "$MAIN_TOPIC_DIR/$f"
+        echo "---" >> "$MAIN_TOPIC_DIR/$f"
+        echo "<!-- Merged from worktree $(date -Iseconds) -->" >> "$MAIN_TOPIC_DIR/$f"
+        cat "$WORKTREE_TOPIC_DIR/$f" >> "$MAIN_TOPIC_DIR/$f"
+      else
+        cp "$WORKTREE_TOPIC_DIR/$f" "$MAIN_TOPIC_DIR/$f"
+      fi
+    fi
+  done
+
+  # Copy handoffs (additive)
+  if [ -d "$WORKTREE_TOPIC_DIR/handoffs" ]; then
+    mkdir -p "$MAIN_TOPIC_DIR/handoffs"
+    cp -n "$WORKTREE_TOPIC_DIR/handoffs/"* "$MAIN_TOPIC_DIR/handoffs/" 2>/dev/null || true
+  fi
+
+  echo "Topic memory preserved to: $MAIN_TOPIC_DIR"
+fi
+
+# Update topics.json status
+if [ -n "$TOPIC" ]; then
+  python3 -c "
+import json, os
+from datetime import datetime
+topics_file = os.path.expanduser('~/.atlas/topics.json')
+if os.path.exists(topics_file):
+    with open(topics_file) as f:
+        topics = json.load(f)
+    if '${TOPIC}' in topics:
+        topics['${TOPIC}']['status'] = 'completed'
+        topics['${TOPIC}']['completedAt'] = datetime.now().isoformat()
+        with open(topics_file, 'w') as f:
+            json.dump(topics, f, indent=2)
+" 2>/dev/null
+fi
+```
+
+**Rules**:
+- ALWAYS preserve topic memory before worktree removal (Options 1 and 4)
+- For Option 2 (PR): keep worktree, topic memory stays in place
+- For Option 3 (keep): no action needed, topic memory stays
+- Merge strategy: append to existing files (don't overwrite)
+
 ### Step 3: Post-Integration
 
 - Update `.blueprint/plans/INDEX.md` if tracked in plan → `plan({subsystem}): mark phase X complete`

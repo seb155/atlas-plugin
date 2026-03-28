@@ -40,3 +40,49 @@ When making decisions during planning (Section C):
 - Log the decision
 - Reference it in the plan: "See decision log: {date} {decision}"
 - Future sessions can grep decisions.jsonl for context
+
+---
+
+## Topic Memory (SP-ECO v4)
+
+When `ATLAS_TOPIC` env var is set (topic-based session), ALSO write decisions to topic memory.
+This is a **DUAL WRITE** — the existing `.claude/decisions.jsonl` write stays unchanged.
+
+### Process
+
+1. Check if `.claude/topics/${ATLAS_TOPIC}/` directory exists
+2. If yes: append decision to `.claude/topics/${ATLAS_TOPIC}/decisions.md` in markdown format:
+
+```markdown
+## Decision: {title}
+**Date**: {YYYY-MM-DD HH:MM TZ}
+**Context**: {what prompted this decision}
+**Choice**: {what was decided}
+**Alternatives rejected**: {what was NOT chosen and why}
+**Confidence**: {high/medium/low}
+**Reversibility**: {easily reversible / hard to reverse / irreversible}
+```
+
+3. Append using bash:
+   ```bash
+   TOPIC_DIR=".claude/topics/${ATLAS_TOPIC}"
+   if [ -d "$TOPIC_DIR" ]; then
+     cat >> "$TOPIC_DIR/decisions.md" << 'DECISION'
+   ## Decision: {title}
+   **Date**: {date}
+   **Context**: {context}
+   **Choice**: {choice}
+   **Alternatives rejected**: {alternatives}
+   **Confidence**: {confidence}
+   **Reversibility**: {reversibility}
+
+   DECISION
+   fi
+   ```
+
+4. Topic `decisions.md` is **markdown** (not JSONL) for human readability in topic context
+5. If the file doesn't exist yet, create it with a header:
+   ```markdown
+   # Decisions — {ATLAS_TOPIC}
+   > Topic-scoped decision log. See also: `.claude/decisions.jsonl` (global)
+   ```
