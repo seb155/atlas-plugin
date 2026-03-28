@@ -19,11 +19,13 @@ jobs:
           git clone --depth=1 --branch ${{ github.ref_name }} http://oauth2:${GIT_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git .
           git fetch --tags --depth=10
 
-      - name: Build all tiers
+      - name: Build all tiers + domains
         shell: sh
-        run: ./build.sh all
+        run: |
+          ./build.sh all
+          ./build.sh domains
 
-      - name: Package and publish tiers
+      - name: Package and publish tiers (legacy)
         shell: sh
         env:
           FORGEJO_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
@@ -32,7 +34,7 @@ jobs:
         run: |
           set -eu
           VERSION=$(cat VERSION | tr -d '[:space:]')
-          echo "Publishing version ${VERSION}"
+          echo "Publishing legacy tiers v${VERSION}"
 
           for tier in admin dev user; do
             pkg="atlas-${tier}"
@@ -53,7 +55,39 @@ jobs:
             echo "  Published: ${FORGEJO_URL}/${OWNER}/-/packages/generic/${pkg}/${VERSION}"
           done
 
-          echo "All 3 tiers published for v${VERSION}"
+          echo "All 3 legacy tiers published for v${VERSION}"
+
+      - name: Package and publish domain plugins (SP-ECO v4)
+        shell: sh
+        env:
+          FORGEJO_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
+          FORGEJO_URL: http://${{ vars.FORGEJO_HOST }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -eu
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "Publishing domain plugins v${VERSION}"
+
+          for domain in core dev frontend infra enterprise experiential; do
+            pkg="atlas-${domain}"
+            tarball="${pkg}-${VERSION}.tar.gz"
+
+            echo "Packaging ${pkg} v${VERSION}..."
+            tar -czf "${tarball}" -C dist "${pkg}"
+
+            echo "Publishing ${tarball}..."
+            curl --fail-with-body \
+              --silent --show-error \
+              -X PUT \
+              -H "Authorization: token ${FORGEJO_TOKEN}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@${tarball}" \
+              "${FORGEJO_URL}/api/packages/${OWNER}/generic/${pkg}/${VERSION}/${tarball}"
+
+            echo "  Published: ${FORGEJO_URL}/${OWNER}/-/packages/generic/${pkg}/${VERSION}"
+          done
+
+          echo "All 6 domain plugins published for v${VERSION}"
 
       - name: Create Forgejo Release
         shell: sh
@@ -74,11 +108,11 @@ jobs:
             NOTES="Initial release"
           fi
 
-          # Count skills/commands/agents from built dist
+          # Count skills from built dist (legacy + domains)
           SKILLS=$(find dist/atlas-admin/skills -name "SKILL.md" 2>/dev/null | wc -l)
-          COMMANDS=$(find dist/atlas-admin/commands -name "*.md" 2>/dev/null | wc -l)
+          DOMAINS_BUILT=$(ls -d dist/atlas-core dist/atlas-dev dist/atlas-frontend dist/atlas-infra dist/atlas-enterprise dist/atlas-experiential 2>/dev/null | wc -l)
 
-          BODY="## ATLAS v${VERSION}\n\n${SKILLS} skills | ${COMMANDS} commands\n\n### Changes\n${NOTES}"
+          BODY="## ATLAS v${VERSION}\n\n${SKILLS} skills (monolith) | ${DOMAINS_BUILT} domain plugins\n\n### Changes\n${NOTES}"
 
           curl --fail-with-body --silent --show-error \
             -X POST \
