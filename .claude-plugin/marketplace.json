@@ -8,89 +8,11 @@
   "plugins": [
     {
       "name": "atlas-admin",
-      "description": "ATLAS \u2014 AXOIQ unified AI engineering assistant. 44 commands + 44 skills + 6 agents + 4 hooks. Gold standard handoff/pickup. Auto-routing co-pilot with HITL gates.",
+      "description": "ATLAS — AXOIQ unified AI engineering assistant (monolith). 76 skills + 12 agents. Use 'make dev' to install.",
       "version": "4.0.2",
       "source": {
         "source": "url",
         "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git"
-      },
-      "author": {
-        "name": "Seb Gagnon",
-        "email": "seb@axoiq.com"
-      }
-    },
-    {
-      "name": "atlas-core",
-      "description": "ATLAS Core \u2014 Memory, session, context, vault, assist. Required by all ATLAS plugins.",
-      "source": {
-        "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
-        "path": "dist/atlas-core"
-      },
-      "author": {
-        "name": "Seb Gagnon",
-        "email": "seb@axoiq.com"
-      }
-    },
-    {
-      "name": "atlas-dev",
-      "description": "ATLAS Dev \u2014 TDD, planning, debugging, code review, shipping workflows.",
-      "source": {
-        "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
-        "path": "dist/atlas-dev"
-      },
-      "author": {
-        "name": "Seb Gagnon",
-        "email": "seb@axoiq.com"
-      }
-    },
-    {
-      "name": "atlas-frontend",
-      "description": "ATLAS Frontend \u2014 Design, browser automation, visual QA.",
-      "source": {
-        "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
-        "path": "dist/atlas-frontend"
-      },
-      "author": {
-        "name": "Seb Gagnon",
-        "email": "seb@axoiq.com"
-      }
-    },
-    {
-      "name": "atlas-infra",
-      "description": "ATLAS Infra \u2014 Infrastructure, deploy, security, network, DevOps.",
-      "source": {
-        "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
-        "path": "dist/atlas-infra"
-      },
-      "author": {
-        "name": "Seb Gagnon",
-        "email": "seb@axoiq.com"
-      }
-    },
-    {
-      "name": "atlas-enterprise",
-      "description": "ATLAS Enterprise \u2014 Governance, knowledge engine, agent teams, programme management.",
-      "source": {
-        "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
-        "path": "dist/atlas-enterprise"
-      },
-      "author": {
-        "name": "Seb Gagnon",
-        "email": "seb@axoiq.com"
-      }
-    },
-    {
-      "name": "atlas-experiential",
-      "description": "ATLAS Experiential \u2014 Episode capture, intuition logging, relationship memory.",
-      "source": {
-        "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
-        "path": "dist/atlas-experiential"
       },
       "author": {
         "name": "Seb Gagnon",
