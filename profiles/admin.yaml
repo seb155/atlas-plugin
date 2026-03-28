@@ -33,6 +33,10 @@ skills:
   - atlas-workspace-setup
   # v3.28.0: Agent Teams blueprints
   - atlas-team
+  # v3.42.0: SP-EXP Experiential Memory standalone commands
+  - episode-create
+  - intuition-log
+  - relationship-manager
 
 hooks:
   - enterprise-check
