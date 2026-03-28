@@ -292,6 +292,74 @@ _atlas_status() {
   _atlas_footer
 }
 
+# atlas dashboard (aliases: dash, d)
+_atlas_dashboard() {
+  local TOPICS_FILE="${HOME}/.atlas/topics.json"
+
+  echo ""
+  echo " ATLAS Sessions                                        $(date '+%Y-%m-%d %H:%M %Z')"
+  echo " ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # Get tmux sessions
+  local has_sessions=false
+  if $ATLAS_HAS_TMUX && /usr/bin/tmux list-sessions 2>/dev/null | grep -q "cc-"; then
+    echo " # │ Session              │ Project  │ Topic       │ Branch              │ Status"
+    echo " ──┼──────────────────────┼──────────┼─────────────┼─────────────────────┼────────"
+
+    local idx=0
+    /usr/bin/tmux list-windows -a -F '#{session_name}:#{window_name}:#{window_active}:#{pane_current_path}' 2>/dev/null | \
+      grep "^cc-" | while IFS=: read -r sess win active cwd; do
+      idx=$((idx + 1))
+
+      # Extract project and topic from session name
+      local project topic branch status
+      project=$(echo "$sess" | sed 's/^cc-//' | cut -d- -f1)
+      topic=$(echo "$sess" | sed 's/^cc-[^-]*-*//')
+      [ -z "$topic" ] && topic="(default)"
+
+      # Get branch from cwd
+      branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "—")
+      [ ${#branch} -gt 20 ] && branch="${branch:0:17}..."
+
+      # Status
+      if [ "$active" = "1" ]; then
+        status="ACTIVE"
+      else
+        status="IDLE"
+      fi
+
+      printf " %d │ %-20s │ %-8s │ %-11s │ %-19s │ %s\n" \
+        "$idx" "$sess" "$project" "$topic" "$branch" "$status"
+      has_sessions=true
+    done
+
+    if ! $has_sessions; then
+      echo " (no active CC sessions in tmux)"
+    fi
+  else
+    echo " (no tmux sessions found — start one with: atlas <project> [topic])"
+  fi
+
+  echo " ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # Topic summary from registry
+  if [ -f "$TOPICS_FILE" ]; then
+    local active_count completed_count
+    active_count=$(python3 -c "import json; d=json.load(open('$TOPICS_FILE')); print(sum(1 for v in d.values() if v.get('status')=='active'))" 2>/dev/null || echo "0")
+    completed_count=$(python3 -c "import json; d=json.load(open('$TOPICS_FILE')); print(sum(1 for v in d.values() if v.get('status')=='completed'))" 2>/dev/null || echo "0")
+    echo " Topics: ${active_count} active, ${completed_count} completed"
+  fi
+
+  # Installed plugins
+  local plugin_count
+  plugin_count=$(find ~/.claude/plugins/cache/atlas-marketplace/ -maxdepth 1 -type d 2>/dev/null | wc -l)
+  plugin_count=$((plugin_count - 1))  # subtract the parent dir
+  [ $plugin_count -lt 0 ] && plugin_count=0
+  echo " Plugins: ${plugin_count}/6 ATLAS domain plugins installed"
+
+  echo ""
+}
+
 # atlas help
 _atlas_help() {
   _atlas_header
@@ -306,6 +374,7 @@ SUBCOMMANDS
   list [--all]         Show projects (--all scans workspace)
   resume [project]     Resume most recent session
   status               Active tmux sessions
+  topics               List topic registry (active & completed)
   setup                Run onboarding wizard
   doctor               Health check
   help                 This help
@@ -342,6 +411,8 @@ HELP
     list [--all]         Show projects (--all scans workspace)
     resume [project]     Resume most recent session
     status               Active tmux sessions
+    dashboard (dash, d)   Session & topic overview
+    topics               List topic registry (active & completed)
     setup                Run onboarding wizard
     doctor               Health check
     help                 This help
@@ -708,6 +779,140 @@ _atlas_split_launch() {
   fi
 }
 
+# ─── Topic Registry ──────────────────────────────────────────
+ATLAS_TOPICS_FILE="${HOME}/.atlas/topics.json"
+
+_atlas_topics_init() {
+  [ -f "$ATLAS_TOPICS_FILE" ] || echo '{}' > "$ATLAS_TOPICS_FILE"
+}
+
+_atlas_topic_get() {
+  local topic="$1"
+  _atlas_topics_init
+  python3 -c "
+import json, sys
+with open('$ATLAS_TOPICS_FILE') as f:
+    topics = json.load(f)
+t = topics.get('$topic')
+if t:
+    print(json.dumps(t))
+else:
+    sys.exit(1)
+" 2>/dev/null
+}
+
+_atlas_topic_create() {
+  local topic="$1" project="$2" branch="$3"
+  _atlas_topics_init
+  python3 -c "
+import json
+from datetime import datetime
+with open('$ATLAS_TOPICS_FILE') as f:
+    topics = json.load(f)
+topics['$topic'] = {
+    'project': '$project',
+    'branches': ['$branch'] if '$branch' else [],
+    'sessions': [],
+    'handoffs': [],
+    'plans': [],
+    'created': datetime.now().isoformat(),
+    'lastActive': datetime.now().isoformat(),
+    'status': 'active'
+}
+with open('$ATLAS_TOPICS_FILE', 'w') as f:
+    json.dump(topics, f, indent=2)
+" 2>/dev/null
+}
+
+_atlas_topic_update_active() {
+  local topic="$1"
+  _atlas_topics_init
+  python3 -c "
+import json
+from datetime import datetime
+with open('$ATLAS_TOPICS_FILE') as f:
+    topics = json.load(f)
+if '$topic' in topics:
+    topics['$topic']['lastActive'] = datetime.now().isoformat()
+    with open('$ATLAS_TOPICS_FILE', 'w') as f:
+        json.dump(topics, f, indent=2)
+" 2>/dev/null
+}
+
+_atlas_topic_add_session() {
+  local topic="$1" session_name="$2"
+  python3 -c "
+import json
+with open('$ATLAS_TOPICS_FILE') as f:
+    topics = json.load(f)
+if '$topic' in topics:
+    sessions = topics['$topic'].get('sessions', [])
+    if '$session_name' not in sessions:
+        sessions.append('$session_name')
+        topics['$topic']['sessions'] = sessions
+    with open('$ATLAS_TOPICS_FILE', 'w') as f:
+        json.dump(topics, f, indent=2)
+" 2>/dev/null
+}
+
+_atlas_topic_add_handoff() {
+  local topic="$1" handoff_path="$2"
+  python3 -c "
+import json
+with open('$ATLAS_TOPICS_FILE') as f:
+    topics = json.load(f)
+if '$topic' in topics:
+    handoffs = topics['$topic'].get('handoffs', [])
+    if '$handoff_path' not in handoffs:
+        handoffs.append('$handoff_path')
+        topics['$topic']['handoffs'] = handoffs
+    with open('$ATLAS_TOPICS_FILE', 'w') as f:
+        json.dump(topics, f, indent=2)
+" 2>/dev/null
+}
+
+_atlas_topic_complete() {
+  local topic="$1"
+  python3 -c "
+import json
+from datetime import datetime
+with open('$ATLAS_TOPICS_FILE') as f:
+    topics = json.load(f)
+if '$topic' in topics:
+    topics['$topic']['status'] = 'completed'
+    topics['$topic']['completedAt'] = datetime.now().isoformat()
+    with open('$ATLAS_TOPICS_FILE', 'w') as f:
+        json.dump(topics, f, indent=2)
+" 2>/dev/null
+}
+
+_atlas_topics_list() {
+  _atlas_topics_init
+  python3 -c "
+import json
+from datetime import datetime
+with open('$ATLAS_TOPICS_FILE') as f:
+    topics = json.load(f)
+if not topics:
+    print('No topics registered.')
+else:
+    active = {k:v for k,v in topics.items() if v.get('status') == 'active'}
+    completed = {k:v for k,v in topics.items() if v.get('status') == 'completed'}
+    if active:
+        print(f'Active topics ({len(active)}):')
+        for name, t in sorted(active.items(), key=lambda x: x[1].get('lastActive',''), reverse=True):
+            proj = t.get('project', '?')
+            last = t.get('lastActive', '')[:16].replace('T', ' ')
+            handoff_count = len(t.get('handoffs', []))
+            print(f'  {name:20s}  {proj:12s}  last: {last}  handoffs: {handoff_count}')
+    if completed:
+        print(f'Completed topics ({len(completed)}):')
+        for name, t in sorted(completed.items(), key=lambda x: x[1].get('completedAt',''), reverse=True)[:5]:
+            proj = t.get('project', '?')
+            print(f'  {name:20s}  {proj:12s}  (completed)')
+" 2>/dev/null
+}
+
 # ─── Main Entry Point ────────────────────────────────────────
 atlas() {
   # Ensure standard system paths are in PATH and clear stale command cache
@@ -727,6 +932,8 @@ atlas() {
     status)  _atlas_status; return ;;
     setup)   shift; _atlas_setup "$@"; return ;;
     doctor)  shift; _atlas_doctor "$@"; return ;;
+    topics)  _atlas_topics_list; return ;;
+    dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
   esac
@@ -798,6 +1005,38 @@ atlas() {
 
   # Record usage
   _atlas_record_history "$project"
+
+  # ─── Topic Detection (after project resolved, before CC launch) ───
+  if [ -n "$topic" ]; then
+    local topic_data
+    topic_data=$(_atlas_topic_get "$topic" 2>/dev/null)
+
+    if [ -n "$topic_data" ]; then
+      # Existing topic — check for handoff
+      local latest_handoff
+      latest_handoff=$(python3 -c "
+import json
+t = json.loads('''$topic_data''')
+handoffs = t.get('handoffs', [])
+print(handoffs[-1] if handoffs else '')
+" 2>/dev/null)
+
+      if [ -n "$latest_handoff" ]; then
+        export ATLAS_TOPIC="$topic"
+        export ATLAS_TOPIC_HANDOFF="$latest_handoff"
+      fi
+
+      _atlas_topic_update_active "$topic"
+    else
+      # New topic — create entry
+      local branch
+      branch=$(git -C "$path" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+      _atlas_topic_create "$topic" "$project" "$branch"
+      export ATLAS_TOPIC="$topic"
+    fi
+
+    _atlas_topic_add_session "$topic" "$name"
+  fi
 
   # Fix CC settings before launch (remove overly broad deny rules)
   [ -x "${HOME}/.atlas/scripts/fix-cc-settings.sh" ] && "${HOME}/.atlas/scripts/fix-cc-settings.sh" >/dev/null 2>&1
@@ -902,6 +1141,9 @@ if [ -n "$ZSH_VERSION" ]; then
       'list:Show projects (--all for workspace scan)'
       'resume:Resume most recent session'
       'status:Active tmux sessions'
+      'dashboard:Session & topic overview'
+      'dash:Session & topic overview (alias)'
+      'topics:List topic registry (active & completed)'
       'setup:Run onboarding wizard'
       'doctor:Health check'
       'help:Show documentation'

@@ -1,0 +1,147 @@
+#!/bin/bash
+# Hook UserPromptSubmit — Auto-detect feedback/preferences in user messages
+# POST to Synapse PA Knowledge API for persistent learning.
+# Non-blocking (background), timeout 2s.
+# Migrated from ~/.claude/hooks/auto-learn.sh
+#
+# Patterns detected:
+#   - Corrections: "non", "pas comme ca", "plutot", "jamais", "stop", "arrete"
+#   - Preferences: "je prefere", "toujours", "utilise", "never", "always"
+#   - Context: "je travaille sur", "mon role", "mon client", "je suis"
+#   - Technical: "on utilise", "notre stack", "le projet"
+
+set -euo pipefail
+
+INPUT=$(cat)
+PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty')
+
+# Skip empty or very short prompts
+if [ -z "$PROMPT" ] || [ ${#PROMPT} -lt 10 ]; then
+  exit 0
+fi
+
+SYNAPSE_URL="${SYNAPSE_URL:-http://localhost:8001}"
+SYNAPSE_TOKEN="${SYNAPSE_TOKEN:-}"
+
+# --- Pattern Detection (regex-based, fast) ---
+
+detect_category() {
+  local prompt_lower
+  prompt_lower=$(echo "$PROMPT" | tr '[:upper:]' '[:lower:]')
+
+  if echo "$prompt_lower" | grep -qE "(non[, ]|pas comme|plutôt|jamais |stop |arrête|don.?t |never |instead |not that)"; then
+    echo "feedback"
+    return 0
+  fi
+
+  if echo "$prompt_lower" | grep -qE "(je préfère|toujours |utilise |always |i prefer|use .* instead|on devrait)"; then
+    echo "preference"
+    return 0
+  fi
+
+  if echo "$prompt_lower" | grep -qE "(je travaille|mon rôle|mon client|je suis |i am a |i work on|notre projet)"; then
+    echo "context"
+    return 0
+  fi
+
+  if echo "$prompt_lower" | grep -qE "(on utilise|notre stack|le projet utilise|we use |our stack)"; then
+    echo "technical"
+    return 0
+  fi
+
+  return 1
+}
+
+extract_key() {
+  echo "$PROMPT" | head -c 80 | tr '\n' ' ' | sed 's/[^a-zA-Z0-9àâéèêëïîôùûüÿçÀÂÉÈÊ_ -]//g' | xargs
+}
+
+# --- Experiential Signal Detection (v1) ---
+# Detects energy, mood, time_quality, confidence signals from user prompts.
+# Accumulates signals in ~/.claude/atlas-experiential-signals.json for
+# end-of-session aggregation by the experiential-capture hook.
+
+detect_experiential() {
+  local prompt_lower
+  prompt_lower=$(echo "$PROMPT" | tr '[:upper:]' '[:lower:]')
+
+  local signals=""
+  local ts=$(date -Iseconds)
+
+  # Energy signals
+  if echo "$prompt_lower" | grep -qE "(tired|fatigued|exhausted|tanné|tanne|épuisé|epuise|burned out|burnout|vidé|vide)"; then
+    signals="${signals}{\"type\":\"energy\",\"value\":2,\"source\":\"inferred\",\"confidence\":0.6,\"raw\":\"$(echo "$prompt_lower" | grep -oE '(tired|fatigued|exhausted|tanné|tanne|épuisé|epuise)' | head -1)\",\"ts\":\"$ts\"},"
+  elif echo "$prompt_lower" | grep -qE "(energized|pumped|dans la zone|on fire|motivé|motive|sharp|peak)"; then
+    signals="${signals}{\"type\":\"energy\",\"value\":5,\"source\":\"inferred\",\"confidence\":0.6,\"raw\":\"$(echo "$prompt_lower" | grep -oE '(energized|pumped|dans la zone|on fire|motivé|motive)' | head -1)\",\"ts\":\"$ts\"},"
+  fi
+
+  # Mood signals
+  if echo "$prompt_lower" | grep -qE "(frustrated|annoyed|calice|câlice|maudit|tabarn|osti|crisse|stuck|blocked)"; then
+    signals="${signals}{\"type\":\"mood\",\"value\":\"frustrated\",\"source\":\"inferred\",\"confidence\":0.6,\"raw\":\"$(echo "$prompt_lower" | grep -oE '(frustrated|annoyed|calice|maudit|stuck|blocked)' | head -1)\",\"ts\":\"$ts\"},"
+  elif echo "$prompt_lower" | grep -qE "(parfait|excellent|perfect|great|nice|awesome|beautiful|magnifique|génial|genial)"; then
+    signals="${signals}{\"type\":\"mood\",\"value\":\"positive\",\"source\":\"inferred\",\"confidence\":0.6,\"raw\":\"$(echo "$prompt_lower" | grep -oE '(parfait|excellent|perfect|great|nice)' | head -1)\",\"ts\":\"$ts\"},"
+  fi
+
+  # Time quality signals
+  if echo "$prompt_lower" | grep -qE "(deep focus|dans la zone|flow state|lost track of time|perdu la notion)"; then
+    signals="${signals}{\"type\":\"time_quality\",\"value\":\"deep\",\"source\":\"inferred\",\"confidence\":0.7,\"raw\":\"deep focus\",\"ts\":\"$ts\"},"
+  elif echo "$prompt_lower" | grep -qE "(interrupted|distracted|fragmenté|fragmente|context switch|too many)"; then
+    signals="${signals}{\"type\":\"time_quality\",\"value\":\"fragmented\",\"source\":\"inferred\",\"confidence\":0.6,\"raw\":\"fragmented\",\"ts\":\"$ts\"},"
+  fi
+
+  # Confidence signals
+  if echo "$prompt_lower" | grep -qE "(not sure|pas sûr|pas sur|hesitant|uncertain|incertain|maybe|peut-être|peut-etre)"; then
+    signals="${signals}{\"type\":\"confidence\",\"value\":0.3,\"source\":\"inferred\",\"confidence\":0.6,\"raw\":\"uncertain\",\"ts\":\"$ts\"},"
+  elif echo "$prompt_lower" | grep -qE "(confident|certain|definitely|sûr|sur que|absolument|100%)"; then
+    signals="${signals}{\"type\":\"confidence\",\"value\":0.9,\"source\":\"inferred\",\"confidence\":0.7,\"raw\":\"confident\",\"ts\":\"$ts\"},"
+  fi
+
+  # Output: if signals found, append to signals file
+  if [ -n "$signals" ]; then
+    signals="${signals%,}"  # remove trailing comma
+    local SIGNALS_FILE="${HOME}/.claude/atlas-experiential-signals.json"
+    if [ ! -f "$SIGNALS_FILE" ]; then
+      echo "{\"session_start\":\"$ts\",\"signals\":[$signals]}" > "$SIGNALS_FILE"
+    else
+      # Append to existing signals array using python for JSON safety
+      python3 -c "
+import json, sys
+try:
+    with open('$SIGNALS_FILE', 'r') as f:
+        data = json.load(f)
+    new_signals = json.loads('[$signals]')
+    data['signals'].extend(new_signals)
+    with open('$SIGNALS_FILE', 'w') as f:
+        json.dump(data, f)
+except Exception:
+    pass
+" 2>/dev/null
+    fi
+  fi
+}
+
+# --- Main ---
+
+# Experiential signal detection (always runs, independent of category)
+detect_experiential
+
+# Category-based learning (exits if no category matched)
+CATEGORY=$(detect_category) || exit 0
+KEY=$(extract_key)
+VALUE="$PROMPT"
+
+# POST to PA Knowledge API (background, non-blocking)
+{
+  curl -sf --max-time 2 \
+    -X POST "${SYNAPSE_URL}/api/v1/pa/knowledge/learn" \
+    -H "Content-Type: application/json" \
+    ${SYNAPSE_TOKEN:+-H "Authorization: Bearer ${SYNAPSE_TOKEN}"} \
+    -d "$(jq -n \
+      --arg category "$CATEGORY" \
+      --arg key "$KEY" \
+      --arg value "$VALUE" \
+      '{category: $category, key: $key, value: $value, confidence: 0.6, source: "auto-learn-hook"}'
+    )" > /dev/null 2>&1
+} &
+
+exit 0

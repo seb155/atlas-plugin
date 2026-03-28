@@ -1,16 +1,17 @@
 ---
 name: memory-dream
-description: "Memory consolidation engine v4 (CC auto-dream pattern). 11-phase cycle with experiential layer: orient, docs audit, gather signal, validate, experiential audit, consolidate, session journal, experiential synthesis, prune & index (15D health), reflection generator, cross-project. 9 memory types (user, feedback, project, reference + episode, intuition, reflection, relationship, temporal). Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
+description: "Memory consolidation engine v5 (CC auto-dream pattern). 12-phase cycle with experiential + workflow layers: orient, docs audit, gather signal, validate, experiential audit, workflow audit, consolidate, session journal, experiential synthesis, prune & index (16D health), reflection generator, cross-project. 9 memory types (user, feedback, project, reference + episode, intuition, reflection, relationship, temporal). Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
 effort: high
 ---
 
-# Memory Dream v4 — Whole-Person Consolidation Engine
+# Memory Dream v5 — Whole-Person Consolidation Engine
 
-> Implements CC's auto-dream pattern: an 11-phase memory consolidation cycle inspired by
+> Implements CC's auto-dream pattern: a 12-phase memory consolidation cycle inspired by
 > sleep-time compute (UC Berkeley + Letta, 2025) and cognitive architectures (ACT-R/SOAR).
-> v4 adds the **experiential layer**: 5 new memory types (episode, intuition, reflection,
-> relationship, temporal), 15-dimension health scoring, inference-first capture, and
-> growth trajectory tracking. From technical vault to whole-person memory.
+> v5 adds **workflow audit** (Phase 2.7): skill usage tracking, error rates, unused skill detection,
+> 16-dimension health scoring (D16 Workflow Efficiency), and learning verbosity configuration.
+> v4 added the experiential layer: 5 new memory types, inference-first capture, growth trajectory.
+> Scope: memory + handoffs + docs + plans + features + plugin state + experiential context + workflow.
 > Scope: memory + handoffs + docs + plans + features + plugin state + experiential context.
 
 ## When to Use
@@ -45,6 +46,7 @@ effort: high
 | `/atlas dream --experiential` | 1+2+2.6+3.7 | ~10 min | Experiential audit + synthesis |
 | `/atlas dream --reflection` | 1+2+4.5 | ~5 min | Generate monthly reflection |
 | `/atlas dream --full` | ALL 11 phases | ~25 min | Complete cycle including experiential |
+| `/atlas dream --topic {name}` | topic consolidation | ~3 min | Consolidate topic memory into summary |
 | `/atlas episode create` | standalone | ~3 min | Create episode file for current session |
 | `/atlas intuition log` | standalone | ~2 min | Capture a gut feeling or emerging pattern |
 | `/atlas relationship {person}` | standalone | ~3 min | Create/update relationship file |
@@ -54,7 +56,7 @@ effort: high
 | Tier | Invocation | Phases Run | Writes? |
 |------|------------|------------|---------|
 | Report | `dream report`, `dream health`, `dream trends`, `dream status` | Read-only subset | No |
-| Standard | `dream`, `dream --docs`, `dream --handoffs`, `dream journal` | 1 through 4 (subset varies) | Yes (HITL) |
+| Standard | `dream`, `dream --docs`, `dream --handoffs`, `dream journal`, `dream --topic` | 1 through 4 (subset varies) | Yes (HITL) |
 | Experiential | `dream --experiential`, `dream --reflection`, `episode create`, `intuition log`, `relationship` | 1+2.6+3.7 or standalone | Yes (HITL) |
 | Deep | `dream --deep`, `dream --full`, `dream --validate`, `dream --cross-project` | 1 through 5 (all phases) | Yes (HITL) |
 
@@ -245,6 +247,42 @@ Phase 2.6 — Experiential Audit
 +---------------------------+-------+--------+--------+
 ```
 
+## Phase 2.7 — Workflow Audit (NEW, v5)
+
+> Runs with `--deep`, `--experiential`, or `--full`. Tracks skill effectiveness and workflow patterns.
+
+### Steps
+
+1. **Skill usage tracking**: Scan the current session's conversation for skill invocations.
+   Count how many times each skill was triggered, which completed successfully, which errored.
+   ```bash
+   # Skills invoked this session (from session transcript if available)
+   # Alternatively, check session-log for skill mentions
+   grep -c "Skill(" "$TRANSCRIPT_FILE" 2>/dev/null || echo "0"
+   ```
+
+2. **Timing estimation**: For each skill invocation, estimate duration from surrounding timestamps.
+   Flag skills that took >5 minutes (potential optimization targets).
+
+3. **Error tracking**: Count tool call failures, permission denials, and retries.
+   Group by skill/hook to identify problematic patterns.
+
+4. **Unused skill detection**: Compare installed skills (from plugin cache) with skills actually invoked in last 7 days (from session logs). Flag skills never used in 30+ days.
+
+5. **Output**:
+   ```
+   Phase 2.7 — Workflow Audit
+   +-------------------+-------+--------+--------+---------+
+   | Skill             | Uses  | Errors | Avg ms | Status  |
+   +-------------------+-------+--------+--------+---------+
+   | plan-builder      | 3     | 0      | ~120s  | OK      |
+   | tdd               | 5     | 1      | ~90s   | OK      |
+   | browser-automation| 0     | 0      | —      | UNUSED  |
+   +-------------------+-------+--------+--------+---------+
+   Unused skills (30d+): browser-automation, experiment-loop
+   Suggested: consider uninstalling atlas-frontend if not needed
+   ```
+
 ## Phase 3 — Consolidate (Enhanced, HITL Required)
 
 Make changes with explicit user approval at every step.
@@ -305,7 +343,30 @@ Regenerate MEMORY.md and compute health.
 1. **Generate proposed MEMORY.md**: Group by category, tables for compact representation, 200-line hard limit (180-line soft target).
 2. **Show proposed structure** via AskUserQuestion (H14): "Write as-is" / "Adjust" / "Cancel".
 3. **Write MEMORY.md** if approved.
-4. **Health score computation** (v4): Calculate 15 dimensions (10 structural + 5 experiential), display dashboard.
+3b. **Topics INDEX generation** (if `.claude/topics/` exists):
+   ```bash
+   TOPICS_DIR=".claude/topics"
+   if [ -d "$TOPICS_DIR" ]; then
+     # Generate INDEX.md
+     echo "# Topic Memory Index" > "$TOPICS_DIR/INDEX.md"
+     echo "" >> "$TOPICS_DIR/INDEX.md"
+     echo "| Topic | Status | Created | Decisions | Sessions | Summary |" >> "$TOPICS_DIR/INDEX.md"
+     echo "|-------|--------|---------|-----------|----------|---------|" >> "$TOPICS_DIR/INDEX.md"
+
+     for topic_dir in "$TOPICS_DIR"/*/; do
+       [ -d "$topic_dir" ] || continue
+       topic_name=$(basename "$topic_dir")
+       decisions=$(grep -c "^## Decision:" "$topic_dir/decisions.md" 2>/dev/null || echo "0")
+       sessions=$(ls "$topic_dir/handoffs/" 2>/dev/null | wc -l)
+       has_summary=$([ -f "$topic_dir/topic-summary.md" ] && echo "yes" || echo "—")
+       # Get status from topics.json
+       status=$(python3 -c "import json,os; t=json.load(open(os.path.expanduser('~/.atlas/topics.json'))); print(t.get('$topic_name',{}).get('status','?'))" 2>/dev/null || echo "?")
+       created=$(python3 -c "import json,os; t=json.load(open(os.path.expanduser('~/.atlas/topics.json'))); print(t.get('$topic_name',{}).get('created','?')[:10])" 2>/dev/null || echo "?")
+       echo "| $topic_name | $status | $created | $decisions | $sessions | $has_summary |" >> "$TOPICS_DIR/INDEX.md"
+     done
+   fi
+   ```
+4. **Health score computation** (v5): Calculate 16 dimensions (10 structural + 5 experiential + 1 workflow), display dashboard.
    For details, read `${SKILL_DIR}/references/health-scoring.md`
 
    D1-D10 computed per existing health-scoring.md. D11-D15 (experiential):
@@ -337,7 +398,7 @@ Regenerate MEMORY.md and compute health.
    # Read last 3 dream-history.jsonl entries, compute energy/flow/confidence trends
    # Score: 10 if all rising, 7 if stable, 4 if declining, 2 if no data
    ```
-5. **Generate dream report v4** (H15): Enriched format with 15D health score, trend, importance distribution, code staleness, ecosystem sources, tech claims table, **experiential context (episodes, energy trends, relationships, intuitions)**, session journal, handoff context, cross-project summary.
+5. **Generate dream report v5** (H15): Enriched format with 16D health score, trend, importance distribution, code staleness, ecosystem sources, tech claims table, **experiential context (episodes, energy trends, relationships, intuitions)**, **workflow audit (skill usage, errors, unused)**, session journal, handoff context, cross-project summary.
    For details, read `${SKILL_DIR}/references/dream-report-v2.md`
 6. **Trend persistence** (H16): Append one JSON line to `dream-history.jsonl`.
 7. **Release lock**: Remove `.consolidate-lock`.
@@ -480,6 +541,68 @@ For template details, read `${SKILL_DIR}/references/relationship-template.md`
 5. **Write**: Save to `memory/relationship-{person-slug}.md`
 6. **Index**: Update MEMORY.md EXPERIENTIAL CONTEXT table
 
+### `/atlas dream --topic {name}`
+
+Consolidate a topic's accumulated memory into a summary. Use when a topic is completed (branch merged) or when topic memory needs cleanup.
+
+#### Steps
+
+1. **Read topic directory**: Check `.claude/topics/{name}/` exists
+   ```bash
+   TOPIC_DIR=".claude/topics/${name}"
+   [ -d "$TOPIC_DIR" ] || { echo "Topic not found: ${name}"; exit 1; }
+   ```
+
+2. **Read topic files**:
+   - `decisions.md` — all decisions made during this topic
+   - `lessons.md` — lessons learned (if exists)
+   - `context.md` — last known technical context
+   - `handoffs/` — count handoff files (number of sessions)
+
+3. **Generate topic summary**: Synthesize into `topic-summary.md`:
+   ```markdown
+   # Topic Summary: {name}
+
+   **Project**: {from topics.json}
+   **Duration**: {created} to {completed/now}
+   **Sessions**: {handoff count}
+   **Decisions**: {decision count}
+
+   ## Key Decisions
+   {Summarize top 3-5 decisions with rationale}
+
+   ## Lessons Learned
+   {Extract from lessons.md or synthesize from decisions}
+
+   ## Technical Outcome
+   {From context.md: what was built, which files, which patterns}
+
+   ## What Would I Do Differently
+   {Retrospective insight based on decision confidence and outcomes}
+   ```
+
+4. **HITL gate**: Present topic-summary.md via AskUserQuestion
+   - Options: "Write as-is" / "Edit" / "Skip"
+
+5. **Write**: Save to `.claude/topics/{name}/topic-summary.md`
+
+6. **Update topics.json**: Set status to "archived", add summaryPath
+   ```bash
+   python3 -c "
+   import json, os
+   from datetime import datetime
+   topics_file = os.path.expanduser('~/.atlas/topics.json')
+   with open(topics_file) as f:
+       topics = json.load(f)
+   if '${name}' in topics:
+       topics['${name}']['status'] = 'archived'
+       topics['${name}']['archivedAt'] = datetime.now().isoformat()
+       topics['${name}']['summaryPath'] = '.claude/topics/${name}/topic-summary.md'
+       with open(topics_file, 'w') as f:
+           json.dump(topics, f, indent=2)
+   "
+   ```
+
 ## Schedule Mode
 
 When invoked with `--schedule`:
@@ -488,6 +611,32 @@ When invoked with `--schedule`:
 CronCreate(cron="57 17 * * 1-5", prompt="/atlas dream --dry-run", recurring=True)
 ```
 Display job ID. Scheduled jobs are session-scoped (7-day max, dies on exit).
+
+## Learning Verbosity Configuration
+
+Configure how actively the system communicates its learning:
+
+| Level | Name | Behavior |
+|-------|------|----------|
+| 1 | Silent | Zero injections. Dream reports only. Auto-learn still captures in background. |
+| 2 | Semi (DEFAULT) | Max 2 injections per session: energy alerts, topic context. Episode suggested at end. |
+| 3 | Full | Every detection injected: energy, mood, confidence, patterns, skill suggestions. |
+
+**Setting**: `atlas_learning_verbosity` in `~/.claude/settings.json` env block:
+```json
+{
+  "env": {
+    "ATLAS_LEARNING_VERBOSITY": "2"
+  }
+}
+```
+
+**Affects**:
+- session-start: topic context injection (level 2+)
+- focus-guard: context-switch alerts (level 2+)
+- experiential-capture: episode suggestion (level 2+)
+- auto-learn: signal capture always runs (all levels)
+- dream cycle: always runs fully (all levels)
 
 ## Safety Rules (12 Rules)
 
@@ -541,14 +690,15 @@ Display job ID. Scheduled jobs are session-scoped (7-day max, dies on exit).
 | Phase 2 (Gather) | Sonnet | Pattern matching, scoring |
 | Phase 2.5 (Validate) | Opus | Code understanding, semantic verification |
 | Phase 2.6 (Experiential Audit) | Sonnet | File counting, date comparison |
+| Phase 2.7 (Workflow Audit) | Sonnet | Skill counting, log scanning |
 | Phase 3 (Consolidate) | Opus | Merge decisions, split strategy |
 | Phase 3.5 (Journal) | Opus | Session synthesis, handoff reasoning |
 | Phase 3.7 (Experiential Synthesis) | Opus | Pattern recognition, growth analysis |
-| Phase 4 (Prune & Index) | Opus | Index design, report synthesis, 15D scoring |
+| Phase 4 (Prune & Index) | Opus | Index design, report synthesis, 16D scoring |
 | Phase 4.5 (Reflection Generator) | Opus | Narrative synthesis, trend analysis |
 | Phase 5 (Cross-Project) | Opus | Cross-repo reasoning |
 
-## Health Scoring (15 Dimensions)
+## Health Scoring (16 Dimensions)
 
 Health is a weighted composite score (0-10) across 10 dimensions:
 

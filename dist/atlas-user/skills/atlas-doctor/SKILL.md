@@ -39,8 +39,9 @@ Comprehensive diagnostic of the entire ATLAS ecosystem. Runs bash checks across 
 | 10 | StatusLine       | 4/5   | ⚠️     | Scripts not deployed    |
 | 11 | CC Settings      | 13/15 | ⚠️     | Missing language config |
 | 12 | MCP & Plugins    | 5/6   | ⚠️     | Figma optional          |
+| 13 | Domain Plugins   | 4/4   | ✅     |                         |
 
-OVERALL: 61/72 (85%) ⚠️
+OVERALL: 65/76 (86%) ⚠️
 ```
 
 Status thresholds: ✅ = 100%, ⚠️ = 50-99%, ❌ = <50%
@@ -528,6 +529,53 @@ Display:
 🏛️ ATLAS │ 🔌 PLUGINS │ {N} MCP servers │ {N} plugins
    └─ Context7: {ok} │ Playwright: {ok} │ Figma: {ok} │ Chrome: {ok}
 ```
+
+### Cat 13: Domain Plugin Health (SP-ECO v4)
+
+Check domain plugin installation status for the new multi-plugin architecture:
+
+```bash
+# 1. Old monolithic marketplace detection
+if [ -d "$HOME/.claude/plugins/cache/atlas-admin-marketplace" ]; then
+  echo "⚠️ Legacy atlas-admin-marketplace detected. Run: scripts/migrate-marketplace.sh"
+fi
+
+# 2. Core dependency check
+if [ ! -d "$HOME/.claude/plugins/cache/atlas-marketplace/atlas-core" ]; then
+  echo "❌ atlas-core not installed — required by all ATLAS domain plugins"
+fi
+
+# 3. Orphan domain check — each domain plugin requires atlas-core
+for domain_dir in "$HOME/.claude/plugins/cache/atlas-marketplace/atlas-"*/; do
+  [ ! -d "$domain_dir" ] && continue
+  domain=$(basename "$domain_dir")
+  [ "$domain" = "atlas-core" ] && continue
+  if [ ! -d "$HOME/.claude/plugins/cache/atlas-marketplace/atlas-core" ]; then
+    echo "⚠️ $domain installed without atlas-core — hooks and session management won't work"
+  fi
+done
+
+# 4. Plugin count report
+installed=$(find "$HOME/.claude/plugins/cache/atlas-marketplace" -maxdepth 1 -type d -name "atlas-*" 2>/dev/null | wc -l)
+echo "ATLAS domain plugins: $installed/6 installed"
+```
+
+Domain plugins (6 total):
+| Plugin | Purpose |
+|--------|---------|
+| `atlas-core` | Memory, session, context, vault (REQUIRED by all) |
+| `atlas-dev` | Planning, TDD, debugging, code review, shipping |
+| `atlas-frontend` | UI design, browser automation, visual QA |
+| `atlas-infra` | Infrastructure, deploy, security, network |
+| `atlas-enterprise` | Governance, knowledge engine, agent teams |
+| `atlas-experiential` | Episode capture, intuition, relationships |
+
+Status logic:
+- ✅ = atlas-core present + ≥1 domain plugin installed
+- ⚠️ = legacy monolithic detected OR orphan domain (missing core)
+- ❌ = no atlas-core and no legacy plugin
+
+Auto-fix: dispatch to `atlas setup plugins` for interactive domain selection, or run `scripts/migrate-marketplace.sh --preset dev` directly.
 
 ## Report Persistence
 

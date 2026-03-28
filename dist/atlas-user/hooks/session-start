@@ -471,6 +471,30 @@ if [ -n "$_exp_msg" ]; then
   BADGE+=$'\n'"🏛️ ${_exp_msg}"
 fi
 
+# ─── Topic Context (SP-ECO v4) ───────────────────────────────
+_topic_msg=""
+if [ -n "${ATLAS_TOPIC:-}" ]; then
+  _topic_msg="ATLAS | TOPIC | ${ATLAS_TOPIC}"
+
+  # Check for handoff
+  if [ -n "${ATLAS_TOPIC_HANDOFF:-}" ] && [ -f "${ATLAS_TOPIC_HANDOFF}" ]; then
+    _topic_msg="${_topic_msg} — Handoff available: ${ATLAS_TOPIC_HANDOFF}. Run /pickup to resume."
+  fi
+
+  # Create topic memory directory if needed
+  for _mem_dir in $(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1); do
+    _topic_parent="$(dirname "$_mem_dir")/.claude/topics/${ATLAS_TOPIC}"
+    if [ ! -d "$_topic_parent" ]; then
+      mkdir -p "$_topic_parent/handoffs" 2>/dev/null
+      _topic_msg="${_topic_msg}\nATLAS | TOPIC | Created topic memory: .claude/topics/${ATLAS_TOPIC}/"
+    fi
+  done
+fi
+
+if [ -n "$_topic_msg" ]; then
+  BADGE+=$'\n'"🏛️ ${_topic_msg}"
+fi
+
 # Combine badge + feature summary into context
 FULL_CONTEXT="${BADGE}"
 if [ -n "$FEATURE_SUMMARY" ]; then

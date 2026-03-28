@@ -1,11 +1,11 @@
 {
-  "name": "atlas-dev-marketplace",
+  "name": "atlas-admin-marketplace",
   "owner": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "plugins": [
     {
       "name": "atlas-dev",
-      "description": "Development — planning, TDD, debugging, code review, shipping workflows.",
-      "version": "4.0.3",
+      "description": "ATLAS Dev — AXOIQ AI Engineering Assistant (dev tier)",
+      "version": "4.1.0",
       "source": { "source": "url", "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }

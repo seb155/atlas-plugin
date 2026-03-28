@@ -556,6 +556,9 @@ _setup_plugins() {
     _setup_info "Install in Claude Code: /plugin install atlas-admin@atlas-admin-marketplace"
   fi
 
+  # ─── Domain Plugin Selection (SP-ECO v4) ─────────────────────
+  _setup_plugins_domain
+
   # MCP servers
   echo ""
   gum style --foreground 111 --bold "  MCP Servers"
@@ -563,6 +566,97 @@ _setup_plugins() {
   _setup_info "Common: playwright, context7, stitch, chrome-devtools"
 
   _setup_success "Plugin configuration complete"
+}
+
+# ─── Domain Plugin Selection (SP-ECO v4) ──────────────────────
+_setup_plugins_domain() {
+  echo ""
+  gum style --foreground 214 --bold "  ═══ ATLAS Domain Plugins ═══"
+  echo ""
+
+  # Detect legacy monolithic plugin
+  if [ -d "${HOME}/.claude/plugins/cache/atlas-admin-marketplace" ]; then
+    _setup_warn "Legacy atlas-admin-marketplace detected"
+    _setup_info "Migration required → scripts/migrate-marketplace.sh"
+    echo ""
+  fi
+
+  # Show current domain plugin status
+  local marketplace_dir="${HOME}/.claude/plugins/cache/atlas-marketplace"
+  if [ -d "$marketplace_dir" ]; then
+    local installed_count=$(find "$marketplace_dir" -maxdepth 1 -type d -name "atlas-*" 2>/dev/null | wc -l | tr -d ' ')
+    _setup_info "Currently installed: ${installed_count}/6 domain plugins"
+    for d in "$marketplace_dir"/atlas-*/; do
+      [ -d "$d" ] && _setup_success "  $(basename "$d")"
+    done
+  else
+    _setup_info "No domain plugins installed yet"
+  fi
+
+  echo ""
+  _setup_info "Available plugins:"
+  _setup_info "  [core]         Memory, session, context, vault (REQUIRED)"
+  _setup_info "  [dev]          Planning, TDD, debugging, code review, shipping"
+  _setup_info "  [frontend]     UI design, browser automation, visual QA"
+  _setup_info "  [infra]        Infrastructure, deploy, security, network"
+  _setup_info "  [enterprise]   Governance, knowledge engine, agent teams"
+  _setup_info "  [experiential] Episode capture, intuition, relationships"
+  echo ""
+
+  local DOMAINS=""
+
+  if command -v gum &>/dev/null; then
+    local choice=$(gum choose --header "Select a preset:" \
+      "1) Developer (core + dev) — recommended for most devs" \
+      "2) Full Stack (core + dev + frontend + infra)" \
+      "3) Admin (all 6 plugins) — for Seb / lead engineer" \
+      "4) Infra Only (core + infra)" \
+      "5) Custom selection" \
+      "6) Skip — keep current")
+  else
+    echo "  Presets:"
+    echo "    1) Developer (core + dev)           — recommended for most devs"
+    echo "    2) Full Stack (core + dev + frontend + infra)"
+    echo "    3) Admin (all 6 plugins)            — for Seb / lead engineer"
+    echo "    4) Infra Only (core + infra)"
+    echo "    5) Custom selection"
+    echo "    6) Skip — keep current"
+    echo ""
+    read -r "choice?  Select preset [1-6]: "
+  fi
+
+  case "$choice" in
+    1*|*Developer*) DOMAINS="core dev" ;;
+    2*|*Full*) DOMAINS="core dev frontend infra" ;;
+    3*|*Admin*) DOMAINS="core dev frontend infra enterprise experiential" ;;
+    4*|*Infra*) DOMAINS="core infra" ;;
+    5*|*Custom*)
+      # Interactive multi-select — core always included
+      DOMAINS="core"
+      for d in dev frontend infra enterprise experiential; do
+        if command -v gum &>/dev/null; then
+          gum confirm "Install atlas-${d}?" && DOMAINS="$DOMAINS $d"
+        else
+          read -r "yn?  Install atlas-${d}? [y/N]: "
+          [ "$yn" = "y" ] && DOMAINS="$DOMAINS $d"
+        fi
+      done
+      ;;
+    6*|*Skip*) _setup_info "Keeping current plugin configuration"; return 0 ;;
+    *) _setup_info "No selection — skipping domain plugins"; return 0 ;;
+  esac
+
+  echo ""
+  _setup_info "Installing: ${DOMAINS}"
+
+  # Run migration script with selected domains
+  local script_path="${PLUGIN_ROOT:-$(dirname "$(dirname "${BASH_SOURCE[0]:-$0}")")}/scripts/migrate-marketplace.sh"
+  if [ -f "$script_path" ]; then
+    ATLAS_DOMAINS="$DOMAINS" bash "$script_path" --preset custom
+  else
+    _setup_warn "Migration script not found at ${script_path}"
+    _setup_info "Run manually: ./scripts/migrate-marketplace.sh --preset dev"
+  fi
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -770,6 +864,7 @@ _atlas_setup() {
     statusline)  _setup_statusline; _atlas_footer; return ;;
     performance) _setup_performance; _atlas_footer; return ;;
     plugins)     _setup_plugins; _atlas_footer; return ;;
+    domains)     _setup_plugins_domain; _atlas_footer; return ;;
     sync)        _setup_sync; _atlas_footer; return ;;
     all)         _setup_run_all; _atlas_footer; return ;;
     cc)          _setup_run_cc; _atlas_footer; return ;;
