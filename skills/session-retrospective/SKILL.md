@@ -80,6 +80,47 @@ After steps 1-5:
 
 ---
 
+## Topic Linking (SP-ECO v4)
+
+When generating a handoff, if `ATLAS_TOPIC` env var is set (injected by session-start hook):
+
+1. **Write handoff path to topics.json**: After writing the handoff file, update the topic registry:
+   ```bash
+   # The atlas-cli.sh provides _atlas_topic_add_handoff function
+   # But since we're in CC (not shell), write directly:
+   python3 -c "
+   import json, os
+   topics_file = os.path.expanduser('~/.atlas/topics.json')
+   topic = os.environ.get('ATLAS_TOPIC', '')
+   handoff_path = '{handoff_file_path}'
+   if topic and os.path.exists(topics_file):
+       with open(topics_file) as f:
+           topics = json.load(f)
+       if topic in topics:
+           handoffs = topics[topic].get('handoffs', [])
+           if handoff_path not in handoffs:
+               handoffs.append(handoff_path)
+               topics[topic]['handoffs'] = handoffs
+           from datetime import datetime
+           topics[topic]['lastActive'] = datetime.now().isoformat()
+           with open(topics_file, 'w') as f:
+               json.dump(topics, f, indent=2)
+   "
+   ```
+
+2. **Copy handoff to topic memory**: Copy the handoff to `.claude/topics/{topic}/handoffs/`:
+   ```bash
+   TOPIC_DIR=".claude/topics/${ATLAS_TOPIC}"
+   [ -d "$TOPIC_DIR/handoffs" ] && cp "{handoff_file}" "$TOPIC_DIR/handoffs/"
+   ```
+
+3. **Include topic in handoff header**: Add to the handoff file:
+   ```markdown
+   **Topic**: {ATLAS_TOPIC} (from topics.json)
+   ```
+
+---
+
 ## Experiential Context (v4)
 
 At the end of each retrospective (both Close and Handoff modes), after Step 5, include:

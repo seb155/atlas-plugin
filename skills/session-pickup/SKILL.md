@@ -16,11 +16,28 @@ Resume work from a handoff file. Loads context, reads referenced files, presents
 
 ## Process
 
+### Step 0: Topic-Aware Pickup (SP-ECO v4)
+
+If `ATLAS_TOPIC` env var is set (injected by session-start hook from CLI topic detection):
+
+1. **Search topic memory first**: Check `.claude/topics/${ATLAS_TOPIC}/` for:
+   - `handoffs/` — topic-specific handoff archive (most recent first)
+   - `decisions.md` — decisions made during this topic
+   - `lessons.md` — lessons learned during this topic
+   - `context.md` — key context for this topic
+
+2. **If topic handoff found**: Auto-load it (skip the comparison table). The topic handoff is the most relevant context.
+
+3. **Also load topic memory**: After loading the handoff, read `decisions.md` and `lessons.md` from the topic directory for extra context. This ensures prior decisions are not re-debated.
+
+4. **If no topic handoff**: Fall through to standard handoff search (Step 1 below).
+
 ### Step 1: Find handoff files
 
-Search ALL 3 locations, sorted by modification time (most recent first):
+Search ALL 4 locations, sorted by modification time (most recent first):
 
 ```bash
+ls -t .claude/topics/${ATLAS_TOPIC}/handoffs/handoff-*.md 2>/dev/null  # Topic-specific (highest priority)
 ls -t .blueprint/handoffs/handoff-*.md 2>/dev/null   # Primary (gold standard location)
 ls -t handoff-*.md 2>/dev/null                        # Legacy (project root)
 ls -t .claude/handoffs/*.json 2>/dev/null              # Structured format
