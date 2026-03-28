@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "atlas-admin",
-      "description": "ATLAS — AXOIQ unified AI engineering assistant (monolith). 76 skills + 12 agents. Use 'make dev' to install.",
-      "version": "4.0.2",
+      "description": "ATLAS \u2014 AXOIQ unified AI engineering assistant (monolith). 76 skills + 12 agents. Use 'make dev' to install.",
+      "version": "4.0.3",
       "source": {
         "source": "url",
         "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git"
