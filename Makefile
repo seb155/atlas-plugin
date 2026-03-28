@@ -35,7 +35,8 @@ dev-domains: ## Build all 6 domain plugins + install to CC cache
 	for name in core dev frontend infra enterprise experiential; do \
 		dir="$$CACHE_DIR/atlas-marketplace/atlas-$${name}/$$VERSION"; \
 		mkdir -p "$$dir"; \
-		cp -r "dist/atlas-$${name}/." "$$dir/"; \
+		cp -r "dist/atlas-$${name}/." "$$dir/" && \
+		cp -r "dist/atlas-$${name}/.claude-plugin" "$$dir/" 2>/dev/null; \
 		echo "  ✅ atlas-$${name} → $$dir"; \
 	done; \
 	echo ""; \
