@@ -1,8 +1,9 @@
-# Dream Report v2 — Template & Schema
+# Dream Report v4 — Template & Schema
 
-> Enriched report format generated in Phase 4 of the dream cycle. Includes health score,
-> trends, importance distribution, ecosystem audit, tech validation, session journal,
-> handoff context, and cross-project summary.
+> Enriched report format generated in Phase 4 of the dream cycle. Includes health score
+> (15D with experiential dimensions), trends, importance distribution, ecosystem audit,
+> tech validation, experiential context, session journal, handoff context, and
+> cross-project summary.
 
 ## Report Filename
 
@@ -24,20 +25,26 @@ Always include time in the filename to allow multiple dreams per day.
 
 ---
 
-## Health Score (10 Dimensions)
+## Health Score (15 Dimensions)
 
 | # | Dimension | Score | Weight | Weighted | Detail |
 |---|-----------|-------|--------|----------|--------|
-| D1 | Index Capacity | {X.X} | 12% | {X.XX} | {N}/200 lines |
-| D2 | Orphan Rate | {X.X} | 12% | {X.XX} | {N} orphans |
-| D3 | Staleness | {X.X} | 12% | {X.XX} | {N}% files >30d |
-| D4 | Ref Integrity | {X.X} | 12% | {X.XX} | {N} broken refs |
-| D5 | Content Freshness | {X.X} | 10% | {X.XX} | {N} stale claims |
-| D6 | File Size Balance | {X.X} | 8% | {X.XX} | {N} files >50KB |
-| D7 | Type Coverage | {X.X} | 8% | {X.XX} | {N} untyped |
-| D8 | Cross-Project | {X.X} | 8% | {X.XX} | {N} contradictions |
-| D9 | Docs Freshness | {X.X} | 10% | {X.XX} | INDEX {N}d old |
-| D10 | Tech Accuracy | {X.X} | 8% | {X.XX} | {N} obsolete claims |
+| D1 | Index Capacity | {X.X} | 10% | {X.XX} | {N}/200 lines |
+| D2 | Orphan Rate | {X.X} | 10% | {X.XX} | {N} orphans |
+| D3 | Staleness | {X.X} | 10% | {X.XX} | {N}% files >30d |
+| D4 | Ref Integrity | {X.X} | 10% | {X.XX} | {N} broken refs |
+| D5 | Content Freshness | {X.X} | 8% | {X.XX} | {N} stale claims |
+| D6 | File Size Balance | {X.X} | 6% | {X.XX} | {N} files >50KB |
+| D7 | Type Coverage | {X.X} | 6% | {X.XX} | {N} untyped |
+| D8 | Cross-Project | {X.X} | 6% | {X.XX} | {N} contradictions |
+| D9 | Docs Freshness | {X.X} | 8% | {X.XX} | INDEX {N}d old |
+| D10 | Tech Accuracy | {X.X} | 6% | {X.XX} | {N} obsolete claims |
+| | **EXPERIENTIAL** | | | | |
+| D11 | Experiential Coverage | {X.X} | 5% | {X.XX} | {N}% sessions covered |
+| D12 | Relational Depth | {X.X} | 4% | {X.XX} | {N} active relations |
+| D13 | Temporal Validity | {X.X} | 5% | {X.XX} | {N} expired facts |
+| D14 | Intuition Quality | {X.X} | 3% | {X.XX} | {N} stale intuitions |
+| D15 | Growth Trajectory | {X.X} | 3% | {X.XX} | {trend} |
 | **Total** | | | | **{X.XX}** | **Grade: {G}** |
 
 ---
@@ -122,6 +129,44 @@ Stale claims requiring update: {N}
 | Forgejo IP | {mem} | {actual} | YES/NO |
 
 Mismatches: {N} — memory files to update: {list}
+
+---
+
+## Experiential Context (if --experiential or --deep ran)
+
+### Episode Coverage (last 14 days)
+
+| Metric | Value | Target | Status |
+|--------|-------|--------|--------|
+| Sessions total | {N} | — | — |
+| Episodes created | {N} | {50%+ of sessions} | OK/GAP |
+| Average energy | {X.X}/5 | 3.0+ | OK/LOW |
+| Flow sessions | {N} ({%}) | 30%+ | OK/LOW |
+| Avg confidence | {X.X} | 0.6+ | OK/LOW |
+
+### Energy Trend
+
+```
+{ASCII sparkline or simple trend: 4 → 3 → 2 → 3 → 4}
+```
+
+### Relationship Freshness
+
+| Person | Last Interaction | Status |
+|--------|-----------------|--------|
+| {name} | {date} | OK/STALE (>{30d}) |
+
+### Intuition Status
+
+| Intuition | Age | Confidence | Status |
+|-----------|-----|------------|--------|
+| {topic} | {N}d | {trend} | pending/validated/stale |
+
+### Growth Signals
+
+- Energy: {rising/stable/declining}
+- Flow frequency: {rising/stable/declining}
+- Decision confidence: {rising/stable/declining}
 
 ---
 

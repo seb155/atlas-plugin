@@ -439,6 +439,38 @@ if [ "$(date +%u)" -le 5 ] 2>/dev/null; then
   fi
 fi
 
+# ─── Experiential Context (v4) ─────────────────────────────
+_exp_msg=""
+_PENDING="${HOME}/.claude/atlas-experiential-pending.json"
+if [ -f "$_PENDING" ]; then
+  _energy=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('energy_avg','?'))" 2>/dev/null || echo "?")
+  _mood=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('mood_dominant','?'))" 2>/dev/null || echo "?")
+  _signals=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('signal_count',0))" 2>/dev/null || echo "0")
+  if [ "$_signals" -ge 3 ] 2>/dev/null; then
+    _exp_msg="ATLAS | EXPERIENTIAL | Previous session: energy ${_energy}/5, mood ${_mood}. /atlas episode create to capture."
+  fi
+fi
+
+# Energy trend from recent episodes (rate-limited to 1x/day)
+_ALERT_FILE="${HOME}/.claude/atlas-alert-last.txt"
+_today=$(date +%Y-%m-%d)
+_last_alert=$(cat "$_ALERT_FILE" 2>/dev/null || echo "")
+if [ "$_today" != "$_last_alert" ]; then
+  # Find memory dir for current project
+  _mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
+  if [ -n "$_mem_dir" ]; then
+    _recent_energy=$(grep -l "type: episode" "$_mem_dir"/episode-*.md 2>/dev/null | sort -r | head -3 | xargs -I{} grep "^energy:" {} 2>/dev/null | awk -F: '{sum+=$2; n++} END{if(n>0) printf "%.1f", sum/n; else print "?"}')
+    if [ "$_recent_energy" != "?" ] && [ "$(echo "$_recent_energy < 2.5" | bc -l 2>/dev/null)" = "1" ]; then
+      _exp_msg="${_exp_msg:+$_exp_msg$'\n'}ATLAS | ALERT | Energy trend declining (avg ${_recent_energy}/5). Consider pacing."
+      echo "$_today" > "$_ALERT_FILE"
+    fi
+  fi
+fi
+
+if [ -n "$_exp_msg" ]; then
+  BADGE+=$'\n'"🏛️ ${_exp_msg}"
+fi
+
 # Combine badge + feature summary into context
 FULL_CONTEXT="${BADGE}"
 if [ -n "$FEATURE_SUMMARY" ]; then

@@ -37,6 +37,14 @@ effort: medium
 2. Render ASCII profile card with sections: **Identity**, **Expertise Map** (bar charts from skill confidence), **Interests**, **Working Style**, **Key Relationships**, **Current Goals**, **Profile Stats**
 3. Empty sections show "No data yet — use `/atlas profile update` to add."
 
+### Experiential Summary (v4)
+If experiential data exists in memory files, display after Profile Stats:
+- **Recent energy trend**: last 3 episodes' energy values as sparkline (e.g., `⚡ 7→8→6`)
+- **Active relationships**: count of `relationship-*.md` files with interaction in last 30d
+- **Last reflection**: date of most recent `reflection-*.md` file
+- **Intuitions pending**: count of `intuition-*.md` files with `validated: false`
+If no experiential data exists, show: `🧪 Experiential: No data yet — try /atlas episode create`
+
 ## Profile Audit
 
 Score 7 dimensions: `(coverage * 0.6) + (confidence * 0.4)`, capped 100%.
@@ -52,6 +60,20 @@ Score 7 dimensions: `(coverage * 0.6) + (confidence * 0.4)`, capped 100%.
 | Communication | `preference` (language, style, format) | 3 |
 
 Output: dimension scores + overall % + gaps detected + recommended actions.
+
+### Experiential Completeness (v4 sub-score)
+
+In addition to the 7 core dimensions, compute an **Experiential Completeness** sub-score from 3 optional dimensions:
+
+| Dimension | Source | Threshold |
+|-----------|--------|-----------|
+| Energy Awareness | `episode` memory files (with energy field) | 3 episodes in last 14d |
+| Relational Depth | `relationship` memory files | 2 active relationships |
+| Growth Tracking | `reflection` memory files | 1 reflection in last 30d |
+
+Scoring: same formula `(coverage * 0.6) + (confidence * 0.4)`, reported separately as **Experiential: {N}%**.
+These do NOT affect the main 7D score — they appear as a separate line in audit output.
+If no experiential data exists, show: `Experiential: N/A — run /atlas episode create to start tracking.`
 
 ## Profile Update (Interactive)
 

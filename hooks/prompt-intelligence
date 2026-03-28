@@ -61,4 +61,62 @@ if echo "$PROMPT_LC" | grep -qP '(push|ship|merge|deploy|release|publish)'; then
   fi
 fi
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# R9: Experiential context — relationship surfacing
+# When a person name matches a relationship memory file,
+# inject strengths + last interaction (rate-limited)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXP_COUNTER_FILE="$HOME/.claude/atlas-exp-inject-count.txt"
+
+# Read + increment counter (reset every 5 prompts)
+EXP_COUNT=0
+if [ -f "$EXP_COUNTER_FILE" ]; then
+  EXP_COUNT=$(cat "$EXP_COUNTER_FILE" 2>/dev/null || echo 0)
+fi
+EXP_COUNT=$((EXP_COUNT + 1))
+if [ "$EXP_COUNT" -ge 5 ]; then
+  EXP_COUNT=0
+fi
+echo "$EXP_COUNT" > "$EXP_COUNTER_FILE"
+
+# Only inject if counter == 1 (once per 5-prompt window)
+if [ "$EXP_COUNT" -eq 1 ]; then
+
+  MEMORY_DIR="$HOME/.claude/projects/-home-sgagnon-workspace-atlas-projects-atlas-synapse/memory"
+
+  # R9a: Relationship surfacing — match person names from relationship files
+  for REL_FILE in "$MEMORY_DIR"/relationship-*.md; do
+    [ -f "$REL_FILE" ] || continue
+    # Extract person name from filename: relationship-seb-gagnon.md → seb gagnon
+    PERSON_SLUG=$(basename "$REL_FILE" .md | sed 's/^relationship-//' | tr '-' ' ')
+    if echo "$PROMPT_LC" | grep -qi "$PERSON_SLUG"; then
+      STRENGTHS=$(grep -i 'strengths\|expertise\|skills' "$REL_FILE" 2>/dev/null | head -1 | sed 's/^[#*: -]*//' | cut -c1-80)
+      LAST_INT=$(grep -i 'last.interaction\|last.contact\|last.seen' "$REL_FILE" 2>/dev/null | head -1 | sed 's/^[#*: -]*//' | cut -c1-40)
+      [ -n "$STRENGTHS" ] && echo "🧠 ATLAS │ RELATIONSHIP │ ${PERSON_SLUG}: ${STRENGTHS}. ${LAST_INT:+Last: $LAST_INT}"
+      break  # Max 1 injection
+    fi
+  done
+
+  # R9b: Decision context — detect decision keywords and surface similar past decisions
+  if echo "$PROMPT_LC" | grep -qP '(should we|choose|option [a-d]|which approach|quelle approche|lequel|choisir|decide|trade.?off)'; then
+    # Search recent episodes for decision-related content
+    DECISION_HIT=""
+    for EP_FILE in "$MEMORY_DIR"/episode-*.md; do
+      [ -f "$EP_FILE" ] || continue
+      MATCH=$(grep -il 'decision\|chose\|selected\|picked\|went with' "$EP_FILE" 2>/dev/null)
+      if [ -n "$MATCH" ]; then
+        EP_DATE=$(grep -i 'date\|created' "$EP_FILE" 2>/dev/null | head -1 | grep -oP '\d{4}-\d{2}-\d{2}' | head -1)
+        EP_CONF=$(grep -i 'confidence' "$EP_FILE" 2>/dev/null | head -1 | grep -oP '[\d.]+' | head -1)
+        EP_OUTCOME=$(grep -i 'outcome\|result' "$EP_FILE" 2>/dev/null | head -1 | sed 's/^[#*: -]*//' | cut -c1-60)
+        if [ -n "$EP_DATE" ] || [ -n "$EP_OUTCOME" ]; then
+          echo "🔮 ATLAS │ DECISION │ Similar choice on ${EP_DATE:-unknown}. ${EP_CONF:+Confidence: $EP_CONF.} ${EP_OUTCOME:+Outcome: $EP_OUTCOME}"
+          break  # Max 1 injection total
+        fi
+      fi
+    done
+  fi
+
+fi
+
 exit 0

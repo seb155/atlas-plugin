@@ -54,7 +54,23 @@ Generate a structured summary of the current session. Captures wins, blockers, d
 - {unresolved questions, topics to investigate}
 - {decisions deferred to next session}
 - {areas needing HITL input}
+
+### ⚡ Energy & Flow (v4 — experiential context)
+- **Energy level**: {1-5} ({source: inferred from signals / explicit from user})
+- **Time quality**: {deep | focused | fragmented | interrupted | recovery}
+- **Flow achieved**: {yes / no / partial}
+- **Energy arc**: {steady | rising | declining | peak-then-crash}
+
+### 🎭 Emotional Context (v4 — experiential context)
+- **Mood**: {primary mood: focused, frustrated, curious, elated, calm, anxious, determined}
+- **Decision confidence**: {high / medium / low} — average across session decisions
+- **Notable emotional transitions**: {e.g., "frustrated → relieved after fixing VLAN issue"}
 ```
+
+> **v4 Note**: The Energy & Flow and Emotional Context sections are auto-populated
+> from accumulated signals in `~/.claude/atlas-experiential-signals.json`. They can
+> also be manually edited during the H13 gate review. These sections are OPTIONAL —
+> omit if no experiential data is available.
 
 ### How to Populate
 
@@ -378,4 +394,4 @@ Each iteration improves context quality: handoffs capture ephemeral session know
 
 ---
 
-*Reference: session-journal.md | Phase: 3.5 | Plan: humming-brewing-melody | Updated: 2026-03-25*
+*Reference: session-journal.md | Phase: 3.5 | Plan: humming-brewing-melody | Updated: 2026-03-27 (v4: experiential sections added)*

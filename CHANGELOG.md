@@ -1,5 +1,60 @@
 # Changelog
 
+## v3.41.0 (2026-03-27)
+
+### ✨ SP-EXP: Experiential Memory Layer
+
+Major evolution from technical vault to whole-person memory system.
+Based on SOTA research: Letta/MemGPT (file-based validated), sleep-time compute
+(UC Berkeley), ACT-R cognitive architecture mapping.
+
+#### New Memory Types (4 → 9)
+- `episode` — Narrative session memories with energy/mood/confidence context
+- `intuition` — Gut feelings and emerging patterns with validation tracking
+- `reflection` — Monthly growth retrospectives and meta-learning
+- `relationship` — Deep relational context (trust, dynamics, interaction history)
+- `temporal` — Facts with time-bounded validity windows
+
+#### Dream Cycle v4 (8 → 11 phases)
+- **Phase 2.6** — Experiential Audit (episode coverage, relationship freshness, temporal expiry)
+- **Phase 3.7** — Experiential Synthesis (energy patterns, productivity cycles, intuition generation)
+- **Phase 4.5** — Reflection Generator (monthly narrative synthesis)
+- 6 new HITL gates (H19-H24), total 23
+
+#### Health Scoring (10D → 15D)
+- D11: Experiential Coverage (5%)
+- D12: Relational Depth (4%)
+- D13: Temporal Validity (5%)
+- D14: Intuition Quality (3%)
+- D15: Growth Trajectory (3%)
+- dream-history.jsonl schema v4
+
+#### New Standalone Commands
+- `/atlas episode create` — Narrative episode with experiential frontmatter
+- `/atlas intuition log` — Capture gut feelings with validation plan
+- `/atlas relationship {person}` — Create/update deep relationship profiles
+
+#### New Hooks
+- `experiential-capture` (SessionEnd) — Accumulate signals, create pending summary
+- `auto-learn` extended — Energy/mood/time_quality/confidence regex (FR+EN)
+- `session-start` enhanced — Experiential context injection + sustainability alerts
+- `prompt-intelligence` enhanced — Relationship surfacing + decision context
+
+#### Enhanced Skills
+- `session-retrospective` — Experiential capture section
+- `user-profiler` — 3 experiential sub-dimensions (Energy Awareness, Relational Depth, Growth Tracking)
+
+#### New Reference Documents (7)
+- `experiential-schema.md` — Frontmatter schema (backward-compatible)
+- `episode-template.md` — Episode creation guide
+- `relationship-template.md` — Relationship file template
+- `intuition-template.md` — Intuition capture guide
+- `reflection-template.md` — Monthly reflection template
+- `experiential-synthesis.md` — Phase 3.7 algorithms (H19-H23)
+- Updated: `health-scoring.md`, `dream-report-v2.md`, `session-journal.md`
+
+**Files**: 10 modified, 7 new | **SKILL.md**: 591 lines | **References**: 7→13
+
 ## v3.19.2 (2026-03-22)
 
 ### 🐛 Bug Fixes

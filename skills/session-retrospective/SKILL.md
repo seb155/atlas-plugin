@@ -77,3 +77,28 @@ After steps 1-5:
 **3. Memory update**: Update MEMORY.md + session-log.md if sprint/architecture changed.
 
 **Options**: `--manual` (interactive prompts) | `--summary "text"` (custom summary) | default (auto from git + tasks)
+
+---
+
+## Experiential Context (v4)
+
+At the end of each retrospective (both Close and Handoff modes), after Step 5, include:
+
+### Energy Summary
+If episode files (`memory/episode-*.md`) exist for this session/sprint, summarize:
+- Average energy level across episodes
+- Flow state occurrences (count of episodes with `flow: true` or energy >= 8)
+- Format: `⚡ Energy: avg {N}/10 | Flow: {count} sessions | Trend: {↑↗→↘↓}`
+
+### Episode Suggestion
+If **no episode** was created during the session, append to the retrospective output:
+```
+💡 No episode was captured for this session. Run `/atlas episode create` to preserve the experiential context.
+```
+
+### Relationship Mentions
+If team members were discussed during the session (detected from task owners, commit authors, or explicit mentions), note which relationship files may need updating:
+```
+👥 Relationship files to review: relationship-{person1}.md, relationship-{person2}.md
+```
+Check `memory/relationship-*.md` — if a mentioned person has no file, suggest creating one via `/atlas relationship add {person}`.
