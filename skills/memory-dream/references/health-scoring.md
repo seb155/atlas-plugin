@@ -1,4 +1,4 @@
-# Health Scoring Reference — 15 Dimensions (v4)
+# Health Scoring Reference — 16 Dimensions (v5)
 
 > Detailed scoring thresholds, formula, dashboard template, and edge cases for the
 > memory health score computed in Phase 4 of the dream cycle.
@@ -244,7 +244,23 @@ Positive trend in average energy, flow frequency, and decision confidence over l
 
 Defaults to 5.0 when insufficient episode data exists.
 
-### Weight Summary (v4)
+### D16 — Workflow Efficiency (Weight: 3%)
+
+Ratio of successful skill completions to total invocations, plus unused skill penalty.
+
+| Score | Condition |
+|-------|-----------|
+| 10 | 95%+ success rate, 0 unused skills |
+| 8 | 90-94% success, 1-2 unused |
+| 6 | 80-89% success, 3-5 unused |
+| 4 | 70-79% success |
+| 2 | <70% success |
+| 0 | No data |
+
+Defaults to 5.0 when no workflow data available.
+Requires `--deep`, `--experiential`, or `--full` to measure (Phase 2.7 output).
+
+### Weight Summary (v5)
 
 | # | Dimension | Weight | Default |
 |---|-----------|--------|---------|
@@ -263,7 +279,8 @@ Defaults to 5.0 when insufficient episode data exists.
 | D13 | Temporal Validity | 5% | 10.0 if no temporal files |
 | D14 | Intuition Quality | 3% | 10.0 if no intuition files |
 | D15 | Growth Trajectory | 3% | 5.0 if insufficient data |
-| | **TOTAL** | **100%** | |
+| D16 | Workflow Efficiency | 3% | 5.0 if no workflow data |
+| | **TOTAL** | **103%** | *Normalized to 100% at computation time* |
 
 ---
 
@@ -307,6 +324,7 @@ Defaults to 5.0 when insufficient episode data exists.
 | Temporal Valid.   | {X.X} |   5%   | {X.XX}| {N} expired facts     |
 | Intuition Quality | {X.X} |   3%   | {X.XX}| {N} stale intuitions  |
 | Growth Trajectory | {X.X} |   3%   | {X.XX}| {trend}               |
+| Workflow Effic.   | {X.X} |   3%   | {X.XX}| {N}% success rate     |
 +===================+=======+========+=======+=======================+
 | TOTAL             |       |        | {X.XX}| Grade: {G}            |
 +===================================================================+
@@ -490,7 +508,7 @@ v4 adds experiential dimensions and metadata for the whole-person memory system.
 {
   "timestamp": "2026-03-28T10:15:00-04:00",
   "project": "synapse",
-  "version": "v4",
+  "version": "v5",
   "score": 8.7,
   "grade": "B",
   "dimensions": {
@@ -508,7 +526,8 @@ v4 adds experiential dimensions and metadata for the whole-person memory system.
     "relational_depth": 8.0,
     "temporal_validity": 10.0,
     "intuition_quality": 10.0,
-    "growth_trajectory": 5.0
+    "growth_trajectory": 5.0,
+    "workflow_efficiency": null
   },
   "metadata": {
     "files_total": 185,
@@ -528,7 +547,9 @@ v4 adds experiential dimensions and metadata for the whole-person memory system.
     "experiential_coverage_pct": 60,
     "avg_energy": 3.4,
     "flow_sessions_pct": 40,
-    "avg_confidence": 0.72
+    "avg_confidence": 0.72,
+    "skill_success_rate_pct": null,
+    "unused_skills_count": null
   },
   "actions_taken": ["created 2 episodes", "updated 1 relationship", "archived 3 old episodes"],
   "mode": "deep",
@@ -551,3 +572,8 @@ New v4 fields:
 - `metadata.avg_energy`: Mean energy level across recent episodes
 - `metadata.flow_sessions_pct`: Percentage of sessions with flow_state:true
 - `metadata.avg_confidence`: Mean decision confidence across recent episodes
+
+New v5 fields:
+- `dimensions.workflow_efficiency`: D16 score (null if not measured)
+- `metadata.skill_success_rate_pct`: Percentage of successful skill completions
+- `metadata.unused_skills_count`: Number of skills unused in 30+ days

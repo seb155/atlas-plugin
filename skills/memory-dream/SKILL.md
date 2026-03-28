@@ -1,16 +1,17 @@
 ---
 name: memory-dream
-description: "Memory consolidation engine v4 (CC auto-dream pattern). 11-phase cycle with experiential layer: orient, docs audit, gather signal, validate, experiential audit, consolidate, session journal, experiential synthesis, prune & index (15D health), reflection generator, cross-project. 9 memory types (user, feedback, project, reference + episode, intuition, reflection, relationship, temporal). Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
+description: "Memory consolidation engine v5 (CC auto-dream pattern). 12-phase cycle with experiential + workflow layers: orient, docs audit, gather signal, validate, experiential audit, workflow audit, consolidate, session journal, experiential synthesis, prune & index (16D health), reflection generator, cross-project. 9 memory types (user, feedback, project, reference + episode, intuition, reflection, relationship, temporal). Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
 effort: high
 ---
 
-# Memory Dream v4 — Whole-Person Consolidation Engine
+# Memory Dream v5 — Whole-Person Consolidation Engine
 
-> Implements CC's auto-dream pattern: an 11-phase memory consolidation cycle inspired by
+> Implements CC's auto-dream pattern: a 12-phase memory consolidation cycle inspired by
 > sleep-time compute (UC Berkeley + Letta, 2025) and cognitive architectures (ACT-R/SOAR).
-> v4 adds the **experiential layer**: 5 new memory types (episode, intuition, reflection,
-> relationship, temporal), 15-dimension health scoring, inference-first capture, and
-> growth trajectory tracking. From technical vault to whole-person memory.
+> v5 adds **workflow audit** (Phase 2.7): skill usage tracking, error rates, unused skill detection,
+> 16-dimension health scoring (D16 Workflow Efficiency), and learning verbosity configuration.
+> v4 added the experiential layer: 5 new memory types, inference-first capture, growth trajectory.
+> Scope: memory + handoffs + docs + plans + features + plugin state + experiential context + workflow.
 > Scope: memory + handoffs + docs + plans + features + plugin state + experiential context.
 
 ## When to Use
@@ -246,6 +247,42 @@ Phase 2.6 — Experiential Audit
 +---------------------------+-------+--------+--------+
 ```
 
+## Phase 2.7 — Workflow Audit (NEW, v5)
+
+> Runs with `--deep`, `--experiential`, or `--full`. Tracks skill effectiveness and workflow patterns.
+
+### Steps
+
+1. **Skill usage tracking**: Scan the current session's conversation for skill invocations.
+   Count how many times each skill was triggered, which completed successfully, which errored.
+   ```bash
+   # Skills invoked this session (from session transcript if available)
+   # Alternatively, check session-log for skill mentions
+   grep -c "Skill(" "$TRANSCRIPT_FILE" 2>/dev/null || echo "0"
+   ```
+
+2. **Timing estimation**: For each skill invocation, estimate duration from surrounding timestamps.
+   Flag skills that took >5 minutes (potential optimization targets).
+
+3. **Error tracking**: Count tool call failures, permission denials, and retries.
+   Group by skill/hook to identify problematic patterns.
+
+4. **Unused skill detection**: Compare installed skills (from plugin cache) with skills actually invoked in last 7 days (from session logs). Flag skills never used in 30+ days.
+
+5. **Output**:
+   ```
+   Phase 2.7 — Workflow Audit
+   +-------------------+-------+--------+--------+---------+
+   | Skill             | Uses  | Errors | Avg ms | Status  |
+   +-------------------+-------+--------+--------+---------+
+   | plan-builder      | 3     | 0      | ~120s  | OK      |
+   | tdd               | 5     | 1      | ~90s   | OK      |
+   | browser-automation| 0     | 0      | —      | UNUSED  |
+   +-------------------+-------+--------+--------+---------+
+   Unused skills (30d+): browser-automation, experiment-loop
+   Suggested: consider uninstalling atlas-frontend if not needed
+   ```
+
 ## Phase 3 — Consolidate (Enhanced, HITL Required)
 
 Make changes with explicit user approval at every step.
@@ -329,7 +366,7 @@ Regenerate MEMORY.md and compute health.
      done
    fi
    ```
-4. **Health score computation** (v4): Calculate 15 dimensions (10 structural + 5 experiential), display dashboard.
+4. **Health score computation** (v5): Calculate 16 dimensions (10 structural + 5 experiential + 1 workflow), display dashboard.
    For details, read `${SKILL_DIR}/references/health-scoring.md`
 
    D1-D10 computed per existing health-scoring.md. D11-D15 (experiential):
@@ -361,7 +398,7 @@ Regenerate MEMORY.md and compute health.
    # Read last 3 dream-history.jsonl entries, compute energy/flow/confidence trends
    # Score: 10 if all rising, 7 if stable, 4 if declining, 2 if no data
    ```
-5. **Generate dream report v4** (H15): Enriched format with 15D health score, trend, importance distribution, code staleness, ecosystem sources, tech claims table, **experiential context (episodes, energy trends, relationships, intuitions)**, session journal, handoff context, cross-project summary.
+5. **Generate dream report v5** (H15): Enriched format with 16D health score, trend, importance distribution, code staleness, ecosystem sources, tech claims table, **experiential context (episodes, energy trends, relationships, intuitions)**, **workflow audit (skill usage, errors, unused)**, session journal, handoff context, cross-project summary.
    For details, read `${SKILL_DIR}/references/dream-report-v2.md`
 6. **Trend persistence** (H16): Append one JSON line to `dream-history.jsonl`.
 7. **Release lock**: Remove `.consolidate-lock`.
@@ -575,6 +612,32 @@ CronCreate(cron="57 17 * * 1-5", prompt="/atlas dream --dry-run", recurring=True
 ```
 Display job ID. Scheduled jobs are session-scoped (7-day max, dies on exit).
 
+## Learning Verbosity Configuration
+
+Configure how actively the system communicates its learning:
+
+| Level | Name | Behavior |
+|-------|------|----------|
+| 1 | Silent | Zero injections. Dream reports only. Auto-learn still captures in background. |
+| 2 | Semi (DEFAULT) | Max 2 injections per session: energy alerts, topic context. Episode suggested at end. |
+| 3 | Full | Every detection injected: energy, mood, confidence, patterns, skill suggestions. |
+
+**Setting**: `atlas_learning_verbosity` in `~/.claude/settings.json` env block:
+```json
+{
+  "env": {
+    "ATLAS_LEARNING_VERBOSITY": "2"
+  }
+}
+```
+
+**Affects**:
+- session-start: topic context injection (level 2+)
+- focus-guard: context-switch alerts (level 2+)
+- experiential-capture: episode suggestion (level 2+)
+- auto-learn: signal capture always runs (all levels)
+- dream cycle: always runs fully (all levels)
+
 ## Safety Rules (12 Rules)
 
 1. **NEVER auto-delete** -- archive only, never permanent delete
@@ -627,14 +690,15 @@ Display job ID. Scheduled jobs are session-scoped (7-day max, dies on exit).
 | Phase 2 (Gather) | Sonnet | Pattern matching, scoring |
 | Phase 2.5 (Validate) | Opus | Code understanding, semantic verification |
 | Phase 2.6 (Experiential Audit) | Sonnet | File counting, date comparison |
+| Phase 2.7 (Workflow Audit) | Sonnet | Skill counting, log scanning |
 | Phase 3 (Consolidate) | Opus | Merge decisions, split strategy |
 | Phase 3.5 (Journal) | Opus | Session synthesis, handoff reasoning |
 | Phase 3.7 (Experiential Synthesis) | Opus | Pattern recognition, growth analysis |
-| Phase 4 (Prune & Index) | Opus | Index design, report synthesis, 15D scoring |
+| Phase 4 (Prune & Index) | Opus | Index design, report synthesis, 16D scoring |
 | Phase 4.5 (Reflection Generator) | Opus | Narrative synthesis, trend analysis |
 | Phase 5 (Cross-Project) | Opus | Cross-repo reasoning |
 
-## Health Scoring (15 Dimensions)
+## Health Scoring (16 Dimensions)
 
 Health is a weighted composite score (0-10) across 10 dimensions:
 

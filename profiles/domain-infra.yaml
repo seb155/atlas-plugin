@@ -11,8 +11,8 @@ skills:
   - security-audit
   - engineering-ops
   # Network skills (fusionnés — mêmes utilisateurs que infra)
-  # - mesh-diagnostics    # TODO: Phase 5 — NEW
-  # - network-audit       # TODO: Phase 5 — NEW
+  - mesh-diagnostics
+  - network-audit
 
 hooks:
   - enterprise-check

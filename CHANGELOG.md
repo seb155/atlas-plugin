@@ -1,5 +1,56 @@
 # Changelog
 
+## v4.0.0 (2026-03-28)
+
+### SP-ECO: ATLAS Ecosystem Architecture
+
+From monolithic plugin to modular marketplace. Topic-based sessions. Self-improving system.
+
+#### Plugin Split (Phase 1)
+- 1 monolith (71 skills) → 6 domain plugins in unified marketplace
+- `atlas-core` (22 skills, required), `atlas-dev` (22), `atlas-frontend` (8), `atlas-infra` (6+network), `atlas-enterprise` (14), `atlas-experiential` (4)
+- build.sh: `./build.sh domains` builds all 6, `./build.sh domain core` builds one
+- Makefile: `make dev-domains` for local install
+- Hook filter fix: run-hook.sh wrapper regex for correct distribution (core=25, dev=7, frontend=2, infra=2, enterprise=0, experiential=0)
+
+#### Topic-Based Sessions (Phase 2)
+- Topic registry (`~/.atlas/topics.json`): create/resume/complete/archive lifecycle
+- `atlas synapse {topic}` auto-detects and resumes existing topics
+- `atlas dashboard` (alias: `dash`, `d`): tmux session table + topic/plugin counts
+- session-start hook: ATLAS_TOPIC env injection + topic dir auto-creation
+- session-pickup: topic-aware search (Step 0: .claude/topics/ first)
+- session-retrospective: topic linking (handoff → topics.json + topics/ archive)
+
+#### Marketplace Migration (Phase 3)
+- `scripts/migrate-marketplace.sh`: 6-step migration with --dry-run, 3 presets (admin/dev/infra)
+- atlas-doctor: Cat 13 domain plugin health (old marketplace detect, core dependency, orphan check)
+- setup-wizard: plugin selection step with 6 presets (Developer, Full Stack, Admin, Infra, Custom, Skip)
+- CI publish.yaml: builds + publishes 6 domains + 3 legacy tiers on tag push
+
+#### Topic Memory (Phase 4)
+- decision-log: dual write to `.claude/topics/{topic}/decisions.md`
+- session-retrospective: context.md generation per topic
+- memory-dream: `--topic {name}` consolidation + `.claude/topics/INDEX.md` generation
+- finishing-branch: Step 2.5 preserves topic memory before worktree cleanup
+
+#### Self-Improving System (Phase 5)
+- Dream v5: Phase 2.7 (Workflow Audit) + D16 (Workflow Efficiency, 16D total)
+- `self-propose` skill: MAPE-K monthly improvement proposals with HITL
+- `focus-guard` hook: context-switch + energy alerts (verbosity-aware)
+- Learning verbosity: `ATLAS_LEARNING_VERBOSITY` 1=silent, 2=semi (default), 3=full
+- `mesh-diagnostics` skill: NetBird/Tailscale mesh health
+- `network-audit` skill: DNS, ports, SSL, VLAN diagnostics
+- ONBOARDING.md: team onboarding guide (6 phases, < 30 min)
+
+**Stats**: 5 phases, 14 agents, ~155h effort, ~19h wall time, ~$23 token cost
+**Breaking**: marketplace renamed `atlas-admin-marketplace` → `atlas-marketplace` (migration script provided)
+
+## v3.42.0 (2026-03-27)
+
+### Standalone Skills for Experiential Memory
+- `episode-create`, `intuition-log`, `relationship-manager` as separate routable skills
+- Added to admin profile for tier builds
+
 ## v3.41.0 (2026-03-27)
 
 ### ✨ SP-EXP: Experiential Memory Layer

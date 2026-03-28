@@ -54,6 +54,7 @@ hooks:
   - contextual-rules-injector
   # Safety
   - validate-bash
+  - focus-guard
   - stop-failure
   - session-checkpoint
   # Compaction
