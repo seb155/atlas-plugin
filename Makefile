@@ -33,7 +33,7 @@ dev-domains: ## Build all 6 domain plugins + install to CC cache
 	echo ""; \
 	echo "📦 Installing domain plugins to CC cache..."; \
 	for name in core dev frontend infra enterprise experiential; do \
-		dir="$$CACHE_DIR/atlas-$${name}-marketplace/atlas-$${name}/$$VERSION"; \
+		dir="$$CACHE_DIR/atlas-marketplace/atlas-$${name}/$$VERSION"; \
 		mkdir -p "$$dir"; \
 		cp -r "dist/atlas-$${name}/." "$$dir/"; \
 		echo "  ✅ atlas-$${name} → $$dir"; \
