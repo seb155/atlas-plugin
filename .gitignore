@@ -1,5 +1,6 @@
-# Build output
-dist/
+# Build output — dist/ is committed for CC git-subdir plugin discovery
+# Run ./build.sh domains before committing to update dist/
+# dist/
 
 # OS files
 .DS_Store

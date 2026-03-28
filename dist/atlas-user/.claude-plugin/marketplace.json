@@ -1,0 +1,13 @@
+{
+  "name": "atlas-admin-marketplace",
+  "owner": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "plugins": [
+    {
+      "name": "atlas-user",
+      "description": "ATLAS User — AXOIQ AI Engineering Assistant (user tier)",
+      "version": "3.42.0",
+      "source": { "source": "url", "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git" },
+      "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
+    }
+  ]
+}

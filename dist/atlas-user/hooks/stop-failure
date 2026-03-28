@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# StopFailure — Alert when a turn ends due to API error (rate limit, auth, etc.)
+# CC v2.1.78+ | ATLAS Admin Plugin
+set -euo pipefail
+
+INPUT=$(cat)
+TS=$(date '+%H:%M')
+
+echo "🏛️ ATLAS │ ⚠️ STOP-FAILURE │ ${TS} — Turn ended with error. Check /usage or /login."
+
+# Audit log
+echo "${TS} STOP-FAILURE" >> "${HOME}/.claude/atlas-audit.log" 2>/dev/null || true

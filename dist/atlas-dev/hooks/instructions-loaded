@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# InstructionsLoaded — Log when CLAUDE.md / rules files are loaded into context
+# CC v2.1.69+ | ATLAS Admin Plugin
+set -euo pipefail
+
+INPUT=$(cat)
+TS=$(date '+%H:%M')
+
+echo "🏛️ ATLAS │ 📚 INSTRUCTIONS │ Context loaded at ${TS}"

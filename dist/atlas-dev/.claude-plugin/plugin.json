@@ -1,0 +1,8 @@
+{
+  "name": "atlas-dev",
+  "version": "4.0.3",
+  "description": "Development — planning, TDD, debugging, code review, shipping workflows.",
+  "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "license": "UNLICENSED",
+  "buildTimestamp": "2026-03-28T17:05:20Z"
+}

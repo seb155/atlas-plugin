@@ -1,0 +1,13 @@
+{
+  "name": "atlas-infra-marketplace",
+  "owner": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "plugins": [
+    {
+      "name": "atlas-infra",
+      "description": "Infrastructure — deploy, security, network, DevOps, engineering ops.",
+      "version": "4.0.3",
+      "source": { "source": "url", "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git" },
+      "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
+    }
+  ]
+}

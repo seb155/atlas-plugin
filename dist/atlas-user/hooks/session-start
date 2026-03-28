@@ -1,0 +1,482 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — Session Start Hook
+# Injects the tier-appropriate atlas-assist skill into every Claude Code session
+# Detects user role via: Authentik API → ATLAS_ROLE env var → plugin default
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"
+AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
+
+export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"  # suppress bw punycode warning
+
+# ─── Version Check: notify if newer version available ─────────────────
+# Lightweight check (~200ms). Uses Forgejo API to compare versions.
+# Actual update done via CC native: /plugin → Discover → toggle update.
+# Set ATLAS_NO_VERSION_CHECK=1 to skip.
+_auto_update_msg=""
+if [ "${ATLAS_NO_VERSION_CHECK:-}" != "1" ]; then
+  _INSTALLED_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "0.0.0")
+  _FORGEJO_API="${ATLAS_FORGEJO_API:-http://192.168.10.75:3000/api/v1}"
+
+  # Source token early for API call
+  [ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
+
+  if [ -n "${FORGEJO_TOKEN:-}" ]; then
+    _LATEST_TAG=$(curl -sf --connect-timeout 2 --max-time 2 \
+      "${_FORGEJO_API}/repos/atlas/atlas-plugin/releases?limit=1" \
+      -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null \
+      | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['tag_name'])" 2>/dev/null || echo "")
+    _LATEST_VERSION="${_LATEST_TAG#v}"
+
+    if [ -n "$_LATEST_VERSION" ] && [ "$_LATEST_VERSION" != "$_INSTALLED_VERSION" ] && [ "$_LATEST_VERSION" != "0.0.0" ]; then
+      _auto_update_msg="🆙 ATLAS v${_LATEST_VERSION} available (installed: v${_INSTALLED_VERSION}) — run /plugin to update"
+    fi
+  fi
+fi
+
+# Source user env (tokens, API keys) if available
+[ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
+
+# Auto-resolve secrets via keyring + Vaultwarden (if configured)
+VAULT_MSG=""
+_secrets_provider=$(python3 -c "
+import json, os
+try:
+    with open(os.path.expanduser('~/.atlas/config.json')) as f:
+        print(json.load(f).get('secrets',{}).get('provider','env'))
+except: print('env')
+" 2>/dev/null || echo "env")
+
+if [ "$_secrets_provider" = "vaultwarden" ] && command -v bw &>/dev/null; then
+  # Try keyring-cached BW_SESSION
+  if [ -z "${BW_SESSION:-}" ] && [ -x "${PLUGIN_ROOT}/scripts/atlas-keyring.sh" ]; then
+    BW_SESSION=$("${PLUGIN_ROOT}/scripts/atlas-keyring.sh" get bw_session 2>/dev/null || true)
+    [ -n "$BW_SESSION" ] && export BW_SESSION
+  fi
+
+  # If BW_SESSION expired, try auto-unlock via keyring-stored master password
+  if [ -z "${BW_SESSION:-}" ] && [ -x "${PLUGIN_ROOT}/scripts/atlas-keyring.sh" ]; then
+    _keyring_pw=$("${PLUGIN_ROOT}/scripts/atlas-keyring.sh" get bw_master_password 2>/dev/null || true)
+    if [ -n "$_keyring_pw" ]; then
+      BW_SESSION=$(BW_PASSWORD="$_keyring_pw" bw unlock --passwordenv BW_PASSWORD --raw 2>/dev/null || true)
+      if [ -n "$BW_SESSION" ]; then
+        export BW_SESSION
+        # Re-cache session in volatile keyring (8h TTL)
+        "${PLUGIN_ROOT}/scripts/atlas-keyring.sh" set bw_session "$BW_SESSION" 2>/dev/null || true
+      fi
+    fi
+    unset _keyring_pw
+  fi
+
+  # If BW_SESSION available, resolve missing core tokens
+  if [ -n "${BW_SESSION:-}" ]; then
+    if [ -z "${FORGEJO_TOKEN:-}" ]; then
+      FORGEJO_TOKEN=$(BW_SESSION="$BW_SESSION" bw get password "FORGEJO_TOKEN" 2>/dev/null || true)
+      [ -n "$FORGEJO_TOKEN" ] && export FORGEJO_TOKEN
+    fi
+    if [ -z "${SYNAPSE_TOKEN:-}" ]; then
+      SYNAPSE_TOKEN=$(BW_SESSION="$BW_SESSION" bw get password "SYNAPSE_TOKEN" 2>/dev/null || true)
+      [ -n "$SYNAPSE_TOKEN" ] && export SYNAPSE_TOKEN
+    fi
+  else
+    VAULT_MSG="🏛️ ATLAS │ 🔐 VAULT LOCKED │ Run: ! eval \$(${PLUGIN_ROOT}/scripts/bw-login.sh --store-password)"
+  fi
+fi
+
+# Read value from ~/.atlas/config.json with fallback
+atlas_config() {
+  local key="$1" fallback="${2:-}"
+  python3 -c "
+import json, os
+try:
+    with open(os.path.expanduser('~/.atlas/config.json')) as f:
+        d = json.load(f)
+    keys = '$key'.split('.')
+    v = d
+    for k in keys: v = v[k]
+    if isinstance(v, list): print(' '.join(v))
+    else: print(v)
+except: print('$fallback')
+" 2>/dev/null || echo "$fallback"
+}
+
+# Detect the plugin's built-in tier from plugin.json or install path
+detect_plugin_tier() {
+  local plugin_name
+  plugin_name=$(cat "${PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null \
+    | grep -o '"name": *"[^"]*"' | head -1 | sed 's/.*"name": *"atlas-\?\([^"]*\)".*/\1/')
+
+  case "$plugin_name" in
+    admin|dev|user) echo "$plugin_name" ;;
+    *)
+      # Fallback: infer tier from install path (e.g. .../atlas-admin/3.2.0/)
+      local path_tier
+      path_tier=$(echo "$PLUGIN_ROOT" | grep -o 'atlas-\(admin\|dev\|user\)' | head -1 | sed 's/atlas-//')
+      case "$path_tier" in
+        admin|dev|user) echo "$path_tier" ;;
+        *) echo "admin" ;;  # Default to admin (sole user)
+      esac
+      ;;
+  esac
+}
+
+# Detect user role from Authentik or environment
+detect_role() {
+  local source="default"
+  local role=""
+  local details=""
+
+  # Priority 1: Authentik API (if token available)
+  if [ -n "${AUTHENTIK_TOKEN:-}" ]; then
+    local authentik_url_cfg admin_groups dev_groups
+    authentik_url_cfg=$(atlas_config "services.authentik.url" "")
+    admin_groups=$(atlas_config "auth.admin_groups" "admins")
+    dev_groups=$(atlas_config "auth.dev_groups" "developers")
+
+    local groups
+    groups=$(curl -sf --max-time 3 \
+      "${AUTHENTIK_URL:-$authentik_url_cfg}/api/v3/core/users/me/" \
+      -H "Authorization: Bearer $AUTHENTIK_TOKEN" \
+      | grep -o '"name":"[^"]*"' | sed 's/"name":"//;s/"//' 2>/dev/null || true)
+
+    if [ -n "$groups" ]; then
+      source="authentik"
+      # Check admin groups (space-separated from config)
+      local is_admin="false" is_dev="false"
+      for ag in $admin_groups; do
+        echo "$groups" | grep -q "$ag" && is_admin="true" && break
+      done
+      for dg in $dev_groups; do
+        echo "$groups" | grep -q "$dg" && is_dev="true" && break
+      done
+      if [ "$is_admin" = "true" ]; then
+        role="admin"; details="group=${admin_groups}"
+      elif [ "$is_dev" = "true" ]; then
+        role="dev"; details="group=${dev_groups}"
+      else
+        role="user"; details="group=other"
+      fi
+    fi
+  fi
+
+  # Priority 2: ATLAS_ROLE env var
+  if [ -z "$role" ] && [ -n "${ATLAS_ROLE:-}" ]; then
+    source="env_var"
+    role="${ATLAS_ROLE}"
+    details="ATLAS_ROLE=${ATLAS_ROLE}"
+  fi
+
+  # Priority 3: Plugin's built-in tier
+  if [ -z "$role" ]; then
+    source="plugin_tier"
+    role=$(detect_plugin_tier)
+    details="plugin=$(basename "$PLUGIN_ROOT")"
+  fi
+
+  # Audit log
+  local ts
+  ts=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  local plugin_tier
+  plugin_tier=$(detect_plugin_tier)
+  local version
+  version=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "unknown")
+  mkdir -p "$(dirname "$AUDIT_LOG")"
+  echo "${ts} | tier=${role} | source=${source} | ${details} | plugin=atlas-${plugin_tier}@${version}" >> "$AUDIT_LOG"
+
+  # Check for tier mismatch
+  if [ "$source" = "authentik" ] && [ "$role" != "$plugin_tier" ]; then
+    # User's Authentik role doesn't match installed plugin tier
+    TIER_WARNING="⚠️ TIER MISMATCH: Your Authentik role is '${role}' but you have atlas-${plugin_tier} installed. Consider installing atlas-${role} for the best experience."
+  fi
+
+  echo "$role"
+}
+
+# Write session-state.json for CShip/Starship status line consumption
+write_session_state() {
+  local state_dir="${CLAUDE_PLUGIN_DATA:-$HOME/.claude}"
+  local state_file="${state_dir}/session-state.json"
+  mkdir -p "$state_dir"
+
+  local version
+  version=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
+  local host
+  host=$(hostname -s 2>/dev/null || echo "?")
+  local now
+  now=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  local branch
+  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
+
+  # Feature counts (fast awk single-pass) — non-local for badge output
+  feat_total=0; feat_active=0; feat_done=0
+  if [ -f ".blueprint/FEATURES.md" ]; then
+    eval "$(awk '/^## Feature:/{t++} /IN_PROGRESS/{a++} /DONE/{d++} END{printf "feat_total=%d feat_active=%d feat_done=%d",t,a,d}' ".blueprint/FEATURES.md" 2>/dev/null)" || true
+  fi
+
+  # Docker check (skip on ATL-dev or when docker unavailable) — non-local for badge output
+  docker_avail="false"; docker_n=0
+  if [ "$host" != "ATL-dev" ] && command -v docker &>/dev/null; then
+    docker_avail="true"
+    docker_n=$(docker ps --filter name=synapse -q 2>/dev/null | wc -l | tr -d ' ')
+  fi
+
+  cat > "$state_file" <<STATEEOF
+{"version":1,"updated_at":"${now}","tier":"${DETECTED_ROLE}","plugin_version":"${version}","hostname":"${host}","docker":{"available":${docker_avail},"containers":${docker_n},"checked_at":"${now}"},"ci":{"status":"pending","branch":"${branch}","checked_at":"${now}"},"features":{"total":${feat_total},"active":${feat_active},"done":${feat_done},"checked_at":"${now}"}}
+STATEEOF
+}
+
+# ─── Auto-reload tmux config (if inside tmux session) ─────────────────
+if [ -n "${TMUX:-}" ] && [ -f "${HOME}/.tmux.conf" ]; then
+  tmux source-file "${HOME}/.tmux.conf" 2>/dev/null || true
+fi
+
+# Main — SessionStart hook: role detection + audit log + feature summary + state file
+# Skills are loaded on-demand by CC's skill system, NOT injected here.
+TIER_WARNING=""
+DETECTED_ROLE=$(detect_role)
+write_session_state
+
+# Feature Board summary injection (if FEATURES.md exists in current project)
+FEATURE_SUMMARY=""
+PARSE_SCRIPT="${PLUGIN_ROOT}/scripts/parse-features.sh"
+if [ -f ".blueprint/FEATURES.md" ] && [ -x "$PARSE_SCRIPT" ]; then
+  FEATURE_SUMMARY=$("$PARSE_SCRIPT" ".blueprint/FEATURES.md" 2>/dev/null || true)
+fi
+
+# First-run detection — check for onboarding profile
+ATLAS_PROFILE="${HOME}/.atlas/profile.json"
+FIRST_RUN_MSG=""
+if [ ! -f "$ATLAS_PROFILE" ]; then
+  MISSING=""
+  [ -z "${SYNAPSE_TOKEN:-}" ] && MISSING+="SYNAPSE_TOKEN, "
+  [ -z "${FORGEJO_TOKEN:-}" ] && MISSING+="FORGEJO_TOKEN, "
+  [ ! -f "CLAUDE.md" ] && MISSING+="CLAUDE.md, "
+  command -v yq &>/dev/null || MISSING+="yq, "
+  # Platform detection for first-run info
+  PLATFORM_OS="?"
+  PLATFORM_SHELL=$(basename "${SHELL:-?}")
+  PLATFORM_TERM="?"
+  if [ -x "${PLUGIN_ROOT}/scripts/detect-platform.sh" ]; then
+    PJSON=$("${PLUGIN_ROOT}/scripts/detect-platform.sh" 2>/dev/null || true)
+    if [ -n "$PJSON" ]; then
+      PLATFORM_OS=$(echo "$PJSON" | python3 -c "import sys,json; print(json.load(sys.stdin).get('os','?'))" 2>/dev/null || echo "?")
+      PLATFORM_TERM=$(echo "$PJSON" | python3 -c "import sys,json; print(json.load(sys.stdin).get('terminal','?'))" 2>/dev/null || echo "?")
+    fi
+  fi
+  FIRST_RUN_MSG="🏛️ ATLAS │ 👋 FIRST RUN │ Welcome! Run /atlas setup to configure"
+  FIRST_RUN_MSG+=$'\n'"   └─ Platform: ${PLATFORM_OS} │ Shell: ${PLATFORM_SHELL} │ Terminal: ${PLATFORM_TERM}"
+  if [ -n "$MISSING" ]; then
+    MISSING="${MISSING%, }"
+    FIRST_RUN_MSG+=$'\n'"   └─ Missing: ${MISSING}"
+  fi
+fi
+
+# ─── CC Version Detection (self-improvement loop) ─────────────────────
+# Compare running CC version with the version this plugin was audited for.
+# If CC is newer, suggest running /atlas platform-update for SOTA sync.
+KNOWN_CC_VERSION="2.1.83"
+CC_VERSION_NOTICE=""
+_cc_ver=$(claude --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
+if [ -n "$_cc_ver" ] && [ "$_cc_ver" != "$KNOWN_CC_VERSION" ]; then
+  # Simple version comparison: if CC version string is different, notify
+  CC_VERSION_NOTICE="⚡ CC v${_cc_ver} detected (plugin audited for v${KNOWN_CC_VERSION}). Consider /atlas platform-update"
+fi
+
+# ─── Auto-deploy statusline (CShip + bash fallback) ───────────────────
+# 1. Deploy CShip config if outdated or missing
+_plugin_cship_toml="${PLUGIN_ROOT}/scripts/cship.toml"
+_user_cship_toml="${HOME}/.config/cship.toml"
+if [ -f "$_plugin_cship_toml" ]; then
+  if [ ! -f "$_user_cship_toml" ] || ! diff -q "$_plugin_cship_toml" "$_user_cship_toml" &>/dev/null; then
+    mkdir -p "${HOME}/.config"
+    cp "$_plugin_cship_toml" "$_user_cship_toml"
+  fi
+fi
+
+# 2. Install CShip binary if missing (cargo install, background, non-blocking)
+if ! command -v cship &>/dev/null && command -v cargo &>/dev/null; then
+  (cargo install cship --quiet &>/dev/null &)
+fi
+
+# 3. Deploy bash fallback statusline if outdated
+_plugin_statusline="${PLUGIN_ROOT}/scripts/statusline-command.sh"
+_user_statusline="${HOME}/.claude/statusline-command.sh"
+if [ -f "$_plugin_statusline" ]; then
+  if [ ! -f "$_user_statusline" ] || ! diff -q "$_plugin_statusline" "$_user_statusline" &>/dev/null; then
+    cp "$_plugin_statusline" "$_user_statusline"
+    chmod +x "$_user_statusline"
+  fi
+fi
+
+# 4. Deploy custom statusline modules (Starship/CShip custom.* resolvers)
+_sl_target="${HOME}/.local/share/atlas-statusline"
+mkdir -p "$_sl_target" 2>/dev/null
+for _mod in atlas-resolve-version.sh atlas-alert-module.sh atlas-context-size-module.sh; do
+  _src="${PLUGIN_ROOT}/scripts/${_mod}"
+  _dst="${_sl_target}/${_mod}"
+  if [ -f "$_src" ]; then
+    if [ ! -f "$_dst" ] || ! diff -q "$_src" "$_dst" &>/dev/null; then
+      cp "$_src" "$_dst"
+      chmod +x "$_dst"
+    fi
+  fi
+done
+
+# 5. Deploy ATLAS CLI shell launcher + wizard (if outdated)
+_cli_target="${HOME}/.atlas/shell"
+_scripts_target="${HOME}/.atlas/scripts"
+mkdir -p "$_cli_target" "$_scripts_target" 2>/dev/null
+for _pair in "atlas-cli.sh:${_cli_target}/atlas.sh" "setup-wizard.sh:${_cli_target}/setup-wizard.sh" "starship-atlas-fragment.toml:${_cli_target}/starship-atlas-fragment.toml" "cship.toml:${_cli_target}/cship.toml" "load-secrets.sh:${_scripts_target}/load-secrets.sh" "fix-cc-settings.sh:${_scripts_target}/fix-cc-settings.sh"; do
+  _src="${PLUGIN_ROOT}/scripts/${_pair%%:*}"
+  _dst="${_pair#*:}"
+  if [ -f "$_src" ]; then
+    if [ ! -f "$_dst" ] || ! diff -q "$_src" "$_dst" &>/dev/null; then
+      cp "$_src" "$_dst"
+      chmod +x "$_dst"
+    fi
+  fi
+done
+# Ensure .zshrc sources atlas.sh (idempotent)
+if ! grep -q 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null; then
+  echo '[ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"' >> "${HOME}/.zshrc"
+fi
+
+# 6. Check if starship custom modules are missing → badge warning
+_starship_warning=""
+if [ -f "${HOME}/.config/starship.toml" ] && ! grep -q 'custom.atlas_version' "${HOME}/.config/starship.toml" 2>/dev/null; then
+  _starship_warning="⚠️ Starship ATLAS modules missing — run: atlas setup sync"
+fi
+
+# ─── Skill & Agent Counts ─────────────────────────────────────────────
+_SKILL_COUNT=$(find "${PLUGIN_ROOT}/skills" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
+_AGENT_COUNT=$(find "${PLUGIN_ROOT}/agents" -name "AGENT.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
+
+# Build branded badge (use real newlines, JSON escape at the end)
+PLUGIN_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
+BADGE="🏛️ ATLAS │ ✅ SESSION │ v${PLUGIN_VERSION} ${DETECTED_ROLE}"
+if [ "$docker_avail" = "true" ]; then
+  BADGE+=" │ 🐳 ${docker_n}"
+fi
+BADGE+=" │ Branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+BADGE+=$'\n'"🏛️ ATLAS │ 🧩 ${_SKILL_COUNT} skills | 🤖 ${_AGENT_COUNT} agents"
+if [ $feat_total -gt 0 ]; then
+  BADGE+=$'\n'"🏛️ ATLAS │ 📋 ${feat_total} features (${feat_active}▶ ${feat_done}✓)"
+fi
+if [ -n "$TIER_WARNING" ]; then
+  BADGE+=$'\n'"🏛️ ATLAS │ ⚠️ ${TIER_WARNING}"
+fi
+if [ -n "$FIRST_RUN_MSG" ]; then
+  BADGE+=$'\n'"${FIRST_RUN_MSG}"
+fi
+if [ -n "$VAULT_MSG" ]; then
+  BADGE+=$'\n'"${VAULT_MSG}"
+fi
+# Suggest session name (repo-version-branch)
+_repo_name=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || echo "")
+_repo_ver=$(cat VERSION 2>/dev/null || jq -r '.version // empty' package.json 2>/dev/null || echo "")
+_repo_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+if [ -n "$_repo_name" ]; then
+  _suggested_name="${_repo_name}"
+  [ -n "$_repo_ver" ] && _suggested_name="${_suggested_name}-v${_repo_ver}"
+  [ -n "$_repo_branch" ] && [ "$_repo_branch" != "main" ] && _suggested_name="${_suggested_name}-${_repo_branch}"
+  BADGE+=$'\n'"🏛️ ATLAS │ 💡 SESSION │ /rename ${_suggested_name}"
+fi
+
+# Check for missing core secrets (after all resolution attempts)
+_missing_secrets=""
+[ -z "${FORGEJO_TOKEN:-}" ] && _missing_secrets+="FORGEJO_TOKEN, "
+[ -z "${SYNAPSE_TOKEN:-}" ] && _missing_secrets+="SYNAPSE_TOKEN, "
+if [ -n "$_missing_secrets" ]; then
+  _missing_secrets="${_missing_secrets%, }"
+  BADGE+=$'\n'"🏛️ ATLAS │ 🔐 SECRETS │ Missing: ${_missing_secrets}"
+fi
+
+# Add update notification if available
+if [ -n "$_auto_update_msg" ]; then
+  BADGE+=$'\n'"${_auto_update_msg}"
+fi
+
+# Add CC version mismatch notice
+if [ -n "$CC_VERSION_NOTICE" ]; then
+  BADGE+=$'\n'"🏛️ ATLAS │ ${CC_VERSION_NOTICE}"
+fi
+if [ -n "${_starship_warning:-}" ]; then
+  BADGE+=$'\n'"🏛️ ATLAS │ ${_starship_warning}"
+fi
+
+# ─── R1: Auto-detect recent handoffs ────────────────────────────────────
+# Scan .blueprint/handoffs/ and memory dirs for handoff files < 24h old.
+# Shows max 2 entries. Non-blocking (|| true on everything).
+_handoff_files=""
+if [ -d ".blueprint/handoffs" ]; then
+  _handoff_files=$(find .blueprint/handoffs/ -name "handoff-*.md" -mtime -1 2>/dev/null | head -2 || true)
+fi
+# Also check memory dir for handoff files
+_memory_base="${HOME}/.claude/projects"
+if [ -d "$_memory_base" ]; then
+  _mem_handoffs=$(find "$_memory_base" -maxdepth 3 -path "*/memory/handoff-*.md" -mtime -1 2>/dev/null | head -2 || true)
+  if [ -n "$_mem_handoffs" ]; then
+    _handoff_files="${_handoff_files:+${_handoff_files}$'\n'}${_mem_handoffs}"
+  fi
+fi
+if [ -n "$_handoff_files" ]; then
+  _hcount=0
+  while IFS= read -r _hf; do
+    [ -z "$_hf" ] && continue
+    [ "$_hcount" -ge 2 ] && break
+    _hname=$(basename "$_hf")
+    BADGE+=$'\n'"📋 ATLAS │ Recent handoff detected: ${_hname} — say \"/pickup\" to resume"
+    _hcount=$((_hcount + 1))
+  done <<< "$_handoff_files"
+fi
+
+# ─── R4: Morning brief auto-suggest ─────────────────────────────────────
+# Weekday + morning (7-9 local) → suggest /atlas morning
+if [ "$(date +%u)" -le 5 ] 2>/dev/null; then
+  _hour=$(date +%H 2>/dev/null || echo "0")
+  if [ "$_hour" -ge 7 ] && [ "$_hour" -le 9 ]; then
+    BADGE+=$'\n'"☀️ ATLAS │ Good morning! Say \"/atlas morning\" for your daily brief"
+  fi
+fi
+
+# ─── Experiential Context (v4) ─────────────────────────────
+_exp_msg=""
+_PENDING="${HOME}/.claude/atlas-experiential-pending.json"
+if [ -f "$_PENDING" ]; then
+  _energy=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('energy_avg','?'))" 2>/dev/null || echo "?")
+  _mood=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('mood_dominant','?'))" 2>/dev/null || echo "?")
+  _signals=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('signal_count',0))" 2>/dev/null || echo "0")
+  if [ "$_signals" -ge 3 ] 2>/dev/null; then
+    _exp_msg="ATLAS | EXPERIENTIAL | Previous session: energy ${_energy}/5, mood ${_mood}. /atlas episode create to capture."
+  fi
+fi
+
+# Energy trend from recent episodes (rate-limited to 1x/day)
+_ALERT_FILE="${HOME}/.claude/atlas-alert-last.txt"
+_today=$(date +%Y-%m-%d)
+_last_alert=$(cat "$_ALERT_FILE" 2>/dev/null || echo "")
+if [ "$_today" != "$_last_alert" ]; then
+  # Find memory dir for current project
+  _mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
+  if [ -n "$_mem_dir" ]; then
+    _recent_energy=$(grep -l "type: episode" "$_mem_dir"/episode-*.md 2>/dev/null | sort -r | head -3 | xargs -I{} grep "^energy:" {} 2>/dev/null | awk -F: '{sum+=$2; n++} END{if(n>0) printf "%.1f", sum/n; else print "?"}')
+    if [ "$_recent_energy" != "?" ] && [ "$(echo "$_recent_energy < 2.5" | bc -l 2>/dev/null)" = "1" ]; then
+      _exp_msg="${_exp_msg:+$_exp_msg$'\n'}ATLAS | ALERT | Energy trend declining (avg ${_recent_energy}/5). Consider pacing."
+      echo "$_today" > "$_ALERT_FILE"
+    fi
+  fi
+fi
+
+if [ -n "$_exp_msg" ]; then
+  BADGE+=$'\n'"🏛️ ${_exp_msg}"
+fi
+
+# Combine badge + feature summary into context
+FULL_CONTEXT="${BADGE}"
+if [ -n "$FEATURE_SUMMARY" ]; then
+  FULL_CONTEXT+=$'\n\n'"${FEATURE_SUMMARY}"
+fi
+
+# Output with branded context — proper JSON escaping via python
+ESCAPED=$(printf '%s' "$FULL_CONTEXT" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+echo "{\"continue\": true, \"additionalContext\": ${ESCAPED}}"

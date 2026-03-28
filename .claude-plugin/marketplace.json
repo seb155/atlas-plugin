@@ -1,6 +1,6 @@
 {
   "name": "atlas-admin-marketplace",
-  "description": "AXOIQ marketplace for the ATLAS unified AI engineering assistant plugin",
+  "description": "AXOIQ marketplace for the ATLAS AI engineering assistant ecosystem",
   "owner": {
     "name": "Seb Gagnon",
     "email": "seb@axoiq.com"
@@ -8,16 +8,73 @@
   "plugins": [
     {
       "name": "atlas-admin",
-      "description": "ATLAS \u2014 AXOIQ unified AI engineering assistant (monolith). 76 skills + 12 agents. Use 'make dev' to install.",
+      "description": "ATLAS monolith — all 76 skills in one plugin. Use domain plugins instead for modular install.",
       "version": "4.0.4",
       "source": {
         "source": "url",
         "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git"
       },
-      "author": {
-        "name": "Seb Gagnon",
-        "email": "seb@axoiq.com"
-      }
+      "author": { "name": "Seb Gagnon" }
+    },
+    {
+      "name": "atlas-core",
+      "description": "ATLAS Core — Memory, session, context, vault, assist. Required by all ATLAS domain plugins.",
+      "source": {
+        "source": "git-subdir",
+        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "path": "dist/atlas-core"
+      },
+      "author": { "name": "Seb Gagnon" }
+    },
+    {
+      "name": "atlas-dev",
+      "description": "ATLAS Dev — TDD, planning, debugging, code review, shipping workflows.",
+      "source": {
+        "source": "git-subdir",
+        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "path": "dist/atlas-dev"
+      },
+      "author": { "name": "Seb Gagnon" }
+    },
+    {
+      "name": "atlas-frontend",
+      "description": "ATLAS Frontend — Design, browser automation, visual QA.",
+      "source": {
+        "source": "git-subdir",
+        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "path": "dist/atlas-frontend"
+      },
+      "author": { "name": "Seb Gagnon" }
+    },
+    {
+      "name": "atlas-infra",
+      "description": "ATLAS Infra — Infrastructure, deploy, security, network, DevOps.",
+      "source": {
+        "source": "git-subdir",
+        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "path": "dist/atlas-infra"
+      },
+      "author": { "name": "Seb Gagnon" }
+    },
+    {
+      "name": "atlas-enterprise",
+      "description": "ATLAS Enterprise — Governance, knowledge engine, agent teams, programme management.",
+      "source": {
+        "source": "git-subdir",
+        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "path": "dist/atlas-enterprise"
+      },
+      "author": { "name": "Seb Gagnon" }
+    },
+    {
+      "name": "atlas-experiential",
+      "description": "ATLAS Experiential — Episode capture, intuition logging, relationship memory.",
+      "source": {
+        "source": "git-subdir",
+        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "path": "dist/atlas-experiential"
+      },
+      "author": { "name": "Seb Gagnon" }
     }
   ]
 }
