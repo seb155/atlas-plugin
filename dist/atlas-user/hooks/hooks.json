@@ -10,6 +10,29 @@
             "async": false
           }
         ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/morning-brief\"",
+            "async": true,
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/experiential-capture\"",
+            "async": true,
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -59,6 +82,18 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/auto-learn\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/focus-guard\"",
+            "async": true,
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/tone-adaptation\"",
+            "async": true,
+            "timeout": 3
           }
         ]
       }
