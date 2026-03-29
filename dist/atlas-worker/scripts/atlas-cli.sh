@@ -9,7 +9,7 @@
 # Source this file from ~/.zshrc:
 #   [ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"
 
-ATLAS_VERSION="1.1.1"
+ATLAS_VERSION="1.2.0"
 ATLAS_CONFIG="${HOME}/.atlas/config.json"
 ATLAS_HISTORY="${HOME}/.atlas/history.json"
 ATLAS_SHELL_DIR="${HOME}/.atlas/shell"
@@ -945,7 +945,7 @@ atlas() {
   local effort=$ATLAS_DEFAULT_EFFORT
   local chrome=$ATLAS_DEFAULT_CHROME
   local yolo=false auto_mode=false plan_mode=false bare=false
-  local cont=false resume_name="" session_name=""
+  local cont=false resume_name="" session_name="" wt_name=""
   local -a extra_args=()
   local parsing_extra=false
 
@@ -989,6 +989,8 @@ atlas() {
           project="$arg"
         elif [ -z "$topic" ]; then
           topic="$arg"
+        elif [[ "$worktree" == "true" ]] && [ -z "$wt_name" ]; then
+          wt_name="$arg"
         else
           extra_args+=("$arg")
         fi
@@ -1038,6 +1040,18 @@ print(handoffs[-1] if handoffs else '')
     _atlas_topic_add_session "$topic" "$name"
   fi
 
+  # Auto-rebuild plugin if source is newer than cache (zero-friction dev)
+  local _plugin_src="${HOME}/workspace_atlas/projects/atlas-dev-plugin"
+  if [ -f "${_plugin_src}/VERSION" ]; then
+    local _src_time _cache_time
+    _src_time=$(stat -c %Y "${_plugin_src}/VERSION" 2>/dev/null || echo 0)
+    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION 2>/dev/null | head -1 || echo 0)
+    if [ "${_src_time:-0}" -gt "${_cache_time:-0}" ]; then
+      echo "🔄 Plugin source newer than cache, rebuilding..."
+      (cd "${_plugin_src}" && make dev-admin 2>/dev/null) && echo "   ✅ Plugin rebuilt" || echo "   ⚠️  Plugin rebuild failed (non-blocking)"
+    fi
+  fi
+
   # Fix CC settings before launch (remove overly broad deny rules)
   [ -x "${HOME}/.atlas/scripts/fix-cc-settings.sh" ] && "${HOME}/.atlas/scripts/fix-cc-settings.sh" >/dev/null 2>&1
 
@@ -1051,8 +1065,21 @@ print(handoffs[-1] if handoffs else '')
   [ ! -x "$claude_bin" ] && claude_bin=$(command -v claude 2>/dev/null || echo "claude")
   local -a cmd=("$claude_bin")
 
-  # Worktree
-  [[ "$worktree" == "true" ]] && cmd+=(-w)
+  # Worktree — always with a meaningful name (never random)
+  if [[ "$worktree" == "true" ]]; then
+    if [ -n "$wt_name" ]; then
+      # Explicit name: atlas -w synapse pitch-demo
+      cmd+=(-w "$wt_name")
+    elif [ -n "$topic" ]; then
+      # Topic provided: atlas synapse pitch-demo → use topic as worktree name
+      cmd+=(-w "$topic")
+    else
+      # Fallback: project-MMDD (still meaningful, never random)
+      local _wt_project
+      _wt_project=$(basename "$path")
+      cmd+=(-w "${_wt_project}-$(date '+%m%d')")
+    fi
+  fi
 
   # Effort
   [ -n "$effort" ] && [ "$effort" != "auto" ] && cmd+=(--effort "$effort")
