@@ -13,8 +13,8 @@ effort: high
 
 | Step | Action | HITL |
 |------|--------|------|
-| 1. Load | Read context discovery report + `.blueprint/plans/INDEX.md`. Extending? Load existing plan. Load `.blueprint/PLAN-TEMPLATE.md` | - |
-| 2. Research | WebSearch (2026+ best practices) + Context7 (lib docs) → feed Section C | - |
+| 1. Load | Read context discovery report + `.blueprint/plans/INDEX.md`. Extending? Load existing plan. Load `.blueprint/PLAN-TEMPLATE.md`. Check `.blueprint/designs/` for design docs (see Design Doc Integration below) | - |
+| 2. Research | Objective research: factual questions only, NO intent in Explore prompts (see Research Objectivity below). WebSearch (2026+) + Context7 (lib docs) → feed Section C | - |
 | 3. Brainstorm | AskUserQuestion with 2-3 approaches + comparison table | YES |
 | 4. Draft | Fill all 15 sections (see below). N/A sections get 1-line justification | - |
 | 4.5 Exec Strategy | For plans > 10 tasks: add execution strategy sections (task types, model alloc, parallelism, cost) | - |
@@ -52,6 +52,45 @@ effort: high
 | 📋 M | TRACEABILITY | Audit trail (who/when/what) + versioning + derivation tracking |
 | 📅 N | PHASES | Table: phase, content, files, duration, dependencies. Mermaid gantt. |
 | ✅ O | VERIFICATION | Backend + frontend + E2E persona + DB + perf + security commands |
+
+## Design Doc Integration
+
+When `.blueprint/designs/{feature}.md` exists (produced by brainstorming skill):
+
+1. **Load** the design doc as pre-resolved context
+2. **Pre-fill sections** from design doc content:
+   - "Resolved Decisions" → Section A (Vision), Section C (Architecture)
+   - "Patterns Found" → Section B (Inventory) — reusable code, anti-patterns to avoid
+   - "Phase Sketch" → Section N (Phases) — follow the vertical structure as baseline
+   - "Constraints" → Sections H-L (Enterprise)
+3. **Resolve "Open Questions"** — research or ask user for remaining unknowns
+4. **Do NOT re-ask** questions already resolved in the design doc
+5. If no design doc found → proceed normally (brainstorming may not have been run)
+
+## Research Objectivity
+
+When launching Explore agents or sub-agents for research (Step 2):
+
+**Rule**: Research agents must NOT know what feature is being built. They gather FACTS only.
+
+**2-phase approach**:
+1. **Generate research questions** (with ticket context): Frame as factual questions
+   - GOOD: "How does the endpoint routing work in `backend/routes/`?"
+   - GOOD: "What tables and indexes exist for the `instruments` domain?"
+   - GOOD: "Trace the data flow from import CSV to material_catalog table."
+   - BAD: "How should we implement the new spline feature?"
+   - BAD: "What's the best approach for adding tenant filtering?"
+2. **Send only questions** to Explore agents — exclude ticket, feature name, and user intent
+
+**Opinion detection** (post-research): Scan research output for opinion words: "should", "recommend", "suggest", "better to", "consider using", "I think". If found → flag to user as potentially contaminated research, but don't block.
+
+## Vertical Plan Constraint (Section N)
+
+Each phase in Section N MUST be an independently testable end-to-end slice:
+- Each phase touches at least 2 layers (e.g., DB+API, or API+FE)
+- Each phase has a test checkpoint command (how to verify it works)
+- **Anti-pattern**: 3+ consecutive same-layer phases (all DB → all API → all FE = HORIZONTAL, reject)
+- If a Phase Sketch exists in the design doc, use it as the structural baseline
 
 ## Quality Gate (20 criteria, gate >= 16)
 

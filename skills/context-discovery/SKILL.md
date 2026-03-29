@@ -16,7 +16,7 @@ Generic — works with any tech stack/framework/language.
 | # | Phase | Scan targets | Output |
 |---|-------|-------------|--------|
 | 1 | **Stack** | `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `pom.xml`, `Gemfile`, `docker-compose.yml`, `alembic/`, `prisma/` | `Stack: {FE} + {BE} + {DB} + {infra}` |
-| 2 | **Docs** | `CLAUDE.md`, `.blueprint/`, `.claude/rules/`, `memory/`, `docs/`, `.cursor/`, `.windsurf/` | `Docs: {N} files, key: {list}` |
+| 2 | **Docs** | `CLAUDE.md`, `.blueprint/`, `.blueprint/designs/`, `.claude/rules/`, `memory/`, `docs/`, `.cursor/`, `.windsurf/` | `Docs: {N} files, key: {list}. Designs: {N} design docs` |
 | 3 | **Domain** | CLAUDE.md keywords, model/service names, domain-specific libs | `Domain: {type}` |
 | 4 | **Architecture** | `routes/`, `services/`, `models/`, `components/`, `hooks/`, `tests/` — count files per category | `Architecture: {N} endpoints, {M} services, {K} models, {J} components` |
 | 5 | **Deploy** | `docker-compose.yml`, `Dockerfile`, `.github/workflows/`, `.forgejo/workflows/`, `scripts/`, `.env.example` | `Deploy: {method}, CI: {platform}, Envs: {list}` |
