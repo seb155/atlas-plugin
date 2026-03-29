@@ -71,15 +71,45 @@ else
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 3. Prompt-level signals (typo rate, length, directness)
+# 3. Prompt-level signals (Theory of Mind — user state inference)
+#    NOTE: In calibration mode for first 30 days. Accumulates
+#    baselines before drawing conclusions. Does NOT predict yet.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TOM_LOG="$HOME/.claude/atlas-tom-signals.json"
 
 if [ -n "$PROMPT" ]; then
   PROMPT_LEN=${#PROMPT}
-  # Very short + late = likely tired
-  if [ "$PROMPT_LEN" -lt 30 ] && [ "$HOUR" -ge 21 ]; then
-    ENERGY=$((ENERGY > 1 ? ENERGY - 1 : 1))
-  fi
+
+  # Accumulate signal for baseline building (no conclusions yet)
+  python3 -c "
+import json, os
+from datetime import datetime
+entry = {
+    'ts': datetime.now().isoformat(),
+    'hour': $HOUR,
+    'length': $PROMPT_LEN,
+    'energy_at_time': $ENERGY,
+    'mood_at_time': '$MOOD'
+}
+log = []
+if os.path.exists('$TOM_LOG'):
+    try:
+        with open('$TOM_LOG') as f:
+            log = json.load(f)
+    except: log = []
+log.append(entry)
+log = log[-200:]  # keep last 200 entries
+with open('$TOM_LOG', 'w') as f:
+    json.dump(log, f)
+
+# Only infer if 30+ entries (calibration complete)
+if len(log) >= 30:
+    avg_len = sum(e['length'] for e in log) / len(log)
+    # Short message = potentially low energy (only if well below avg)
+    if $PROMPT_LEN < avg_len * 0.4 and $HOUR >= 21:
+        print('LOW_ENERGY_SIGNAL')
+" 2>/dev/null | grep -q "LOW_ENERGY_SIGNAL" && ENERGY=$((ENERGY > 1 ? ENERGY - 1 : 1))
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
