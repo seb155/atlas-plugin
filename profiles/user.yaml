@@ -32,6 +32,11 @@ hooks:  # Hook scripts — run automatically on CC lifecycle events
   - validate-bash
   - pre-compact-context
   - auto-learn
+  - focus-guard
+  - experiential-capture
+  # SP-COGNITION: cognitive hooks (Gap 1 + Gap 2)
+  - tone-adaptation
+  - morning-brief
 
 agents:
   - context-scanner

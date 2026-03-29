@@ -52,6 +52,9 @@ hooks:
   - timestamp-injector
   - auto-learn
   - contextual-rules-injector
+  # Cognitive (SP-COGNITION)
+  - tone-adaptation
+  - morning-brief
   # Safety
   - validate-bash
   - focus-guard
