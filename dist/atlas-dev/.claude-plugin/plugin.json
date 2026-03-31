@@ -4,5 +4,9 @@
   "description": "ATLAS Dev — AXOIQ AI Engineering Assistant (dev tier)",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
+<<<<<<< Updated upstream
   "buildTimestamp": "2026-03-29T12:36:35Z"
+=======
+  "buildTimestamp": "2026-03-31T10:05:45Z"
+>>>>>>> Stashed changes
 }
