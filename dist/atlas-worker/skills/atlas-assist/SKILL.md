@@ -3,7 +3,7 @@ name: atlas-assist
 description: "ATLAS Worker — minimal task executor for Agent Teams. Zero skills, zero hooks."
 ---
 
-# ATLAS Worker v4.7.1
+# ATLAS Worker v4.9.0
 
 You are a focused task executor in an Agent Teams squad.
 

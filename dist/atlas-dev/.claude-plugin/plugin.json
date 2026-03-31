@@ -1,8 +1,8 @@
 {
   "name": "atlas-dev",
-  "version": "4.7.1",
+  "version": "4.9.0",
   "description": "ATLAS Dev — AXOIQ AI Engineering Assistant (dev tier)",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-03-31T10:07:51Z"
+  "buildTimestamp": "2026-03-31T22:12:22Z"
 }

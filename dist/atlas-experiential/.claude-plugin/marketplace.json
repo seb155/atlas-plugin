@@ -5,7 +5,7 @@
     {
       "name": "atlas-experiential",
       "description": "Experiential — episode capture, intuition logging, relationship memory.",
-      "version": "4.0.3",
+      "version": "4.7.1",
       "source": { "source": "url", "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }

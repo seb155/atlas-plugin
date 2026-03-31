@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — Tone Adaptation Hook (UserPromptSubmit)
+# SP-COGNITION Gap 2: Affect-as-Signal
+#
+# Reads experiential signals + time of day → adjusts response tone.
+# Output: system-reminder with tone guidance (Claude follows it).
+# Only injects when tone != standard (to avoid noise).
+#
+# Input: JSON on stdin with prompt text
+# Must complete in <3s
+
+set -o pipefail
+trap 'exit 0' ERR
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true
+
+# Read prompt (unused for now, but available for typo/length analysis)
+INPUT=$(cat 2>/dev/null || echo '{}')
+PROMPT=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prompt', d.get('message', '')))" 2>/dev/null || echo "")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 1. Read accumulated experiential signals
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SIGNALS_FILE="$HOME/.claude/atlas-experiential-signals.json"
+
+ENERGY=4  # default: moderate
+MOOD="neutral"
+
+if [ -f "$SIGNALS_FILE" ] && [ -s "$SIGNALS_FILE" ]; then
+  # Get last energy signal
+  LAST_ENERGY=$(python3 -c "
+import json
+with open('$SIGNALS_FILE') as f:
+    signals = json.load(f)
+energies = [s['value'] for s in signals if s.get('type') == 'energy']
+print(energies[-1] if energies else 4)
+" 2>/dev/null)
+  ENERGY=${LAST_ENERGY:-4}
+
+  # Get last mood signal
+  LAST_MOOD=$(python3 -c "
+import json
+with open('$SIGNALS_FILE') as f:
+    signals = json.load(f)
+moods = [s['value'] for s in signals if s.get('type') == 'mood']
+print(moods[-1] if moods else 'neutral')
+" 2>/dev/null)
+  MOOD=${LAST_MOOD:-neutral}
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2. Time-of-day factor
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HOUR=$(date +%H)
+
+if [ "$HOUR" -ge 22 ] || [ "$HOUR" -lt 6 ]; then
+  # Late night → energy penalty (-1)
+  ENERGY=$((ENERGY > 1 ? ENERGY - 1 : 1))
+  TIME_LABEL="late-night"
+elif [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 10 ]; then
+  TIME_LABEL="morning"
+elif [ "$HOUR" -ge 10 ] && [ "$HOUR" -lt 14 ]; then
+  TIME_LABEL="midday"
+elif [ "$HOUR" -ge 14 ] && [ "$HOUR" -lt 18 ]; then
+  TIME_LABEL="afternoon"
+else
+  TIME_LABEL="evening"
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 3. Prompt-level signals (Theory of Mind — user state inference)
+#    NOTE: In calibration mode for first 30 days. Accumulates
+#    baselines before drawing conclusions. Does NOT predict yet.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TOM_LOG="$HOME/.claude/atlas-tom-signals.json"
+
+if [ -n "$PROMPT" ]; then
+  PROMPT_LEN=${#PROMPT}
+
+  # Accumulate signal for baseline building (no conclusions yet)
+  python3 -c "
+import json, os
+from datetime import datetime
+entry = {
+    'ts': datetime.now().isoformat(),
+    'hour': $HOUR,
+    'length': $PROMPT_LEN,
+    'energy_at_time': $ENERGY,
+    'mood_at_time': '$MOOD'
+}
+log = []
+if os.path.exists('$TOM_LOG'):
+    try:
+        with open('$TOM_LOG') as f:
+            log = json.load(f)
+    except: log = []
+log.append(entry)
+log = log[-200:]  # keep last 200 entries
+with open('$TOM_LOG', 'w') as f:
+    json.dump(log, f)
+
+# Only infer if 30+ entries (calibration complete)
+if len(log) >= 30:
+    avg_len = sum(e['length'] for e in log) / len(log)
+    # Short message = potentially low energy (only if well below avg)
+    if $PROMPT_LEN < avg_len * 0.4 and $HOUR >= 21:
+        print('LOW_ENERGY_SIGNAL')
+" 2>/dev/null | grep -q "LOW_ENERGY_SIGNAL" && ENERGY=$((ENERGY > 1 ? ENERGY - 1 : 1))
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 4. Compute tone mode
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TONE="standard"
+STYLE=""
+
+if [ "$ENERGY" -le 2 ]; then
+  TONE="ultra-concise"
+  STYLE="Max 3 bullets. No brainstorm. No insights block. Actions only. Skip AskUserQuestion if the answer is obvious."
+elif [ "$ENERGY" -le 3 ] && [[ "$MOOD" == "frustrated" || "$MOOD" == "annoyed" || "$MOOD" == "stuck" ]]; then
+  TONE="empathetic-concise"
+  STYLE="Acknowledge the blocker briefly. Propose 1-2 concrete alternatives. Stay short and supportive."
+elif [ "$ENERGY" -ge 5 ] && [[ "$MOOD" == "curious" || "$MOOD" == "excited" ]]; then
+  TONE="exploration"
+  STYLE="Insights welcome. Explore alternatives. Encourage creative thinking. Longer responses OK."
+elif [[ "$MOOD" == "flow" ]] || [[ "$MOOD" == "dans-la-zone" ]]; then
+  TONE="flow-protect"
+  STYLE="MINIMAL output. Execute directly. No questions. No commentary. Just do the work."
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 5. Inject guidance (only when non-standard)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+if [ "$TONE" != "standard" ]; then
+  # Throttle: max 1 injection per 5 minutes
+  if type throttle_check &>/dev/null && ! throttle_check "tone-adapt" 300; then
+    exit 0
+  fi
+  echo "🎭 Tone: ${TONE} (energy=${ENERGY}, mood=${MOOD}, time=${TIME_LABEL}). ${STYLE}"
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 6. Write tone state for downstream use
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TONE_FILE="$HOME/.claude/atlas-tone-state.json"
+python3 -c "
+import json
+from datetime import datetime
+state = {
+    'tone': '$TONE',
+    'energy': $ENERGY,
+    'mood': '$MOOD',
+    'time_label': '$TIME_LABEL',
+    'hour': $HOUR,
+    'updated': datetime.now().isoformat()
+}
+with open('$TONE_FILE', 'w') as f:
+    json.dump(state, f, indent=2)
+" 2>/dev/null || true

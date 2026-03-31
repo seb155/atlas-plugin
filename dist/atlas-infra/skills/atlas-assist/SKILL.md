@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Infra — AXOIQ's unified AI engineering assistant. 6 skills, 1 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Infra — AXOIQ's unified AI engineering assistant. 7 skills, 1 agents. Auto-routing co-pilot with HITL gates."
 ---
 
 # ATLAS — AXOIQ's Unified AI Engineering Assistant (Infra Tier)
@@ -15,8 +15,8 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.0.3 Infra
-   6 skills │ 1 agents │ Gate 12/15
+🏛️ ATLAS │ ✅ SESSION │ v4.7.1 Infra
+   7 skills │ 1 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -74,6 +74,7 @@ Phases: `AUDIT → PLAN → DEPLOY → VERIFY → MONITOR`
 | **engineering-ops** | ⚙️ | Optimize |
 | **mesh-diagnostics** | ❓ | Other |
 | **network-audit** | ❓ | Other |
+| **infrastructure-change** | 🏗️ | Infrastructure |
 
 ### Breadcrumb Examples
 
@@ -102,12 +103,13 @@ Phases: `AUDIT → PLAN → DEPLOY → VERIFY → MONITOR`
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (6)
+## Available Skills (7)
 
 ### 🎯 Deploy
 - 🎯 **devops-deploy**: Deploy to any env with health checks, validators, data sync
 
 ### 🔧 Infrastructure
+- 🏗️ **infrastructure-change**: CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation
 - 🔧 **infrastructure-ops**: Infrastructure management: VMs, containers, networking, monitoring
 
 ### 🧬 Optimize

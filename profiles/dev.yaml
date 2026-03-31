@@ -34,6 +34,8 @@ skills:
   - plugin-builder
   # Domain
   - engineering-ops
+  # Visual
+  - visual-generator
   # v3.26.0: migrated from commands
   - session-pickup
   - ci-management

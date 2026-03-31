@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Dev — AXOIQ's unified AI engineering assistant. 38 skills, 6 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Dev — AXOIQ's unified AI engineering assistant. 39 skills, 6 agents. Auto-routing co-pilot with HITL gates."
 ---
 
 # ATLAS — AXOIQ's Unified AI Engineering Assistant (Dev Tier)
@@ -15,8 +15,8 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.7.1 Dev
-   38 skills │ 6 agents │ Gate 12/15
+🏛️ ATLAS │ ✅ SESSION │ v4.9.0 Dev
+   39 skills │ 6 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -105,6 +105,7 @@ Phases: `DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP`
 | **user-profiler** | 👤 | Personal |
 | **verification** | 📊 | Quality |
 | **vision-alignment** | 🧭 | Planning |
+| **visual-generator** | ❓ | Other |
 | **youtube-transcript** | 🎬 | Knowledge |
 
 ### Breadcrumb Examples
@@ -134,7 +135,7 @@ Phases: `DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP`
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (38)
+## Available Skills (39)
 
 ### 🎯 Deploy
 - 🔧 **ci-management**: CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet
@@ -168,6 +169,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 
 ### 📌 Other
 - ❓ **execution-strategy**: 
+- ❓ **visual-generator**: 
 
 ### 👤 Personal
 - 🧠 **knowledge-builder**: Learn facts/preferences/relationships. Confidence-based
