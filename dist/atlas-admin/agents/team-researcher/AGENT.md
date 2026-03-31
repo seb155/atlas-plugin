@@ -2,6 +2,7 @@
 name: team-researcher
 description: "Information gathering worker for Agent Teams. Haiku agent. Web search, docs, memory files, git history. Read-only — never modifies files."
 model: haiku
+effort: low
 ---
 
 # Team Researcher Agent

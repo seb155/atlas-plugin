@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 64 skills, 12 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 65 skills, 12 agents. Auto-routing co-pilot with HITL gates."
 ---
 
 # ATLAS — AXOIQ's Unified AI Engineering Assistant (Admin Tier)
@@ -15,8 +15,8 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.5.0 Admin
-   64 skills │ 12 agents │ Gate 12/15
+🏛️ ATLAS │ ✅ SESSION │ v4.5.3 Admin
+   65 skills │ 12 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -98,6 +98,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **frontend-workflow** | 🎨 | Planning |
 | **git-worktrees** | 🌿 | Implementation |
 | **hookify** | 🪝 | Meta |
+| **infrastructure-change** | 🏗️ | Infrastructure |
 | **infrastructure-ops** | 🔧 | Infrastructure |
 | **intuition-log** | ❓ | Other |
 | **knowledge-builder** | 🧠 | Personal |
@@ -160,7 +161,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (64)
+## Available Skills (65)
 
 ### 🎯 Deploy
 - 🔧 **ci-management**: CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet
@@ -177,6 +178,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 🧪 **tdd**: Failing test → minimal impl → pass → commit. Strict TDD cycle
 
 ### 🔧 Infrastructure
+- 🏗️ **infrastructure-change**: CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation
 - 🔧 **infrastructure-ops**: Infrastructure management: VMs, containers, networking, monitoring
 - 📟 **statusline-setup**: Configure CShip + Starship status line for Claude Code sessions
 

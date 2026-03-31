@@ -58,18 +58,56 @@ Every team follows this exact lifecycle:
 - **NEVER** use Explore-type agents as team members (can't SendMessage)
 - **NEVER** spawn more than 4 workers (RAM: ~1-2 GB per agent)
 
-### Named Agent Mapping
+### Named Agent Mapping (Model + Effort Matrix)
 
-| Agent Definition | Model | Capabilities |
-|-----------------|-------|-------------|
-| `atlas-admin:team-researcher` | haiku | Read-only: web, docs, git, memory |
-| `atlas-admin:team-engineer` | sonnet | Full: code, tests, fixes |
-| `atlas-admin:team-tester` | sonnet | Full: test writing + running |
-| `atlas-admin:team-reviewer` | sonnet | Read-only: diff review, quality |
-| `atlas-admin:team-coordinator` | haiku | Read-only: CI, Docker, ops status |
-| `atlas-admin:team-security` | sonnet | Read-only: OWASP, secrets, RBAC |
+| Agent Definition | Model | Effort | Capabilities |
+|-----------------|-------|--------|-------------|
+| `atlas-admin:team-researcher` | haiku | low | Read-only: web, docs, git, memory |
+| `atlas-admin:team-engineer` | sonnet | medium | Full: code, tests, fixes |
+| `atlas-admin:team-tester` | sonnet | medium | Full: test writing + running |
+| `atlas-admin:team-reviewer` | sonnet | high | Read-only: diff review, quality |
+| `atlas-admin:team-coordinator` | haiku | low | Read-only: CI, Docker, ops status |
+| `atlas-admin:team-security` | sonnet | high | Read-only: OWASP, secrets, RBAC |
+| `atlas-admin:plan-architect` | opus | max | Plans: 15-section, ultrathink |
+| `atlas-admin:code-reviewer` | sonnet | high | Standalone code review |
+| `atlas-admin:plan-reviewer` | sonnet | high | Quality gate 12/15 scoring |
+| `atlas-admin:context-scanner` | haiku | low | CLAUDE.md drift detection |
+
+**Effort levels** (from CC API):
+- `low`: Minimal thinking, max speed. For lookups, status checks, classification.
+- `medium`: Balanced (default). For implementation, coding, test writing.
+- `high`: Deep reasoning. For reviews, security audits, quality gates.
+- `max`: No thinking constraint (Opus 4.6 only). For architecture, planning.
 
 Fallback: if named agent not found, use `subagent_type: "general-purpose"` with the same prompt.
+
+### Model ID Reference — 1M Context (CRITICAL)
+
+**The `model:` shorthand and full ID activate different context windows:**
+
+| Use case | `model:` param | Context window |
+|----------|---------------|----------------|
+| Default (200K) | `"opus"` or `"sonnet"` | 200K tokens |
+| 1M context | `"claude-opus-4-6[1m]"` | 1M tokens |
+| 1M Sonnet | `"claude-sonnet-4-6[1m]"` | 1M tokens |
+
+**CRITICAL rules for 1M context agents**:
+- The `[1m]` suffix in the model ID is what activates 1M context — shorthand NEVER gets it
+- AGENT.md frontmatter `model:` is documentation only — CC does NOT auto-apply it when spawning
+- Always pass `model:` explicitly via the Agent tool `model:` parameter
+- For 1M context: pass the full ID `"claude-opus-4-6[1m]"` — not `"opus"`
+
+```
+# 200K (default) — shorthand OK:
+Agent(name: "engineer", model: "sonnet", ...)
+
+# 1M context — full ID required:
+Agent(name: "lead", model: "claude-opus-4-6[1m]", ...)
+
+# Caveat (CC 2.1.74): Agent tool model param only accepts shorthand OR full ID.
+# If 1M is needed for a worker, ensure the parent session is already on 1M model.
+# The [1m] suffix propagates via AGENT.md but NOT via Agent tool model: param shorthand.
+```
 
 ## Blueprints
 
@@ -230,25 +268,25 @@ Agent(name: "security-auditor", subagent_type: "atlas-admin:team-security",
 
 **When**: System health check, post-deploy validation, or periodic audit.
 
-| Name | Model | Role | Prompt Focus |
-|------|-------|------|-------------|
-| Lead (you) | Opus | Coordination + report | Synthesize findings into health report |
-| docker-checker | Sonnet | Container status | docker ps, logs, health checks, resource usage |
-| api-tester | Sonnet | API endpoints | Health endpoints, response times, error rates |
-| log-analyzer | Sonnet | Log patterns | Error patterns, anomalies, warnings |
+| Name | Model | Effort | Role | Prompt Focus |
+|------|-------|--------|------|-------------|
+| Lead (you) | Opus | high | Coordination + report | Synthesize findings into health report |
+| docker-checker | Haiku | low | Container status | docker ps, logs, health checks, resource usage |
+| api-tester | Sonnet | medium | API endpoints | Health endpoints, response times, error rates |
+| log-analyzer | Haiku | low | Log patterns | Error patterns, anomalies, warnings |
 
 **Spawn pattern**:
 ```
 TeamCreate(team_name: "audit")
 
 Agent(name: "docker-checker", subagent_type: "atlas-admin:team-coordinator",
-      team_name: "audit", model: "sonnet", run_in_background: true,
+      team_name: "audit", model: "haiku", run_in_background: true,
       prompt: "Docker: Check container status, health, resource usage, stale images. SendMessage report to team lead.")
 Agent(name: "api-tester", subagent_type: "atlas-admin:team-engineer",
       team_name: "audit", model: "sonnet", run_in_background: true,
       prompt: "API: Test health endpoints, response times, error rates. SendMessage report to team lead.")
 Agent(name: "log-analyzer", subagent_type: "atlas-admin:team-researcher",
-      team_name: "audit", model: "sonnet", run_in_background: true,
+      team_name: "audit", model: "haiku", run_in_background: true,
       prompt: "Logs: Analyze error patterns, anomalies, warnings in docker logs and system logs. SendMessage report to team lead.")
 ```
 

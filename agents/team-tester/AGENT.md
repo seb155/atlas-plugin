@@ -2,6 +2,7 @@
 name: team-tester
 description: "Testing worker for Agent Teams. Sonnet agent. Writes and runs unit, integration, and E2E tests. Verifies implementations."
 model: sonnet
+effort: medium
 ---
 
 # Team Tester Agent

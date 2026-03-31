@@ -11,19 +11,36 @@ effort: medium
 Execute plan tasks by dispatching specialized subagents. Each task gets a subagent with the
 **model specified by the execution manifest** (default: Sonnet), followed by 2-stage review.
 
-## Model Strategy (Manifest-Driven)
+## Model + Effort Strategy (Manifest-Driven)
 
 When an execution manifest is available (from `execution-strategy` skill):
 - **Read task.model from manifest** → use that model for the subagent
-- **Opus**: Architecture, DB migration, cross-system design tasks
-- **Sonnet**: Implementation, bug fixes, tests, code review (default)
-- **Haiku**: Validation, search, spec checklists (read-only tasks)
-- **DET**: Lint, format, type-check (bash command, no subagent needed)
+
+### Agent Orchestration Matrix
+
+| Role | Model | Effort | Context | When to Use |
+|------|-------|--------|---------|-------------|
+| **Architect / Planner** | `opus` | `max` | 1M if >50 files | Architecture, DB migration, cross-system design, 15-section plans |
+| **Code Reviewer** | `sonnet` | `high` | 200K | Spec compliance review, quality gate, security audit |
+| **Implementer** | `sonnet` | `medium` | 200K (1M for large refactors) | Implementation, bug fixes, features (default worker) |
+| **Tester** | `sonnet` | `medium` | 200K (1M for large suites) | Unit, integration, E2E tests |
+| **Researcher** | `haiku` | `low` | 200K | Web search, docs lookup, git history, read-only synthesis |
+| **Coordinator** | `haiku` | `low` | 200K | CI status, Docker health, deploy checks |
+| **Context Scanner** | `haiku` | `low` | 200K | CLAUDE.md audit, drift detection |
+| **DET** | N/A | N/A | N/A | Lint, format, type-check (bash command, no subagent) |
+
+### Key Rules
+
+- **`effort:` is mandatory** — always pass it when spawning agents via Agent tool
+- **`model: opus` = 200K** by default. Use `model: "opus"` with frontmatter `effort: max` for plan-architect
+- **1M context** (`[1m]` suffix): reserve for sessions touching >50 files or requiring full codebase awareness
+- **Never Haiku for implementation** — too shallow for code generation
+- **Never Opus for simple lookups** — cost waste (~8x vs Haiku)
 
 When NO manifest is available (legacy fallback):
-- **Implementation subagents**: Sonnet 4.6 (efficient, high quality)
-- **Review subagents**: Sonnet 4.6 (spec + quality review)
-- **Never**: Haiku for implementation (too shallow)
+- **Implementation subagents**: Sonnet, effort: medium
+- **Review subagents**: Sonnet, effort: high
+- **Research subagents**: Haiku, effort: low
 
 ### Cost Awareness
 
@@ -46,10 +63,12 @@ After subagent completes:
 ### 1. Dispatch Implementer
 ```
 Agent tool:
-  subagent_type: general-purpose
-  model: task.model  # FROM MANIFEST (was hardcoded "sonnet")
+  subagent_type: general-purpose (or team-engineer for Agent Teams)
+  model: task.model  # FROM MANIFEST — default: sonnet
   prompt: "{full task text from plan + context + constraints}"
 ```
+Note: Agent frontmatter `effort:` is applied automatically when using named subagent_type.
+When using `general-purpose`, the effort level inherits from the session default.
 
 Provide the subagent with:
 - Full task text (don't make it read the plan file)

@@ -2,6 +2,7 @@
 name: design-implementer
 description: "Frontend implementation from design specs and mockups. Sonnet agent. Translates wireframes, ASCII mockups, and design documents into production React/TypeScript components following project conventions."
 model: sonnet
+effort: medium
 ---
 
 # Design Implementer Agent

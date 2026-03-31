@@ -2,6 +2,7 @@
 name: team-engineer
 description: "Implementation worker for Agent Teams. Sonnet agent. Writes code, fixes bugs, implements features. Full file access except browser MCP."
 model: sonnet
+effort: medium
 ---
 
 # Team Engineer Agent
