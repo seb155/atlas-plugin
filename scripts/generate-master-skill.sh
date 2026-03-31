@@ -107,6 +107,8 @@ declare -A EMOJI_MAP=(
   [marketplace-manager]="🏪" [programme-manager]="📊" [knowledge-engine]="🗂️"
   # v3.28.0: Agent Teams
   [atlas-team]="👥"
+  # v3.43.0: Infrastructure change orchestration
+  [infrastructure-change]="🏗️"
 )
 
 # Skill category map
@@ -137,6 +139,8 @@ declare -A CATEGORY_MAP=(
   [marketplace-manager]="Meta" [programme-manager]="Project" [knowledge-engine]="Knowledge"
   # v3.28.0: Agent Teams
   [atlas-team]="Implementation"
+  # v3.43.0: Infrastructure change orchestration
+  [infrastructure-change]="Infrastructure"
 )
 
 # Skill one-liner descriptions
@@ -203,6 +207,8 @@ declare -A DESC_MAP=(
   [knowledge-engine]="Enterprise knowledge layer — search, ingest, discover, vectorize"
   # v3.28.0: Agent Teams
   [atlas-team]="Agent Teams blueprints — spawn coordinated worker squads in tmux panes (jarvis, feature, debug, review, audit)"
+  # v3.43.0: Infrastructure change orchestration
+  [infrastructure-change]="CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation"
 )
 
 # Category header emojis
