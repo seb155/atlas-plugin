@@ -13,6 +13,8 @@ skills:
   # Network skills (fusionnés — mêmes utilisateurs que infra)
   - mesh-diagnostics
   - network-audit
+  # v3.43.0: CF Tunnel, Caddy, Authentik, NetBird change orchestration
+  - infrastructure-change
 
 hooks:
   - enterprise-check

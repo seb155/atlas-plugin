@@ -1,12 +1,8 @@
 {
   "name": "atlas-worker",
-  "version": "4.6.0",
+  "version": "4.6.1",
   "description": "ATLAS Worker — AXOIQ AI Engineering Assistant (worker tier)",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-<<<<<<< Updated upstream
-  "buildTimestamp": "2026-03-29T12:36:36Z"
-=======
-  "buildTimestamp": "2026-03-31T10:05:47Z"
->>>>>>> Stashed changes
+  "buildTimestamp": "2026-03-31T10:07:15Z"
 }
