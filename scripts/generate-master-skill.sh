@@ -79,145 +79,27 @@ ALL_SKILLS=$(resolve_field "$TIER" "skills")
 SKILL_COUNT=$(echo "$ALL_SKILLS" | grep -c . || echo 0)
 ALL_AGENTS=$(resolve_field "$TIER" "agents")
 AGENT_COUNT=$(echo "$ALL_AGENTS" | grep -c . || echo 0)
-# Skill emoji map (static — add new skills here)
-declare -A EMOJI_MAP=(
-  [context-discovery]="🔭" [plan-builder]="🏗️" [brainstorming]="💡" [frontend-design]="🎨"
-  [tdd]="🧪" [executing-plans]="⚡" [subagent-dispatch]="🤖" [git-worktrees]="🌿"
-  [systematic-debugging]="🔬" [verification]="📊" [code-review]="🔍" [code-simplify]="✨"
-  [finishing-branch]="📦" [devops-deploy]="🎯" [experiment-loop]="🧬" [engineering-ops]="⚙️"
-  [deep-research]="📚" [document-generator]="📄" [scope-check]="🛡️" [decision-log]="📋"
-  [session-retrospective]="🔄" [hookify]="🪝" [browser-automation]="🌐" [skill-management]="🧩"
-  [note-capture]="📝" [knowledge-builder]="🧠" [user-profiler]="👤" [reminder-scheduler]="⏰"
-  [morning-brief]="☀️" [infrastructure-ops]="🔧" [security-audit]="🔐"
-  [plugin-builder]="🔌"
-  # v3.3.0 additions
-  [statusline-setup]="📟" [feature-board]="📌" [code-analysis]="🔎"
-  [enterprise-audit]="🏢" [knowledge-manager]="📖" [platform-update]="🆙"
-  [atlas-dev-self]="🔁" [atlas-onboarding]="👋" [atlas-doctor]="🩺"
-  [atlas-vault]="🔐" [atlas-location]="📍"
-  [youtube-transcript]="🎬"
-  [plan-review]="🔍"
-  [frontend-workflow]="🎨"
-  [test-orchestrator]="🧪"
-  [vision-alignment]="🧭"
-  [memory-dream]="🌙"
-  # v3.26.0 additions (commands→skills migration)
-  [session-pickup]="🔄" [ultrathink]="🧠" [ci-management]="🔧"
-  [product-health]="🏥" [onboarding-check]="✅" [session-spawn]="🚀"
-  [marketplace-manager]="🏪" [programme-manager]="📊" [knowledge-engine]="🗂️"
-  # v3.28.0: Agent Teams
-  [atlas-team]="👥"
-  # v3.43.0: Infrastructure change orchestration
-  [infrastructure-change]="🏗️"
-)
+# ─── Load skill metadata from YAML (SSoT: skills/_metadata.yaml) ─────────
+METADATA_FILE="${ROOT_DIR}/skills/_metadata.yaml"
+if [ ! -f "$METADATA_FILE" ]; then
+  echo "ERROR: Missing $METADATA_FILE — run from repo root" >&2; exit 1
+fi
 
-# Skill category map
-declare -A CATEGORY_MAP=(
-  [context-discovery]="Planning" [plan-builder]="Planning" [brainstorming]="Planning" [frontend-design]="Planning"
-  [tdd]="Implementation" [executing-plans]="Implementation" [subagent-dispatch]="Implementation" [git-worktrees]="Implementation"
-  [systematic-debugging]="Quality" [verification]="Quality" [code-review]="Quality" [code-simplify]="Quality"
-  [finishing-branch]="Ship" [devops-deploy]="Deploy" [experiment-loop]="Optimize" [engineering-ops]="Optimize"
-  [deep-research]="Knowledge" [document-generator]="Knowledge" [scope-check]="Meta" [decision-log]="Meta"
-  [session-retrospective]="Meta" [hookify]="Meta" [browser-automation]="Meta" [skill-management]="Meta"
-  [note-capture]="Personal" [knowledge-builder]="Personal" [user-profiler]="Personal" [reminder-scheduler]="Personal"
-  [morning-brief]="Personal" [infrastructure-ops]="Infrastructure" [security-audit]="Security"
-  [plugin-builder]="Meta"
-  # v3.3.0 additions
-  [statusline-setup]="Infrastructure" [feature-board]="Project" [code-analysis]="Quality"
-  [enterprise-audit]="Governance" [knowledge-manager]="Knowledge" [platform-update]="Meta"
-  [atlas-dev-self]="Meta" [atlas-onboarding]="Meta" [atlas-doctor]="Meta"
-  [atlas-vault]="Security" [atlas-location]="Meta"
-  [youtube-transcript]="Knowledge"
-  [plan-review]="Quality"
-  [frontend-workflow]="Planning"
-  [test-orchestrator]="Quality"
-  [vision-alignment]="Planning"
-  [memory-dream]="Meta"
-  # v3.26.0 additions
-  [session-pickup]="Meta" [ultrathink]="Meta" [ci-management]="Deploy"
-  [product-health]="Quality" [onboarding-check]="Meta" [session-spawn]="Meta"
-  [marketplace-manager]="Meta" [programme-manager]="Project" [knowledge-engine]="Knowledge"
-  # v3.28.0: Agent Teams
-  [atlas-team]="Implementation"
-  # v3.43.0: Infrastructure change orchestration
-  [infrastructure-change]="Infrastructure"
-)
+declare -A EMOJI_MAP CATEGORY_MAP DESC_MAP CATEGORY_EMOJI
 
-# Skill one-liner descriptions
-declare -A DESC_MAP=(
-  [context-discovery]="Auto-scan project + CLAUDE.md audit + codemap generation"
-  [plan-builder]="Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15"
-  [brainstorming]="Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval"
-  [frontend-design]="UI/UX implementation from specs. Distinctive, production-grade"
-  [tdd]="Failing test → minimal impl → pass → commit. Strict TDD cycle"
-  [executing-plans]="Load plan → TaskCreate per step → execute with subagents"
-  [subagent-dispatch]="Dispatch Sonnet subagents per task. 2-stage review"
-  [git-worktrees]="Isolated branch per feature. Safety verification (Forgejo-native)"
-  [systematic-debugging]="Hypothesize → verify → fix. Max 2 attempts then escalate"
-  [verification]="L1-L4 tests + E2E + security scan + perf benchmarks"
-  [code-review]="Code review with confidence filtering. Local or PR mode"
-  [code-simplify]="Refactoring for clarity, consistency, maintainability"
-  [finishing-branch]="Commit + push + PR + CI + cleanup (conventional commits)"
-  [devops-deploy]="Deploy to any env with health checks, validators, data sync"
-  [experiment-loop]="Autonomous optimization (autoresearch pattern)"
-  [engineering-ops]="I&C maintenance + 4-agent estimation pipeline"
-  [deep-research]="Multi-query decomposition → search → triangulate → synthesize"
-  [document-generator]="Generate PPTX/DOCX/XLSX with storytelling and layouts"
-  [scope-check]="Detect drift. Are you working outside original scope?"
-  [decision-log]="Log architectural decisions to .claude/decisions.jsonl"
-  [session-retrospective]="End-of-session lessons + session close + handoff context"
-  [hookify]="Create Claude Code hooks from conversation patterns"
-  [browser-automation]="Browser automation for E2E testing and visual QA"
-  [skill-management]="Create, improve, benchmark skills. Plugin development"
-  [note-capture]="Quick capture notes with tags, context, linked to meetings/projects"
-  [knowledge-builder]="Learn facts/preferences/relationships. Confidence-based"
-  [user-profiler]="Build and display user's complete profile"
-  [reminder-scheduler]="Schedule reminders via CronCreate"
-  [morning-brief]="Compile daily brief: agenda + emails + tasks + suggestions"
-  [infrastructure-ops]="Infrastructure management: VMs, containers, networking, monitoring"
-  [security-audit]="Security scanning, RBAC audit, vulnerability assessment, compliance"
-  [plugin-builder]="Build Claude Code plugins from scratch with correct structure and validation"
-  # v3.3.0 additions
-  [statusline-setup]="Configure CShip + Starship status line for Claude Code sessions"
-  [feature-board]="Feature registry dashboard — kanban, validation matrix, roadmap"
-  [code-analysis]="Codebase analysis: dead code, dependency graphs, dataflow tracing"
-  [enterprise-audit]="14-dimension enterprise readiness audit for due diligence"
-  [knowledge-manager]="Enterprise knowledge layer — coverage, discovery, search, vault"
-  [platform-update]="SOTA audit + auto-update for ATLAS plugin and CC environment"
-  [atlas-dev-self]="Self-development workflow for the ATLAS plugin itself"
-  [atlas-onboarding]="Guided 5-phase setup wizard for new users"
-  [atlas-doctor]="System health check with 8-category dashboard and auto-fix"
-  [atlas-vault]="Ingest user vault for personalized behavior and trust-based access"
-  [atlas-location]="Location profiles, WiFi network trust, and security adaptation"
-  [youtube-transcript]="Extract YouTube video transcripts to timestamped markdown files"
-  [plan-review]="Iterative plan review with simulation, consolidation, and HITL gates"
-  [frontend-workflow]="6-phase iterative UX development with architectural gates and HITL"
-  [test-orchestrator]="Test pyramid orchestration: unit, integration, E2E, security, coverage"
-  [vision-alignment]="Strategic idea intake — scan mega plan, sub-plans, features, backlog before deciding"
-  [memory-dream]="Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather, consolidate, prune"
-  # v3.26.0 additions
-  [session-pickup]="Resume from handoff file — context reload, rich briefing, scope-locked drill-in"
-  [ultrathink]="Deep reasoning mode — maximum thinking budget for complex architectural decisions"
-  [ci-management]="CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet"
-  [product-health]="Application reality audit — live validation via API, browser, and tests"
-  [onboarding-check]="Team readiness audit — 12-check grade A-F with auto-fix mode"
-  [session-spawn]="Multi-session orchestration — spawn/continue/list CC sessions in tmux"
-  [marketplace-manager]="Marketplace plugin management — publish, version, distribute"
-  [programme-manager]="Programme management — mega plan tracking, sub-plan coordination"
-  [knowledge-engine]="Enterprise knowledge layer — search, ingest, discover, vectorize"
-  # v3.28.0: Agent Teams
-  [atlas-team]="Agent Teams blueprints — spawn coordinated worker squads in tmux panes (jarvis, feature, debug, review, audit)"
-  # v3.43.0: Infrastructure change orchestration
-  [infrastructure-change]="CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation"
-)
+# Load per-skill maps (emoji, category, description) in a single yq pass
+while IFS=$'\t' read -r name emoji category desc; do
+  [ -z "$name" ] && continue
+  EMOJI_MAP["$name"]="$emoji"
+  CATEGORY_MAP["$name"]="$category"
+  DESC_MAP["$name"]="$desc"
+done < <(yq -r '.skills | to_entries[] | [.key, .value.emoji, .value.category, .value.description] | @tsv' "$METADATA_FILE")
 
-# Category header emojis
-declare -A CATEGORY_EMOJI=(
-  [Planning]="🏗️" [Implementation]="⚡" [Quality]="📊" [Ship]="📦"
-  [Deploy]="🎯" [Optimize]="🧬" [Knowledge]="📚" [Meta]="🛡️"
-  [Personal]="👤" [Infrastructure]="🔧" [Security]="🔐"
-  [Project]="📌" [Governance]="🏢"
-)
+# Load category header emojis
+while IFS=$'\t' read -r cat emoji; do
+  [ -z "$cat" ] && continue
+  CATEGORY_EMOJI["$cat"]="$emoji"
+done < <(yq -r '.category_emojis | to_entries[] | [.key, .value] | @tsv' "$METADATA_FILE")
 
 # Build skill list grouped by category
 build_skill_list() {

@@ -82,7 +82,7 @@ Phases: `DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP`
 | **document-generator** | 📄 | Knowledge |
 | **engineering-ops** | ⚙️ | Optimize |
 | **executing-plans** | ⚡ | Implementation |
-| **execution-strategy** | ❓ | Other |
+| **execution-strategy** | 📋 | Planning |
 | **finishing-branch** | 📦 | Ship |
 | **frontend-design** | 🎨 | Planning |
 | **frontend-workflow** | 🎨 | Planning |
@@ -105,7 +105,7 @@ Phases: `DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP`
 | **user-profiler** | 👤 | Personal |
 | **verification** | 📊 | Quality |
 | **vision-alignment** | 🧭 | Planning |
-| **visual-generator** | ❓ | Other |
+| **visual-generator** | 🎨 | Knowledge |
 | **youtube-transcript** | 🎬 | Knowledge |
 
 ### Breadcrumb Examples
@@ -149,6 +149,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 ### 📚 Knowledge
 - 📚 **deep-research**: Multi-query decomposition → search → triangulate → synthesize
 - 📄 **document-generator**: Generate PPTX/DOCX/XLSX with storytelling and layouts
+- 🎨 **visual-generator**: Generate diagrams, infographics, photos via Gemini API (Imagen 4 + Flash)
 - 🎬 **youtube-transcript**: Extract YouTube video transcripts to timestamped markdown files
 
 ### 🛡️ Meta
@@ -167,10 +168,6 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 ### 🧬 Optimize
 - ⚙️ **engineering-ops**: I&C maintenance + 4-agent estimation pipeline
 
-### 📌 Other
-- ❓ **execution-strategy**: 
-- ❓ **visual-generator**: 
-
 ### 👤 Personal
 - 🧠 **knowledge-builder**: Learn facts/preferences/relationships. Confidence-based
 - ☀️ **morning-brief**: Compile daily brief: agenda + emails + tasks + suggestions
@@ -181,6 +178,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 ### 🏗️ Planning
 - 💡 **brainstorming**: Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval
 - 🔭 **context-discovery**: Auto-scan project + CLAUDE.md audit + codemap generation
+- 📋 **execution-strategy**: Analyze plan → optimal execution strategy: model allocation, parallel vs sequential, cost estimation
 - 🎨 **frontend-design**: UI/UX implementation from specs. Distinctive, production-grade
 - 🎨 **frontend-workflow**: 6-phase iterative UX development with architectural gates and HITL
 - 🏗️ **plan-builder**: Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15

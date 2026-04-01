@@ -1,0 +1,452 @@
+# ATLAS Skills Metadata — Single Source of Truth
+# Used by: scripts/generate-master-skill.sh (atlas-assist generation)
+#
+# owner: which plugin OWNS this skill (where the SKILL.md lives in dist/)
+#   core = base tier (everyone), dev = dev delta, admin = admin delta
+#   infra/enterprise = domain-exclusive (not in any tier)
+#
+# Updated: 2026-03-31
+
+# Category header emojis (for grouped skill lists)
+category_emojis:
+  Planning: "\U0001F3D7\uFE0F"       # 🏗️
+  Implementation: "\u26A1"             # ⚡
+  Quality: "\U0001F4CA"               # 📊
+  Ship: "\U0001F4E6"                  # 📦
+  Deploy: "\U0001F3AF"                # 🎯
+  Optimize: "\U0001F9EC"              # 🧬
+  Knowledge: "\U0001F4DA"             # 📚
+  Meta: "\U0001F6E1\uFE0F"            # 🛡️
+  Personal: "\U0001F464"              # 👤
+  Infrastructure: "\U0001F527"         # 🔧
+  Security: "\U0001F510"              # 🔐
+  Project: "\U0001F4CC"               # 📌
+  Governance: "\U0001F3E2"            # 🏢
+
+# Per-skill metadata
+skills:
+  # ═══════════════════════════════════════
+  # CORE tier (base — 14 skills)
+  # ═══════════════════════════════════════
+  atlas-doctor:
+    emoji: "\U0001FA7A"               # 🩺
+    category: Meta
+    owner: core
+    description: "System health check with 8-category dashboard and auto-fix"
+
+  atlas-location:
+    emoji: "\U0001F4CD"               # 📍
+    category: Meta
+    owner: core
+    description: "Location profiles, WiFi network trust, and security adaptation"
+
+  atlas-onboarding:
+    emoji: "\U0001F44B"               # 👋
+    category: Meta
+    owner: core
+    description: "Guided 5-phase setup wizard for new users"
+
+  browser-automation:
+    emoji: "\U0001F310"               # 🌐
+    category: Meta
+    owner: core
+    description: "Browser automation for E2E testing and visual QA"
+
+  context-discovery:
+    emoji: "\U0001F52D"               # 🔭
+    category: Planning
+    owner: core
+    description: "Auto-scan project + CLAUDE.md audit + codemap generation"
+
+  deep-research:
+    emoji: "\U0001F4DA"               # 📚
+    category: Knowledge
+    owner: core
+    description: "Multi-query decomposition → search → triangulate → synthesize"
+
+  document-generator:
+    emoji: "\U0001F4C4"               # 📄
+    category: Knowledge
+    owner: core
+    description: "Generate PPTX/DOCX/XLSX with storytelling and layouts"
+
+  knowledge-builder:
+    emoji: "\U0001F9E0"               # 🧠
+    category: Personal
+    owner: core
+    description: "Learn facts/preferences/relationships. Confidence-based"
+
+  morning-brief:
+    emoji: "\u2600\uFE0F"             # ☀️
+    category: Personal
+    owner: core
+    description: "Compile daily brief: agenda + emails + tasks + suggestions"
+
+  note-capture:
+    emoji: "\U0001F4DD"               # 📝
+    category: Personal
+    owner: core
+    description: "Quick capture notes with tags, context, linked to meetings/projects"
+
+  reminder-scheduler:
+    emoji: "\u23F0"                    # ⏰
+    category: Personal
+    owner: core
+    description: "Schedule reminders via CronCreate"
+
+  scope-check:
+    emoji: "\U0001F6E1\uFE0F"         # 🛡️
+    category: Meta
+    owner: core
+    description: "Detect drift. Are you working outside original scope?"
+
+  user-profiler:
+    emoji: "\U0001F464"               # 👤
+    category: Personal
+    owner: core
+    description: "Build and display user's complete profile"
+
+  youtube-transcript:
+    emoji: "\U0001F3AC"               # 🎬
+    category: Knowledge
+    owner: core
+    description: "Extract YouTube video transcripts to timestamped markdown files"
+
+  # ═══════════════════════════════════════
+  # DEV tier (delta — 25 skills)
+  # ═══════════════════════════════════════
+  brainstorming:
+    emoji: "\U0001F4A1"               # 💡
+    category: Planning
+    owner: dev
+    description: "Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval"
+
+  ci-management:
+    emoji: "\U0001F527"               # 🔧
+    category: Deploy
+    owner: dev
+    description: "CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet"
+
+  code-review:
+    emoji: "\U0001F50D"               # 🔍
+    category: Quality
+    owner: dev
+    description: "Code review with confidence filtering. Local or PR mode"
+
+  code-simplify:
+    emoji: "\u2728"                    # ✨
+    category: Quality
+    owner: dev
+    description: "Refactoring for clarity, consistency, maintainability"
+
+  decision-log:
+    emoji: "\U0001F4CB"               # 📋
+    category: Meta
+    owner: dev
+    description: "Log architectural decisions to .claude/decisions.jsonl"
+
+  engineering-ops:
+    emoji: "\u2699\uFE0F"             # ⚙️
+    category: Optimize
+    owner: dev
+    description: "I&C maintenance + 4-agent estimation pipeline"
+
+  executing-plans:
+    emoji: "\u26A1"                    # ⚡
+    category: Implementation
+    owner: dev
+    description: "Load plan → TaskCreate per step → execute with subagents"
+
+  execution-strategy:
+    emoji: "\U0001F4CB"               # 📋
+    category: Planning
+    owner: dev
+    description: "Analyze plan → optimal execution strategy: model allocation, parallel vs sequential, cost estimation"
+
+  finishing-branch:
+    emoji: "\U0001F4E6"               # 📦
+    category: Ship
+    owner: dev
+    description: "Commit + push + PR + CI + cleanup (conventional commits)"
+
+  frontend-design:
+    emoji: "\U0001F3A8"               # 🎨
+    category: Planning
+    owner: dev
+    description: "UI/UX implementation from specs. Distinctive, production-grade"
+
+  frontend-workflow:
+    emoji: "\U0001F3A8"               # 🎨
+    category: Planning
+    owner: dev
+    description: "6-phase iterative UX development with architectural gates and HITL"
+
+  git-worktrees:
+    emoji: "\U0001F33F"               # 🌿
+    category: Implementation
+    owner: dev
+    description: "Isolated branch per feature. Safety verification (Forgejo-native)"
+
+  hookify:
+    emoji: "\U0001FA9D"               # 🪝
+    category: Meta
+    owner: dev
+    description: "Create Claude Code hooks from conversation patterns"
+
+  plan-builder:
+    emoji: "\U0001F3D7\uFE0F"         # 🏗️
+    category: Planning
+    owner: dev
+    description: "Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15"
+
+  plugin-builder:
+    emoji: "\U0001F50C"               # 🔌
+    category: Meta
+    owner: dev
+    description: "Build Claude Code plugins from scratch with correct structure and validation"
+
+  session-pickup:
+    emoji: "\U0001F504"               # 🔄
+    category: Meta
+    owner: dev
+    description: "Resume from handoff file — context reload, rich briefing, scope-locked drill-in"
+
+  session-retrospective:
+    emoji: "\U0001F504"               # 🔄
+    category: Meta
+    owner: dev
+    description: "End-of-session lessons + session close + handoff context"
+
+  skill-management:
+    emoji: "\U0001F9E9"               # 🧩
+    category: Meta
+    owner: dev
+    description: "Create, improve, benchmark skills. Plugin development"
+
+  subagent-dispatch:
+    emoji: "\U0001F916"               # 🤖
+    category: Implementation
+    owner: dev
+    description: "Dispatch Sonnet subagents per task. 2-stage review"
+
+  systematic-debugging:
+    emoji: "\U0001F52C"               # 🔬
+    category: Quality
+    owner: dev
+    description: "Hypothesize → verify → fix. Max 2 attempts then escalate"
+
+  tdd:
+    emoji: "\U0001F9EA"               # 🧪
+    category: Implementation
+    owner: dev
+    description: "Failing test → minimal impl → pass → commit. Strict TDD cycle"
+
+  test-orchestrator:
+    emoji: "\U0001F9EA"               # 🧪
+    category: Quality
+    owner: dev
+    description: "Test pyramid orchestration: unit, integration, E2E, security, coverage"
+
+  verification:
+    emoji: "\U0001F4CA"               # 📊
+    category: Quality
+    owner: dev
+    description: "L1-L4 tests + E2E + security scan + perf benchmarks"
+
+  vision-alignment:
+    emoji: "\U0001F9ED"               # 🧭
+    category: Planning
+    owner: dev
+    description: "Strategic idea intake — scan mega plan, sub-plans, features, backlog before deciding"
+
+  visual-generator:
+    emoji: "\U0001F3A8"               # 🎨
+    category: Knowledge
+    owner: dev
+    description: "Generate diagrams, infographics, photos via Gemini API (Imagen 4 + Flash)"
+
+  # ═══════════════════════════════════════
+  # ADMIN tier (delta — 27 skills)
+  # ═══════════════════════════════════════
+  atlas-dev-self:
+    emoji: "\U0001F501"               # 🔁
+    category: Meta
+    owner: admin
+    description: "Self-development workflow for the ATLAS plugin itself"
+
+  atlas-team:
+    emoji: "\U0001F465"               # 👥
+    category: Implementation
+    owner: admin
+    description: "Agent Teams blueprints — spawn coordinated worker squads in tmux panes (jarvis, feature, debug, review, audit)"
+
+  atlas-vault:
+    emoji: "\U0001F510"               # 🔐
+    category: Security
+    owner: admin
+    description: "Ingest user vault for personalized behavior and trust-based access"
+
+  atlas-workspace-setup:
+    emoji: "\U0001F527"               # 🔧
+    category: Meta
+    owner: admin
+    description: "Configure multi-session development workspace: tmux, split-screen, Agent Teams"
+
+  code-analysis:
+    emoji: "\U0001F50E"               # 🔎
+    category: Quality
+    owner: admin
+    description: "Codebase analysis: dead code, dependency graphs, dataflow tracing"
+
+  devops-deploy:
+    emoji: "\U0001F3AF"               # 🎯
+    category: Deploy
+    owner: admin
+    description: "Deploy to any env with health checks, validators, data sync"
+
+  enterprise-audit:
+    emoji: "\U0001F3E2"               # 🏢
+    category: Governance
+    owner: admin
+    description: "14-dimension enterprise readiness audit for due diligence"
+
+  episode-create:
+    emoji: "\U0001F4D6"               # 📖
+    category: Personal
+    owner: admin
+    description: "Create narrative episode capturing session experiential context"
+
+  experiment-loop:
+    emoji: "\U0001F9EC"               # 🧬
+    category: Optimize
+    owner: admin
+    description: "Autonomous optimization (autoresearch pattern)"
+
+  feature-board:
+    emoji: "\U0001F4CC"               # 📌
+    category: Project
+    owner: admin
+    description: "Feature registry dashboard — kanban, validation matrix, roadmap"
+
+  infrastructure-change:
+    emoji: "\U0001F3D7\uFE0F"         # 🏗️
+    category: Infrastructure
+    owner: admin
+    description: "CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation"
+
+  infrastructure-ops:
+    emoji: "\U0001F527"               # 🔧
+    category: Infrastructure
+    owner: admin
+    description: "Infrastructure management: VMs, containers, networking, monitoring"
+
+  intuition-log:
+    emoji: "\U0001F4AD"               # 💭
+    category: Personal
+    owner: admin
+    description: "Capture gut feelings and emerging patterns as persistent intuition files"
+
+  knowledge-engine:
+    emoji: "\U0001F5C2\uFE0F"         # 🗂️
+    category: Knowledge
+    owner: admin
+    description: "Enterprise knowledge layer — search, ingest, discover, vectorize"
+
+  knowledge-manager:
+    emoji: "\U0001F4D6"               # 📖
+    category: Knowledge
+    owner: admin
+    description: "Enterprise knowledge layer — coverage, discovery, search, vault"
+
+  marketplace-manager:
+    emoji: "\U0001F3EA"               # 🏪
+    category: Meta
+    owner: admin
+    description: "Marketplace plugin management — publish, version, distribute"
+
+  memory-dream:
+    emoji: "\U0001F319"               # 🌙
+    category: Meta
+    owner: admin
+    description: "Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather, consolidate, prune"
+
+  onboarding-check:
+    emoji: "\u2705"                    # ✅
+    category: Meta
+    owner: admin
+    description: "Team readiness audit — 12-check grade A-F with auto-fix mode"
+
+  plan-review:
+    emoji: "\U0001F50D"               # 🔍
+    category: Quality
+    owner: admin
+    description: "Iterative plan review with simulation, consolidation, and HITL gates"
+
+  platform-update:
+    emoji: "\U0001F199"               # 🆙
+    category: Meta
+    owner: admin
+    description: "SOTA audit + auto-update for ATLAS plugin and CC environment"
+
+  product-health:
+    emoji: "\U0001F3E5"               # 🏥
+    category: Quality
+    owner: admin
+    description: "Application reality audit — live validation via API, browser, and tests"
+
+  programme-manager:
+    emoji: "\U0001F4CA"               # 📊
+    category: Project
+    owner: admin
+    description: "Programme management — mega plan tracking, sub-plan coordination"
+
+  relationship-manager:
+    emoji: "\U0001F91D"               # 🤝
+    category: Personal
+    owner: admin
+    description: "Create or update deep relationship profiles for team members and collaborators"
+
+  security-audit:
+    emoji: "\U0001F510"               # 🔐
+    category: Security
+    owner: admin
+    description: "Security scanning, RBAC audit, vulnerability assessment, compliance"
+
+  session-spawn:
+    emoji: "\U0001F680"               # 🚀
+    category: Meta
+    owner: admin
+    description: "Multi-session orchestration — spawn/continue/list CC sessions in tmux"
+
+  statusline-setup:
+    emoji: "\U0001F4DF"               # 📟
+    category: Infrastructure
+    owner: admin
+    description: "Configure CShip + Starship status line for Claude Code sessions"
+
+  ultrathink:
+    emoji: "\U0001F9E0"               # 🧠
+    category: Meta
+    owner: admin
+    description: "Deep reasoning mode — maximum thinking budget for complex architectural decisions"
+
+  # ═══════════════════════════════════════
+  # DOMAIN-EXCLUSIVE skills
+  # ═══════════════════════════════════════
+  mesh-diagnostics:
+    emoji: "\U0001F50C"               # 🔌
+    category: Infrastructure
+    owner: infra
+    description: "NetBird and Tailscale mesh network health diagnostics"
+
+  network-audit:
+    emoji: "\U0001F310"               # 🌐
+    category: Infrastructure
+    owner: infra
+    description: "Network infrastructure audit: DNS, ports, VLAN, SSL, firewall"
+
+  self-propose:
+    emoji: "\U0001F504"               # 🔄
+    category: Meta
+    owner: enterprise
+    description: "Self-improvement engine. Aggregates dream reports, retrospectives, workflow analytics"

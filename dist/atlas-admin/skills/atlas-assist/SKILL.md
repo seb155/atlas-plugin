@@ -74,7 +74,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **atlas-onboarding** | 👋 | Meta |
 | **atlas-team** | 👥 | Implementation |
 | **atlas-vault** | 🔐 | Security |
-| **atlas-workspace-setup** | ❓ | Other |
+| **atlas-workspace-setup** | 🔧 | Meta |
 | **brainstorming** | 💡 | Planning |
 | **browser-automation** | 🌐 | Meta |
 | **ci-management** | 🔧 | Deploy |
@@ -88,9 +88,9 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **document-generator** | 📄 | Knowledge |
 | **engineering-ops** | ⚙️ | Optimize |
 | **enterprise-audit** | 🏢 | Governance |
-| **episode-create** | ❓ | Other |
+| **episode-create** | 📖 | Personal |
 | **executing-plans** | ⚡ | Implementation |
-| **execution-strategy** | ❓ | Other |
+| **execution-strategy** | 📋 | Planning |
 | **experiment-loop** | 🧬 | Optimize |
 | **feature-board** | 📌 | Project |
 | **finishing-branch** | 📦 | Ship |
@@ -100,7 +100,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **hookify** | 🪝 | Meta |
 | **infrastructure-change** | 🏗️ | Infrastructure |
 | **infrastructure-ops** | 🔧 | Infrastructure |
-| **intuition-log** | ❓ | Other |
+| **intuition-log** | 💭 | Personal |
 | **knowledge-builder** | 🧠 | Personal |
 | **knowledge-engine** | 🗂️ | Knowledge |
 | **knowledge-manager** | 📖 | Knowledge |
@@ -115,7 +115,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **plugin-builder** | 🔌 | Meta |
 | **product-health** | 🏥 | Quality |
 | **programme-manager** | 📊 | Project |
-| **relationship-manager** | ❓ | Other |
+| **relationship-manager** | 🤝 | Personal |
 | **reminder-scheduler** | ⏰ | Personal |
 | **scope-check** | 🛡️ | Meta |
 | **security-audit** | 🔐 | Security |
@@ -132,7 +132,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **user-profiler** | 👤 | Personal |
 | **verification** | 📊 | Quality |
 | **vision-alignment** | 🧭 | Planning |
-| **visual-generator** | ❓ | Other |
+| **visual-generator** | 🎨 | Knowledge |
 | **youtube-transcript** | 🎬 | Knowledge |
 
 ### Breadcrumb Examples
@@ -188,6 +188,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 📄 **document-generator**: Generate PPTX/DOCX/XLSX with storytelling and layouts
 - 🗂️ **knowledge-engine**: Enterprise knowledge layer — search, ingest, discover, vectorize
 - 📖 **knowledge-manager**: Enterprise knowledge layer — coverage, discovery, search, vault
+- 🎨 **visual-generator**: Generate diagrams, infographics, photos via Gemini API (Imagen 4 + Flash)
 - 🎬 **youtube-transcript**: Extract YouTube video transcripts to timestamped markdown files
 
 ### 🛡️ Meta
@@ -195,6 +196,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 🩺 **atlas-doctor**: System health check with 8-category dashboard and auto-fix
 - 📍 **atlas-location**: Location profiles, WiFi network trust, and security adaptation
 - 👋 **atlas-onboarding**: Guided 5-phase setup wizard for new users
+- 🔧 **atlas-workspace-setup**: Configure multi-session development workspace: tmux, split-screen, Agent Teams
 - 🌐 **browser-automation**: Browser automation for E2E testing and visual QA
 - 📋 **decision-log**: Log architectural decisions to .claude/decisions.jsonl
 - 🪝 **hookify**: Create Claude Code hooks from conversation patterns
@@ -214,24 +216,20 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - ⚙️ **engineering-ops**: I&C maintenance + 4-agent estimation pipeline
 - 🧬 **experiment-loop**: Autonomous optimization (autoresearch pattern)
 
-### 📌 Other
-- ❓ **atlas-workspace-setup**: 
-- ❓ **episode-create**: 
-- ❓ **execution-strategy**: 
-- ❓ **intuition-log**: 
-- ❓ **relationship-manager**: 
-- ❓ **visual-generator**: 
-
 ### 👤 Personal
+- 📖 **episode-create**: Create narrative episode capturing session experiential context
+- 💭 **intuition-log**: Capture gut feelings and emerging patterns as persistent intuition files
 - 🧠 **knowledge-builder**: Learn facts/preferences/relationships. Confidence-based
 - ☀️ **morning-brief**: Compile daily brief: agenda + emails + tasks + suggestions
 - 📝 **note-capture**: Quick capture notes with tags, context, linked to meetings/projects
+- 🤝 **relationship-manager**: Create or update deep relationship profiles for team members and collaborators
 - ⏰ **reminder-scheduler**: Schedule reminders via CronCreate
 - 👤 **user-profiler**: Build and display user's complete profile
 
 ### 🏗️ Planning
 - 💡 **brainstorming**: Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval
 - 🔭 **context-discovery**: Auto-scan project + CLAUDE.md audit + codemap generation
+- 📋 **execution-strategy**: Analyze plan → optimal execution strategy: model allocation, parallel vs sequential, cost estimation
 - 🎨 **frontend-design**: UI/UX implementation from specs. Distinctive, production-grade
 - 🎨 **frontend-workflow**: 6-phase iterative UX development with architectural gates and HITL
 - 🏗️ **plan-builder**: Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15
