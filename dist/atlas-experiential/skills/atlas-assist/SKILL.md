@@ -16,7 +16,7 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.7.1 Experiential
+🏛️ ATLAS │ ✅ SESSION │ v4.10.0 Experiential
    3 skills │ 0
 0 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
@@ -70,9 +70,9 @@ Phases: `OBSERVE → CAPTURE → REFLECT → GROW`
 
 | Skill | Emoji | Category |
 |-------|-------|----------|
-| **episode-create** | ❓ | Other |
-| **intuition-log** | ❓ | Other |
-| **relationship-manager** | ❓ | Other |
+| **episode-create** | 📖 | Personal |
+| **intuition-log** | 💭 | Personal |
+| **relationship-manager** | 🤝 | Personal |
 
 ### Breadcrumb Examples
 
@@ -103,10 +103,10 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 
 ## Available Skills (3)
 
-### 📌 Other
-- ❓ **episode-create**: 
-- ❓ **intuition-log**: 
-- ❓ **relationship-manager**: 
+### 👤 Personal
+- 📖 **episode-create**: Create narrative episode capturing session experiential context
+- 💭 **intuition-log**: Capture gut feelings and emerging patterns as persistent intuition files
+- 🤝 **relationship-manager**: Create or update deep relationship profiles for team members and collaborators
 
 ## Pipeline (Automatic)
 

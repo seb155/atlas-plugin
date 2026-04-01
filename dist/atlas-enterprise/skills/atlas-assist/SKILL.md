@@ -15,7 +15,7 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.7.1 Enterprise
+🏛️ ATLAS │ ✅ SESSION │ v4.10.0 Enterprise
    14 skills │ 5 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
@@ -81,7 +81,7 @@ Phases: `AUDIT → PLAN → COORDINATE → REVIEW → GOVERN`
 | **atlas-dev-self** | 🔁 | Meta |
 | **marketplace-manager** | 🏪 | Meta |
 | **atlas-team** | 👥 | Implementation |
-| **self-propose** | ❓ | Other |
+| **self-propose** | 🔄 | Meta |
 
 ### Breadcrumb Examples
 
@@ -127,12 +127,10 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 🏪 **marketplace-manager**: Marketplace plugin management — publish, version, distribute
 - ✅ **onboarding-check**: Team readiness audit — 12-check grade A-F with auto-fix mode
 - 🆙 **platform-update**: SOTA audit + auto-update for ATLAS plugin and CC environment
+- 🔄 **self-propose**: Self-improvement engine. Aggregates dream reports, retrospectives, workflow analytics
 
 ### 🧬 Optimize
 - 🧬 **experiment-loop**: Autonomous optimization (autoresearch pattern)
-
-### 📌 Other
-- ❓ **self-propose**: 
 
 ### 🏗️ Planning
 - 🧭 **vision-alignment**: Strategic idea intake — scan mega plan, sub-plans, features, backlog before deciding

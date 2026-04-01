@@ -10,6 +10,7 @@ cd "$SCRIPT_DIR"
 
 VERSION=$(cat VERSION | tr -d '[:space:]')
 TIERS="${1:-all}"
+METADATA_FILE="skills/_metadata.yaml"
 
 # Propagate VERSION to source JSON files (keeps them in sync)
 if command -v python3 &>/dev/null; then
@@ -59,6 +60,32 @@ resolve_field() {
   fi
 }
 
+# ── Ownership functions (SP-DEDUP Phase 1) ──────────────────────
+# Map tier build names to _metadata.yaml owner values
+# (user tier → "core" owner — they merge in Phase 3)
+tier_to_owner() {
+  case "$1" in
+    user) echo "core" ;;
+    *) echo "$1" ;;
+  esac
+}
+
+# Return skills OWNED by a given owner (from _metadata.yaml)
+get_owned_skills() {
+  local owner="$1"
+  yq -r ".skills | to_entries[] | select(.value.owner == \"$owner\") | .key" "$METADATA_FILE"
+}
+
+# Return domain-EXCLUSIVE skills (owned by this domain but NOT a tier name)
+# Tier owners (core/dev/admin) have their skills in tier plugins, not domain plugins
+get_domain_exclusive_skills() {
+  local domain="$1"
+  case "$domain" in
+    core|dev|admin) echo "" ;;  # These are tier names — no exclusive domain skills
+    *) get_owned_skills "$domain" ;;  # infra, enterprise, etc.
+  esac
+}
+
 build_tier() {
   local tier="$1"
   local profile="profiles/${tier}.yaml"
@@ -74,11 +101,14 @@ build_tier() {
   rm -rf "$output"
   mkdir -p "$output"/{.claude-plugin,skills,agents,hooks}
 
-  # Resolve inherited skills
-  local skills
-  skills=$(resolve_field "$tier" "skills")
+  # SP-DEDUP: Copy only OWNED skills (delta), not inherited
+  # atlas-assist still gets the full list via resolve_field (line ~190)
+  local owner
+  owner=$(tier_to_owner "$tier")
+  local owned_skills
+  owned_skills=$(get_owned_skills "$owner")
 
-  for skill in $skills; do
+  for skill in $owned_skills; do
     if [ -d "skills/$skill" ]; then
       cp -r "skills/$skill" "$output/skills/"
     else
@@ -229,6 +259,13 @@ build_domain() {
     exit 1
   fi
 
+  # SP-DEDUP: Skip domain build if a tier with same name was already built
+  # (avoids dist/atlas-dev/ collision between tier "dev" and domain "dev")
+  if [ -f "profiles/${name}.yaml" ] && [ -d "dist/atlas-${name}/skills" ]; then
+    echo "⏭️  Skipping atlas-${name} domain — tier build already exists at dist/atlas-${name}/"
+    return 0
+  fi
+
   local desc
   desc=$(yq -r '.description // "ATLAS domain plugin"' "$profile")
 
@@ -237,11 +274,12 @@ build_domain() {
   rm -rf "$output"
   mkdir -p "$output"/{.claude-plugin,skills,agents,hooks}
 
-  # Skills — direct read, no inheritance resolution needed
-  local skills
-  skills=$(yq -r '.skills // [] | .[]' "$profile" 2>/dev/null || true)
+  # SP-DEDUP: Copy only domain-EXCLUSIVE skills (not tier-owned)
+  # atlas-assist still gets the full domain skill list for reference
+  local owned_skills
+  owned_skills=$(get_domain_exclusive_skills "$name")
 
-  for skill in $skills; do
+  for skill in $owned_skills; do
     if [ -d "skills/$skill" ]; then
       cp -r "skills/$skill" "$output/skills/"
     else

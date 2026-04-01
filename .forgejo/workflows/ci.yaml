@@ -90,6 +90,29 @@ jobs:
 
           echo "Regression gate passed (${SKILLS} skills, ${CMDS} commands, ${AGENTS} agents)"
 
+      - name: Zero-duplication gate (SP-DEDUP)
+        shell: sh
+        run: |
+          echo "Checking skill duplication across all packages..."
+          DUPES=$(for pkg in dist/atlas-*/; do
+            if [ -d "${pkg}skills" ]; then
+              find "${pkg}skills" -maxdepth 1 -mindepth 1 -type d \
+                -not -name "refs" -not -name "atlas-assist" -exec basename {} \;
+            fi
+          done | sort | uniq -d)
+          if [ -n "$DUPES" ]; then
+            echo "FAIL: Skill duplication found:"
+            echo "$DUPES"
+            exit 1
+          fi
+          TOTAL=$(for pkg in dist/atlas-*/; do
+            if [ -d "${pkg}skills" ]; then
+              find "${pkg}skills" -maxdepth 1 -mindepth 1 -type d \
+                -not -name "refs" -not -name "atlas-assist" -exec basename {} \;
+            fi
+          done | sort -u | wc -l)
+          echo "Zero-duplication gate passed (${TOTAL} unique skills, 0 duplicates)"
+
   release:
     name: Auto-release (SemVer from commits)
     runs-on: ci-atlas

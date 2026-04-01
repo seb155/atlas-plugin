@@ -15,7 +15,7 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.7.1 Infra
+🏛️ ATLAS │ ✅ SESSION │ v4.10.0 Infra
    7 skills │ 1 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
@@ -72,8 +72,8 @@ Phases: `AUDIT → PLAN → DEPLOY → VERIFY → MONITOR`
 | **devops-deploy** | 🎯 | Deploy |
 | **security-audit** | 🔐 | Security |
 | **engineering-ops** | ⚙️ | Optimize |
-| **mesh-diagnostics** | ❓ | Other |
-| **network-audit** | ❓ | Other |
+| **mesh-diagnostics** | 🔌 | Infrastructure |
+| **network-audit** | 🌐 | Infrastructure |
 | **infrastructure-change** | 🏗️ | Infrastructure |
 
 ### Breadcrumb Examples
@@ -111,13 +111,11 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 ### 🔧 Infrastructure
 - 🏗️ **infrastructure-change**: CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation
 - 🔧 **infrastructure-ops**: Infrastructure management: VMs, containers, networking, monitoring
+- 🔌 **mesh-diagnostics**: NetBird and Tailscale mesh network health diagnostics
+- 🌐 **network-audit**: Network infrastructure audit: DNS, ports, VLAN, SSL, firewall
 
 ### 🧬 Optimize
 - ⚙️ **engineering-ops**: I&C maintenance + 4-agent estimation pipeline
-
-### 📌 Other
-- ❓ **mesh-diagnostics**: 
-- ❓ **network-audit**: 
 
 ### 🔐 Security
 - 🔐 **security-audit**: Security scanning, RBAC audit, vulnerability assessment, compliance

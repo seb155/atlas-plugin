@@ -15,7 +15,7 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.7.1 Core
+🏛️ ATLAS │ ✅ SESSION │ v4.10.0 Core
    20 skills │ 1 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
@@ -79,7 +79,7 @@ Phases: `DISCOVER → ASSIST → REMEMBER`
 | **session-pickup** | 🔄 | Meta |
 | **session-retrospective** | 🔄 | Meta |
 | **session-spawn** | 🚀 | Meta |
-| **atlas-workspace-setup** | ❓ | Other |
+| **atlas-workspace-setup** | 🔧 | Meta |
 | **memory-dream** | 🌙 | Meta |
 | **context-discovery** | 🔭 | Planning |
 | **scope-check** | 🛡️ | Meta |
@@ -127,6 +127,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 🩺 **atlas-doctor**: System health check with 8-category dashboard and auto-fix
 - 📍 **atlas-location**: Location profiles, WiFi network trust, and security adaptation
 - 👋 **atlas-onboarding**: Guided 5-phase setup wizard for new users
+- 🔧 **atlas-workspace-setup**: Configure multi-session development workspace: tmux, split-screen, Agent Teams
 - 🌙 **memory-dream**: Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather, consolidate, prune
 - 🛡️ **scope-check**: Detect drift. Are you working outside original scope?
 - 🔄 **session-pickup**: Resume from handoff file — context reload, rich briefing, scope-locked drill-in
@@ -135,7 +136,6 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 
 ### 📌 Other
 - ❓ **atlas-assist**: 
-- ❓ **atlas-workspace-setup**: 
 
 ### 👤 Personal
 - 🧠 **knowledge-builder**: Learn facts/preferences/relationships. Confidence-based
