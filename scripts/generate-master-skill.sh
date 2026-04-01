@@ -24,12 +24,21 @@ else
   SKILL_NAME="atlas-assist"
 fi
 
+# Only admin tier exposes /atlas-assist in the slash command menu.
+# All other tiers/domains are hidden (still usable by CC's internal routing).
+if [ "$TIER" = "admin" ]; then
+  USER_INVOCABLE="true"
+else
+  USER_INVOCABLE="false"
+fi
+
 # Worker tier: generate minimal SKILL.md and exit early
 if [ "$TIER" = "worker" ]; then
   cat > "$OUTPUT" <<WORKER_EOF
 ---
 name: ${SKILL_NAME}
 description: "ATLAS Worker — minimal task executor for Agent Teams. Zero skills, zero hooks."
+user-invocable: ${USER_INVOCABLE}
 ---
 
 # ATLAS Worker v${VERSION}
@@ -149,6 +158,7 @@ cat > "$OUTPUT" <<SKILLEOF
 ---
 name: ${SKILL_NAME}
 description: "Master skill for ATLAS ${BANNER_LABEL} — AXOIQ's unified AI engineering assistant. ${SKILL_COUNT} skills, ${AGENT_COUNT} agents. Auto-routing co-pilot with HITL gates."
+user-invocable: ${USER_INVOCABLE}
 ---
 
 # ATLAS — AXOIQ's Unified AI Engineering Assistant (${BANNER_LABEL} Tier)

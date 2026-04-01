@@ -1,6 +1,7 @@
 ---
 name: atlas-assist
 description: "Master skill for ATLAS Enterprise — AXOIQ's unified AI engineering assistant. 14 skills, 5 agents. Auto-routing co-pilot with HITL gates."
+user-invocable: false
 ---
 
 # ATLAS — AXOIQ's Unified AI Engineering Assistant (Enterprise Tier)

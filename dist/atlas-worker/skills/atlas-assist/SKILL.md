@@ -1,6 +1,7 @@
 ---
 name: atlas-assist
 description: "ATLAS Worker — minimal task executor for Agent Teams. Zero skills, zero hooks."
+user-invocable: false
 ---
 
 # ATLAS Worker v4.11.1
