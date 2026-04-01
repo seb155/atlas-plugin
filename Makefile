@@ -33,7 +33,7 @@ dev-domains: ## Build all 6 domain plugins + install to CC cache
 	echo ""; \
 	echo "📦 Installing domain plugins to CC cache..."; \
 	for name in core dev frontend infra enterprise experiential; do \
-		dir="$$CACHE_DIR/atlas-marketplace/atlas-$${name}/$$VERSION"; \
+		dir="$$CACHE_DIR/atlas-admin-marketplace/atlas-$${name}/$$VERSION"; \
 		mkdir -p "$$dir"; \
 		cp -r "dist/atlas-$${name}/." "$$dir/" && \
 		cp -r "dist/atlas-$${name}/.claude-plugin" "$$dir/" 2>/dev/null; \
@@ -57,6 +57,10 @@ publish-patch: ## Release patch version bump
 
 publish-minor: ## Release minor version bump
 	./scripts/publish.sh minor
+
+dev-all: ## Build + install ALL (tiers + domains) to single marketplace
+	$(MAKE) dev
+	$(MAKE) dev-domains
 
 clean: ## Remove build artifacts
 	rm -rf dist/

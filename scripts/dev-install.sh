@@ -15,7 +15,7 @@ cd "$(dirname "$SCRIPT_DIR")"
 
 VERSION=$(cat VERSION | tr -d '[:space:]')
 TIER_MARKETPLACE_DIR="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
-DOMAIN_MARKETPLACE_DIR="$HOME/.claude/plugins/cache/atlas-marketplace"
+DOMAIN_MARKETPLACE_DIR="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
 DOMAINS=(core dev frontend infra enterprise experiential)
 
 if [ "${1:-}" = "--admin-only" ]; then
