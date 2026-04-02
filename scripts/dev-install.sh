@@ -89,6 +89,16 @@ if [ -f "$SHELL_SRC" ]; then
   echo "  ✅ atlas-cli.sh → ${SHELL_DST} (v${VERSION})"
 fi
 
+# Sync atlas-modules/ (modularized CLI)
+MODULES_SRC="${SCRIPT_DIR}/atlas-modules"
+MODULES_DST="${HOME}/.atlas/shell/modules"
+if [ -d "$MODULES_SRC" ]; then
+  mkdir -p "$MODULES_DST"
+  cp "$MODULES_SRC/"*.sh "$MODULES_DST/"
+  chmod +x "$MODULES_DST/"*.sh
+  echo "  ✅ atlas-modules/ → ${MODULES_DST}/ ($(ls "$MODULES_SRC"/*.sh | wc -l) modules)"
+fi
+
 echo ""
 echo "⚠️  Restart Claude Code to apply changes."
 echo ""

@@ -188,6 +188,13 @@ build_tier() {
     sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"${VERSION}\"/" "$output/scripts/atlas-cli.sh"
   fi
 
+  # Copy atlas-modules/ (modularized CLI)
+  if [ -d "scripts/atlas-modules" ]; then
+    mkdir -p "$output/scripts/atlas-modules"
+    cp scripts/atlas-modules/*.sh "$output/scripts/atlas-modules/"
+    chmod +x "$output/scripts/atlas-modules/"*.sh
+  fi
+
   # Copy VERSION file
   cp VERSION "$output/VERSION"
 
@@ -356,6 +363,12 @@ build_domain() {
         chmod +x "$output/scripts/$script"
       fi
     done
+    # Copy atlas-modules/ (modularized CLI)
+    if [ -d "scripts/atlas-modules" ]; then
+      mkdir -p "$output/scripts/atlas-modules"
+      cp scripts/atlas-modules/*.sh "$output/scripts/atlas-modules/"
+      chmod +x "$output/scripts/atlas-modules/"*.sh
+    fi
     # Config presets
     if [ -d "scripts/presets" ]; then
       mkdir -p "$output/scripts/presets"
