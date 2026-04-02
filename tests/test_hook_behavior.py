@@ -365,3 +365,160 @@ class TestPostCompactHook:
         assert result.returncode == 0
         log = fake_home / ".claude" / "compaction-log.txt"
         assert log.exists(), f"compaction-log.txt not created at {log}"
+
+
+# ---------------------------------------------------------------------------
+# protect-plugin-cache hook (SOTA 2026-04-02)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.hook
+class TestProtectPluginCacheHook:
+
+    def test_blocks_write_to_plugin_cache(self, tmp_path: Path) -> None:
+        """protect-plugin-cache must exit 2 when writing to plugin cache dir."""
+        fake_home = tmp_path / "home"
+        fake_home.mkdir()
+        cache_path = f"{fake_home}/.claude/plugins/cache/some-plugin/file.md"
+        stdin_data = json.dumps({"tool_input": {"file_path": cache_path}})
+        result = _run_hook(
+            "protect-plugin-cache",
+            stdin_data=stdin_data,
+            env_extra={"HOME": str(fake_home)},
+        )
+        assert result.returncode == 2, (
+            f"Expected exit 2 (block), got {result.returncode}\n"
+            f"stderr: {result.stderr}"
+        )
+        assert "BLOQUE" in result.stderr or "READ-ONLY" in result.stderr
+
+    def test_allows_write_to_normal_path(self, tmp_path: Path) -> None:
+        """protect-plugin-cache must exit 0 for normal file paths."""
+        stdin_data = json.dumps({"tool_input": {"file_path": "/tmp/normal-file.ts"}})
+        result = _run_hook("protect-plugin-cache", stdin_data=stdin_data)
+        assert result.returncode == 0
+
+    def test_allows_empty_file_path(self) -> None:
+        """protect-plugin-cache must exit 0 when file_path is missing."""
+        stdin_data = json.dumps({"tool_input": {}})
+        result = _run_hook("protect-plugin-cache", stdin_data=stdin_data)
+        assert result.returncode == 0
+
+    def test_allows_write_to_plugin_source(self, tmp_path: Path) -> None:
+        """protect-plugin-cache must allow writes to the plugin SOURCE repo."""
+        stdin_data = json.dumps({
+            "tool_input": {"file_path": str(tmp_path / "atlas-dev-plugin" / "hooks" / "test")}
+        })
+        result = _run_hook("protect-plugin-cache", stdin_data=stdin_data)
+        assert result.returncode == 0
+
+
+# ---------------------------------------------------------------------------
+# task-created-log hook (SOTA 2026-04-02)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.hook
+class TestTaskCreatedLogHook:
+
+    def test_exits_zero(self) -> None:
+        """task-created-log must always exit 0."""
+        stdin_data = json.dumps({"tool_input": {"subject": "Test task"}})
+        result = _run_hook("task-created-log", stdin_data=stdin_data)
+        assert result.returncode == 0
+
+    def test_writes_jsonl_entry(self, tmp_path: Path) -> None:
+        """task-created-log must append a JSON line to task-log.jsonl."""
+        fake_home = tmp_path / "home"
+        (fake_home / ".claude").mkdir(parents=True)
+        stdin_data = json.dumps({
+            "tool_input": {"subject": "Fix auth bug"},
+            "tool_result": {"task_id": "42"},
+        })
+        result = _run_hook(
+            "task-created-log",
+            stdin_data=stdin_data,
+            env_extra={"HOME": str(fake_home)},
+        )
+        assert result.returncode == 0
+        log = fake_home / ".claude" / "task-log.jsonl"
+        assert log.exists(), f"task-log.jsonl not created at {log}"
+        line = log.read_text().strip()
+        entry = json.loads(line)
+        assert "ts" in entry
+        assert entry["subject"] == "Fix auth bug"
+
+    def test_handles_missing_fields(self, tmp_path: Path) -> None:
+        """task-created-log must not crash on missing fields."""
+        fake_home = tmp_path / "home"
+        (fake_home / ".claude").mkdir(parents=True)
+        stdin_data = json.dumps({})
+        result = _run_hook(
+            "task-created-log",
+            stdin_data=stdin_data,
+            env_extra={"HOME": str(fake_home)},
+        )
+        assert result.returncode == 0
+
+
+# ---------------------------------------------------------------------------
+# permission-denied-log hook (SOTA 2026-04-02)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.hook
+class TestPermissionDeniedLogHook:
+
+    def test_exits_zero(self) -> None:
+        """permission-denied-log must always exit 0."""
+        stdin_data = json.dumps({"tool_name": "Bash", "action": "deny"})
+        result = _run_hook("permission-denied-log", stdin_data=stdin_data)
+        assert result.returncode == 0
+
+    def test_writes_jsonl_entry(self, tmp_path: Path) -> None:
+        """permission-denied-log must append to permission-log.jsonl."""
+        fake_home = tmp_path / "home"
+        (fake_home / ".claude").mkdir(parents=True)
+        stdin_data = json.dumps({
+            "tool_name": "Bash",
+            "action": "deny",
+            "tool_input": {"command": "rm -rf /"},
+        })
+        result = _run_hook(
+            "permission-denied-log",
+            stdin_data=stdin_data,
+            env_extra={"HOME": str(fake_home)},
+        )
+        assert result.returncode == 0
+        log = fake_home / ".claude" / "permission-log.jsonl"
+        assert log.exists(), f"permission-log.jsonl not created at {log}"
+        entry = json.loads(log.read_text().strip())
+        assert entry["tool"] == "Bash"
+
+
+# ---------------------------------------------------------------------------
+# cwd-changed-env hook (SOTA 2026-04-02)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.hook
+class TestCwdChangedEnvHook:
+
+    def test_exits_zero(self, tmp_path: Path) -> None:
+        """cwd-changed-env must always exit 0."""
+        result = _run_hook("cwd-changed-env", cwd=tmp_path)
+        assert result.returncode == 0
+
+    def test_detects_dotenv(self, tmp_path: Path) -> None:
+        """cwd-changed-env reports when .env is present."""
+        env_file = tmp_path / ".env"
+        env_file.write_text("PROJECT_ID=test-123\nSECRET_KEY=abc\n")
+        result = _run_hook("cwd-changed-env", cwd=tmp_path)
+        assert result.returncode == 0
+        assert ".env" in result.stdout
+
+    def test_no_output_without_dotenv(self, tmp_path: Path) -> None:
+        """cwd-changed-env produces no output when no .env exists."""
+        result = _run_hook("cwd-changed-env", cwd=tmp_path)
+        assert result.returncode == 0
+        assert result.stdout.strip() == ""
