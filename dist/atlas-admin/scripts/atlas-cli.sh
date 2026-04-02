@@ -9,7 +9,7 @@
 # Source this file from ~/.zshrc:
 #   [ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"
 
-ATLAS_VERSION="4.12.0"
+ATLAS_VERSION="4.14.0"
 ATLAS_CONFIG="${HOME}/.atlas/config.json"
 ATLAS_HISTORY="${HOME}/.atlas/history.json"
 ATLAS_SHELL_DIR="${HOME}/.atlas/shell"
