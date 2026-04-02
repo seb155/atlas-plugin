@@ -23,11 +23,18 @@ dist/atlas-{user,dev,user}/      ← Self-contained artifacts (no runtime deps)
 
 | Component | Location | Count (admin) |
 |-----------|----------|---------------|
-| Skills | `skills/*/SKILL.md` | ~58 (profile + atlas-assist) |
-| Agents | `agents/*/AGENT.md` | 6 |
-| Hooks | `hooks/hooks.json` + scripts | 7 |
+| Skills | `skills/*/SKILL.md` | ~67 (profile + atlas-assist) |
+| Agents | `agents/*/AGENT.md` | 12 |
+| Hooks | `hooks/hooks.json` + scripts | 16 events, ~37 handlers |
 | Refs | `skills/refs/*/SKILL.md` | 5 |
-| Tests | `tests/test_*.py` | 15 |
+| Tests | `tests/test_*.py` | 17 |
+
+### Hook Architecture (IMPORTANT)
+
+- **hooks.json is the SSoT** for all hook registrations. NEVER put hooks in `~/.claude/settings.json`.
+- **Naming convention**: Hook scripts in `hooks/` have NO `.sh` extension (e.g., `protect-plugin-cache` not `protect-plugin-cache.sh`).
+- **Plugin settings.json**: Only env vars and UI flags. NEVER include a `hooks` block.
+- Policy enforcement: `policy-drift-detector` hook warns at session start if deny rules are missing.
 
 ## COMMANDS
 
