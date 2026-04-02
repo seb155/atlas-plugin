@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 66 skills, 12 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 67 skills, 12 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: true
 ---
 
@@ -16,8 +16,8 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.14.0 Admin
-   66 skills │ 12 agents │ Gate 12/15
+🏛️ ATLAS │ ✅ SESSION │ v4.13.0 Admin
+   67 skills │ 12 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -69,6 +69,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 
 | Skill | Emoji | Category |
 |-------|-------|----------|
+| **atlas-analytics** | 📊 | Meta |
 | **atlas-dev-self** | 🔁 | Meta |
 | **atlas-doctor** | 🩺 | Meta |
 | **atlas-location** | 📍 | Meta |
@@ -163,7 +164,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (66)
+## Available Skills (67)
 
 ### 🎯 Deploy
 - 🔧 **ci-management**: CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet
@@ -193,6 +194,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 🎬 **youtube-transcript**: Extract YouTube video transcripts to timestamped markdown files
 
 ### 🛡️ Meta
+- 📊 **atlas-analytics**: Hook activity analytics dashboard — task-log, permission events, session stats
 - 🔁 **atlas-dev-self**: Self-development workflow for the ATLAS plugin itself
 - 🩺 **atlas-doctor**: System health check with 8-category dashboard and auto-fix
 - 📍 **atlas-location**: Location profiles, WiFi network trust, and security adaptation

@@ -9,7 +9,7 @@
 # Source this file from ~/.zshrc:
 #   [ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"
 
-ATLAS_VERSION="4.14.0"
+ATLAS_VERSION="4.13.0"
 ATLAS_CONFIG="${HOME}/.atlas/config.json"
 ATLAS_HISTORY="${HOME}/.atlas/history.json"
 ATLAS_SHELL_DIR="${HOME}/.atlas/shell"
@@ -377,6 +377,7 @@ SUBCOMMANDS
   topics               List topic registry (active & completed)
   setup                Run onboarding wizard
   doctor               Health check
+  hooks                Hook health dashboard
   help                 This help
 
 FLAGS
@@ -447,6 +448,85 @@ HELP
 HELP
   fi
 
+  _atlas_footer
+}
+
+# atlas hooks — Hook health dashboard
+_atlas_hooks() {
+  _atlas_header
+  printf "  ${ATLAS_CYAN}🪝 Hook Health Dashboard${ATLAS_RESET}\n\n"
+
+  local cache="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
+  local settings="$HOME/.claude/settings.json"
+
+  # 1. Plugin hooks
+  local found=0
+  for tier_dir in "$cache"/atlas-*/; do
+    [ -d "$tier_dir" ] || continue
+    for ver_dir in "$tier_dir"*/; do
+      [ -d "$ver_dir" ] || continue
+      local hj="$ver_dir/hooks/hooks.json"
+      [ -f "$hj" ] || continue
+      local tier=$(basename "$tier_dir")
+      local events=$(python3 -c "import json; d=json.load(open('$hj')); print(len(d.get('hooks',{})))" 2>/dev/null)
+      local handlers=$(python3 -c "
+import json
+d=json.load(open('$hj'))
+t=sum(len(h) for es in d.get('hooks',{}).values() for e in es for h in [e.get('hooks',[])])
+print(t)
+" 2>/dev/null)
+      printf "  ✅ %-20s %s events, %s handlers\n" "$tier" "$events" "$handlers"
+      found=1
+      break
+    done
+  done
+  [ $found -eq 0 ] && printf "  ❌ No plugin hooks.json found\n"
+
+  # 2. settings.json hooks (should be empty)
+  echo ""
+  if [ -f "$settings" ]; then
+    local has_hooks=$(python3 -c "import json; d=json.load(open('$settings')); print(len(d['hooks']) if 'hooks' in d else 0)" 2>/dev/null)
+    if [ "$has_hooks" != "0" ]; then
+      printf "  ⚠️  settings.json has %s hook type(s) — should be 0 (plugin is SSoT)\n" "$has_hooks"
+      printf "     Run: ${ATLAS_CYAN}atlas setup hooks${ATLAS_RESET} to clean up\n"
+    else
+      printf "  ✅ settings.json: clean (no hooks block)\n"
+    fi
+  fi
+
+  # 3. Log files
+  echo ""
+  printf "  ${ATLAS_CYAN}📊 Hook Logs${ATLAS_RESET}\n"
+  for log in task-log.jsonl permission-log.jsonl atlas-audit.log compaction-log.txt; do
+    local path="$HOME/.claude/$log"
+    if [ -f "$path" ]; then
+      local lines=$(wc -l < "$path" 2>/dev/null)
+      local size=$(du -sh "$path" 2>/dev/null | cut -f1)
+      printf "  ✅ %-25s %s lines (%s)\n" "$log" "$lines" "$size"
+    else
+      printf "  ⬚  %-25s (not yet created)\n" "$log"
+    fi
+  done
+
+  # 4. Stale local hooks
+  echo ""
+  local stale=0
+  for script in "$HOME/.claude/hooks/"*.sh; do
+    [ -f "$script" ] || continue
+    local name=$(basename "$script" .sh)
+    for tier_dir in "$cache"/atlas-*/; do
+      for ver_dir in "$tier_dir"*/; do
+        if [ -f "$ver_dir/hooks/$name" ] 2>/dev/null; then
+          printf "  ⚠️  Stale: %s.sh (exists in plugin as %s)\n" "$name" "$name"
+          stale=$((stale + 1))
+          break 2
+        fi
+      done
+    done
+  done
+  [ $stale -eq 0 ] && printf "  ✅ No stale local hooks\n"
+
+  echo ""
   _atlas_footer
 }
 
@@ -932,6 +1012,7 @@ atlas() {
     status)  _atlas_status; return ;;
     setup)   shift; _atlas_setup "$@"; return ;;
     doctor)  shift; _atlas_doctor "$@"; return ;;
+    hooks)   _atlas_hooks; return ;;
     topics)  _atlas_topics_list; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
@@ -1173,6 +1254,7 @@ if [ -n "$ZSH_VERSION" ]; then
       'topics:List topic registry (active & completed)'
       'setup:Run onboarding wizard'
       'doctor:Health check'
+      'hooks:Hook health dashboard'
       'help:Show documentation'
     )
 

@@ -430,6 +430,12 @@ skills:
     owner: admin
     description: "Deep reasoning mode — maximum thinking budget for complex architectural decisions"
 
+  atlas-analytics:
+    emoji: "\U0001F4CA"               # 📊
+    category: Meta
+    owner: admin
+    description: "Hook activity analytics dashboard — task-log, permission events, session stats"
+
   # ═══════════════════════════════════════
   # DOMAIN-EXCLUSIVE skills
   # ═══════════════════════════════════════
