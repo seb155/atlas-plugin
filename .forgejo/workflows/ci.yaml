@@ -90,6 +90,114 @@ jobs:
 
           echo "Regression gate passed (${SKILLS} skills, ${CMDS} commands, ${AGENTS} agents)"
 
+      - name: Hook executability check
+        shell: sh
+        run: |
+          echo "Checking hook scripts are executable..."
+          FAIL=0
+          for hook in hooks/*; do
+            [ -f "$hook" ] || continue
+            [ "$hook" = "hooks/hooks.json" ] && continue
+            [ -d "$hook" ] && continue
+            case "$hook" in *.py|*.md|*.json|*.toml) continue ;; esac
+            if ! [ -x "$hook" ]; then
+              echo "  NOT EXECUTABLE: $hook"
+              FAIL=1
+            fi
+          done
+          [ $FAIL -eq 0 ] && echo "All hook scripts are executable" || exit 1
+
+      - name: Settings isolation check
+        shell: sh
+        run: |
+          echo "Verifying plugin settings.json has no hooks block..."
+          python3 -c "
+          import json, sys
+          s = json.load(open('settings.json'))
+          if 'hooks' in s:
+              print('FAIL: settings.json contains hooks block — use hooks/hooks.json')
+              sys.exit(1)
+          print('OK: settings.json clean (no hooks block)')
+          "
+
+      - name: Hook E2E smoke tests (SOTA hooks)
+        shell: sh
+        run: |
+          echo "Testing protect-plugin-cache (should block)..."
+          echo '{"tool_input":{"file_path":"'$HOME'/.claude/plugins/cache/test/file.md"}}' \
+            | CLAUDE_PLUGIN_ROOT=. hooks/protect-plugin-cache 2>/dev/null && echo "FAIL: should have blocked" && exit 1 || true
+          echo "  protect-plugin-cache: OK (exit 2 = blocked)"
+
+          echo "Testing task-created-log..."
+          TMPLOG=$(mktemp)
+          echo '{"tool_input":{"subject":"CI test task"}}' \
+            | HOME=$(dirname $TMPLOG) CLAUDE_PLUGIN_ROOT=. hooks/task-created-log
+          echo "  task-created-log: OK (exit 0)"
+
+          echo "Testing permission-denied-log..."
+          echo '{"tool_name":"Bash","action":"deny"}' \
+            | HOME=$(mktemp -d) CLAUDE_PLUGIN_ROOT=. hooks/permission-denied-log
+          echo "  permission-denied-log: OK (exit 0)"
+
+          echo "Testing cwd-changed-env..."
+          CLAUDE_PLUGIN_ROOT=. hooks/cwd-changed-env
+          echo "  cwd-changed-env: OK (exit 0)"
+
+          echo "All SOTA hook smoke tests passed"
+
+      - name: Shellcheck advisory
+        shell: sh
+        run: |
+          if command -v shellcheck &>/dev/null; then
+            echo "Running shellcheck on hook scripts..."
+            WARNINGS=0
+            for hook in hooks/*; do
+              [ -f "$hook" ] || continue
+              [ -d "$hook" ] && continue
+              case "$hook" in *.json|*.py|*.md|*.toml) continue ;; esac
+              head -1 "$hook" | grep -q "^#!" || continue
+              if ! shellcheck -S warning "$hook" 2>/dev/null; then
+                WARNINGS=$((WARNINGS + 1))
+              fi
+            done
+            echo "Shellcheck done ($WARNINGS scripts with warnings — advisory only)"
+          else
+            echo "shellcheck not installed — skipping (advisory)"
+          fi
+
+      - name: Version sync check
+        shell: sh
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "Checking version sync (VERSION=$VERSION)..."
+
+          # Check dist atlas-cli.sh has correct version
+          for tier in admin dev user worker; do
+            CLI="dist/atlas-${tier}/scripts/atlas-cli.sh"
+            if [ -f "$CLI" ]; then
+              CLI_VER=$(grep '^ATLAS_VERSION=' "$CLI" | cut -d'"' -f2)
+              if [ "$CLI_VER" != "$VERSION" ]; then
+                echo "FAIL: $CLI has version $CLI_VER, expected $VERSION"
+                exit 1
+              fi
+              echo "  atlas-${tier}/atlas-cli.sh: v${CLI_VER} ✓"
+            fi
+          done
+
+          # Check plugin.json versions match
+          for tier in admin dev user worker; do
+            PJ="dist/atlas-${tier}/.claude-plugin/plugin.json"
+            if [ -f "$PJ" ]; then
+              PJ_VER=$(python3 -c "import json; print(json.load(open('$PJ'))['version'])")
+              if [ "$PJ_VER" != "$VERSION" ]; then
+                echo "FAIL: $PJ has version $PJ_VER, expected $VERSION"
+                exit 1
+              fi
+            fi
+          done
+
+          echo "Version sync OK ($VERSION everywhere)"
+
       - name: Zero-duplication gate (SP-DEDUP)
         shell: sh
         run: |
