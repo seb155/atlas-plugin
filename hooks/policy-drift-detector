@@ -1,0 +1,42 @@
+#!/bin/bash
+# Hook: SessionStart(startup) — Detect missing safety deny rules
+# Warns (via stdout) if required deny rules are absent from settings.json
+# Exit 0 always (informational, never block session)
+
+SETTINGS="$HOME/.claude/settings.json"
+[ -f "$SETTINGS" ] || exit 0
+
+# Required deny rules (must match safety-policy.json)
+REQUIRED_DENY=(
+  "Bash(rm -rf /*)"
+  "Bash(rm -rf /)"
+  "Bash(sudo rm -rf /*)"
+  "Bash(mkfs *)"
+  "Bash(dd if=/dev/zero of=/dev/ *)"
+)
+
+# Check each required rule
+MISSING=0
+for rule in "${REQUIRED_DENY[@]}"; do
+  if ! python3 -c "
+import json, sys
+with open('$SETTINGS') as f:
+    s = json.load(f)
+deny = s.get('permissions', {}).get('deny', [])
+sys.exit(0 if '$rule' in deny else 1)
+" 2>/dev/null; then
+    MISSING=$((MISSING + 1))
+  fi
+done
+
+if [ $MISSING -gt 0 ]; then
+  echo "⚠️ POLICY DRIFT: $MISSING mandatory deny rules missing from settings.json. Run: atlas setup permissions"
+fi
+
+# Check if settings.json has a hooks block (should be in plugin hooks.json)
+HAS_HOOKS=$(python3 -c "import json; d=json.load(open('$SETTINGS')); print('yes' if 'hooks' in d else 'no')" 2>/dev/null)
+if [ "$HAS_HOOKS" = "yes" ]; then
+  echo "⚠️ HOOKS DRIFT: settings.json contains hooks block — should be in plugin hooks.json only. Run: atlas setup hooks"
+fi
+
+exit 0

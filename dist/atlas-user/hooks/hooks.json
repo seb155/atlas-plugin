@@ -25,6 +25,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/cwd-changed-env\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/policy-drift-detector\"",
+            "async": true,
+            "timeout": 5
           }
         ]
       }

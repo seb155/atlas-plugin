@@ -260,6 +260,42 @@ with open(path, 'w') as f: json.dump(s, f, indent=2)
 " 2>/dev/null
 
   _setup_success "Permissions: ${preset} | Auto mode: ${use_auto}"
+
+  # Enforce safety policy (mandatory deny rules regardless of preset)
+  _setup_info "Enforcing safety policy..."
+  local policy_file="${ATLAS_PLUGIN_ROOT:-${0:A:h}}/presets/safety-policy.json"
+  if [ -f "$policy_file" ]; then
+    python3 -c "
+import json, os
+settings_path = os.path.expanduser('~/.claude/settings.json')
+with open(settings_path) as f:
+    s = json.load(f)
+with open('$policy_file') as f:
+    policy = json.load(f)
+
+# Ensure all mandatory deny rules exist
+current_deny = set(s.get('permissions', {}).get('deny', []))
+required_deny = set(policy.get('deny_rules', []))
+missing = required_deny - current_deny
+if missing:
+    s.setdefault('permissions', {}).setdefault('deny', [])
+    s['permissions']['deny'] = list(current_deny | required_deny)
+    print(f'Added {len(missing)} missing deny rules')
+else:
+    print('All deny rules present')
+
+# Remove forbidden keys
+for key in policy.get('forbidden_settings_keys', {}).get('keys', []):
+    if key in s:
+        del s[key]
+        print(f'Removed forbidden key: {key}')
+
+with open(settings_path, 'w') as f:
+    json.dump(s, f, indent=2)
+    f.write('\n')
+" 2>/dev/null
+    _setup_success "Safety policy enforced"
+  fi
 }
 
 # ═══════════════════════════════════════════════════════════════

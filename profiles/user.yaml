@@ -41,6 +41,7 @@ hooks:  # Hook scripts — run automatically on CC lifecycle events
   - protect-plugin-cache
   - permission-denied-log
   - cwd-changed-env
+  - policy-drift-detector
 
 agents:
   - context-scanner
