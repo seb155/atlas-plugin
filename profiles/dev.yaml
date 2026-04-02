@@ -50,6 +50,8 @@ hooks:
   - instructions-loaded
   - config-change
   - post-edit-lint
+  # SOTA 2026-04-02: task analytics
+  - task-created-log
 
 refs:
   - composition-patterns

@@ -37,6 +37,10 @@ hooks:  # Hook scripts — run automatically on CC lifecycle events
   # SP-COGNITION: cognitive hooks (Gap 1 + Gap 2)
   - tone-adaptation
   - morning-brief
+  # SOTA 2026-04-02: safety + analytics
+  - protect-plugin-cache
+  - permission-denied-log
+  - cwd-changed-env
 
 agents:
   - context-scanner

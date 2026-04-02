@@ -1,0 +1,16 @@
+#!/bin/bash
+# Hook: PostToolUse(TaskCreate) — Log task creation for analytics
+# Appends one JSON line per task to ~/.claude/task-log.jsonl
+# Exit 0 always (never block)
+
+INPUT=$(cat)
+TASK_ID=$(echo "$INPUT" | jq -r '.tool_result.task_id // .tool_input.subject // "unknown"')
+SUBJECT=$(echo "$INPUT" | jq -r '.tool_input.subject // "unknown"')
+TEAM=$(echo "$INPUT" | jq -r '.tool_input.team_name // "solo"')
+TIMESTAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+LOG_FILE="$HOME/.claude/task-log.jsonl"
+echo "{\"ts\":\"$TIMESTAMP\",\"id\":\"$TASK_ID\",\"subject\":\"$SUBJECT\",\"team\":\"$TEAM\"}" \
+  >> "$LOG_FILE" 2>/dev/null
+
+exit 0

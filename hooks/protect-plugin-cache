@@ -1,0 +1,18 @@
+#!/bin/bash
+# Hook: PreToolUse(Write|Edit) — Block writes to plugin cache directory
+# Enforces plugin-cache read-only rule via guaranteed hook execution.
+# Exit 0 = allow, Exit 2 = block
+
+INPUT=$(cat)
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // empty')
+
+[ -z "$FILE" ] && exit 0
+
+# Block any write to ~/.claude/plugins/cache/
+if echo "$FILE" | grep -q "$HOME/.claude/plugins/cache/"; then
+  echo "BLOQUE: Ecriture dans ~/.claude/plugins/cache/ interdite." >&2
+  echo "Le cache plugin est READ-ONLY. Editer le repo source (atlas-dev-plugin/) puis 'make dev'." >&2
+  exit 2
+fi
+
+exit 0

@@ -1,8 +1,8 @@
 {
   "name": "atlas-frontend",
-  "version": "4.11.0",
+  "version": "4.11.1",
   "description": "Frontend — UI design, browser automation, visual QA, product health.",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-01T09:44:17Z"
+  "buildTimestamp": "2026-04-01T09:45:49Z"
 }

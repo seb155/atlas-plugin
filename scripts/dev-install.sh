@@ -84,7 +84,9 @@ SHELL_DST="${HOME}/.atlas/shell/atlas.sh"
 if [ -f "$SHELL_SRC" ]; then
   mkdir -p "$(dirname "$SHELL_DST")"
   cp "$SHELL_SRC" "$SHELL_DST"
-  echo "  ✅ atlas-cli.sh → ${SHELL_DST}"
+  # Inject VERSION into installed atlas-cli.sh (fix version drift)
+  sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"${VERSION}\"/" "$SHELL_DST"
+  echo "  ✅ atlas-cli.sh → ${SHELL_DST} (v${VERSION})"
 fi
 
 echo ""

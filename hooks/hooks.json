@@ -49,6 +49,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/morning-brief\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/cwd-changed-env\"",
+            "async": true,
+            "timeout": 5
           }
         ]
       }
@@ -83,6 +89,16 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/validate-bash\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/protect-plugin-cache\"",
             "timeout": 5
           }
         ]
@@ -122,6 +138,17 @@
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "TaskCreate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/task-created-log\"",
+            "async": true,
+            "timeout": 5
+          }
+        ]
+      },
       {
         "matcher": "Write|Edit",
         "hooks": [
@@ -211,6 +238,12 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/permission-request\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/permission-denied-log\"",
+            "async": true,
             "timeout": 5
           }
         ]

@@ -183,6 +183,11 @@ build_tier() {
     fi
   done
 
+  # Inject VERSION into atlas-cli.sh (fix version drift)
+  if [ -f "$output/scripts/atlas-cli.sh" ]; then
+    sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"${VERSION}\"/" "$output/scripts/atlas-cli.sh"
+  fi
+
   # Copy VERSION file
   cp VERSION "$output/VERSION"
 
