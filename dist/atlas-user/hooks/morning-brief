@@ -8,8 +8,16 @@
 #
 # Output: system-reminder with predicted focus + context.
 
+# ─── SP-HOOK-DEDUP: Prevent duplicate morning-brief across plugins ──
+_ATLAS_MB_LOCK="/tmp/.atlas-morning-brief-${PPID:-$$}"
+if [ -f "$_ATLAS_MB_LOCK" ]; then
+  exit 0
+fi
+touch "$_ATLAS_MB_LOCK"
+trap 'rm -f "$_ATLAS_MB_LOCK"' EXIT
+# ────────────────────────────────────────────────────────────────────
+
 set -o pipefail
-trap 'exit 0' ERR
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 1. Resolve memory directory

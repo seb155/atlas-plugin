@@ -260,6 +260,42 @@ with open(path, 'w') as f: json.dump(s, f, indent=2)
 " 2>/dev/null
 
   _setup_success "Permissions: ${preset} | Auto mode: ${use_auto}"
+
+  # Enforce safety policy (mandatory deny rules regardless of preset)
+  _setup_info "Enforcing safety policy..."
+  local policy_file="${ATLAS_PLUGIN_ROOT:-${0:A:h}}/presets/safety-policy.json"
+  if [ -f "$policy_file" ]; then
+    python3 -c "
+import json, os
+settings_path = os.path.expanduser('~/.claude/settings.json')
+with open(settings_path) as f:
+    s = json.load(f)
+with open('$policy_file') as f:
+    policy = json.load(f)
+
+# Ensure all mandatory deny rules exist
+current_deny = set(s.get('permissions', {}).get('deny', []))
+required_deny = set(policy.get('deny_rules', []))
+missing = required_deny - current_deny
+if missing:
+    s.setdefault('permissions', {}).setdefault('deny', [])
+    s['permissions']['deny'] = list(current_deny | required_deny)
+    print(f'Added {len(missing)} missing deny rules')
+else:
+    print('All deny rules present')
+
+# Remove forbidden keys
+for key in policy.get('forbidden_settings_keys', {}).get('keys', []):
+    if key in s:
+        del s[key]
+        print(f'Removed forbidden key: {key}')
+
+with open(settings_path, 'w') as f:
+    json.dump(s, f, indent=2)
+    f.write('\n')
+" 2>/dev/null
+    _setup_success "Safety policy enforced"
+  fi
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -845,6 +881,106 @@ print('OK')
 }
 
 # ═══════════════════════════════════════════════════════════════
+# 11. HOOKS HEALTH CHECK
+# ═══════════════════════════════════════════════════════════════
+_setup_hooks() {
+  _setup_section_header "🪝 Hooks Health Check"
+
+  local settings="$HOME/.claude/settings.json"
+  local issues=0
+  local fixed=0
+
+  # Check 1: settings.json should NOT contain hooks block
+  _setup_info "Checking settings.json hooks isolation..."
+  if [ -f "$settings" ]; then
+    local has_hooks=$(python3 -c "import json; d=json.load(open('$settings')); print('yes' if 'hooks' in d else 'no')" 2>/dev/null)
+    if [ "$has_hooks" = "yes" ]; then
+      gum style --foreground 196 "  ✗ settings.json contains hooks block — should be in plugin hooks.json only"
+      local hook_count=$(python3 -c "import json; d=json.load(open('$settings')); print(len(d.get('hooks',{})))" 2>/dev/null)
+      gum style --foreground 214 "    Found $hook_count event types in settings.json (these duplicate plugin hooks)"
+      issues=$((issues + 1))
+
+      if gum confirm "Remove hooks block from settings.json? (plugin hooks.json is the SSoT)"; then
+        python3 -c "
+import json
+with open('$settings') as f:
+    d = json.load(f)
+d.pop('hooks', None)
+with open('$settings', 'w') as f:
+    json.dump(d, f, indent=2)
+    f.write('\n')
+print('Removed hooks block')
+" 2>/dev/null
+        gum style --foreground 46 "  ✓ Hooks block removed from settings.json"
+        fixed=$((fixed + 1))
+      fi
+    else
+      gum style --foreground 46 "  ✓ settings.json clean (no hooks block)"
+    fi
+  else
+    gum style --foreground 214 "  ⚠ settings.json not found"
+    issues=$((issues + 1))
+  fi
+
+  # Check 2: Plugin cache has hooks.json
+  _setup_info "Checking plugin hooks.json..."
+  local plugin_cache="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
+  local found_hooks=0
+  for tier_dir in "$plugin_cache"/atlas-*/; do
+    [ -d "$tier_dir" ] || continue
+    # Find the version directory
+    for ver_dir in "$tier_dir"*/; do
+      [ -d "$ver_dir" ] || continue
+      if [ -f "$ver_dir/hooks/hooks.json" ]; then
+        local tier_name=$(basename "$tier_dir")
+        local event_count=$(python3 -c "import json; d=json.load(open('$ver_dir/hooks/hooks.json')); print(len(d.get('hooks',{})))" 2>/dev/null)
+        local hook_count=$(python3 -c "
+import json
+d=json.load(open('$ver_dir/hooks/hooks.json'))
+total=sum(len(h) for entries in d.get('hooks',{}).values() for e in entries for h in [e.get('hooks',[])])
+print(total)
+" 2>/dev/null)
+        gum style --foreground 46 "  ✓ $tier_name: $event_count events, $hook_count handlers"
+        found_hooks=1
+      fi
+      break
+    done
+  done
+  if [ $found_hooks -eq 0 ]; then
+    gum style --foreground 196 "  ✗ No plugin hooks.json found in cache"
+    issues=$((issues + 1))
+  fi
+
+  # Check 3: Stale local hook scripts
+  _setup_info "Checking for stale local hooks..."
+  local stale=0
+  for script in "$HOME/.claude/hooks/"*.sh; do
+    [ -f "$script" ] || continue
+    local name=$(basename "$script" .sh)
+    # Check if this hook exists in the plugin
+    if [ -f "$plugin_cache/atlas-admin/"*/hooks/"$name" ] 2>/dev/null; then
+      gum style --foreground 214 "  ⚠ Stale: $name.sh (exists in plugin as $name)"
+      stale=$((stale + 1))
+    fi
+  done
+  if [ $stale -gt 0 ]; then
+    gum style --foreground 214 "  $stale stale local hook(s) found (duplicated by plugin)"
+    issues=$((issues + stale))
+  else
+    gum style --foreground 46 "  ✓ No stale local hooks"
+  fi
+
+  # Summary
+  echo ""
+  if [ $issues -eq 0 ]; then
+    gum style --foreground 46 --bold "  ✓ Hooks health: CLEAN ($fixed fixed)"
+  else
+    local remaining=$((issues - fixed))
+    gum style --foreground 214 --bold "  ⚠ Hooks health: $remaining issue(s) remaining"
+  fi
+}
+
+# ═══════════════════════════════════════════════════════════════
 # MAIN WIZARD ROUTER
 # ═══════════════════════════════════════════════════════════════
 _atlas_setup() {
@@ -866,6 +1002,7 @@ _atlas_setup() {
     plugins)     _setup_plugins; _atlas_footer; return ;;
     domains)     _setup_plugins_domain; _atlas_footer; return ;;
     sync)        _setup_sync; _atlas_footer; return ;;
+    hooks)       _setup_hooks; _atlas_footer; return ;;
     all)         _setup_run_all; _atlas_footer; return ;;
     cc)          _setup_run_cc; _atlas_footer; return ;;
     terminal)    _setup_run_terminal; _atlas_footer; return ;;
@@ -874,7 +1011,7 @@ _atlas_setup() {
 
   # Interactive section picker
   echo ""
-  local choice=$(printf '🚀 Quick Setup (Identity + Model + Projects)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🤖 CLAUDE CODE\n  👤 1. Identity — Forgejo/vault auto-detect\n  🧠 2. AI Model — model, effort, thinking budget\n  🔒 3. Permissions — presets, auto mode\n  🔑 5. Secrets — Vaultwarden, keyring, tokens\n🐚 TERMINAL\n  🐚 4. Shell — zsh plugins, tools, completion\n📁 PROJECTS\n  📁 6. Projects — workspace, defaults, worktree\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚙️  ADVANCED\n  📊 7. Status Line — Starship, CShip\n  ⚡ 8. Performance — memory, timeouts\n  🧩 9. Plugins — CC plugins, MCP\n  🔄 10. Sync — User config sync (zshrc, starship, cship)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🌟 Full Setup (all 9 sections)' | \
+  local choice=$(printf '🚀 Quick Setup (Identity + Model + Projects)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🤖 CLAUDE CODE\n  👤 1. Identity — Forgejo/vault auto-detect\n  🧠 2. AI Model — model, effort, thinking budget\n  🔒 3. Permissions — presets, auto mode\n  🔑 5. Secrets — Vaultwarden, keyring, tokens\n🐚 TERMINAL\n  🐚 4. Shell — zsh plugins, tools, completion\n📁 PROJECTS\n  📁 6. Projects — workspace, defaults, worktree\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚙️  ADVANCED\n  📊 7. Status Line — Starship, CShip\n  ⚡ 8. Performance — memory, timeouts\n  🧩 9. Plugins — CC plugins, MCP\n  🔄 10. Sync — User config sync (zshrc, starship, cship)\n  🪝 11. Hooks — Health check, conflict detection\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🌟 Full Setup (all sections)' | \
     gum choose --header "ATLAS Setup — Select what to configure:" \
     --cursor "→ " --cursor.foreground 214 --height 22)
 
@@ -893,6 +1030,7 @@ _atlas_setup() {
     *"8. Performance"*) _setup_performance ;;
     *"9. Plugins"*)   _setup_plugins ;;
     *"10. Sync"*)     _setup_sync ;;
+    *"11. Hooks"*)    _setup_hooks ;;
     *"CLAUDE CODE"*)  _setup_run_cc ;;
     *"TERMINAL"*)     _setup_run_terminal ;;
     *"PROJECTS"*)     _setup_projects ;;
@@ -914,6 +1052,7 @@ _setup_run_all() {
   _setup_statusline
   _setup_performance
   _setup_plugins
+  _setup_hooks
 }
 
 _setup_run_cc() {

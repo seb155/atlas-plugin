@@ -143,9 +143,20 @@ build_tier() {
     fi
   done
 
-  # Copy hooks (profile-resolved — each tier gets only its declared hooks)
+  # Copy hooks — SP-HOOK-DEDUP: use delta hooks for child tiers
+  # Base tier (user) gets full resolved hooks. Child tiers (dev, admin)
+  # get ONLY hooks declared in their OWN profile, not inherited ones.
+  # This prevents SessionStart duplication when multiple tiers are installed.
   local hooks
-  hooks=$(resolve_field "$tier" "hooks")
+  local parent
+  parent=$(yq -r '.inherits // ""' "$profile")
+  if [ -z "$parent" ]; then
+    # Base tier (user, worker) — gets full resolved hooks
+    hooks=$(resolve_field "$tier" "hooks")
+  else
+    # Child tier (dev, admin) — delta only (own hooks, not parent's)
+    hooks=$(yq -r '.hooks // [] | .[]' "$profile" 2>/dev/null || true)
+  fi
 
   if [ -z "$hooks" ]; then
     # Empty hooks list (e.g., worker tier) → write empty hooks.json

@@ -1,6 +1,8 @@
 {
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "92"
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "83",
+    "CLAUDE_CODE_NO_FLICKER": "1",
+    "MCP_CONNECTION_NONBLOCKING": "1"
   },
   "showClearContextOnPlanAccept": true,
   "showTurnDuration": true,

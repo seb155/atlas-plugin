@@ -3,6 +3,18 @@
 # Injects the tier-appropriate atlas-assist skill into every Claude Code session
 # Detects user role via: Authentik API → ATLAS_ROLE env var → plugin default
 
+# ─── SP-HOOK-DEDUP: Prevent duplicate SessionStart across tier plugins ──
+# When atlas-admin + atlas-core + atlas-dev are all installed, CC runs
+# session-start 3x. This guard ensures only the FIRST invocation runs.
+# Uses PPID (Claude Code process) so each CC session gets its own lock.
+_ATLAS_SS_LOCK="/tmp/.atlas-session-start-${PPID:-$$}"
+if [ -f "$_ATLAS_SS_LOCK" ]; then
+  exit 0
+fi
+touch "$_ATLAS_SS_LOCK"
+trap 'rm -f "$_ATLAS_SS_LOCK"' EXIT
+# ─────────────────────────────────────────────────────────────────────────
+
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"
 AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
