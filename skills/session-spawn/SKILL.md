@@ -14,7 +14,7 @@ Max plan (no API key), gets its own worktree (file isolation), and is fully inte
 - User says "continue fresh", "new session", "flush context", "restart fresh"
 - User says "spawn", "parallel task", "separate window", "another CC"
 - User says "sessions", "what's running", "list agents"
-- Context budget is exhausted (~50+ tool calls, quality degrading)
+- User explicitly requests a fresh session or `/atlas continue`
 - Need to work on multiple tasks simultaneously
 - After `/atlas end` or `/atlas handoff` — offer to auto-continue
 

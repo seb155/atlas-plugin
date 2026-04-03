@@ -9,7 +9,7 @@ effort: low
 ## When to Run
 - Before closing or pausing a session
 - After completing a major feature/phase
-- When context budget is getting tight
+- When user requests session close or handoff
 
 ## Core Process (Steps 1-5, always run first)
 
