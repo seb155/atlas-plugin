@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# affect-signal — Decision Confidence Modifier (SP-COGNITION Gap #2)
+# Event: UserPromptSubmit | Injects DCM into session context
+#
+# Reads most recent episode file, extracts affect signals (energy, mood,
+# time_quality) and emits a DCM score for downstream skill caution.
+#
+# DCM = (energy/10) × mood_factor × time_quality_factor
+# Ranges: 0.8-1.0 high | 0.6-0.79 medium | 0.4-0.59 low | <0.4 minimal
+
+set -euo pipefail
+
+_START_MS=$(date +%s%N 2>/dev/null | head -c13 || echo "0")
+
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local end_ms
+  end_ms=$(date +%s%N 2>/dev/null | head -c13 || echo "0")
+  local elapsed=$(( end_ms - _START_MS ))
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-UserPromptSubmit}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null || true
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 1. Resolve memory directory (CWD-based, like morning-brief)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CWD=$(pwd)
+MEMORY_DIR=""
+for d in ~/.claude/projects/*/memory; do
+  proj_path=$(basename "$(dirname "$d")" | sed 's/^-/\//' | sed 's/-/\//g')
+  if echo "$CWD" | grep -q "$(echo "$proj_path" | head -c 30)"; then
+    MEMORY_DIR="$d"
+    break
+  fi
+done
+
+# Fallback: first memory dir with MEMORY.md
+if [ -z "$MEMORY_DIR" ] || [ ! -d "$MEMORY_DIR" ]; then
+  MEMORY_DIR=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
+fi
+
+if [ -z "$MEMORY_DIR" ] || [ ! -d "$MEMORY_DIR" ]; then
+  _hook_log "skip:no-memory-dir"
+  exit 0
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2. Find most recent episode file
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LATEST_EPISODE=$(find "$MEMORY_DIR" -name "episode-*.md" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $2}')
+if [ -z "$LATEST_EPISODE" ] || [ ! -f "$LATEST_EPISODE" ]; then
+  _hook_log "skip:no-episode"
+  exit 0
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 3. Staleness check — only today or yesterday
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EPISODE_DATE=$(basename "$LATEST_EPISODE" | grep -oP '\d{4}-\d{2}-\d{2}' || echo "")
+TODAY=$(date +%Y-%m-%d)
+YESTERDAY=$(date -d "yesterday" +%Y-%m-%d 2>/dev/null || date -v-1d +%Y-%m-%d 2>/dev/null || echo "")
+
+if [ "$EPISODE_DATE" != "$TODAY" ] && [ "$EPISODE_DATE" != "$YESTERDAY" ]; then
+  _hook_log "skip:stale-episode:${EPISODE_DATE}"
+  exit 0
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 4. Extract frontmatter values
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ENERGY=$(grep "^energy:" "$LATEST_EPISODE" 2>/dev/null | awk '{print $2}' | head -1 || echo "")
+MOOD=$(grep "^mood:" "$LATEST_EPISODE" 2>/dev/null | awk '{print $2}' | head -1 || echo "")
+TIME_Q=$(grep "^time_quality:" "$LATEST_EPISODE" 2>/dev/null | awk '{print $2}' | head -1 || echo "")
+
+# Defaults if missing
+ENERGY=${ENERGY:-5}
+MOOD=${MOOD:-neutral}
+TIME_Q=${TIME_Q:-mixed}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 5. Compute mood factor
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+case "$MOOD" in
+  positive|productive|methodical|creative|focused) MOOD_F="1.0" ;;
+  neutral|routine|reflective)                       MOOD_F="0.85" ;;
+  tired|frustrated|scattered|anxious)               MOOD_F="0.7" ;;
+  exhausted|overwhelmed)                            MOOD_F="0.5" ;;
+  *)                                                MOOD_F="0.85" ;;
+esac
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 6. Compute time quality factor
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+case "$TIME_Q" in
+  deep)       TQ_F="1.0" ;;
+  focused)    TQ_F="0.95" ;;
+  mixed)      TQ_F="0.85" ;;
+  shallow)    TQ_F="0.7" ;;
+  distracted) TQ_F="0.6" ;;
+  *)          TQ_F="0.85" ;;
+esac
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 7. Compute DCM score via python3
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DCM=$(python3 -c "
+e = float('${ENERGY}') / 10.0
+m = float('${MOOD_F}')
+t = float('${TQ_F}')
+dcm = round(e * m * t, 2)
+if dcm >= 0.8:
+    level = 'high'
+elif dcm >= 0.6:
+    level = 'medium'
+elif dcm >= 0.4:
+    level = 'low'
+else:
+    level = 'minimal'
+print(f'{dcm}|{level}')
+" 2>/dev/null || echo "0.5|low")
+
+DCM_SCORE=$(echo "$DCM" | cut -d'|' -f1)
+DCM_LEVEL=$(echo "$DCM" | cut -d'|' -f2)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 8. Output — CC captures stdout as system-reminder injection
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+echo "⚡ DCM: ${DCM_SCORE} (${DCM_LEVEL}) — Energy:${ENERGY}/10 Mood:${MOOD} Quality:${TIME_Q}"
+
+_hook_log "pass:dcm=${DCM_SCORE}:${DCM_LEVEL}"

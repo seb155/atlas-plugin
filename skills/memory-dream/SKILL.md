@@ -1,14 +1,16 @@
 ---
 name: memory-dream
-description: "Memory consolidation engine v5 (CC auto-dream pattern). 12-phase cycle with experiential + workflow layers: orient, docs audit, gather signal, validate, experiential audit, workflow audit, consolidate, session journal, experiential synthesis, prune & index (16D health), reflection generator, cross-project. 9 memory types (user, feedback, project, reference + episode, intuition, reflection, relationship, temporal). Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
+description: "Memory consolidation engine v5.5 (CC auto-dream pattern). 12-phase cycle with experiential + workflow + learning velocity layers: orient, docs audit, gather signal, validate, experiential audit, workflow audit, learning velocity audit, consolidate, session journal, experiential synthesis, prune & index (17D health), reflection generator, cross-project. 9 memory types (user, feedback, project, reference + episode, intuition, reflection, relationship, temporal). Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
 effort: high
 ---
 
-# Memory Dream v5 — Whole-Person Consolidation Engine
+# Memory Dream v5.5 — Whole-Person Consolidation Engine
 
 > Implements CC's auto-dream pattern: a 12-phase memory consolidation cycle inspired by
 > sleep-time compute (UC Berkeley + Letta, 2025) and cognitive architectures (ACT-R/SOAR).
-> v5 adds **workflow audit** (Phase 2.7): skill usage tracking, error rates, unused skill detection,
+> v5.5 adds **learning velocity audit** (Phase 2.8): feedback rate tracking, bias correction detection,
+> 17-dimension health scoring (D17 Learning Velocity), measuring how actively the system learns.
+> v5 added **workflow audit** (Phase 2.7): skill usage tracking, error rates, unused skill detection,
 > 16-dimension health scoring (D16 Workflow Efficiency), and learning verbosity configuration.
 > v4 added the experiential layer: 5 new memory types, inference-first capture, growth trajectory.
 > Scope: memory + handoffs + docs + plans + features + plugin state + experiential context + workflow.
@@ -283,6 +285,47 @@ Phase 2.6 — Experiential Audit
    Suggested: consider uninstalling atlas-frontend if not needed
    ```
 
+## Phase 2.8 — Learning Velocity Audit (NEW, v5.5)
+
+> Runs with `--deep` or `--full`. Measures learning rate from feedback and bias corrections.
+
+### Steps
+
+1. **New feedback detection**: Count `feedback_*.md` files created in last 30 days.
+   ```bash
+   NEW_FB=$(find "$MEMORY_DIR" -name "feedback_*.md" -mtime -30 2>/dev/null | wc -l)
+   NEW_CONSOL=$(find "$MEMORY_DIR" -name "feedback-*.md" -mtime -30 2>/dev/null | wc -l)
+   TOTAL_NEW=$((NEW_FB + NEW_CONSOL))
+   ```
+
+2. **Bias correction tracking**: Read `self-model.md` Known Biases section. Compare correction counts with previous dream report. Count increments.
+   ```bash
+   # Extract current bias counts from self-model.md
+   grep -A1 "corrections" "$MEMORY_DIR/self-model.md" 2>/dev/null
+   ```
+
+3. **Feedback confidence audit**: Count feedback files WITH vs WITHOUT `confidence:` frontmatter field.
+   ```bash
+   TOTAL_FB=$(find "$MEMORY_DIR" -name "feedback*.md" 2>/dev/null | wc -l)
+   SCORED_FB=$(grep -rl "^confidence:" "$MEMORY_DIR"/feedback*.md 2>/dev/null | wc -l)
+   ```
+
+4. **Regression detection**: Check if any bias from self-model.md has been triggered 3+ times since last dream.
+
+5. **Output**:
+   ```
+   Phase 2.8 — Learning Velocity Audit
+   +---------------------------+-------+--------+--------+
+   | Metric                    | Count | Target | Status |
+   +---------------------------+-------+--------+--------+
+   | New feedback (30d)        | {N}   | 2+     | OK/LOW |
+   | Bias corrections          | {N}   | 1+     | OK/LOW |
+   | Confidence scored (%)     | {N}%  | 50%+   | OK/GAP |
+   | Regressions               | {N}   | 0      | OK/WARN|
+   +---------------------------+-------+--------+--------+
+   D17 Score: {N}/10
+   ```
+
 ## Phase 3 — Consolidate (Enhanced, HITL Required)
 
 Make changes with explicit user approval at every step.
@@ -366,7 +409,7 @@ Regenerate MEMORY.md and compute health.
      done
    fi
    ```
-4. **Health score computation** (v5): Calculate 16 dimensions (10 structural + 5 experiential + 1 workflow), display dashboard.
+4. **Health score computation** (v5.5): Calculate 17 dimensions (10 structural + 5 experiential + 1 workflow + 1 learning), display dashboard.
    For details, read `${SKILL_DIR}/references/health-scoring.md`
 
    D1-D10 computed per existing health-scoring.md. D11-D15 (experiential):
@@ -398,7 +441,7 @@ Regenerate MEMORY.md and compute health.
    # Read last 3 dream-history.jsonl entries, compute energy/flow/confidence trends
    # Score: 10 if all rising, 7 if stable, 4 if declining, 2 if no data
    ```
-5. **Generate dream report v5** (H15): Enriched format with 16D health score, trend, importance distribution, code staleness, ecosystem sources, tech claims table, **experiential context (episodes, energy trends, relationships, intuitions)**, **workflow audit (skill usage, errors, unused)**, session journal, handoff context, cross-project summary.
+5. **Generate dream report v5.5** (H15): Enriched format with 17D health score, trend, importance distribution, code staleness, ecosystem sources, tech claims table, **experiential context (episodes, energy trends, relationships, intuitions)**, **workflow audit (skill usage, errors, unused)**, **learning velocity audit (new feedback, bias corrections, confidence scoring)**, session journal, handoff context, cross-project summary.
    For details, read `${SKILL_DIR}/references/dream-report-v2.md`
 6. **Trend persistence** (H16): Append one JSON line to `dream-history.jsonl`.
 7. **Release lock**: Remove `.consolidate-lock`.
@@ -691,6 +734,7 @@ Configure how actively the system communicates its learning:
 | Phase 2.5 (Validate) | Opus | Code understanding, semantic verification |
 | Phase 2.6 (Experiential Audit) | Sonnet | File counting, date comparison |
 | Phase 2.7 (Workflow Audit) | Sonnet | Skill counting, log scanning |
+| Phase 2.8 (Learning Velocity Audit) | Sonnet | Feedback counting, bias diff |
 | Phase 3 (Consolidate) | Opus | Merge decisions, split strategy |
 | Phase 3.5 (Journal) | Opus | Session synthesis, handoff reasoning |
 | Phase 3.7 (Experiential Synthesis) | Opus | Pattern recognition, growth analysis |
@@ -698,17 +742,17 @@ Configure how actively the system communicates its learning:
 | Phase 4.5 (Reflection Generator) | Opus | Narrative synthesis, trend analysis |
 | Phase 5 (Cross-Project) | Opus | Cross-repo reasoning |
 
-## Health Scoring (16 Dimensions)
+## Health Scoring (17 Dimensions)
 
-Health is a weighted composite score (0-10) across 10 dimensions:
+Health is a weighted composite score (0-10) across 17 dimensions (normalized to 100%):
 
 | # | Dimension | Weight |
 |---|-----------|--------|
 | D1 | Index Capacity | 10% |
 | D2 | Orphan Rate | 10% |
-| D3 | Staleness | 10% |
+| D3 | Staleness | 8% |
 | D4 | Referential Integrity | 10% |
-| D5 | Content Freshness | 8% |
+| D5 | Content Freshness | 5% |
 | D6 | File Size Balance | 6% |
 | D7 | Type Coverage | 6% |
 | D8 | Cross-Project Coherence | 6% |
@@ -719,6 +763,8 @@ Health is a weighted composite score (0-10) across 10 dimensions:
 | **D13** | **Temporal Validity** | **5%** |
 | **D14** | **Intuition Quality** | **3%** |
 | **D15** | **Growth Trajectory** | **3%** |
+| **D16** | **Workflow Efficiency** | **3%** |
+| **D17** | **Learning Velocity** | **5%** |
 
 Grade: A (9-10) | B (7-8.9) | C (5-6.9) | D (3-4.9) | F (<3)
 

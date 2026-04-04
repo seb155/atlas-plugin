@@ -15,6 +15,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 from conftest import PLUGIN_ROOT, VERSION_FILE, resolved_tier
 
@@ -116,21 +117,38 @@ class TestBuildVersionSync:
         assert vf.read_text(encoding="utf-8").strip() == expected
 
 
+def _owned_skills_for_tier(tier: str) -> set[str]:
+    """Return skill names OWNED by a tier according to _metadata.yaml (SP-DEDUP model)."""
+    tier_to_owner: dict[str, str] = {"user": "core"}
+    owner = tier_to_owner.get(tier, tier)
+
+    metadata_path = PLUGIN_ROOT / "skills" / "_metadata.yaml"
+    data = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
+    skills_meta = data.get("skills", {})
+
+    return {
+        name for name, info in skills_meta.items()
+        if isinstance(info, dict) and info.get("owner") == owner
+    }
+
+
 class TestBuildCounts:
 
     @pytest.mark.parametrize("tier", ["admin", "dev", "user"])
-    def test_skill_count_matches_profile(self, build_output: Path, tier: str) -> None:
-        """Dist skill count should match resolved profile."""
-        resolved = resolved_tier(tier)
-        expected_count = len(resolved["skills"])
+    def test_skill_count_matches_owned(self, build_output: Path, tier: str) -> None:
+        """SP-DEDUP: Dist should contain only OWNED skills (no inherited copies)."""
+        owned = _owned_skills_for_tier(tier)
 
         tier_dir = build_output / f"atlas-{tier}" / "skills"
-        # Count SKILL.md files (1 per skill, including refs sub-dirs)
-        actual = len(list(tier_dir.rglob("SKILL.md")))
+        # Direct skill directories (exclude refs/ container and atlas-assist)
+        dist_skills = {
+            d.name for d in tier_dir.iterdir()
+            if d.is_dir() and d.name not in {"refs", "atlas-assist"}
+        }
 
-        # Allow +1 for atlas-assist (auto-generated, not in profile)
-        assert actual >= expected_count, (
-            f"dist/atlas-{tier} has {actual} skills, "
-            f"expected >= {expected_count} from profile"
+        assert dist_skills == owned, (
+            f"dist/atlas-{tier} skill mismatch.\n"
+            f"  Extra (should not be there): {sorted(dist_skills - owned)}\n"
+            f"  Missing (should be there):   {sorted(owned - dist_skills)}"
         )
 

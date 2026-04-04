@@ -1,9 +1,9 @@
 # Dream Report v4 — Template & Schema
 
 > Enriched report format generated in Phase 4 of the dream cycle. Includes health score
-> (15D with experiential dimensions), trends, importance distribution, ecosystem audit,
-> tech validation, experiential context, session journal, handoff context, and
-> cross-project summary.
+> (17D with experiential + workflow + learning velocity dimensions), trends, importance
+> distribution, ecosystem audit, tech validation, experiential context, workflow audit,
+> learning velocity audit, session journal, handoff context, and cross-project summary.
 
 ## Report Filename
 
@@ -25,15 +25,15 @@ Always include time in the filename to allow multiple dreams per day.
 
 ---
 
-## Health Score (15 Dimensions)
+## Health Score (17 Dimensions)
 
 | # | Dimension | Score | Weight | Weighted | Detail |
 |---|-----------|-------|--------|----------|--------|
 | D1 | Index Capacity | {X.X} | 10% | {X.XX} | {N}/200 lines |
 | D2 | Orphan Rate | {X.X} | 10% | {X.XX} | {N} orphans |
-| D3 | Staleness | {X.X} | 10% | {X.XX} | {N}% files >30d |
+| D3 | Staleness | {X.X} | 8% | {X.XX} | {N}% files >30d |
 | D4 | Ref Integrity | {X.X} | 10% | {X.XX} | {N} broken refs |
-| D5 | Content Freshness | {X.X} | 8% | {X.XX} | {N} stale claims |
+| D5 | Content Freshness | {X.X} | 5% | {X.XX} | {N} stale claims |
 | D6 | File Size Balance | {X.X} | 6% | {X.XX} | {N} files >50KB |
 | D7 | Type Coverage | {X.X} | 6% | {X.XX} | {N} untyped |
 | D8 | Cross-Project | {X.X} | 6% | {X.XX} | {N} contradictions |
@@ -45,6 +45,9 @@ Always include time in the filename to allow multiple dreams per day.
 | D13 | Temporal Validity | {X.X} | 5% | {X.XX} | {N} expired facts |
 | D14 | Intuition Quality | {X.X} | 3% | {X.XX} | {N} stale intuitions |
 | D15 | Growth Trajectory | {X.X} | 3% | {X.XX} | {trend} |
+| | **WORKFLOW & LEARNING** | | | | |
+| D16 | Workflow Efficiency | {X.X} | 3% | {X.XX} | {N}% success rate |
+| D17 | Learning Velocity | {X.X} | 5% | {X.XX} | {N} new FB/30d |
 | **Total** | | | | **{X.XX}** | **Grade: {G}** |
 
 ---

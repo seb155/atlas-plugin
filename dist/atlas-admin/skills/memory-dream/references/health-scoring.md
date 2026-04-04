@@ -52,7 +52,7 @@ Percentage of memory files not referenced in MEMORY.md.
 | 2 | 9-12 orphans (8-10%) |
 | 0 | > 12 orphans (> 10%) |
 
-### D3 — Staleness (Weight: 10%)
+### D3 — Staleness (Weight: 8%)
 
 Percentage of files not modified in the last 30 days.
 
@@ -78,7 +78,7 @@ Broken links in MEMORY.md (files referenced but not existing on disk).
 | 2 | 6-8 broken |
 | 0 | > 8 broken |
 
-### D5 — Content Freshness (Weight: 8%)
+### D5 — Content Freshness (Weight: 5%)
 
 Status claims (`COMPLETE`, `LIVE`, `DONE`, `SHIPPED`) that are stale or unverifiable.
 
@@ -260,15 +260,52 @@ Ratio of successful skill completions to total invocations, plus unused skill pe
 Defaults to 5.0 when no workflow data available.
 Requires `--deep`, `--experiential`, or `--full` to measure (Phase 2.7 output).
 
-### Weight Summary (v5)
+### D17: Learning Velocity (Weight: 5%)
+
+Measures how actively the system learns from feedback and corrects biases.
+
+**Inputs**:
+- New feedback files created since last dream (from git log or file dates)
+- Bias corrections in self-model.md (compare Known Biases section)
+- Feedback confidence scoring progress (% of feedback files with confidence: field)
+
+**Scoring**:
+| Condition | Score |
+|-----------|-------|
+| 2+ new feedback/month AND 1+ bias correction | 10 |
+| 2+ new feedback/month OR 1+ bias correction | 8 |
+| 1 new feedback/month, no bias correction | 6 |
+| No new feedback in 30 days (stagnant) | 4 |
+| Same bias repeated 3+ times (regression) | 2 |
+| No feedback files exist | 0 |
+
+**Computation**:
+```bash
+# Count new feedback files in last 30 days
+NEW_FB=$(find "$MEMORY_DIR" -name "feedback_*.md" -mtime -30 2>/dev/null | wc -l)
+
+# Check for bias corrections (compare self-model Known Biases counts)
+# This requires reading self-model.md and comparing with previous dream report
+BIAS_CORRECTIONS=0  # computed by diffing self-model.md
+
+# Check confidence scoring progress
+TOTAL_FB=$(find "$MEMORY_DIR" -name "feedback*.md" 2>/dev/null | wc -l)
+SCORED_FB=$(grep -rl "^confidence:" "$MEMORY_DIR"/feedback*.md 2>/dev/null | wc -l)
+CONFIDENCE_PCT=$((SCORED_FB * 100 / (TOTAL_FB > 0 ? TOTAL_FB : 1)))
+```
+
+Defaults to 5.0 when no feedback files exist and no self-model.md present.
+Requires `--deep` or `--full` to measure (Phase 2.8 output).
+
+### Weight Summary (v5.5)
 
 | # | Dimension | Weight | Default |
 |---|-----------|--------|---------|
 | D1 | Index Capacity | 10% | Measured always |
 | D2 | Orphan Rate | 10% | Measured always |
-| D3 | Staleness | 10% | Measured always |
+| D3 | Staleness | 8% | Measured always |
 | D4 | Ref Integrity | 10% | Measured always |
-| D5 | Content Freshness | 8% | 10.0 if not validated |
+| D5 | Content Freshness | 5% | 10.0 if not validated |
 | D6 | File Size Balance | 6% | Measured always |
 | D7 | Type Coverage | 6% | Measured always |
 | D8 | Cross-Project | 6% | 10.0 if not scanned |
@@ -280,6 +317,7 @@ Requires `--deep`, `--experiential`, or `--full` to measure (Phase 2.7 output).
 | D14 | Intuition Quality | 3% | 10.0 if no intuition files |
 | D15 | Growth Trajectory | 3% | 5.0 if insufficient data |
 | D16 | Workflow Efficiency | 3% | 5.0 if no workflow data |
+| D17 | Learning Velocity | 5% | 5.0 if no feedback files |
 | | **TOTAL** | **103%** | *Normalized to 100% at computation time* |
 
 ---
@@ -308,9 +346,9 @@ Requires `--deep`, `--experiential`, or `--full` to measure (Phase 2.7 output).
 +===================+=======+========+=======+=======================+
 | Index Capacity    | {X.X} |  10%   | {X.XX}| {N}/200 ln            |
 | Orphan Rate       | {X.X} |  10%   | {X.XX}| {N} orphans           |
-| Staleness         | {X.X} |  10%   | {X.XX}| {N} stale >30d        |
+| Staleness         | {X.X} |   8%   | {X.XX}| {N} stale >30d        |
 | Ref Integrity     | {X.X} |  10%   | {X.XX}| {N} broken            |
-| Content Fresh     | {X.X} |   8%   | {X.XX}| {N} claims stale      |
+| Content Fresh     | {X.X} |   5%   | {X.XX}| {N} claims stale      |
 | File Size Bal     | {X.X} |   6%   | {X.XX}| {N} >50KB             |
 | Type Coverage     | {X.X} |   6%   | {X.XX}| {N} untyped           |
 | Cross-Project     | {X.X} |   6%   | {X.XX}| {N} contradictions    |
@@ -325,6 +363,7 @@ Requires `--deep`, `--experiential`, or `--full` to measure (Phase 2.7 output).
 | Intuition Quality | {X.X} |   3%   | {X.XX}| {N} stale intuitions  |
 | Growth Trajectory | {X.X} |   3%   | {X.XX}| {trend}               |
 | Workflow Effic.   | {X.X} |   3%   | {X.XX}| {N}% success rate     |
+| Learning Velocity | {X.X} |   5%   | {X.XX}| {N} new FB/30d        |
 +===================+=======+========+=======+=======================+
 | TOTAL             |       |        | {X.XX}| Grade: {G}            |
 +===================================================================+
@@ -527,7 +566,8 @@ v4 adds experiential dimensions and metadata for the whole-person memory system.
     "temporal_validity": 10.0,
     "intuition_quality": 10.0,
     "growth_trajectory": 5.0,
-    "workflow_efficiency": null
+    "workflow_efficiency": null,
+    "learning_velocity": null
   },
   "metadata": {
     "files_total": 185,
@@ -577,3 +617,9 @@ New v5 fields:
 - `dimensions.workflow_efficiency`: D16 score (null if not measured)
 - `metadata.skill_success_rate_pct`: Percentage of successful skill completions
 - `metadata.unused_skills_count`: Number of skills unused in 30+ days
+
+New v5.5 fields:
+- `dimensions.learning_velocity`: D17 score (null if not measured)
+- `metadata.new_feedback_30d`: Count of new feedback files created in last 30 days
+- `metadata.bias_corrections`: Count of bias corrections applied to self-model.md
+- `metadata.feedback_confidence_pct`: Percentage of feedback files with confidence: field
