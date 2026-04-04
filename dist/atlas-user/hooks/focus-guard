@@ -4,6 +4,15 @@
 # Respects ATLAS_LEARNING_VERBOSITY (1=silent, 2=semi, 3=full).
 set -euo pipefail
 
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-UserPromptSubmit}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
 VERBOSITY="${ATLAS_LEARNING_VERBOSITY:-2}"
 [ "$VERBOSITY" -lt 2 ] 2>/dev/null && exit 0  # Silent mode — skip
 
@@ -70,3 +79,4 @@ with open('$COUNTER_FILE', 'w') as f:
 if [ -n "$MSG" ]; then
   echo "$MSG"
 fi
+_hook_log pass

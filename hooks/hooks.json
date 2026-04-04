@@ -267,6 +267,12 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/cleanup-worktrees\"",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/suggest-episode\"",
+            "async": true,
+            "timeout": 5
           }
         ]
       }

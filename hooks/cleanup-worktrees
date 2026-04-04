@@ -3,6 +3,15 @@
 # Only cleans .claude/worktrees/ (CC-managed), NOT .worktrees/ (manual/project)
 # Safe: skips worktrees with uncommitted changes or unique commits
 
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-Stop}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
 WORKSPACE="${HOME}/workspace_atlas"
 CLEANED=0
 KEPT=0
@@ -45,4 +54,5 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
 done
 
 [ "$CLEANED" -gt 0 ] && echo "🧹 Cleaned $CLEANED stale worktree(s), kept $KEPT with work"
+_hook_log pass
 exit 0

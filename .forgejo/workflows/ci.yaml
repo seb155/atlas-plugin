@@ -198,6 +198,27 @@ jobs:
 
           echo "Version sync OK ($VERSION everywhere)"
 
+      - name: Verify version sync across all tiers
+        shell: sh
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          FAILED=0
+          for tier in admin dev user core infra enterprise frontend experiential worker; do
+            TIER_DIR="dist/atlas-${tier}"
+            [ -d "$TIER_DIR" ] || continue
+            PJ="${TIER_DIR}/.claude-plugin/plugin.json"
+            [ -f "$PJ" ] || continue
+            TIER_VER=$(python3 -c "import json; print(json.load(open('$PJ'))['version'])")
+            if [ "$TIER_VER" != "$VERSION" ]; then
+              echo "::error::Version skew: atlas-${tier}=${TIER_VER} vs VERSION=${VERSION}"
+              FAILED=1
+            else
+              echo "  atlas-${tier}: v${TIER_VER} ✓"
+            fi
+          done
+          [ $FAILED -eq 0 ] || exit 1
+          echo "✅ All tiers at version $VERSION"
+
       - name: Zero-duplication gate (SP-DEDUP)
         shell: sh
         run: |

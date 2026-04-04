@@ -12,6 +12,15 @@
 
 set -euo pipefail
 
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-SessionEnd}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
 CLAUDE_PROJECTS_DIR="$HOME/.claude/projects"
 MEMORY_DIRS=$(find "$CLAUDE_PROJECTS_DIR" -maxdepth 2 -name "memory" -type d 2>/dev/null)
 
@@ -75,3 +84,4 @@ cat <<EOF
   }
 }
 EOF
+_hook_log pass

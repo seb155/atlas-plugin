@@ -8,6 +8,15 @@
 
 set -euo pipefail
 
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-PostToolUse}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
 # Throttle: max 1 warning per type per 60s
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true
@@ -63,3 +72,4 @@ if [[ -n "$WARNINGS" ]]; then
     echo -e "$WARNINGS"
   fi
 fi
+_hook_log pass

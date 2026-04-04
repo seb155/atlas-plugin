@@ -41,6 +41,8 @@ skills:
   - infrastructure-change
   # v4.13.0: SOTA 2026-04-02 analytics
   - atlas-analytics
+  # v4.15.3: GMS POC command center
+  - gms-cockpit
 
 hooks:
   - enterprise-check

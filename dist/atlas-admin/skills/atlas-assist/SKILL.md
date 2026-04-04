@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 67 skills, 12 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 68 skills, 12 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: true
 ---
 
@@ -17,7 +17,7 @@ in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
 🏛️ ATLAS │ ✅ SESSION │ v4.15.2 Admin
-   67 skills │ 12 agents │ Gate 12/15
+   68 skills │ 12 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -99,6 +99,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **frontend-design** | 🎨 | Planning |
 | **frontend-workflow** | 🎨 | Planning |
 | **git-worktrees** | 🌿 | Implementation |
+| **gms-cockpit** | 🏭 | Project |
 | **hookify** | 🪝 | Meta |
 | **infrastructure-change** | 🏗️ | Infrastructure |
 | **infrastructure-ops** | 🔧 | Infrastructure |
@@ -164,7 +165,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (67)
+## Available Skills (68)
 
 ### 🎯 Deploy
 - 🔧 **ci-management**: CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet
@@ -240,6 +241,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 
 ### 📌 Project
 - 📌 **feature-board**: Feature registry dashboard — kanban, validation matrix, roadmap
+- 🏭 **gms-cockpit**: GMS POC command center — adoption tracking, KC stats, pilier coverage, magic moments
 - 📊 **programme-manager**: Programme management — mega plan tracking, sub-plan coordination
 
 ### 📊 Quality

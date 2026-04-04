@@ -436,6 +436,12 @@ skills:
     owner: admin
     description: "Hook activity analytics dashboard — task-log, permission events, session stats"
 
+  gms-cockpit:
+    emoji: "\U0001F3ED"               # 🏭
+    category: Project
+    owner: admin
+    description: "GMS POC command center — adoption tracking, KC stats, pilier coverage, magic moments"
+
   # ═══════════════════════════════════════
   # DOMAIN-EXCLUSIVE skills
   # ═══════════════════════════════════════

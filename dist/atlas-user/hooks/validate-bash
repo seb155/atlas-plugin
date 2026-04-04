@@ -9,6 +9,15 @@
 # - Watch modes (infinite loop)
 # - Massive tracebacks (--tb=long/full)
 
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-PreToolUse}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
@@ -19,24 +28,24 @@ COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 if echo "$COMMAND" | grep -qE 'pytest.*--pdb'; then
   echo "BLOQUE: pytest --pdb = interactive mode, will hang Claude Code." >&2
   echo "Suggestion: pytest <path> -x -q --tb=line" >&2
-  exit 2
+  _hook_log block; exit 2
 fi
 
 if echo "$COMMAND" | grep -qP 'pytest.*\s-s\b'; then
   echo "BLOQUE: pytest -s = stdout capture disabled, massive output." >&2
   echo "Suggestion: pytest <path> -x -q --tb=line" >&2
-  exit 2
+  _hook_log block; exit 2
 fi
 
 # --- BLOCK: watch/auto modes (infinite loop) ---
 if echo "$COMMAND" | grep -qiE '\b(inotifywait|entr|watchdog|nodemon)\b.*--'; then
   echo "BLOQUE: Watch mode = infinite loop in Claude Code." >&2
-  exit 2
+  _hook_log block; exit 2
 fi
 
 if echo "$COMMAND" | grep -qiE 'pytest.*--looponfail|pytest-watch|ptw\b'; then
   echo "BLOQUE: pytest watch mode = infinite loop." >&2
-  exit 2
+  _hook_log block; exit 2
 fi
 
 # --- BLOCK: pytest full suite without safety flags ---
@@ -45,7 +54,7 @@ if echo "$COMMAND" | grep -qP 'pytest\s+tests/?(\s|$|[^/])'; then
     if ! echo "$COMMAND" | grep -qE '(-x\b|--maxfail|--exitfirst)'; then
       echo "BLOQUE: pytest on tests/ without -x or --maxfail = potentially massive output." >&2
       echo "Suggestion: Add -x (stop at 1st fail) or --maxfail=3" >&2
-      exit 2
+      _hook_log block; exit 2
     fi
   fi
 fi
@@ -58,13 +67,13 @@ fi
 # --- BLOCK: serial port commands (freeze Claude Code) ---
 if echo "$COMMAND" | grep -qiE '(screen|minicom|picocom|cu)\s+/dev/(tty|serial|USB)'; then
   echo "BLOQUE: Serial port command = guaranteed freeze in Claude Code." >&2
-  exit 2
+  _hook_log block; exit 2
 fi
 
 # --- BLOCK: dangerous docker operations ---
 if echo "$COMMAND" | grep -qE 'docker\s+(system\s+prune|rm\s+-f.*--volumes|compose\s+down\s+-v)'; then
   echo "BLOQUE: Destructive Docker operation. Run manually." >&2
-  exit 2
+  _hook_log block; exit 2
 fi
 
 # --- WARN: git push to main/master ---
@@ -72,4 +81,5 @@ if echo "$COMMAND" | grep -qE 'git\s+push.*\b(main|master)\b'; then
   echo "ATTENTION: git push to main/master. Verify with user." >&2
 fi
 
+_hook_log pass
 exit 0
