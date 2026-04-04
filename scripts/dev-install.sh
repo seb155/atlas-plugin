@@ -16,7 +16,7 @@ cd "$(dirname "$SCRIPT_DIR")"
 VERSION=$(cat VERSION | tr -d '[:space:]')
 TIER_MARKETPLACE_DIR="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
 DOMAIN_MARKETPLACE_DIR="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
-DOMAINS=(core dev frontend infra enterprise experiential)
+DOMAINS=(core dev frontend infra enterprise)
 
 if [ "${1:-}" = "--admin-only" ]; then
   echo "🔨 Building atlas-admin v${VERSION} (quick mode)..."
@@ -66,7 +66,7 @@ else
   # Clear ALL cached versions to avoid stale confusion
   rm -rf "${TIER_MARKETPLACE_DIR}/"
 
-  for tier in admin dev user worker; do
+  for tier in admin dev user; do
     local_dir="${TIER_MARKETPLACE_DIR}/atlas-${tier}/${VERSION}"
     mkdir -p "$local_dir"
     cp -r "dist/atlas-${tier}/." "$local_dir/"

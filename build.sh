@@ -270,7 +270,7 @@ EOF
 }
 
 # ── Domain build (standalone, no inheritance) ─────────────────────
-DOMAIN_NAMES=(core dev frontend infra enterprise experiential)
+DOMAIN_NAMES=(core dev frontend infra enterprise)
 
 build_domain() {
   local name="$1"
@@ -449,7 +449,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 if [ "$TIERS" = "all" ]; then
-  for t in admin dev user worker; do
+  for t in admin dev user; do
     build_tier "$t"
     echo ""
   done
