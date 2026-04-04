@@ -22,6 +22,9 @@ effort: low
 | `/atlas gms status` | Full dashboard (adoption, KCs, piliers, magic moments) |
 | `/atlas gms kc-report` | Knowledge Card stats by type/discipline |
 | `/atlas gms team` | MSE profiles summary (4 disciplines) |
+| `/atlas gms skills` | Skills Matrix — competency heatmap + gap detection |
+| `/atlas gms insights` | Cross-discipline insight candidates (Pilier 1) |
+| `/atlas gms report` | Monthly report for Mathieu (Pilier 4) — Markdown output |
 | `/atlas gms sync` | Force sync local KCs to Forgejo (git add+commit+push) |
 | `/atlas gms sync --status` | Show pending/synced/failed KC counts |
 | `/atlas gms sync --dry-run` | Preview sync without pushing |
@@ -106,6 +109,90 @@ P4 Formation         {n}   {bar}
   Last active: {date} | Primary use case: {use_case}
 ...
 ```
+
+## Skills Matrix Format (`/atlas gms skills`)
+
+```
+🎯 GMS │ Skills Matrix — {date}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Skill / Domain        I&C    EL     ME     PROC   Bus Factor
+─────────────────────────────────────────────────────────────
+Cable sizing          ░░     █████  ░░     ░░     ⚠️ 1 (EL only)
+Motor selection       ░░     ██░░░  █████  ░░     ✅ 2
+PLC I/O count         █████  ██░░░  ░░     ░░     ✅ 2
+Calc sheet design     ███░░  ░░     ██░░░  █████  ✅ 3
+Pump curve analysis   ░░     ░░     █████  ██░░░  ✅ 2
+...
+─────────────────────────────────────────────────────────────
+
+🚨 ALERTS
+─────────────────────────────────────────────────────────────
+⚠️ Bus Factor = 1: Cable sizing (EL only), SCADA config (I&C only)
+🕳️ Dead Zones: No KCs for "safety systems" across any discipline
+🤝 Synergy: Cable sizing (EL) ↔ PLC I/O count (I&C) — 3 shared tags
+```
+
+### Skills Matrix Logic
+
+**Data source**: Read MSE profile files from `gms-cowork-plugins/kit-day1/profiles/mse-*.md`
+Each profile has: `skills:` list with `{name, level, kc_count}`.
+
+**Aggregation**:
+1. Parse all MSE profiles → build skill×discipline matrix
+2. **Bus Factor**: Count unique disciplines per skill. ⚠️ if only 1 discipline has it.
+3. **Dead Zone**: Expected skills (from ISA 5.1 standard list) with 0 KCs across all MSEs.
+4. **Synergy**: Two KCs from different disciplines sharing 2+ tags → potential collaboration.
+
+## Monthly Report Format (`/atlas gms report`)
+
+Generate a comprehensive monthly report as Markdown. Use AskUserQuestion to confirm the reporting period.
+
+```
+# GMS POC — Monthly Report {Month Year}
+
+## Executive Summary
+- {1-2 sentences: adoption trend, highlight achievement}
+
+## Adoption Metrics
+| MSE | Discipline | Sessions | KCs | Trend |
+|-----|-----------|----------|-----|-------|
+{table from /atlas gms team data}
+
+## Knowledge Card Inventory
+- Total: {n} KCs ({+n} vs last month)
+- By type: How-to ({n}), Case study ({n}), Checklist ({n}), Reference ({n})
+- By discipline: I&C ({n}), EL ({n}), ME ({n}), Process ({n})
+- Quality avg: {score}/5
+
+## 4 Piliers Progress
+| Pilier | KCs | Coverage | Status |
+|--------|-----|----------|--------|
+| P1 Automatisation | {n} | {bar} | {🟢🟡🔴} |
+| P2 Analyse | {n} | {bar} | {🟢🟡🔴} |
+| P3 Documentation | {n} | {bar} | {🟢🟡🔴} |
+| P4 Formation | {n} | {bar} | {🟢🟡🔴} |
+
+## Skills Matrix Highlights
+- Bus factor alerts: {list}
+- New skills identified: {list}
+- Synergy opportunities: {list}
+
+## Cross-Discipline Insights
+{list from /atlas gms insights}
+
+## Recommendations
+1. {auto-generated based on gaps and trends}
+2. {auto-generated}
+3. {auto-generated}
+```
+
+### Report Generation Rules
+- Always ask for reporting period via AskUserQuestion
+- Use real data from MSE profiles, KC files, and adoption logs
+- Compare with previous month if data available
+- Flag [estimated] for any inferred data
+- Output as Markdown — user can convert via `/atlas present --format pdf`
 
 ## Progress Bar
 

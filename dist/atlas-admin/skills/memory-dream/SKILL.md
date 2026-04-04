@@ -377,6 +377,33 @@ For details, read `${SKILL_DIR}/references/experiential-synthesis.md`
 
 **Output**: Patterns persisted to `patterns-experiential.md` (HITL on each pattern).
 
+## Phase 3.8 — Cross-Project Memory Reconciliation (NEW, P2-MEM-6)
+
+> Optional. Only runs with `--full` flag. Scans multiple project memory directories for duplicates and inconsistencies.
+
+### Steps
+
+- **H24 — Multi-project scan**: Find all `~/.claude/projects/*/memory/` directories. List projects with memory file counts.
+- **H25 — Duplicate detection**: Hash-based comparison of memory files across projects. Flag files with >80% content similarity.
+- **H26 — Stale cross-reference check**: If memory file A references file B in another project, verify B still exists and is not stale.
+- **H27 — Reconciliation proposals**: For each duplicate pair, propose via AskUserQuestion:
+  - Merge (combine unique content into one file, symlink the other)
+  - Keep both (mark as "cross-project shared" in MEMORY.md)
+  - Archive one (move to archive bundle)
+
+**Trigger condition**: Only runs if 2+ project memory directories exist with 10+ files each.
+**Output**: Reconciliation report added to dream report. Cross-project links documented.
+
+**Example reconciliation**:
+```
+Cross-Project Memory Reconciliation:
+  Projects scanned: synapse (197 files), atlas-core (23 files), nexus (8 files)
+  Duplicates found: 3
+    - feedback_zustand_selectors.md (synapse ↔ nexus) — 92% similar → MERGE
+    - git-workflow.md (synapse ↔ atlas-core) — 85% similar → KEEP BOTH
+    - deploy-targets.md (synapse ↔ atlas-core) — 88% similar → ARCHIVE atlas-core copy
+```
+
 ## Phase 4 — Prune & Index (Enhanced)
 
 Regenerate MEMORY.md and compute health.
