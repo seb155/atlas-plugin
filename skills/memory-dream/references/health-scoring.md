@@ -318,7 +318,8 @@ Requires `--deep` or `--full` to measure (Phase 2.8 output).
 | D15 | Growth Trajectory | 3% | 5.0 if insufficient data |
 | D16 | Workflow Efficiency | 3% | 5.0 if no workflow data |
 | D17 | Learning Velocity | 5% | 5.0 if no feedback files |
-| | **TOTAL** | **103%** | *Normalized to 100% at computation time* |
+| D18 | Retention Health | 3% | 10.0 if no Tier 1-3 files |
+| | **TOTAL** | **106%** | *Normalized to 100% at computation time* |
 
 ---
 
