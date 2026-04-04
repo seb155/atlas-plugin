@@ -377,6 +377,102 @@ For details, read `${SKILL_DIR}/references/experiential-synthesis.md`
 
 **Output**: Patterns persisted to `patterns-experiential.md` (HITL on each pattern).
 
+## Phase 3.9 — Active Forgetting: Retention Tier Scan (NEW, P3-COG-5)
+
+> Runs during every dream cycle. Scans memory files for retention tier compliance.
+> See `${SKILL_DIR}/references/retention-tiers.md` for full tier definitions.
+
+### Steps
+
+- **H28 — Tier classification**: For each memory file, determine retention tier:
+  1. Check explicit `retention_tier:` in frontmatter → use if present
+  2. Infer from `type:` field (feedback→0, user→0, reference→0, project→1)
+  3. Infer from filename pattern (handoff-*→2, episode-*→2, debug-*→3)
+  4. Default: Tier 2 (medium-term, 60 days)
+
+- **H29 — Expiry scan**: Compare file age (from modification time) against tier TTL:
+  - Tier 0: skip (permanent)
+  - Tier 1 (180d): warn at 150d, propose archive at 180d
+  - Tier 2 (60d): warn at 45d, propose archive at 60d
+  - Tier 3 (14d): warn at 10d, auto-archive at 14d
+
+- **H30 — Archive proposal**: For each expired file, present via AskUserQuestion:
+  - "Archive {filename}? (Tier {N}, {age} days old, TTL={ttl}d)"
+  - Options: Archive / Keep (extend TTL) / Promote (change tier)
+  - Tier 3 files: auto-archive without asking (report in summary)
+
+- **H31 — Archive execution**: For approved archives:
+  1. Extract key facts (first 5 lines after frontmatter)
+  2. Append summary to `archive-expired-{year}-{month}.md`
+  3. Remove original file
+  4. Update MEMORY.md index (remove entry)
+  5. Log to dream report
+
+- **H32 — Retention health metric (D18)**: Compute retention health score:
+  ```
+  D18 = (files_within_ttl / total_tier_1_2_3_files) × 10
+  ```
+  Include in dream health scoring table.
+
+### Scan Command (outside Dream)
+
+```bash
+# Quick scan without archiving
+python3 -c "
+import os, re, json
+from datetime import datetime, timedelta
+from pathlib import Path
+
+MEMORY_DIR = Path('$MEMORY_DIR')
+TIER_TTL = {0: float('inf'), 1: 180, 2: 60, 3: 14}
+TYPE_TIER = {'feedback': 0, 'user': 0, 'reference': 0, 'project': 1}
+NAME_TIER_0 = ['feedback_', 'feedback-', 'user_', 'relationship_', 'self-model', 'MEMORY', 'lessons']
+NAME_TIER_2 = ['handoff-', 'episode-', 'checkpoint-', 'session-', 'dream-report-', 'archive-']
+NAME_TIER_3 = ['debug-', 'temp-', 'scratch-', 'experiment-']
+
+now = datetime.now()
+results = {'fresh': 0, 'warning': 0, 'expired': 0, 'permanent': 0}
+
+for f in MEMORY_DIR.glob('*.md'):
+    if f.name == 'MEMORY.md': continue
+    # Read frontmatter
+    content = f.read_text()
+    tier = 2  # default
+    fm = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
+    if fm:
+        if m := re.search(r'retention_tier:\s*(\d)', fm.group(1)):
+            tier = int(m.group(1))
+        elif m := re.search(r'type:\s*(\w+)', fm.group(1)):
+            tier = TYPE_TIER.get(m.group(1), 2)
+    # Filename override
+    for pat in NAME_TIER_0:
+        if f.name.startswith(pat): tier = 0; break
+    if tier != 0:
+        for pat in NAME_TIER_3:
+            if f.name.startswith(pat): tier = 3; break
+        for pat in NAME_TIER_2:
+            if f.name.startswith(pat): tier = 2; break
+
+    if tier == 0:
+        results['permanent'] += 1
+        continue
+
+    age = (now - datetime.fromtimestamp(f.stat().st_mtime)).days
+    ttl = TIER_TTL[tier]
+    if age > ttl:
+        results['expired'] += 1
+        print(f'  EXPIRED T{tier}: {f.name} ({age}d > {ttl}d)')
+    elif age > ttl * 0.75:
+        results['warning'] += 1
+        print(f'  WARNING T{tier}: {f.name} ({age}d, TTL={ttl}d)')
+    else:
+        results['fresh'] += 1
+
+total = sum(results.values())
+print(f'\nRetention: {results[\"permanent\"]} permanent, {results[\"fresh\"]} fresh, {results[\"warning\"]} warning, {results[\"expired\"]} expired')
+"
+```
+
 ## Phase 3.8 — Cross-Project Memory Reconciliation (NEW, P2-MEM-6)
 
 > Optional. Only runs with `--full` flag. Scans multiple project memory directories for duplicates and inconsistencies.
