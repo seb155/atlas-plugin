@@ -728,6 +728,51 @@ Display in scoring table footer:
 Dream Health: B+ 8.91/10 (2026-04-04)
 ```
 
+## Hook Performance Profiling (P2-HOOK-4)
+
+Read `~/.claude/hook-log.jsonl` and report hook timing statistics.
+
+```bash
+HOOK_LOG="$HOME/.claude/hook-log.jsonl"
+if [ -f "$HOOK_LOG" ]; then
+  python3 -c "
+import json
+from datetime import datetime, timedelta
+from collections import defaultdict
+
+cutoff = (datetime.now() - timedelta(hours=24)).isoformat()
+stats = defaultdict(list)  # handler → [ms values]
+
+with open('$HOOK_LOG') as f:
+    for line in f:
+        line = line.strip()
+        if not line: continue
+        try:
+            e = json.loads(line)
+            if e.get('ts','') >= cutoff:
+                stats[e['handler']].append(int(e.get('ms', 0)))
+        except: pass
+
+if stats:
+    print('Hook Performance (24h):')
+    print(f'  {\"Handler\":<30} {\"Calls\":>6} {\"Avg ms\":>8} {\"Max ms\":>8} {\"Status\":>8}')
+    print('  ' + '─'*62)
+    for handler, times in sorted(stats.items(), key=lambda x: -max(x[1])):
+        avg = sum(times) / len(times)
+        mx = max(times)
+        status = '⚠️ SLOW' if avg > 3000 else '✅'
+        print(f'  {handler:<30} {len(times):>6} {avg:>8.0f} {mx:>8} {status:>8}')
+else:
+    print('Hook Performance: No data in last 24h')
+"
+fi
+```
+
+**Warning thresholds**:
+- Average > 3000ms (3s) → ⚠️ SLOW
+- Max > 5000ms (5s) → 🔴 CRITICAL
+- Include in doctor category `hooks` scoring: +1 if all hooks < 3s avg, -1 per slow hook
+
 ## Report Persistence
 
 After running doctor, save report to `~/.atlas/doctor-report.json`:

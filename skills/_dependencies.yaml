@@ -1,0 +1,75 @@
+# Skill Dependency Graph — declares which skills depend on which others.
+# Used by test_skill_dependencies.py for tier validation.
+# Format: skill_name → list of required skills
+#
+# If a skill depends on another, both must be available in the same tier
+# (or the dependency must be in a parent tier that gets inherited).
+
+# Architecture & Planning
+plan-builder:
+  - brainstorming
+  - verification
+execution-strategy:
+  - plan-builder
+  - verification
+executing-plans:
+  - plan-builder
+  - verification
+  - finishing-branch
+plan-review:
+  - plan-builder
+
+# Development Workflow
+tdd:
+  - verification
+  - systematic-debugging
+frontend-workflow:
+  - brainstorming
+  - verification
+  - finishing-branch
+finishing-branch:
+  - verification
+git-worktrees:
+  - finishing-branch
+
+# Debugging
+systematic-debugging:
+  - verification
+
+# Quality & Ops
+enterprise-audit:
+  - verification
+product-health:
+  - verification
+subagent-dispatch:
+  - verification
+infrastructure-ops:
+  - verification
+network-audit:
+  - verification
+
+# Router (depends on many)
+atlas-assist:
+  - brainstorming
+  - plan-builder
+  - verification
+  - systematic-debugging
+  - tdd
+  - finishing-branch
+
+# GMS
+gms-insights:
+  - gms-cockpit
+  - gms-profiler
+gms-onboard:
+  - gms-profiler
+  - gms-cockpit
+
+# Cognitive
+memory-dream:
+  - verification
+
+# Strategy
+vision-alignment:
+  - brainstorming
+  - plan-builder
