@@ -118,12 +118,96 @@ _atlas_dashboard() {
     echo " Topics: ${active_count} active, ${completed_count} completed"
   fi
 
+  # ── Health & Version ────────────────────────────────────────────
+  echo ""
+
+  # Plugin version (from VERSION file in source)
+  local plugin_version="?"
+  local plugin_src="${HOME}/workspace_atlas/projects/atlas-dev-plugin"
+  [ -f "$plugin_src/VERSION" ] && plugin_version=$(cat "$plugin_src/VERSION" | tr -d '[:space:]')
+
+  # Installed cache version
+  local cache_version="?"
+  local cache_dir="${HOME}/.claude/plugins/cache/atlas-admin-marketplace"
+  if [ -d "$cache_dir" ]; then
+    cache_version=$(ls -1 "$cache_dir/atlas-admin/" 2>/dev/null | sort -V | tail -1)
+  fi
+
+  # Version sync status
+  local sync_status="✅ synced"
+  if [ "$plugin_version" != "$cache_version" ]; then
+    sync_status="⚠️  drift ($plugin_version → $cache_version)"
+  fi
+
+  echo " Plugin: v${cache_version} ${sync_status}"
+
+  # Dream health score (last dream report)
+  local memory_dir
+  memory_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
+  if [ -n "$memory_dir" ] && [ -f "$memory_dir/dream-history.jsonl" ]; then
+    local dream_info
+    dream_info=$(tail -1 "$memory_dir/dream-history.jsonl" | python3 -c "
+import sys,json
+d=json.loads(sys.stdin.readline())
+score=d.get('score','?')
+grade=d.get('grade','?')
+date=d.get('date',d.get('timestamp','?'))[:10]
+print(f'{score}/10 ({grade}) — {date}')
+" 2>/dev/null || echo "?")
+    echo " Health: ${dream_info}"
+  fi
+
+  # Hook activity (last 24h from hook-log.jsonl)
+  local hook_log="${HOME}/.claude/hook-log.jsonl"
+  if [ -f "$hook_log" ]; then
+    local hook_stats
+    hook_stats=$(python3 -c "
+import json
+from datetime import datetime, timedelta
+cutoff = (datetime.now() - timedelta(hours=24)).isoformat()
+counts = {}
+with open('$hook_log') as f:
+    for line in f:
+        line = line.strip()
+        if not line: continue
+        try:
+            e = json.loads(line)
+            if e.get('ts','') >= cutoff:
+                h = e.get('handler','?')
+                counts[h] = counts.get(h, 0) + 1
+        except: pass
+total = sum(counts.values())
+top3 = sorted(counts.items(), key=lambda x: -x[1])[:3]
+top_str = ', '.join(f'{k}({v})' for k,v in top3)
+print(f'{total} triggers — top: {top_str}')
+" 2>/dev/null || echo "?")
+    echo " Hooks: ${hook_stats}"
+  fi
+
+  # TOM state (current)
+  local tom_state="${HOME}/.claude/atlas-tom-state.json"
+  if [ -f "$tom_state" ]; then
+    local tom_info
+    tom_info=$(python3 -c "
+import json
+with open('$tom_state') as f:
+    d = json.load(f)
+state = d.get('state','?')
+conf = d.get('confidence',0)
+if state != 'standard':
+    print(f'{state} ({conf*100:.0f}%)')
+else:
+    print('standard')
+" 2>/dev/null || echo "?")
+    echo " ToM: ${tom_info}"
+  fi
+
   # Installed plugins
   local plugin_count
-  plugin_count=$(find ~/.claude/plugins/cache/atlas-marketplace/ -maxdepth 1 -type d 2>/dev/null | wc -l)
+  plugin_count=$(find ~/.claude/plugins/cache/atlas-admin-marketplace/ -maxdepth 1 -type d 2>/dev/null | wc -l)
   plugin_count=$((plugin_count - 1))  # subtract the parent dir
   [ $plugin_count -lt 0 ] && plugin_count=0
-  echo " Plugins: ${plugin_count}/6 ATLAS domain plugins installed"
+  echo " Plugins: ${plugin_count} tiers installed"
 
   echo ""
 }
