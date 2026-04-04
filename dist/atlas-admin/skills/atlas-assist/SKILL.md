@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 71 skills, 12 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 72 skills, 12 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: true
 ---
 
@@ -16,8 +16,8 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.24.0 Admin
-   71 skills │ 12 agents │ Gate 12/15
+🏛️ ATLAS │ ✅ SESSION │ v4.25.0 Admin
+   72 skills │ 12 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -104,6 +104,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **gms-onboard** | 🎓 | Project |
 | **gms-profiler** | 👤 | Project |
 | **hookify** | 🪝 | Meta |
+| **idle-curiosity** | 🔍 | Cognitive |
 | **infrastructure-change** | 🏗️ | Infrastructure |
 | **infrastructure-ops** | 🔧 | Infrastructure |
 | **intuition-log** | 💭 | Personal |
@@ -168,7 +169,10 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (71)
+## Available Skills (72)
+
+### 📌 Cognitive
+- 🔍 **idle-curiosity**: Autonomous exploration engine — discovers under-explored topics and knowledge gaps. HITL gated.
 
 ### 🎯 Deploy
 - 🔧 **ci-management**: CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet
