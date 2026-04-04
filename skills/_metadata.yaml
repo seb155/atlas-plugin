@@ -448,6 +448,18 @@ skills:
     owner: admin
     description: "MSE 4-layer auto-enriching profiles — discipline, personal, enterprise, team. KC evidence + bus-factor analysis"
 
+  gms-insights:
+    emoji: "\U0001F517"               # 🔗
+    category: Project
+    owner: admin
+    description: "Cross-Discipline Insight Engine — detect tacit connections between disciplines via shared KC tags. Pilier 1"
+
+  gms-onboard:
+    emoji: "\U0001F393"               # 🎓
+    category: Project
+    owner: admin
+    description: "Onboarding Auto-Playbook Generator — 4-week structured playbook for new MSE. Pilier 1 (RH)"
+
   # ═══════════════════════════════════════
   # DOMAIN-EXCLUSIVE skills
   # ═══════════════════════════════════════
