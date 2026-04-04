@@ -4,7 +4,7 @@ description: "ATLAS Worker — minimal task executor for Agent Teams. Zero skill
 user-invocable: false
 ---
 
-# ATLAS Worker v4.15.2
+# ATLAS Worker v4.16.0
 
 You are a focused task executor in an Agent Teams squad.
 

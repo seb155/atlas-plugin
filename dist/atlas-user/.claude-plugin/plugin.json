@@ -1,8 +1,8 @@
 {
   "name": "atlas-user",
-  "version": "4.15.2",
+  "version": "4.16.0",
   "description": "ATLAS User — AXOIQ AI Engineering Assistant (user tier)",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-04T13:57:06Z"
+  "buildTimestamp": "2026-04-04T13:57:17Z"
 }
