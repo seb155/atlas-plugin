@@ -31,7 +31,7 @@ effort: high
 | Command | Phases | Time | Action |
 |---------|--------|------|--------|
 | `/atlas dream` | 1-4 | ~10 min | Standard 4-phase cycle with HITL gates |
-| `/atlas dream --deep` | 1-5 | ~20 min | Full intelligence: validate + cross-project |
+| `/atlas dream --deep` | 1-5 + 4.6 | ~20 min | Full intelligence: validate + self-model update + cross-project |
 | `/atlas dream --dry-run` | 1-2 | ~2 min | Report only — zero writes |
 | `/atlas dream report` | 1-2 | ~2 min | Quick staleness + orphan report only |
 | `/atlas dream --validate` | 1+2.5 | ~5 min | Code freshness + status claim check |
@@ -47,7 +47,7 @@ effort: high
 | `/atlas dream --schedule` | — | — | Schedule recurring dream via CronCreate |
 | `/atlas dream --experiential` | 1+2+2.6+3.7 | ~10 min | Experiential audit + synthesis |
 | `/atlas dream --reflection` | 1+2+4.5 | ~5 min | Generate monthly reflection |
-| `/atlas dream --full` | ALL 11 phases | ~25 min | Complete cycle including experiential |
+| `/atlas dream --full` | ALL phases + 4.6 | ~25 min | Complete cycle including experiential + self-model update |
 | `/atlas dream --topic {name}` | topic consolidation | ~3 min | Consolidate topic memory into summary |
 | `/atlas episode create` | standalone | ~3 min | Create episode file for current session |
 | `/atlas intuition log` | standalone | ~2 min | Capture a gut feeling or emerging pattern |
@@ -472,6 +472,42 @@ For details, read `${SKILL_DIR}/references/reflection-template.md`
 
 **Frequency**: Max 2 per month. One at sprint end, one at month end.
 
+## Phase 4.6 — Self-Model Auto-Update (NEW, v5.5)
+
+> Runs with `--deep` or `--full`. Updates self-model.md based on recent feedback and session data.
+
+### Steps
+
+1. **Read current self-model**: Load `memory/self-model.md`, parse Known Biases section.
+
+2. **Scan recent feedback**: Find feedback files modified since last dream cycle.
+   ```bash
+   LAST_DREAM=$(ls -t "$MEMORY_DIR"/dream-report-*.md 2>/dev/null | head -1)
+   LAST_DATE=$(stat -c %Y "$LAST_DREAM" 2>/dev/null || echo 0)
+   NEW_FEEDBACK=$(find "$MEMORY_DIR" -name "feedback*.md" -newer "$LAST_DREAM" 2>/dev/null)
+   ```
+
+3. **Detect new biases**: For each new feedback file, check if the behavior is already in Known Biases.
+   - If YES: increment correction count
+   - If NO: propose adding as new bias (HITL gate H25)
+
+4. **Update Known Biases**: For each bias with incremented count:
+   - If count reaches 3+: ensure marked as HIGH priority
+   - If count was 3+ and no new occurrence in 30d: consider for demotion
+
+5. **Review Ranked Values**: Check if any new feedback contradicts the current value ranking.
+   - Example: if "Speed > Completeness" appears in feedback but current ranking is reversed → flag for review (HITL gate H26)
+
+6. **Update Growth Log**: Append entry with date, changes made, trigger feedback files.
+
+7. **HITL gate H25**: Present proposed changes to Known Biases
+   Options: "Apply all" / "Review each" / "Skip"
+
+8. **HITL gate H26**: Present value ranking conflicts (if any)
+   Options: "Update ranking" / "Keep current" / "Discuss"
+
+9. **Write**: Update self-model.md with approved changes. Add `Updated: YYYY-MM-DD HH:MM TZ` to footer.
+
 ## Phase 5 — Cross-Project (NEW)
 
 > Requires `--deep` or `--cross-project`. Read-only scan across all project memory directories.
@@ -723,6 +759,8 @@ Configure how actively the system communicates its learning:
 | **H22** | **3.7** | **Relationship update proposal** | **Yes (--experiential/--deep)** |
 | **H23** | **3.7** | **Growth trajectory snapshot approval** | **Yes (--experiential/--deep)** |
 | **H24** | **4.5** | **Reflection file approval** | **Yes (--reflection/--full)** |
+| **H25** | **4.6** | **New bias addition to Known Biases** | **Yes (--deep/--full)** |
+| **H26** | **4.6** | **Value ranking conflict resolution** | **Yes (--deep/--full)** |
 
 ## Model Strategy
 
@@ -740,6 +778,7 @@ Configure how actively the system communicates its learning:
 | Phase 3.7 (Experiential Synthesis) | Opus | Pattern recognition, growth analysis |
 | Phase 4 (Prune & Index) | Opus | Index design, report synthesis, 16D scoring |
 | Phase 4.5 (Reflection Generator) | Opus | Narrative synthesis, trend analysis |
+| Phase 4.6 (Self-Model Auto-Update) | Opus | Self-model decisions need deep reasoning |
 | Phase 5 (Cross-Project) | Opus | Cross-repo reasoning |
 
 ## Health Scoring (17 Dimensions)

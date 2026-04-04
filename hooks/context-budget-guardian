@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# context-budget-guardian — Warn when context approaches limits
+# Event: UserPromptSubmit (sync, fast)
+set -euo pipefail
+
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-UserPromptSubmit}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
+# Check if a context warning was shown recently (within this session, 5 min cooldown)
+CONTEXT_MARKER="$HOME/.claude/.context-warning-shown"
+if [ -f "$CONTEXT_MARKER" ]; then
+  MARKER_AGE=$(( $(date +%s) - $(stat -c %Y "$CONTEXT_MARKER" 2>/dev/null || echo 0) ))
+  if [ "$MARKER_AGE" -lt 300 ]; then
+    _hook_log skip
+    exit 0
+  fi
+fi
+
+# Use hook-log.jsonl as a proxy for context usage
+# Count tool call entries from today as heuristic for session depth
+HOOK_LOG="$HOME/.claude/hook-log.jsonl"
+if [ ! -f "$HOOK_LOG" ]; then
+  _hook_log pass
+  exit 0
+fi
+
+TODAY=$(date +%Y-%m-%d)
+TODAY_CALLS=$(grep -c "$TODAY" "$HOOK_LOG" 2>/dev/null || echo 0)
+
+# Heuristic thresholds (calibrated for 1M context Opus 4.6)
+if [ "$TODAY_CALLS" -gt 200 ]; then
+  echo "🔴 Context budget high (~80%+). Consider: /compact or /atlas dream journal"
+  touch "$CONTEXT_MARKER"
+  _hook_log warn
+elif [ "$TODAY_CALLS" -gt 150 ]; then
+  echo "⚠️ Context budget moderate (~70%). Consider saving progress soon."
+  touch "$CONTEXT_MARKER"
+  _hook_log warn
+else
+  _hook_log pass
+fi

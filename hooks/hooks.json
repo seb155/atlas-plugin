@@ -61,6 +61,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/policy-drift-detector\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/feature-drift-detector\"",
+            "async": true,
+            "timeout": 5
           }
         ]
       }
@@ -239,6 +245,11 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/affect-signal\"",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-budget-guardian\"",
+            "timeout": 2
           }
         ]
       }

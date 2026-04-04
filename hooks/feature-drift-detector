@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# feature-drift-detector — Detect features marked PLANNED/BACKLOG with shipped commits
+# Event: SessionStart (async)
+set -euo pipefail
+
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-SessionStart}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
+# Find FEATURES.md
+FEATURES_FILE=""
+for f in .blueprint/FEATURES.md FEATURES.md; do
+  [ -f "$f" ] && FEATURES_FILE="$f" && break
+done
+
+if [ -z "$FEATURES_FILE" ]; then
+  _hook_log skip
+  exit 0
+fi
+
+# Get recent feat() commits (last 50)
+FEAT_COMMITS=$(git log --oneline -50 --grep="^feat(" 2>/dev/null || true)
+if [ -z "$FEAT_COMMITS" ]; then
+  _hook_log pass
+  exit 0
+fi
+
+# Extract scopes from feat() commits
+SCOPES=$(echo "$FEAT_COMMITS" | grep -oP 'feat\(\K[^)]+' | sort -u)
+
+# Check each scope against FEATURES.md
+STALE=""
+for scope in $SCOPES; do
+  # Look for the scope in FEATURES.md lines with PLANNED|BACKLOG|0%
+  if grep -qi "$scope" "$FEATURES_FILE" 2>/dev/null; then
+    STATUS=$(grep -i "$scope" "$FEATURES_FILE" | grep -ioP 'PLANNED|BACKLOG|0%' | head -1)
+    if [ -n "$STATUS" ]; then
+      STALE="${STALE}\n  ⚠️ feat($scope) has commits but FEATURES.md shows: $STATUS"
+    fi
+  fi
+done
+
+if [ -n "$STALE" ]; then
+  echo "🔍 Feature Drift Detected:"
+  echo -e "$STALE"
+  echo "  → Run /atlas board to update FEATURES.md"
+  _hook_log warn
+else
+  _hook_log pass
+fi
