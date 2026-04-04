@@ -22,6 +22,9 @@ effort: low
 | `/atlas gms status` | Full dashboard (adoption, KCs, piliers, magic moments) |
 | `/atlas gms kc-report` | Knowledge Card stats by type/discipline |
 | `/atlas gms team` | MSE profiles summary (4 disciplines) |
+| `/atlas gms sync` | Force sync local KCs to Forgejo (git add+commit+push) |
+| `/atlas gms sync --status` | Show pending/synced/failed KC counts |
+| `/atlas gms sync --dry-run` | Preview sync without pushing |
 
 ## Data Sources (priority order)
 

@@ -442,6 +442,12 @@ skills:
     owner: admin
     description: "GMS POC command center — adoption tracking, KC stats, pilier coverage, magic moments"
 
+  gms-profiler:
+    emoji: "\U0001F464"               # 👤
+    category: Project
+    owner: admin
+    description: "MSE 4-layer auto-enriching profiles — discipline, personal, enterprise, team. KC evidence + bus-factor analysis"
+
   # ═══════════════════════════════════════
   # DOMAIN-EXCLUSIVE skills
   # ═══════════════════════════════════════

@@ -43,6 +43,8 @@ skills:
   - atlas-analytics
   # v4.15.3: GMS POC command center
   - gms-cockpit
+  # v4.16.0: GMS MSE 4-layer auto-enriching profiles
+  - gms-profiler
 
 hooks:
   - enterprise-check
