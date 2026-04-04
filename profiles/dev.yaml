@@ -65,6 +65,7 @@ agents:
   - design-implementer
   - code-reviewer
   - experiment-runner
+  - data-engineer
 
 persona: "senior engineering architect"
 pipeline: "DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP"

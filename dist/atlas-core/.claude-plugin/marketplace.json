@@ -5,7 +5,7 @@
     {
       "name": "atlas-core",
       "description": "Core foundation — memory, session, context, vault, assist. Required by all ATLAS plugins.",
-      "version": "4.18.0",
+      "version": "4.26.2",
       "source": { "source": "url", "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }

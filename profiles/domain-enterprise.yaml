@@ -26,6 +26,7 @@ agents:
   - team-engineer
   - team-tester
   - team-reviewer
+  - domain-analyst
 
 persona: "enterprise programme manager"
 pipeline: "AUDIT → PLAN → COORDINATE → REVIEW → GOVERN"

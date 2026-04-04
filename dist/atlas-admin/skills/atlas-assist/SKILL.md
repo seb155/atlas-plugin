@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 72 skills, 12 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 72 skills, 15 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: true
 ---
 
@@ -16,8 +16,8 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.26.0 Admin
-   72 skills │ 12 agents │ Gate 12/15
+🏛️ ATLAS │ ✅ SESSION │ v4.26.2 Admin
+   72 skills │ 15 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 

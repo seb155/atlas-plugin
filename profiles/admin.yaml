@@ -61,6 +61,10 @@ agents:
   - team-reviewer
   - team-coordinator
   - team-security
+  # v4.x: Specialized domain agents
+  - infra-expert
+  - data-engineer
+  - devops-engineer
 
 persona: "infrastructure architect"
 pipeline: "DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFRA"

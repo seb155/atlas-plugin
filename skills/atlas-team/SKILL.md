@@ -72,6 +72,10 @@ Every team follows this exact lifecycle:
 | `atlas-admin:code-reviewer` | sonnet | high | Standalone code review |
 | `atlas-admin:plan-reviewer` | sonnet | high | Quality gate 12/15 scoring |
 | `atlas-admin:context-scanner` | haiku | low | CLAUDE.md drift detection |
+| `atlas-admin:infra-expert` | sonnet | medium | Infrastructure: Proxmox, Docker, IaC, GPU, networking |
+| `atlas-admin:data-engineer` | sonnet | medium | Database: PG admin, migrations, query optimization |
+| `atlas-admin:devops-engineer` | sonnet | medium | CI/CD: Forgejo Actions, Docker builds, deploy pipelines |
+| `atlas-enterprise:domain-analyst` | haiku | low | Domain: ISA 5.1, MBSE, WBS, mining engineering (read-only) |
 
 **Effort levels** (from CC API):
 - `low`: Minimal thinking, max speed. For lookups, status checks, classification.

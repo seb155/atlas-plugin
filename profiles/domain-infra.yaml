@@ -24,6 +24,7 @@ refs:
 
 agents:
   - team-security
+  - infra-expert
 
 persona: "infrastructure architect"
 pipeline: "AUDIT → PLAN → DEPLOY → VERIFY → MONITOR"
