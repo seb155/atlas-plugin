@@ -27,8 +27,13 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
     [ -d "$wt" ] || continue
     name=$(basename "$wt")
 
-    # Skip if dirty (uncommitted changes)
-    dirty=$(cd "$wt" && git status --porcelain 2>/dev/null | wc -l)
+    # Skip if dirty (uncommitted changes) — exclude known ephemeral files
+    # Auto-generated plan files and .claude/ settings are not real work
+    dirty=$(cd "$wt" && git status --porcelain 2>/dev/null \
+      | grep -v '^?? \.blueprint/plans/' \
+      | grep -v '^?? \.claude/' \
+      | grep -v '^?? memory/' \
+      | wc -l)
     if [ "$dirty" -gt 0 ]; then
       KEPT=$((KEPT + 1))
       continue
