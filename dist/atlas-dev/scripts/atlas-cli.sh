@@ -11,7 +11,7 @@
 #
 # Modularized: main logic lives in atlas-modules/*.sh
 
-ATLAS_VERSION="4.26.2"
+ATLAS_VERSION="<<<<<<<HEAD4.26.2=======4.27.0>>>>>>>e452e849eddc9c85d1a418ac812ffa08fcf31a31"
 ATLAS_CONFIG="${HOME}/.atlas/config.json"
 ATLAS_HISTORY="${HOME}/.atlas/history.json"
 ATLAS_SHELL_DIR="${HOME}/.atlas/shell"

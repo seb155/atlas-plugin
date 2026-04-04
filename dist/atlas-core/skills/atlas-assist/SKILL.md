@@ -16,7 +16,7 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.26.2 Core
+🏛️ ATLAS │ ✅ SESSION │ v<<<<<<<HEAD4.26.2=======4.27.0>>>>>>>e452e849eddc9c85d1a418ac812ffa08fcf31a31 Core
    20 skills │ 1 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
