@@ -136,3 +136,44 @@ else:
 " 2>/dev/null
 }
 
+# Archive completed topics older than 90 days
+_atlas_cleanup_topics() {
+  local topics_file="$HOME/.atlas/topics.json"
+  [ -f "$topics_file" ] || return 0
+
+  local ninety_days=$((90 * 86400))
+
+  python3 -c "
+import json, time
+with open('$topics_file') as f:
+    topics = json.load(f)
+now = time.time()
+archived = 0
+for name, info in list(topics.items()):
+    if info.get('status') == 'completed':
+        completed = info.get('completedAt', '')
+        if completed:
+            try:
+                from datetime import datetime
+                ct = datetime.fromisoformat(completed).timestamp()
+                if now - ct > ${ninety_days}:
+                    info['status'] = 'archived'
+                    archived += 1
+            except: pass
+if archived > 0:
+    with open('$topics_file', 'w') as f:
+        json.dump(topics, f, indent=2)
+    print(f'Archived {archived} stale topics')
+" 2>/dev/null
+}
+
+# Run cleanup once per day (marker file guard)
+_atlas_maybe_cleanup_topics() {
+  local marker="$HOME/.atlas/.topics-cleaned-$(date +%Y-%m-%d)"
+  [ -f "$marker" ] && return 0
+  _atlas_cleanup_topics
+  touch "$marker" 2>/dev/null
+  # Remove markers older than 7 days
+  find "$HOME/.atlas" -maxdepth 1 -name '.topics-cleaned-*' -mtime +7 -delete 2>/dev/null
+}
+

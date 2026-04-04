@@ -55,10 +55,16 @@ jobs:
         shell: sh
         run: ./build.sh all
 
-      - name: Run tests (skip strict quality checks)
+      - name: Run core tests
         shell: sh
         run: |
-          python3 -m pytest tests/ -x -q --tb=short --maxfail=3 -m "not strict"
+          python3 -m pytest tests/ -x -q --tb=short -m "not strict"
+
+      - name: Run strict tests (advisory)
+        shell: sh
+        continue-on-error: true
+        run: |
+          python3 -m pytest tests/ -q --tb=short -m "strict" || echo "::warning::Strict tests have failures — review recommended"
 
       - name: E2E hook smoke tests
         shell: sh

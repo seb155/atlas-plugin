@@ -438,3 +438,15 @@ _atlas_doctor() {
 
 # (Old inline setup removed — now in setup-wizard.sh)
 
+# atlas update — Refresh CLI modules from Coder workspace skel
+_atlas_update() {
+  local skel="/opt/workspace-skel/.atlas/shell"
+  if [ ! -d "$skel" ]; then
+    echo "Not in a Coder workspace (no skel found at $skel)"
+    return 1
+  fi
+  cp -r "$skel/modules/"* "$HOME/.atlas/shell/modules/"
+  cp "$skel/atlas.sh" "$HOME/.atlas/shell/atlas.sh"
+  echo "✅ ATLAS CLI updated from skel"
+}
+

@@ -81,3 +81,19 @@ ATLAS_DEFAULT_CHROME=$(_atlas_read_config "launcher.chrome" "true")
 ATLAS_WORKSPACE_ROOT=$(_atlas_read_config "launcher.workspace_root" "$HOME/workspace_atlas")
 ATLAS_WORKSPACE_ROOT="${ATLAS_WORKSPACE_ROOT/#\~/$HOME}"
 
+# ─── Coder Workspace Detection ───────────────────────────────
+ATLAS_IN_CODER=false
+if [ -n "${CODER_AGENT_TOKEN:-}" ] || [ -n "${CODER:-}" ]; then
+  ATLAS_IN_CODER=true
+  ATLAS_DEFAULT_SPLIT="false"      # No tmux split in Coder (use VS Code terminals)
+  ATLAS_WORKSPACE_ROOT="${HOME}"   # Workspace root is $HOME in Coder
+fi
+export ATLAS_IN_CODER
+
+# ─── Profile Loading ─────────────────────────────────────────
+ATLAS_PROFILE="unknown"
+if [ -f "$HOME/.atlas/profile.json" ]; then
+  ATLAS_PROFILE=$(python3 -c "import json; print(json.load(open('$HOME/.atlas/profile.json'))['profile'])" 2>/dev/null || echo "unknown")
+fi
+export ATLAS_PROFILE
+

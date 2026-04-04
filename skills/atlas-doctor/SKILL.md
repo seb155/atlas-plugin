@@ -46,6 +46,51 @@ OVERALL: 65/76 (86%) ⚠️
 
 Status thresholds: ✅ = 100%, ⚠️ = 50-99%, ❌ = <50%
 
+## Per-Category Scoring Summary (v2)
+
+After all categories are checked, append a letter-grade scoring table:
+
+```
+ATLAS Doctor Summary
+┌──────────────────────────┬───────┬────────┐
+│ Category                 │ Score │ Issues │
+├──────────────────────────┼───────┼────────┤
+│  1. OS & Shell           │ A     │ 0      │
+│  2. Permissions          │ B     │ 1      │
+│  3. Tools                │ A     │ 0      │
+│  4. Tokens/Creds         │ C     │ 2      │
+│  5. Services             │ A     │ 0      │
+│  6. Claude Code          │ A     │ 0      │
+│  7. ATLAS Plugin         │ B     │ 1      │
+│  8. Project Context      │ A     │ 0      │
+│  9. Terminal & Launch    │ B     │ 1      │
+│ 10. StatusLine           │ A     │ 0      │
+│ 11. CC Settings          │ B     │ 1      │
+│ 12. MCP & Plugins        │ A     │ 0      │
+│ 13. Domain Plugins       │ A     │ 0      │
+├──────────────────────────┼───────┼────────┤
+│ OVERALL                  │ B+    │ 6      │
+└──────────────────────────┴───────┴────────┘
+
+Dream Health: B+ 8.91/10 (2026-04-04)
+```
+
+**Letter grade rules per category:**
+- **A** = 0 issues (100%)
+- **B** = 1 issue (80-99%)
+- **C** = 2 issues (60-79%)
+- **D** = 3+ issues (40-59%)
+- **F** = critical failure (<40% or ❌ category)
+
+**OVERALL grade:**
+- A+ = all A / 0 issues total
+- A  = 0-1 issues total
+- B+ = 2-4 issues total, no F categories
+- B  = 5-7 issues total, no F categories
+- C  = 8-12 issues or 1 F category
+- D  = 13+ issues or 2+ F categories
+- F  = ≥3 F categories or critical system failure
+
 ## Checks by Category
 
 ### Cat 1: OS & Shell (5 checks)
@@ -232,6 +277,57 @@ ls "${PLUGIN_ROOT}"/hooks/ 2>/dev/null | grep -v hooks.json | wc -l
 grep -rl "^effort:" "${PLUGIN_ROOT}"/skills/*/SKILL.md 2>/dev/null | wc -l
 ```
 
+#### 7b. Version Skew Detection (v2)
+
+After checking plugin version (check #1), compare versions across all installed tiers in cache:
+
+```bash
+CACHE_BASE="$HOME/.claude/plugins/cache"
+
+declare -A tier_versions
+for tier_dir in "$CACHE_BASE"/atlas-*/; do
+  [ -d "$tier_dir" ] || continue
+  tier=$(basename "$tier_dir")
+  pj="${tier_dir}.claude-plugin/plugin.json"
+  [ ! -f "$pj" ] && pj="${tier_dir}plugin.json"
+  if [ -f "$pj" ]; then
+    ver=$(python3 -c "import json; print(json.load(open('$pj'))['version'])" 2>/dev/null || echo "?")
+    tier_versions[$tier]="$ver"
+  fi
+done
+
+# Detect skew — all installed tiers should be at the same version
+LATEST=$(for v in "${tier_versions[@]}"; do echo "$v"; done | sort -V | tail -1)
+SKEW=0
+for tier in $(echo "${!tier_versions[@]}" | tr ' ' '\n' | sort); do
+  ver="${tier_versions[$tier]}"
+  if [ "$ver" = "$LATEST" ]; then
+    echo "  $tier: v$ver ✅"
+  else
+    echo "  $tier: v$ver ⚠️ SKEW"
+    SKEW=1
+  fi
+done
+
+if [ $SKEW -eq 1 ]; then
+  echo ""
+  echo "⚠️ Plugin version skew detected"
+  echo "   [FIX] cd ~/workspace_atlas/projects/atlas-dev-plugin && make dev"
+fi
+```
+
+Display example:
+```
+Plugin Version Sync:
+  atlas-admin: v4.16.0 ✅
+  atlas-dev:   v4.16.0 ✅
+  atlas-user:  v4.15.2 ⚠️ SKEW
+  atlas-core:  v4.15.0 ⚠️ SKEW
+
+⚠️ Plugin version skew detected
+   [FIX] cd ~/workspace_atlas/projects/atlas-dev-plugin && make dev
+```
+
 **NOTE**: Marketplace-cached plugins may store ONLY `plugin.json` + `marketplace.json` in `.claude-plugin/`.
 Skills, agents, hooks, and commands are loaded at runtime by CC's plugin system — not as local files.
 If checks 2-8 return 0 but the plugin is functional (skills load in CC), this is expected for marketplace plugins.
@@ -264,6 +360,35 @@ Interactive review of each issue, one by one:
    - Options: `["Oui, fixer", "Skip", "Arrêter les fixes"]`
 4. If approved → execute fix command → re-run check → show result (✅ or still ❌)
 5. Continue to next issue
+
+### [FIX] Tag Format (v2)
+
+For common issues, append a `[FIX]` hint inline with the warning. Use this format throughout all categories:
+
+```
+⚠️ Plugin version skew detected
+   [FIX] cd ~/workspace_atlas/projects/atlas-dev-plugin && make dev
+
+⚠️ Missing tool: yq
+   [FIX] sudo snap install yq  (Ubuntu) | brew install yq (macOS)
+
+⚠️ SYNAPSE_TOKEN missing or invalid
+   [FIX] Add to ~/.env: export SYNAPSE_TOKEN=<token>  then: source ~/.env
+
+❌ Docker not in PATH
+   [FIX] sudo apt install docker.io && sudo usermod -aG docker $USER
+
+⚠️ CC Settings: missing deny rules
+   [FIX] /atlas update-config add-deny-rules
+
+⚠️ StatusLine scripts not deployed
+   [FIX] /atlas statusline-setup
+
+⚠️ Project CLAUDE.md missing
+   [FIX] /atlas setup context
+```
+
+`[FIX]` tags appear in read-only mode too (as hints). In `--fix` mode, they become the proposed command for HITL review.
 
 ### `--fix-all` (batch)
 
@@ -576,6 +701,32 @@ Status logic:
 - ❌ = no atlas-core and no legacy plugin
 
 Auto-fix: dispatch to `atlas setup plugins` for interactive domain selection, or run `scripts/migrate-marketplace.sh --preset dev` directly.
+
+## Dream Health Integration (v2)
+
+Read the latest dream report from the memory directory and include in the scoring summary:
+
+```bash
+# Find the memory directory for this project
+MEMORY_DIR=$(find ~/.claude/projects -name "MEMORY.md" 2>/dev/null | head -1 | xargs dirname 2>/dev/null || echo "")
+
+DREAM_LINE="Dream Health: ⏭️ No dream reports found"
+if [ -n "$MEMORY_DIR" ]; then
+  DREAM_FILE=$(ls -t "$MEMORY_DIR"/dream-report-*.md 2>/dev/null | head -1)
+  if [ -n "$DREAM_FILE" ]; then
+    DREAM_DATE=$(basename "$DREAM_FILE" | sed 's/dream-report-\(.*\)\.md/\1/')
+    DREAM_GRADE=$(grep -m1 -oP '(?i)grade[:\s]+([A-F][+\-]?)' "$DREAM_FILE" 2>/dev/null | grep -oP '[A-F][+\-]?' | head -1 || echo "?")
+    DREAM_SCORE=$(grep -oP '[0-9]+\.[0-9]+/10' "$DREAM_FILE" 2>/dev/null | head -1 || echo "?/10")
+    DREAM_LINE="Dream Health: ${DREAM_GRADE:-?} ${DREAM_SCORE} ($DREAM_DATE)"
+  fi
+fi
+echo "$DREAM_LINE"
+```
+
+Display in scoring table footer:
+```
+Dream Health: B+ 8.91/10 (2026-04-04)
+```
 
 ## Report Persistence
 

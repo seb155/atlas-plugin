@@ -213,10 +213,14 @@ atlas() {
     doctor)  shift; _atlas_doctor "$@"; return ;;
     hooks)   _atlas_hooks; return ;;
     topics)  _atlas_topics_list; return ;;
+    update)  _atlas_update; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
   esac
+
+  # Daily topic cleanup (lightweight — runs once per day, no-op otherwise)
+  _atlas_maybe_cleanup_topics
 
   # Parse project + flags
   local project="" topic=""
