@@ -34,7 +34,8 @@ hooks:  # Hook scripts — run automatically on CC lifecycle events
   - auto-learn
   - focus-guard
   - experiential-capture
-  # SP-COGNITION: cognitive hooks (Gap 1 + Gap 2)
+  # SP-COGNITION: cognitive hooks (Gap 1-3)
+  - theory-of-mind
   - tone-adaptation
   - morning-brief
   # SOTA 2026-04-02: safety + analytics

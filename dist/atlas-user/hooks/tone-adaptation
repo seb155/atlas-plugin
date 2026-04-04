@@ -113,11 +113,41 @@ if len(log) >= 30:
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 4. Compute tone mode
+# 3b. Read Theory of Mind state (from theory-of-mind hook)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TOM_STATE_FILE="$HOME/.claude/atlas-tom-state.json"
+TOM_STATE="standard"
+TOM_CONFIDENCE=0
+
+if [ -f "$TOM_STATE_FILE" ] && [ -s "$TOM_STATE_FILE" ]; then
+  TOM_STATE=$(python3 -c "
+import json
+with open('$TOM_STATE_FILE') as f:
+    d = json.load(f)
+print(d.get('state', 'standard'))
+" 2>/dev/null || echo "standard")
+  TOM_CONFIDENCE=$(python3 -c "
+import json
+with open('$TOM_STATE_FILE') as f:
+    d = json.load(f)
+print(d.get('confidence', 0))
+" 2>/dev/null || echo "0")
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 4. Compute tone mode (integrates TOM state)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 TONE="standard"
 STYLE=""
+
+# TOM-driven tone override (high confidence real-time inference takes priority)
+if python3 -c "exit(0 if float('$TOM_CONFIDENCE') >= 0.7 and '$TOM_STATE' == 'frustrated' else 1)" 2>/dev/null; then
+  MOOD="frustrated"  # Propagate TOM-inferred mood into tone logic
+elif python3 -c "exit(0 if float('$TOM_CONFIDENCE') >= 0.7 and '$TOM_STATE' == 'flow' else 1)" 2>/dev/null; then
+  MOOD="flow"
+fi
 
 if [ "$ENERGY" -le 2 ]; then
   TONE="ultra-concise"
