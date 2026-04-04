@@ -448,6 +448,12 @@ skills:
     owner: admin
     description: "MSE 4-layer auto-enriching profiles — discipline, personal, enterprise, team. KC evidence + bus-factor analysis"
 
+  idle-curiosity:
+    emoji: "\U0001F50D"               # 🔍
+    category: Cognitive
+    owner: admin
+    description: "Autonomous exploration engine — discovers under-explored topics and knowledge gaps. HITL gated."
+
   gms-insights:
     emoji: "\U0001F517"               # 🔗
     category: Project

@@ -45,7 +45,8 @@ skills:
   - gms-cockpit
   # v4.16.0: GMS MSE 4-layer auto-enriching profiles
   - gms-profiler
-  # v4.22.0: GMS P2 — cross-discipline + onboarding
+  # v4.22.0: P2-P3 cognitive + GMS
+  - idle-curiosity
   - gms-insights
   - gms-onboard
 
