@@ -481,6 +481,30 @@ skills:
     owner: infra
     description: "Network infrastructure audit: DNS, ports, VLAN, SSL, firewall"
 
+  proxmox-admin:
+    emoji: "\U0001F5A5\uFE0F"         # 🖥️
+    category: Infrastructure
+    owner: infra
+    description: "Proxmox VE administration: VM/LXC lifecycle, storage, GPU passthrough, clustering"
+
+  iac-orchestrator:
+    emoji: "\U0001F3D7\uFE0F"         # 🏗️
+    category: Infrastructure
+    owner: infra
+    description: "Infrastructure as Code: Terraform/OpenTofu plans, cloud-init, state management"
+
+  hardware-capacity:
+    emoji: "\U0001F4CA"               # 📊
+    category: Infrastructure
+    owner: infra
+    description: "Hardware inventory and capacity planning: CPU/RAM/disk/GPU audit and projections"
+
+  infra-inventory:
+    emoji: "\U0001F50D"               # 🔍
+    category: Infrastructure
+    owner: infra
+    description: "Live infrastructure scanning: PVE nodes, VMs, storage, GPUs. Drift detection."
+
   self-propose:
     emoji: "\U0001F504"               # 🔄
     category: Meta

@@ -5,7 +5,7 @@
     {
       "name": "atlas-user",
       "description": "ATLAS User — AXOIQ AI Engineering Assistant (user tier)",
-      "version": "<<<<<<<HEAD4.26.2=======4.27.0>>>>>>>e452e849eddc9c85d1a418ac812ffa08fcf31a31",
+      "version": "4.26.2",
       "source": { "source": "url", "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }

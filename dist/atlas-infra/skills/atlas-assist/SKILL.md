@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Infra — AXOIQ's unified AI engineering assistant. 7 skills, 2 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Infra — AXOIQ's unified AI engineering assistant. 11 skills, 2 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: false
 ---
 
@@ -16,8 +16,8 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v<<<<<<<HEAD4.26.2=======4.27.0>>>>>>>e452e849eddc9c85d1a418ac812ffa08fcf31a31 Infra
-   7 skills │ 2 agents │ Gate 12/15
+🏛️ ATLAS │ ✅ SESSION │ v4.26.2 Infra
+   11 skills │ 2 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -76,6 +76,10 @@ Phases: `AUDIT → PLAN → DEPLOY → VERIFY → MONITOR`
 | **mesh-diagnostics** | 🔌 | Infrastructure |
 | **network-audit** | 🌐 | Infrastructure |
 | **infrastructure-change** | 🏗️ | Infrastructure |
+| **proxmox-admin** | 🖥️ | Infrastructure |
+| **iac-orchestrator** | 🏗️ | Infrastructure |
+| **hardware-capacity** | 📊 | Infrastructure |
+| **infra-inventory** | 🔍 | Infrastructure |
 
 ### Breadcrumb Examples
 
@@ -104,16 +108,20 @@ Phases: `AUDIT → PLAN → DEPLOY → VERIFY → MONITOR`
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (7)
+## Available Skills (11)
 
 ### 🎯 Deploy
 - 🎯 **devops-deploy**: Deploy to any env with health checks, validators, data sync
 
 ### 🔧 Infrastructure
+- 📊 **hardware-capacity**: Hardware inventory and capacity planning: CPU/RAM/disk/GPU audit and projections
+- 🏗️ **iac-orchestrator**: Infrastructure as Code: Terraform/OpenTofu plans, cloud-init, state management
+- 🔍 **infra-inventory**: Live infrastructure scanning: PVE nodes, VMs, storage, GPUs. Drift detection.
 - 🏗️ **infrastructure-change**: CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation
 - 🔧 **infrastructure-ops**: Infrastructure management: VMs, containers, networking, monitoring
 - 🔌 **mesh-diagnostics**: NetBird and Tailscale mesh network health diagnostics
 - 🌐 **network-audit**: Network infrastructure audit: DNS, ports, VLAN, SSL, firewall
+- 🖥️ **proxmox-admin**: Proxmox VE administration: VM/LXC lifecycle, storage, GPU passthrough, clustering
 
 ### 🧬 Optimize
 - ⚙️ **engineering-ops**: I&C maintenance + 4-agent estimation pipeline

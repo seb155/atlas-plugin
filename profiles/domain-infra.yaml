@@ -15,6 +15,11 @@ skills:
   - network-audit
   # v3.43.0: CF Tunnel, Caddy, Authentik, NetBird change orchestration
   - infrastructure-change
+  # v4.26.2: Advanced infra management
+  - proxmox-admin
+  - iac-orchestrator
+  - hardware-capacity
+  - infra-inventory
 
 hooks:
   - enterprise-check
