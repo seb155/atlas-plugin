@@ -216,6 +216,8 @@ atlas() {
     update)  _atlas_update; return ;;
     ci) _atlas_ci; return ;;
     complexity) shift; _atlas_complexity "$@"; return ;;
+    dispatch) shift; _atlas_dispatch "$@"; return ;;
+    agents) shift; _atlas_agent_stats "$@"; return ;;
     plans) shift; _atlas_plans "$@"; return ;;
     worktrees|wt) _atlas_worktrees; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
