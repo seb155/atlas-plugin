@@ -106,6 +106,22 @@ except: print('⚪ N/A')
   _atlas_footer
 }
 
+# atlas plans [stale] — Plan lifecycle dashboard
+_atlas_plans() {
+  local plans_dir=".blueprint/plans"
+  [ -d "$plans_dir" ] || plans_dir="$(git rev-parse --show-toplevel 2>/dev/null)/.blueprint/plans"
+  [ -d "$plans_dir" ] || { echo "No .blueprint/plans/ found"; return 1; }
+
+  local subcmd="${1:-scan}"
+  local script="${ATLAS_SHELL_DIR}/../scripts/plan-lifecycle.sh"
+
+  # Fallback to plugin scripts if not in shell dir
+  [ -f "$script" ] || script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/plan-lifecycle.sh"
+  [ -f "$script" ] || { echo "plan-lifecycle.sh not found"; return 1; }
+
+  bash "$script" "$subcmd" "$plans_dir"
+}
+
 # atlas ci — Show CI pipeline status from Forgejo Actions
 _atlas_ci() {
   _atlas_header
