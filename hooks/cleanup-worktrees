@@ -2,6 +2,7 @@
 # Auto-cleanup stale Claude Code worktrees on session end
 # Only cleans .claude/worktrees/ (CC-managed), NOT .worktrees/ (manual/project)
 # Safe: skips worktrees with uncommitted changes or unique commits
+# Enhanced: age warnings + auto-merge-back proposals
 
 # Hook aggregation log
 _hook_log() {
@@ -15,6 +16,10 @@ _hook_log() {
 WORKSPACE="${HOME}/workspace_atlas"
 CLEANED=0
 KEPT=0
+AGED=0
+MERGE_CANDIDATES=""
+AGE_WARN_DAYS=7
+NOW_EPOCH=$(date +%s)
 
 for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
   wt_dir="$repo_dir/worktrees"
@@ -27,29 +32,44 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
     [ -d "$wt" ] || continue
     name=$(basename "$wt")
 
+    # Check age (days since last commit in worktree)
+    last_commit_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
+    age_days=$(( (NOW_EPOCH - last_commit_epoch) / 86400 ))
+
     # Skip if dirty (uncommitted changes) — exclude known ephemeral files
-    # Auto-generated plan files and .claude/ settings are not real work
     dirty=$(cd "$wt" && git status --porcelain 2>/dev/null \
       | grep -v '^?? \.blueprint/plans/' \
       | grep -v '^?? \.claude/' \
       | grep -v '^?? memory/' \
+      | grep -v '^?? node_modules/' \
       | wc -l)
     if [ "$dirty" -gt 0 ]; then
       KEPT=$((KEPT + 1))
+      # Age warning for dirty worktrees
+      if [ "$age_days" -ge "$AGE_WARN_DAYS" ]; then
+        AGED=$((AGED + 1))
+      fi
       continue
     fi
 
-    # Skip if has unique commits not in main or dev
+    # Check if has unique commits not in main or dev
     ahead_main=$(cd "$wt" && git log main..HEAD --oneline 2>/dev/null | wc -l)
     ahead_dev=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | wc -l)
+
     if [ "$ahead_main" -gt 0 ] && [ "$ahead_dev" -gt 0 ]; then
       KEPT=$((KEPT + 1))
+      # Clean worktree with unique commits → merge candidate
+      MERGE_CANDIDATES="${MERGE_CANDIDATES}  ${name} (${ahead_dev} commits ahead of dev, ${age_days}d old)\n"
+      if [ "$age_days" -ge "$AGE_WARN_DAYS" ]; then
+        AGED=$((AGED + 1))
+      fi
       continue
     fi
 
-    # Safe to remove
+    # Safe to remove (clean + no unique commits)
     cd "$repo_root" || continue
     git worktree remove "$wt" --force 2>/dev/null
+    # Try both naming conventions for branch cleanup
     git branch -D "$name" 2>/dev/null
     git branch -D "worktree-$name" 2>/dev/null
     CLEANED=$((CLEANED + 1))
@@ -58,6 +78,13 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
   cd "$repo_root" && git worktree prune 2>/dev/null
 done
 
+# Summary output
 [ "$CLEANED" -gt 0 ] && echo "🧹 Cleaned $CLEANED stale worktree(s), kept $KEPT with work"
+[ "$AGED" -gt 0 ] && echo "⚠️ $AGED worktree(s) older than ${AGE_WARN_DAYS} days — consider merging or removing"
+if [ -n "$MERGE_CANDIDATES" ]; then
+  echo "💡 Merge candidates (clean, ahead of dev):"
+  echo -e "$MERGE_CANDIDATES"
+fi
+
 _hook_log pass
 exit 0
