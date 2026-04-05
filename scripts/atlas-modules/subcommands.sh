@@ -60,6 +60,84 @@ _atlas_status() {
   _atlas_footer
 }
 
+# atlas worktrees (aliases: wt)
+_atlas_worktrees() {
+  _atlas_header
+  printf "  ${ATLAS_BOLD}Git Worktrees${ATLAS_RESET} ${ATLAS_DIM}(scanning workspace)${ATLAS_RESET}\n\n"
+
+  local WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
+  local NOW_EPOCH=$(date +%s)
+  local found=0
+
+  printf "  ${ATLAS_DIM}%-20s %-24s %-8s %-8s %-6s${ATLAS_RESET}\n" "WORKTREE" "BRANCH" "DIRTY" "AHEAD" "AGE"
+  printf "  ${ATLAS_DIM}%-20s %-24s %-8s %-8s %-6s${ATLAS_RESET}\n" "────────────────────" "────────────────────────" "────────" "────────" "──────"
+
+  for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
+    local wt_dir="$repo_dir/worktrees"
+    [ -d "$wt_dir" ] || continue
+    local repo_root="$(dirname "$repo_dir")"
+    [ -d "$repo_root/.git" ] || continue
+    local repo_name=$(basename "$repo_root")
+
+    for wt in "$wt_dir"/*/; do
+      [ -d "$wt" ] || continue
+      local name=$(basename "$wt")
+      found=$((found + 1))
+
+      # Get branch
+      local branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
+
+      # Check dirty
+      local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | wc -l)
+      local dirty_str="${ATLAS_GREEN}clean${ATLAS_RESET}"
+      [ "$dirty_count" -gt 0 ] && dirty_str="${ATLAS_YELLOW}${dirty_count} files${ATLAS_RESET}"
+
+      # Check ahead
+      local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | wc -l)
+      local ahead_str="${ATLAS_DIM}0${ATLAS_RESET}"
+      [ "$ahead" -gt 0 ] && ahead_str="${ATLAS_CYAN}${ahead}${ATLAS_RESET}"
+
+      # Age in days
+      local last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
+      local age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
+      local age_str="${age_days}d"
+      [ "$age_days" -ge 7 ] && age_str="${ATLAS_YELLOW}${age_days}d${ATLAS_RESET}"
+      [ "$age_days" -ge 14 ] && age_str="${ATLAS_RED}${age_days}d${ATLAS_RESET}"
+
+      printf "  %-20s %-24s %-8s %-8s %-6s\n" "${repo_name}/${name}" "$branch" "$dirty_str" "$ahead_str" "$age_str"
+    done
+
+    # Also check .worktrees/ (manual)
+    local manual_dir="$repo_root/.worktrees"
+    if [ -d "$manual_dir" ]; then
+      for wt in "$manual_dir"/*/; do
+        [ -d "$wt" ] || continue
+        local name=$(basename "$wt")
+        found=$((found + 1))
+        local branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
+        local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | wc -l)
+        local dirty_str="${ATLAS_GREEN}clean${ATLAS_RESET}"
+        [ "$dirty_count" -gt 0 ] && dirty_str="${ATLAS_YELLOW}${dirty_count} files${ATLAS_RESET}"
+        local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | wc -l)
+        local ahead_str="${ATLAS_DIM}0${ATLAS_RESET}"
+        [ "$ahead" -gt 0 ] && ahead_str="${ATLAS_CYAN}${ahead}${ATLAS_RESET}"
+        local last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
+        local age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
+        local age_str="${age_days}d"
+        [ "$age_days" -ge 7 ] && age_str="${ATLAS_YELLOW}${age_days}d${ATLAS_RESET}"
+        printf "  %-20s %-24s %-8s %-8s %-6s\n" "${repo_name}/${name}*" "$branch" "$dirty_str" "$ahead_str" "$age_str"
+      done
+    fi
+  done
+
+  if [ "$found" -eq 0 ]; then
+    printf "  ${ATLAS_DIM}No worktrees found.${ATLAS_RESET}\n"
+  fi
+  printf "\n  ${ATLAS_DIM}* = manual (.worktrees/)${ATLAS_RESET}\n"
+
+  _atlas_footer
+}
+
 # atlas dashboard (aliases: dash, d)
 _atlas_dashboard() {
   local TOPICS_FILE="${HOME}/.atlas/topics.json"

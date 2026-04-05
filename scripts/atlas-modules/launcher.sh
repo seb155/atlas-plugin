@@ -214,6 +214,7 @@ atlas() {
     hooks)   _atlas_hooks; return ;;
     topics)  _atlas_topics_list; return ;;
     update)  _atlas_update; return ;;
+    worktrees|wt) _atlas_worktrees; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
