@@ -62,24 +62,62 @@ _atlas_dispatch() {
     return 1
   fi
 
-  # Dispatch as background agent via claude --print (non-interactive)
-  echo "   Running..."
-  local start_ts=$(date +%s)
-  local output=$($claude_bin --print --model "$model_id" "$desc" 2>&1)
-  local end_ts=$(date +%s)
-  local duration=$((end_ts - start_ts))
+  # ── P7.6: Auto-escalation ──────────────────────────────────
+  local max_retries=2
+  local attempt=0
+  local models_ladder=("$model")
 
-  echo ""
-  echo "─── Result (${duration}s) ───"
-  echo "$output" | head -50
-  [ $(echo "$output" | wc -l) -gt 50 ] && echo "... (truncated, $(echo "$output" | wc -l) lines total)"
+  # Build escalation ladder if mode is auto
+  if [ "$mode" = "auto" ]; then
+    case "$model" in
+      haiku)  models_ladder=(haiku sonnet opus) ;;
+      sonnet) models_ladder=(sonnet opus) ;;
+      opus)   models_ladder=(opus) ;;
+    esac
+  fi
 
-  # Log completion
-  printf '{"ts":"%s","task":"%s","model":"%s","status":"completed","duration_s":%d}\n' \
-    "$(date -Iseconds)" "$desc" "$model" "$duration" >> "$log_file" 2>/dev/null
+  local success=false
+  for escalated_model in "${models_ladder[@]}"; do
+    attempt=$((attempt + 1))
+    [ "$attempt" -gt 1 ] && echo "   🔄 Escalating to ${escalated_model} (attempt ${attempt}/${#models_ladder[@]})"
 
-  echo ""
-  echo "✅ Done in ${duration}s (model: ${model})"
+    # Map model name to full ID
+    case "$escalated_model" in
+      opus)   model_id="claude-opus-4-6" ;;
+      sonnet) model_id="claude-sonnet-4-6" ;;
+      haiku)  model_id="claude-haiku-4-5-20251001" ;;
+    esac
+
+    echo "   Running (${escalated_model})..."
+    local start_ts=$(date +%s)
+    local output=$($claude_bin --print --model "$model_id" "$desc" 2>&1)
+    local exit_code=$?
+    local end_ts=$(date +%s)
+    local duration=$((end_ts - start_ts))
+
+    if [ "$exit_code" -eq 0 ] && [ -n "$output" ] && ! echo "$output" | grep -qi "error\|failed\|exception" | head -1 >/dev/null 2>&1; then
+      success=true
+      printf '{"ts":"%s","task":"%s","model":"%s","status":"completed","duration_s":%d,"attempt":%d}\n' \
+        "$(date -Iseconds)" "$desc" "$escalated_model" "$duration" "$attempt" >> "$log_file" 2>/dev/null
+
+      echo ""
+      echo "─── Result (${duration}s, ${escalated_model}) ───"
+      echo "$output" | head -50
+      [ $(echo "$output" | wc -l) -gt 50 ] && echo "... (truncated, $(echo "$output" | wc -l) lines total)"
+      echo ""
+      [ "$attempt" -gt 1 ] && echo "✅ Done in ${duration}s (escalated: ${model} → ${escalated_model})" \
+                            || echo "✅ Done in ${duration}s (model: ${escalated_model})"
+      break
+    else
+      printf '{"ts":"%s","task":"%s","model":"%s","status":"failed","duration_s":%d,"attempt":%d}\n' \
+        "$(date -Iseconds)" "$desc" "$escalated_model" "$duration" "$attempt" >> "$log_file" 2>/dev/null
+      echo "   ⚠️  ${escalated_model} failed (${duration}s)"
+    fi
+  done
+
+  if ! $success; then
+    echo "   ❌ All models failed after ${attempt} attempts. Escalate to human."
+  fi
 }
 
 # atlas agents stats — Show agent performance metrics
@@ -126,4 +164,209 @@ for model, s in sorted(stats.items()):
 " 2>/dev/null
 
   _atlas_footer
+}
+
+# ── P7.3: Agent Blueprints Library ──────────────────────────
+
+_atlas_team_blueprint() {
+  local blueprint="${1:-help}"
+
+  # Blueprint definitions
+  case "$blueprint" in
+    solo)
+      echo "📋 Blueprint: solo (1 agent)"
+      echo "   Use: Simple tasks, quick fixes, one-file changes"
+      echo "   Model: auto (complexity-based)"
+      echo ""
+      echo "   atlas dispatch \"your task here\""
+      ;;
+    pair)
+      echo "📋 Blueprint: pair (2 agents)"
+      echo "   Use: Feature with tests — one implements, one verifies"
+      echo "   Models: Sonnet (implement) + Haiku (verify)"
+      echo ""
+      echo "   Pattern:"
+      echo "     atlas dispatch \"implement: {task}\" --model sonnet"
+      echo "     atlas dispatch \"verify: run tests for {task}\" --model haiku"
+      ;;
+    squad)
+      echo "📋 Blueprint: squad (3-5 agents)"
+      echo "   Use: Multi-file feature — architect + engineers + reviewer"
+      echo "   Models: Opus (architect) + Sonnet×2 (implement) + Haiku (review)"
+      echo ""
+      echo "   Pattern:"
+      echo "     1. atlas dispatch \"architect: design {feature}\" --model opus"
+      echo "     2. atlas dispatch \"implement backend: {task}\" --model sonnet"
+      echo "     3. atlas dispatch \"implement frontend: {task}\" --model sonnet"
+      echo "     4. atlas dispatch \"review: check code quality\" --model haiku"
+      ;;
+    swarm)
+      echo "📋 Blueprint: swarm (5+ agents)"
+      echo "   Use: Large refactor, plan execution, multi-repo"
+      echo "   Models: Opus (lead) + Sonnet×N (workers) + Haiku (validators)"
+      echo "   ⚠️  Requires tmux + agent teams for coordination"
+      echo ""
+      echo "   Pattern: Use /atlas team feature --plan {plan-file}"
+      ;;
+    list)
+      echo "📋 Agent Blueprints"
+      echo ""
+      printf "  %-10s %-8s %-45s\n" "NAME" "AGENTS" "USE CASE"
+      printf "  %-10s %-8s %-45s\n" "──────────" "────────" "─────────────────────────────────────────────"
+      printf "  %-10s %-8s %-45s\n" "solo"  "1"    "Quick tasks, fixes, one-file changes"
+      printf "  %-10s %-8s %-45s\n" "pair"  "2"    "Feature + tests (implement + verify)"
+      printf "  %-10s %-8s %-45s\n" "squad" "3-5"  "Multi-file feature (arch + eng + review)"
+      printf "  %-10s %-8s %-45s\n" "swarm" "5+"   "Large refactor, plan exec, multi-repo"
+      ;;
+    *)
+      echo "Usage: atlas team {solo|pair|squad|swarm|list}"
+      echo "   Show pre-built team configurations for agent dispatch."
+      ;;
+  esac
+}
+
+# ── P7.7: Execution Manifest Generator ──────────────────────
+
+_atlas_manifest() {
+  local plan_file="${1:-}"
+  [ -z "$plan_file" ] && { echo "Usage: atlas manifest <plan-file.md>"; return 1; }
+  [ -f "$plan_file" ] || { echo "ERROR: File not found: $plan_file"; return 1; }
+
+  python3 -c "
+import json, re, os, sys
+
+plan_path = '$plan_file'
+with open(plan_path) as f:
+    content = f.read()
+
+plan_name = os.path.basename(plan_path).replace('.md', '')
+
+# Extract phases and tasks from table format:  | N.N | Task | Effort | Deliverable |
+manifest = {
+    'plan': plan_name,
+    'generated': '$(date -Iseconds)',
+    'phases': []
+}
+
+# Find phase headers
+phase_pattern = r'###\s*Phase\s*(\d+)[:\s]*(.+?)(?:\(|—|\n)'
+phases = re.finditer(phase_pattern, content)
+
+for phase_match in phases:
+    phase_num = phase_match.group(1)
+    phase_name = phase_match.group(2).strip()
+
+    # Find tasks after this phase header
+    phase_start = phase_match.end()
+    next_phase = re.search(r'###\s*Phase\s*\d+', content[phase_start:])
+    phase_end = phase_start + next_phase.start() if next_phase else len(content)
+    phase_content = content[phase_start:phase_end]
+
+    tasks = []
+    # Match table rows: | N.N | Task description | Effort | Deliverable |
+    task_pattern = r'\|\s*(\d+\.\d+)\s*\|\s*\*?\*?(.+?)\*?\*?\s*\|\s*(\d+)h?\s*\|'
+    for task_match in re.finditer(task_pattern, phase_content):
+        task_id = task_match.group(1)
+        task_desc = task_match.group(2).strip().strip('*')
+        task_effort = int(task_match.group(3))
+
+        # Auto-assign model based on effort and keywords
+        model = 'sonnet'  # default
+        desc_lower = task_desc.lower()
+        if task_effort >= 4 or any(w in desc_lower for w in ['architect', 'design', 'strategy', 'review']):
+            model = 'opus'
+        elif task_effort <= 1 or any(w in desc_lower for w in ['rename', 'fix', 'simple', 'lint', 'cleanup']):
+            model = 'haiku'
+
+        # Determine mode
+        mode = 'auto'
+        if any(w in desc_lower for w in ['test', 'verify', 'validate']):
+            mode = 'verify'
+        elif any(w in desc_lower for w in ['implement', 'create', 'build', 'add']):
+            mode = 'implement'
+
+        tasks.append({
+            'id': task_id,
+            'description': task_desc[:80],
+            'effort_h': task_effort,
+            'model': model,
+            'mode': mode
+        })
+
+    if tasks:
+        manifest['phases'].append({
+            'phase': int(phase_num),
+            'name': phase_name,
+            'tasks': tasks,
+            'total_effort_h': sum(t['effort_h'] for t in tasks)
+        })
+
+# Summary
+total_tasks = sum(len(p['tasks']) for p in manifest['phases'])
+total_effort = sum(p['total_effort_h'] for p in manifest['phases'])
+manifest['summary'] = {
+    'total_phases': len(manifest['phases']),
+    'total_tasks': total_tasks,
+    'total_effort_h': total_effort,
+    'model_distribution': {}
+}
+
+# Count model allocation
+from collections import Counter
+models = Counter(t['model'] for p in manifest['phases'] for t in p['tasks'])
+manifest['summary']['model_distribution'] = dict(models)
+
+# Output
+print(json.dumps(manifest, indent=2))
+
+# Also print human-readable summary
+print(f'\n📋 Manifest: {plan_name}', file=sys.stderr)
+print(f'   Phases: {len(manifest[\"phases\"])} | Tasks: {total_tasks} | Effort: {total_effort}h', file=sys.stderr)
+for m, c in models.most_common():
+    print(f'   {m}: {c} tasks', file=sys.stderr)
+" 2>&1
+
+  # Optionally save to file
+  local manifest_dir=".atlas/manifests"
+  if [ -d ".atlas" ] || [ -d ".blueprint" ]; then
+    mkdir -p "$manifest_dir"
+    local out_file="${manifest_dir}/${plan_file##*/}"
+    out_file="${out_file%.md}.json"
+    # Re-run python only outputting JSON (no stderr)
+    python3 -c "
+import json, re, os
+
+plan_path = '$plan_file'
+with open(plan_path) as f:
+    content = f.read()
+
+plan_name = os.path.basename(plan_path).replace('.md', '')
+manifest = {'plan': plan_name, 'generated': '$(date -Iseconds)', 'phases': []}
+
+phase_pattern = r'###\s*Phase\s*(\d+)[:\s]*(.+?)(?:\(|—|\n)'
+for phase_match in re.finditer(phase_pattern, content):
+    phase_num = phase_match.group(1)
+    phase_name = phase_match.group(2).strip()
+    phase_start = phase_match.end()
+    next_phase = re.search(r'###\s*Phase\s*\d+', content[phase_start:])
+    phase_end = phase_start + next_phase.start() if next_phase else len(content)
+    phase_content = content[phase_start:phase_end]
+    tasks = []
+    for task_match in re.finditer(r'\|\s*(\d+\.\d+)\s*\|\s*\*?\*?(.+?)\*?\*?\s*\|\s*(\d+)h?\s*\|', phase_content):
+        task_id = task_match.group(1)
+        task_desc = task_match.group(2).strip().strip('*')
+        task_effort = int(task_match.group(3))
+        model = 'sonnet'
+        desc_lower = task_desc.lower()
+        if task_effort >= 4 or any(w in desc_lower for w in ['architect','design','strategy','review']): model = 'opus'
+        elif task_effort <= 1 or any(w in desc_lower for w in ['rename','fix','simple','lint']): model = 'haiku'
+        tasks.append({'id':task_id,'description':task_desc[:80],'effort_h':task_effort,'model':model,'mode':'auto'})
+    if tasks:
+        manifest['phases'].append({'phase':int(phase_num),'name':phase_name,'tasks':tasks,'total_effort_h':sum(t['effort_h'] for t in tasks)})
+
+with open('$out_file','w') as f:
+    json.dump(manifest, f, indent=2)
+print(f'   💾 Saved: $out_file')
+" 2>/dev/null
+  fi
 }

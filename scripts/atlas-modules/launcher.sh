@@ -218,7 +218,13 @@ atlas() {
     complexity) shift; _atlas_complexity "$@"; return ;;
     dispatch) shift; _atlas_dispatch "$@"; return ;;
     agents) shift; _atlas_agent_stats "$@"; return ;;
+    team) shift; _atlas_team_blueprint "$@"; return ;;
+    manifest) shift; _atlas_manifest "$@"; return ;;
     plans) shift; _atlas_plans "$@"; return ;;
+    sessions) _atlas_sessions; return ;;
+    budget) _atlas_budget; return ;;
+    import-handoff) shift; _atlas_import_handoff "$@"; return ;;
+    replay) shift; _atlas_replay "$@"; return ;;
     worktrees|wt) _atlas_worktrees; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;

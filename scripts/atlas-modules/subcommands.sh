@@ -133,6 +133,51 @@ _atlas_plans() {
   bash "$script" "$subcmd" "$plans_dir"
 }
 
+# ── Session Tools (SP-EVOLUTION P6) ───────────────────────────
+
+_find_session_tools() {
+  local search_paths=(
+    "${ATLAS_SHELL_DIR}/../scripts/session-tools.sh"
+    "${ATLAS_SHELL_DIR}/../../scripts/session-tools.sh"
+    "${HOME}/workspace_atlas/projects/atlas-dev-plugin/scripts/session-tools.sh"
+  )
+  if command -v find >/dev/null 2>&1; then
+    while IFS= read -r p; do
+      [ -f "$p" ] && search_paths+=("$p")
+    done < <(find "${HOME}/.claude/plugins/cache" -maxdepth 3 -name "session-tools.sh" 2>/dev/null)
+  fi
+  for p in "${search_paths[@]}"; do
+    [ -f "$p" ] && { echo "$p"; return 0; }
+  done
+  return 1
+}
+
+# atlas sessions — Show active tmux/worktree sessions
+_atlas_sessions() {
+  local script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
+  bash "$script" sessions
+}
+
+# atlas budget — Context budget estimate
+_atlas_budget() {
+  local script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
+  bash "$script" budget
+}
+
+# atlas import-handoff <file> — Parse handoff → session-state.json
+_atlas_import_handoff() {
+  local file="${1:-}"
+  [ -z "$file" ] && { echo "Usage: atlas import-handoff <handoff-file.md>"; return 1; }
+  local script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
+  bash "$script" import "$file"
+}
+
+# atlas replay — Session replay log stats
+_atlas_replay() {
+  local script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
+  bash "$script" replay "$@"
+}
+
 # atlas complexity "description" — Classify task complexity for model selection
 _atlas_complexity() {
   local desc="$*"
