@@ -54,10 +54,11 @@ if ! $DRY_RUN; then
   echo "$NEW_VERSION" > VERSION
 fi
 
-# Step 2: Build all tiers
-echo "2️⃣  Building all tiers..."
+# Step 2: Build all tiers + domains
+echo "2️⃣  Building all tiers + domains..."
 if ! $DRY_RUN; then
   ./build.sh all
+  ./build.sh domains
 fi
 
 # Step 3: Run tests
