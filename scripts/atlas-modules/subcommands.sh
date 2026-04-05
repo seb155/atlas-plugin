@@ -47,16 +47,118 @@ _atlas_resume() {
 # atlas status
 _atlas_status() {
   _atlas_header
-  printf "  ${ATLAS_BOLD}Active sessions${ATLAS_RESET}\n\n"
+  printf "  ${ATLAS_BOLD}System Status${ATLAS_RESET}\n\n"
 
-  if $ATLAS_HAS_TMUX && /usr/bin/tmux list-sessions 2>/dev/null | grep -q 'cc-'; then
-    /usr/bin/tmux list-sessions 2>/dev/null | grep 'cc-' | while read line; do
-      printf "    ${ATLAS_CYAN}%s${ATLAS_RESET}\n" "$line"
-    done
-  else
-    printf "    ${ATLAS_DIM}No active tmux sessions.${ATLAS_RESET}\n"
+  # Git branch
+  local branch=$(git branch --show-current 2>/dev/null || echo "N/A")
+  local repo=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || echo "N/A")
+  printf "  📂 %-14s ${ATLAS_CYAN}%s${ATLAS_RESET} (branch: ${ATLAS_CYAN}%s${ATLAS_RESET})\n" "Repo" "$repo" "$branch"
+
+  # Worktree count
+  local WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
+  local wt_count=$(find "$WORKSPACE" -maxdepth 5 -path "*/.claude/worktrees/*/.git" -type f 2>/dev/null | wc -l)
+  local wt_manual=$(find "$WORKSPACE" -maxdepth 4 -path "*/.worktrees/*/.git" -type f 2>/dev/null | wc -l)
+  printf "  🌿 %-14s %d CC + %d manual\n" "Worktrees" "$wt_count" "$wt_manual"
+
+  # Tmux sessions
+  local tmux_count=0
+  if $ATLAS_HAS_TMUX; then
+    tmux_count=$(/usr/bin/tmux list-sessions 2>/dev/null | grep -c 'cc-' || echo 0)
+  fi
+  printf "  🖥️  %-14s %d active\n" "Sessions" "$tmux_count"
+
+  # Memory files
+  local mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
+  if [ -n "$mem_dir" ] && [ -d "$mem_dir" ]; then
+    local mem_count=$(ls "$mem_dir"/*.md 2>/dev/null | wc -l)
+    local mem_lines=$(wc -l < "$mem_dir/MEMORY.md" 2>/dev/null || echo 0)
+    local mem_color="${ATLAS_GREEN}"
+    [ "$mem_lines" -gt 150 ] && mem_color="${ATLAS_YELLOW}"
+    [ "$mem_lines" -gt 200 ] && mem_color="${ATLAS_RED}"
+    printf "  🧠 %-14s %d files, ${mem_color}%d${ATLAS_RESET} lines index\n" "Memory" "$mem_count" "$mem_lines"
   fi
 
+  # CI status (if Forgejo token available)
+  if [ -n "${FORGEJO_TOKEN:-}" ]; then
+    local forgejo_url="${FORGEJO_BASE_URL:-http://192.168.10.75:3000}"
+    local ci_status=$(curl -sf --max-time 3 "${forgejo_url}/api/v1/repos/axoiq/synapse/statuses/$(git rev-parse HEAD 2>/dev/null)" \
+      -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    if isinstance(data, list) and data:
+        states = set(s.get('status','?') for s in data)
+        if 'failure' in states: print('❌ FAIL')
+        elif 'pending' in states: print('⏳ PENDING')
+        elif 'success' in states: print('✅ PASS')
+        else: print('⚪ N/A')
+    else: print('⚪ N/A')
+except: print('⚪ N/A')
+" 2>/dev/null || echo "⚪ N/A")
+    printf "  🔧 %-14s %s\n" "CI" "$ci_status"
+  fi
+
+  # Plugin version
+  local plugin_ver=$(_atlas_plugin_version 2>/dev/null || echo "?")
+  printf "  🔌 %-14s v%s\n" "Plugin" "$plugin_ver"
+
+  printf "\n"
+  _atlas_footer
+}
+
+# atlas ci — Show CI pipeline status from Forgejo Actions
+_atlas_ci() {
+  _atlas_header
+  printf "  ${ATLAS_BOLD}CI Pipeline Status${ATLAS_RESET}\n\n"
+
+  local forgejo_url="${FORGEJO_BASE_URL:-http://192.168.10.75:3000}"
+  local token="${FORGEJO_TOKEN:-}"
+
+  if [ -z "$token" ]; then
+    # Try loading from ~/.env
+    [ -f "$HOME/.env" ] && source "$HOME/.env" 2>/dev/null
+    token="${FORGEJO_TOKEN:-}"
+  fi
+
+  if [ -z "$token" ]; then
+    printf "  ${ATLAS_DIM}FORGEJO_TOKEN not set. Add to ~/.env${ATLAS_RESET}\n"
+    _atlas_footer
+    return 1
+  fi
+
+  # Detect repo from git remote
+  local repo=$(git remote get-url origin 2>/dev/null | sed 's|.*[:/]\([^/]*/[^/]*\)\.git|\1|' || echo "axoiq/synapse")
+  local sha=$(git rev-parse HEAD 2>/dev/null | head -c 12 || echo "?")
+  local branch=$(git branch --show-current 2>/dev/null || echo "?")
+
+  printf "  📂 ${ATLAS_CYAN}%s${ATLAS_RESET} @ ${ATLAS_DIM}%s${ATLAS_RESET} (%s)\n\n" "$repo" "$sha" "$branch"
+
+  # Fetch commit statuses
+  curl -sf --max-time 5 "${forgejo_url}/api/v1/repos/${repo}/statuses/${sha}" \
+    -H "Authorization: token ${token}" 2>/dev/null | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    if not isinstance(data, list) or not data:
+        print('  No CI status for this commit.')
+        sys.exit(0)
+    seen = set()
+    for s in data:
+        ctx = s.get('context', '?')
+        if ctx in seen:
+            continue
+        seen.add(ctx)
+        status = s.get('status', '?')
+        desc = s.get('description', '')[:40]
+        icon = '✅' if status == 'success' else '❌' if status in ('failure','error') else '⏳' if status == 'pending' else '⚪'
+        print(f'  {icon} {ctx}')
+        if desc:
+            print(f'     {desc}')
+except Exception as e:
+    print(f'  Error: {e}')
+" 2>/dev/null || printf "  ${ATLAS_DIM}Could not reach Forgejo API${ATLAS_RESET}\n"
+
+  printf "\n"
   _atlas_footer
 }
 
