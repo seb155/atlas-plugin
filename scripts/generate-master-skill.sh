@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Generate tier-specific or domain-specific atlas-assist SKILL.md
-# Usage: ./scripts/generate-master-skill.sh <tier|domain> <output_path> [--domain]
+# Usage: ./scripts/generate-master-skill.sh <tier|domain-name> <output_path>
 #
-# Tier mode (default): generates atlas-assist for tier profiles (admin, dev, user, worker)
-# Domain mode (--domain): generates atlas-{domain}-assist for domain profiles (core, dev, frontend, ...)
+# Tier mode:   admin, dev, user, worker  → reads profiles/{tier}.yaml
+# Domain mode: domain-core, domain-dev, domain-infra, etc. → reads profiles/domain-{name}.yaml
+#
+# Both modes produce an atlas-assist SKILL.md with skill lists from _metadata.yaml
+# SP-DEDUP Phase 2: metadata-driven skill catalog
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,17 +15,11 @@ cd "$ROOT_DIR"
 
 TIER="$1"
 OUTPUT="$2"
-DOMAIN_MODE="${3:-}"
 VERSION=$(cat VERSION | tr -d '[:space:]')
 
-# Domain mode uses domain profiles, tier mode uses tier profiles
-if [ "$DOMAIN_MODE" = "--domain" ]; then
-  PROFILE="profiles/domains/${TIER}.yaml"
-  SKILL_NAME="atlas-${TIER}-assist"
-else
-  PROFILE="profiles/${TIER}.yaml"
-  SKILL_NAME="atlas-assist"
-fi
+# All profiles live under profiles/{tier}.yaml (including domain-core, domain-dev, etc.)
+PROFILE="profiles/${TIER}.yaml"
+SKILL_NAME="atlas-assist"
 
 # Only admin tier exposes /atlas-assist in the slash command menu.
 # All other tiers/domains are hidden (still usable by CC's internal routing).

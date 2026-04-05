@@ -76,14 +76,16 @@ get_owned_skills() {
   yq -r ".skills | to_entries[] | select(.value.owner == \"$owner\") | .key" "$METADATA_FILE"
 }
 
-# Return domain-EXCLUSIVE skills (owned by this domain but NOT a tier name)
-# Tier owners (core/dev/admin) have their skills in tier plugins, not domain plugins
-get_domain_exclusive_skills() {
+# Return skills listed in a domain profile (reads profile YAML directly)
+# Domain plugins are functional bundles — they bundle ALL skills in their profile,
+# regardless of tier ownership in _metadata.yaml.
+# SP-DEDUP Phase 2: domains bundle by profile, tiers bundle by ownership.
+get_domain_profile_skills() {
   local domain="$1"
-  case "$domain" in
-    core|dev|admin) echo "" ;;  # These are tier names — no exclusive domain skills
-    *) get_owned_skills "$domain" ;;  # infra, enterprise, etc.
-  esac
+  local profile="profiles/domain-${domain}.yaml"
+  if [ -f "$profile" ]; then
+    yq -r '.skills // [] | .[]' "$profile" 2>/dev/null | grep -v '^atlas-assist$' || true
+  fi
 }
 
 build_tier() {
@@ -185,7 +187,7 @@ build_tier() {
   fi
 
   # Copy runtime scripts (exclude build-only scripts)
-  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh)
+  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh)
   mkdir -p "$output/scripts"
   for script in "${runtime_scripts[@]}"; do
     if [ -f "scripts/$script" ]; then
@@ -297,12 +299,12 @@ build_domain() {
   rm -rf "$output"
   mkdir -p "$output"/{.claude-plugin,skills,agents,hooks}
 
-  # SP-DEDUP: Copy only domain-EXCLUSIVE skills (not tier-owned)
-  # atlas-assist still gets the full domain skill list for reference
-  local owned_skills
-  owned_skills=$(get_domain_exclusive_skills "$name")
+  # SP-DEDUP Phase 2: Domain plugins are functional bundles — copy ALL skills
+  # from domain profile. Domains group by function, not by tier ownership.
+  local domain_skills
+  domain_skills=$(get_domain_profile_skills "$name")
 
-  for skill in $owned_skills; do
+  for skill in $domain_skills; do
     if [ -d "skills/$skill" ]; then
       cp -r "skills/$skill" "$output/skills/"
     else
@@ -366,7 +368,7 @@ build_domain() {
 
   # Runtime scripts — only core domain gets scripts/
   if [ "$name" = "core" ]; then
-    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh)
+    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh)
     mkdir -p "$output/scripts"
     for script in "${runtime_scripts[@]}"; do
       if [ -f "scripts/$script" ]; then

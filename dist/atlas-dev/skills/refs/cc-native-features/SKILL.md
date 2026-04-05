@@ -1,11 +1,11 @@
 ---
 name: cc-native-features
-description: "Claude Code v2.1.83 native features reference — effort system, session management, auto-memory, worktrees, task management, hooks, agent frontmatter, plugin settings, keyboard shortcuts, statusline. SSoT for CC capabilities that ATLAS leverages."
+description: "Claude Code v2.1.92 native features reference — effort system, session management, auto-memory, worktrees, task management, hooks, agent frontmatter, plugin settings, keyboard shortcuts, statusline. SSoT for CC capabilities that ATLAS leverages."
 ---
 
-# Claude Code Native Features Reference (v2.1.83)
+# Claude Code Native Features Reference (v2.1.92)
 
-> SSoT for CC features that ATLAS leverages. Updated: 2026-03-25.
+> SSoT for CC features that ATLAS leverages. Updated: 2026-04-04.
 > Self-improving: update this file when CC releases new features via `/atlas platform-update`.
 
 ## Effort System (v2.1.72 — simplified)

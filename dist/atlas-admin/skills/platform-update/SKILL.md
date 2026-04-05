@@ -76,29 +76,28 @@ Present findings as a scored audit:
 
 | Component          | Current           | SOTA              | Status |
 |--------------------|-------------------|-------------------|--------|
-| Claude Code        | v2.1.74           | v2.1.80           | ⚠️ UPDATE |
-| Opus Model         | claude-opus-4-6   | claude-opus-4-6[1m] | ⚠️ NOT 1M |
-| Sonnet Model       | claude-sonnet-4-6 | claude-sonnet-4-6 | ✅ CURRENT |
+| Claude Code        | (detected)        | v2.1.92           | (auto) |
+| Opus Model         | claude-opus-4-6[1m] | claude-opus-4-6[1m] | ✅ 1M NATIVE |
+| Sonnet Model       | claude-sonnet-4-6 | claude-sonnet-4-6 | ✅ 1M NATIVE |
 | Haiku Model        | claude-haiku-4-5  | claude-haiku-4-5  | ✅ CURRENT |
-| Subagent Model     | (not set)         | haiku             | ❌ MISSING |
-| Autocompact        | (not set)         | 50-70%            | ⚠️ DEFAULT |
-| Plugin Version     | 3.1.0             | 3.1.0             | ✅ CURRENT |
-| Forgejo            | 14.0.3            | 14.0.3            | ✅ CURRENT |
-| Runner             | v12.7.2           | v12.7.2           | ✅ CURRENT |
+| Autocompact        | (detected)        | 85%               | (auto) |
+| Plugin Version     | (detected)        | (detected)        | (auto) |
+| Forgejo            | (detected)        | (detected)        | (auto) |
+| Runner             | (detected)        | (detected)        | (auto) |
 
-📈 Score: 7/10
+📈 Score: (auto-calculated from detection)
 
-🔴 HIGH PRIORITY:
-  1. Enable 1M context: ANTHROPIC_DEFAULT_OPUS_MODEL='claude-opus-4-6[1m]'
-  2. Set subagent model: CLAUDE_CODE_SUBAGENT_MODEL=haiku (3x cost savings)
+🔴 HIGH PRIORITY (if detected):
+  1. CC version behind SOTA → `claude update`
+  2. ANTHROPIC_DEFAULT_OPUS_MODEL not set → add to settings.json env
 
 🟡 RECOMMENDED:
-  3. Update CC: claude update (v2.1.74 → v2.1.80)
-  4. Set autocompact: CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=60
+  3. Autocompact not set → set to 85% for 1M context
+  4. Plugin version behind → `make dev` in plugin source
 
-🟢 OPTIONAL:
-  5. New CC feature: StatusLine API (model info in status bar)
-  6. New hook type: http hooks for external integrations
+🟢 NOTE:
+  5. Opus 4.6 + Sonnet 4.6 have 1M context NATIVELY (API level, April 2026)
+  6. CC 2.1.75+ resolves shorthand "opus"/"sonnet" to 1M for Max subscribers
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

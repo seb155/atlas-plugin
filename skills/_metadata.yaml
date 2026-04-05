@@ -1,512 +1,591 @@
 # ATLAS Skills Metadata — Single Source of Truth
-# Used by: scripts/generate-master-skill.sh (atlas-assist generation)
+# Used by: build.sh (tier+domain builds), scripts/generate-master-skill.sh (atlas-assist generation)
 #
-# owner: which plugin OWNS this skill (where the SKILL.md lives in dist/)
+# owner: which TIER plugin OWNS this skill (where the SKILL.md lives in tier dist/)
 #   core = base tier (everyone), dev = dev delta, admin = admin delta
 #   infra/enterprise = domain-exclusive (not in any tier)
 #
-# Updated: 2026-03-31
+# domains: which DOMAIN plugins BUNDLE this skill (functional grouping)
+#   A skill can be owned by 'admin' (tier) but bundled in 'infra' (domain)
+#   Skills without domains are tier-exclusive (admin only, no domain bundle)
+#
+# SP-DEDUP Phase 2: Tier builds use 'owner', Domain builds use profile YAML directly.
+#
+# Updated: 2026-04-04
 
 # Category header emojis (for grouped skill lists)
 category_emojis:
-  Planning: "\U0001F3D7\uFE0F"       # 🏗️
-  Implementation: "\u26A1"             # ⚡
-  Quality: "\U0001F4CA"               # 📊
-  Ship: "\U0001F4E6"                  # 📦
-  Deploy: "\U0001F3AF"                # 🎯
-  Optimize: "\U0001F9EC"              # 🧬
-  Knowledge: "\U0001F4DA"             # 📚
-  Meta: "\U0001F6E1\uFE0F"            # 🛡️
-  Personal: "\U0001F464"              # 👤
-  Infrastructure: "\U0001F527"         # 🔧
-  Security: "\U0001F510"              # 🔐
-  Project: "\U0001F4CC"               # 📌
-  Governance: "\U0001F3E2"            # 🏢
+  Planning: "🏗️"
+  Implementation: "⚡"
+  Quality: "📊"
+  Ship: "📦"
+  Deploy: "🎯"
+  Optimize: "🧬"
+  Knowledge: "📚"
+  Meta: "🛡️"
+  Personal: "👤"
+  Infrastructure: "🔧"
+  Security: "🔐"
+  Project: "📌"
+  Governance: "🏢"
 
 # Per-skill metadata
 skills:
-  # ═══════════════════════════════════════
+  # ===========================================
   # CORE tier (base — 14 skills)
-  # ═══════════════════════════════════════
+  # ===========================================
   atlas-doctor:
-    emoji: "\U0001FA7A"               # 🩺
+    emoji: "🩺"
     category: Meta
     owner: core
+    domains: [core]
     description: "System health check with 8-category dashboard and auto-fix"
 
   atlas-location:
-    emoji: "\U0001F4CD"               # 📍
+    emoji: "📍"
     category: Meta
     owner: core
+    domains: [core]
     description: "Location profiles, WiFi network trust, and security adaptation"
 
   atlas-onboarding:
-    emoji: "\U0001F44B"               # 👋
+    emoji: "👋"
     category: Meta
     owner: core
+    domains: [core]
     description: "Guided 5-phase setup wizard for new users"
 
   browser-automation:
-    emoji: "\U0001F310"               # 🌐
+    emoji: "🌐"
     category: Meta
     owner: core
+    domains: [frontend]
     description: "Browser automation for E2E testing and visual QA"
 
   context-discovery:
-    emoji: "\U0001F52D"               # 🔭
+    emoji: "🔭"
     category: Planning
     owner: core
+    domains: [core]
     description: "Auto-scan project + CLAUDE.md audit + codemap generation"
 
   deep-research:
-    emoji: "\U0001F4DA"               # 📚
+    emoji: "📚"
     category: Knowledge
     owner: core
+    domains: [core]
     description: "Multi-query decomposition → search → triangulate → synthesize"
 
   document-generator:
-    emoji: "\U0001F4C4"               # 📄
+    emoji: "📄"
     category: Knowledge
     owner: core
+    domains: [core]
     description: "Generate PPTX/DOCX/XLSX with storytelling and layouts"
 
   knowledge-builder:
-    emoji: "\U0001F9E0"               # 🧠
+    emoji: "🧠"
     category: Personal
     owner: core
+    domains: [core]
     description: "Learn facts/preferences/relationships. Confidence-based"
 
   morning-brief:
-    emoji: "\u2600\uFE0F"             # ☀️
+    emoji: "☀️"
     category: Personal
     owner: core
+    domains: [core]
     description: "Compile daily brief: agenda + emails + tasks + suggestions"
 
   note-capture:
-    emoji: "\U0001F4DD"               # 📝
+    emoji: "📝"
     category: Personal
     owner: core
+    domains: [core]
     description: "Quick capture notes with tags, context, linked to meetings/projects"
 
   reminder-scheduler:
-    emoji: "\u23F0"                    # ⏰
+    emoji: "⏰"
     category: Personal
     owner: core
+    domains: [core]
     description: "Schedule reminders via CronCreate"
 
   scope-check:
-    emoji: "\U0001F6E1\uFE0F"         # 🛡️
+    emoji: "🛡️"
     category: Meta
     owner: core
+    domains: [core]
     description: "Detect drift. Are you working outside original scope?"
 
   user-profiler:
-    emoji: "\U0001F464"               # 👤
+    emoji: "👤"
     category: Personal
     owner: core
+    domains: [core]
     description: "Build and display user's complete profile"
 
   youtube-transcript:
-    emoji: "\U0001F3AC"               # 🎬
+    emoji: "🎬"
     category: Knowledge
     owner: core
+    domains: [core]
     description: "Extract YouTube video transcripts to timestamped markdown files"
 
-  # ═══════════════════════════════════════
+  # ===========================================
   # DEV tier (delta — 25 skills)
-  # ═══════════════════════════════════════
+  # ===========================================
   brainstorming:
-    emoji: "\U0001F4A1"               # 💡
+    emoji: "💡"
     category: Planning
     owner: dev
+    domains: [dev]
     description: "Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval"
 
   ci-management:
-    emoji: "\U0001F527"               # 🔧
+    emoji: "🔧"
     category: Deploy
     owner: dev
+    domains: [dev]
     description: "CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet"
 
   code-review:
-    emoji: "\U0001F50D"               # 🔍
+    emoji: "🔍"
     category: Quality
     owner: dev
+    domains: [dev]
     description: "Code review with confidence filtering. Local or PR mode"
 
   code-simplify:
-    emoji: "\u2728"                    # ✨
+    emoji: "✨"
     category: Quality
     owner: dev
+    domains: [dev]
     description: "Refactoring for clarity, consistency, maintainability"
 
   decision-log:
-    emoji: "\U0001F4CB"               # 📋
+    emoji: "📋"
     category: Meta
     owner: dev
+    domains: [dev]
     description: "Log architectural decisions to .claude/decisions.jsonl"
 
   engineering-ops:
-    emoji: "\u2699\uFE0F"             # ⚙️
+    emoji: "⚙️"
     category: Optimize
     owner: dev
+    domains: [infra]
     description: "I&C maintenance + 4-agent estimation pipeline"
 
   executing-plans:
-    emoji: "\u26A1"                    # ⚡
+    emoji: "⚡"
     category: Implementation
     owner: dev
+    domains: [dev]
     description: "Load plan → TaskCreate per step → execute with subagents"
 
   execution-strategy:
-    emoji: "\U0001F4CB"               # 📋
+    emoji: "📋"
     category: Planning
     owner: dev
+    domains: [dev]
     description: "Analyze plan → optimal execution strategy: model allocation, parallel vs sequential, cost estimation"
 
   finishing-branch:
-    emoji: "\U0001F4E6"               # 📦
+    emoji: "📦"
     category: Ship
     owner: dev
+    domains: [dev]
     description: "Commit + push + PR + CI + cleanup (conventional commits)"
 
   frontend-design:
-    emoji: "\U0001F3A8"               # 🎨
+    emoji: "🎨"
     category: Planning
     owner: dev
+    domains: [frontend]
     description: "UI/UX implementation from specs. Distinctive, production-grade"
 
   frontend-workflow:
-    emoji: "\U0001F3A8"               # 🎨
+    emoji: "🎨"
     category: Planning
     owner: dev
+    domains: [frontend]
     description: "6-phase iterative UX development with architectural gates and HITL"
 
   git-worktrees:
-    emoji: "\U0001F33F"               # 🌿
+    emoji: "🌿"
     category: Implementation
     owner: dev
+    domains: [dev]
     description: "Isolated branch per feature. Safety verification (Forgejo-native)"
 
   hookify:
-    emoji: "\U0001FA9D"               # 🪝
+    emoji: "🪝"
     category: Meta
     owner: dev
+    domains: [dev]
     description: "Create Claude Code hooks from conversation patterns"
 
   plan-builder:
-    emoji: "\U0001F3D7\uFE0F"         # 🏗️
+    emoji: "🏗️"
     category: Planning
     owner: dev
+    domains: [dev]
     description: "Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15"
 
   plugin-builder:
-    emoji: "\U0001F50C"               # 🔌
+    emoji: "🔌"
     category: Meta
     owner: dev
+    domains: [dev]
     description: "Build Claude Code plugins from scratch with correct structure and validation"
 
   session-pickup:
-    emoji: "\U0001F504"               # 🔄
+    emoji: "🔄"
     category: Meta
     owner: dev
+    domains: [core]
     description: "Resume from handoff file — context reload, rich briefing, scope-locked drill-in"
 
   session-retrospective:
-    emoji: "\U0001F504"               # 🔄
+    emoji: "🔄"
     category: Meta
     owner: dev
+    domains: [core]
     description: "End-of-session lessons + session close + handoff context"
 
   skill-management:
-    emoji: "\U0001F9E9"               # 🧩
+    emoji: "🧩"
     category: Meta
     owner: dev
+    domains: [dev]
     description: "Create, improve, benchmark skills. Plugin development"
 
   subagent-dispatch:
-    emoji: "\U0001F916"               # 🤖
+    emoji: "🤖"
     category: Implementation
     owner: dev
+    domains: [dev]
     description: "Dispatch Sonnet subagents per task. 2-stage review"
 
   systematic-debugging:
-    emoji: "\U0001F52C"               # 🔬
+    emoji: "🔬"
     category: Quality
     owner: dev
+    domains: [dev]
     description: "Hypothesize → verify → fix. Max 2 attempts then escalate"
 
   tdd:
-    emoji: "\U0001F9EA"               # 🧪
+    emoji: "🧪"
     category: Implementation
     owner: dev
+    domains: [dev]
     description: "Failing test → minimal impl → pass → commit. Strict TDD cycle"
 
   test-orchestrator:
-    emoji: "\U0001F9EA"               # 🧪
+    emoji: "🧪"
     category: Quality
     owner: dev
+    domains: [dev]
     description: "Test pyramid orchestration: unit, integration, E2E, security, coverage"
 
   verification:
-    emoji: "\U0001F4CA"               # 📊
+    emoji: "📊"
     category: Quality
     owner: dev
+    domains: [dev]
     description: "L1-L4 tests + E2E + security scan + perf benchmarks"
 
   vision-alignment:
-    emoji: "\U0001F9ED"               # 🧭
+    emoji: "🧭"
     category: Planning
     owner: dev
+    domains: [enterprise]
     description: "Strategic idea intake — scan mega plan, sub-plans, features, backlog before deciding"
 
   visual-generator:
-    emoji: "\U0001F3A8"               # 🎨
+    emoji: "🎨"
     category: Knowledge
     owner: dev
     description: "Generate diagrams, infographics, photos via Gemini API (Imagen 4 + Flash)"
 
-  # ═══════════════════════════════════════
-  # ADMIN tier (delta — 27 skills)
-  # ═══════════════════════════════════════
+  # ===========================================
+  # ADMIN tier (delta — 33 skills)
+  # ===========================================
   atlas-dev-self:
-    emoji: "\U0001F501"               # 🔁
+    emoji: "🔁"
     category: Meta
     owner: admin
+    domains: [enterprise]
     description: "Self-development workflow for the ATLAS plugin itself"
 
   atlas-team:
-    emoji: "\U0001F465"               # 👥
+    emoji: "👥"
     category: Implementation
     owner: admin
+    domains: [enterprise]
     description: "Agent Teams blueprints — spawn coordinated worker squads in tmux panes (jarvis, feature, debug, review, audit)"
 
   atlas-vault:
-    emoji: "\U0001F510"               # 🔐
+    emoji: "🔐"
     category: Security
     owner: admin
+    domains: [core]
     description: "Ingest user vault for personalized behavior and trust-based access"
 
   atlas-workspace-setup:
-    emoji: "\U0001F527"               # 🔧
+    emoji: "🔧"
     category: Meta
     owner: admin
+    domains: [core]
     description: "Configure multi-session development workspace: tmux, split-screen, Agent Teams"
 
   code-analysis:
-    emoji: "\U0001F50E"               # 🔎
+    emoji: "🔎"
     category: Quality
     owner: admin
+    domains: [dev]
     description: "Codebase analysis: dead code, dependency graphs, dataflow tracing"
 
   devops-deploy:
-    emoji: "\U0001F3AF"               # 🎯
+    emoji: "🎯"
     category: Deploy
     owner: admin
+    domains: [infra]
     description: "Deploy to any env with health checks, validators, data sync"
 
   enterprise-audit:
-    emoji: "\U0001F3E2"               # 🏢
+    emoji: "🏢"
     category: Governance
     owner: admin
+    domains: [enterprise]
     description: "14-dimension enterprise readiness audit for due diligence"
 
   episode-create:
-    emoji: "\U0001F4D6"               # 📖
+    emoji: "📖"
     category: Personal
     owner: admin
     description: "Create narrative episode capturing session experiential context"
 
   experiment-loop:
-    emoji: "\U0001F9EC"               # 🧬
+    emoji: "🧬"
     category: Optimize
     owner: admin
+    domains: [enterprise]
     description: "Autonomous optimization (autoresearch pattern)"
 
   feature-board:
-    emoji: "\U0001F4CC"               # 📌
+    emoji: "📌"
     category: Project
     owner: admin
+    domains: [enterprise]
     description: "Feature registry dashboard — kanban, validation matrix, roadmap"
 
   infrastructure-change:
-    emoji: "\U0001F3D7\uFE0F"         # 🏗️
+    emoji: "🏗️"
     category: Infrastructure
     owner: admin
+    domains: [infra]
     description: "CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation"
 
   infrastructure-ops:
-    emoji: "\U0001F527"               # 🔧
+    emoji: "🔧"
     category: Infrastructure
     owner: admin
+    domains: [infra]
     description: "Infrastructure management: VMs, containers, networking, monitoring"
 
   intuition-log:
-    emoji: "\U0001F4AD"               # 💭
+    emoji: "💭"
     category: Personal
     owner: admin
     description: "Capture gut feelings and emerging patterns as persistent intuition files"
 
   knowledge-engine:
-    emoji: "\U0001F5C2\uFE0F"         # 🗂️
+    emoji: "🗂️"
     category: Knowledge
     owner: admin
+    domains: [enterprise]
     description: "Enterprise knowledge layer — search, ingest, discover, vectorize"
 
   knowledge-manager:
-    emoji: "\U0001F4D6"               # 📖
+    emoji: "📖"
     category: Knowledge
     owner: admin
+    domains: [enterprise]
     description: "Enterprise knowledge layer — coverage, discovery, search, vault"
 
   marketplace-manager:
-    emoji: "\U0001F3EA"               # 🏪
+    emoji: "🏪"
     category: Meta
     owner: admin
+    domains: [enterprise]
     description: "Marketplace plugin management — publish, version, distribute"
 
   memory-dream:
-    emoji: "\U0001F319"               # 🌙
+    emoji: "🌙"
     category: Meta
     owner: admin
+    domains: [core]
     description: "Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather, consolidate, prune"
 
   onboarding-check:
-    emoji: "\u2705"                    # ✅
+    emoji: "✅"
     category: Meta
     owner: admin
+    domains: [enterprise]
     description: "Team readiness audit — 12-check grade A-F with auto-fix mode"
 
   plan-review:
-    emoji: "\U0001F50D"               # 🔍
+    emoji: "🔍"
     category: Quality
     owner: admin
+    domains: [enterprise]
     description: "Iterative plan review with simulation, consolidation, and HITL gates"
 
   platform-update:
-    emoji: "\U0001F199"               # 🆙
+    emoji: "🆙"
     category: Meta
     owner: admin
+    domains: [enterprise]
     description: "SOTA audit + auto-update for ATLAS plugin and CC environment"
 
   product-health:
-    emoji: "\U0001F3E5"               # 🏥
+    emoji: "🏥"
     category: Quality
     owner: admin
+    domains: [frontend]
     description: "Application reality audit — live validation via API, browser, and tests"
 
   programme-manager:
-    emoji: "\U0001F4CA"               # 📊
+    emoji: "📊"
     category: Project
     owner: admin
+    domains: [enterprise]
     description: "Programme management — mega plan tracking, sub-plan coordination"
 
   relationship-manager:
-    emoji: "\U0001F91D"               # 🤝
+    emoji: "🤝"
     category: Personal
     owner: admin
     description: "Create or update deep relationship profiles for team members and collaborators"
 
   security-audit:
-    emoji: "\U0001F510"               # 🔐
+    emoji: "🔐"
     category: Security
     owner: admin
+    domains: [infra]
     description: "Security scanning, RBAC audit, vulnerability assessment, compliance"
 
   session-spawn:
-    emoji: "\U0001F680"               # 🚀
+    emoji: "🚀"
     category: Meta
     owner: admin
+    domains: [core]
     description: "Multi-session orchestration — spawn/continue/list CC sessions in tmux"
 
   statusline-setup:
-    emoji: "\U0001F4DF"               # 📟
+    emoji: "📟"
     category: Infrastructure
     owner: admin
+    domains: [frontend]
     description: "Configure CShip + Starship status line for Claude Code sessions"
 
   ultrathink:
-    emoji: "\U0001F9E0"               # 🧠
+    emoji: "🧠"
     category: Meta
     owner: admin
+    domains: [dev]
     description: "Deep reasoning mode — maximum thinking budget for complex architectural decisions"
 
   atlas-analytics:
-    emoji: "\U0001F4CA"               # 📊
+    emoji: "📊"
     category: Meta
     owner: admin
     description: "Hook activity analytics dashboard — task-log, permission events, session stats"
 
   gms-cockpit:
-    emoji: "\U0001F3ED"               # 🏭
+    emoji: "🏭"
     category: Project
     owner: admin
     description: "GMS POC command center — adoption tracking, KC stats, pilier coverage, magic moments"
 
   gms-profiler:
-    emoji: "\U0001F464"               # 👤
+    emoji: "👤"
     category: Project
     owner: admin
     description: "MSE 4-layer auto-enriching profiles — discipline, personal, enterprise, team. KC evidence + bus-factor analysis"
 
   idle-curiosity:
-    emoji: "\U0001F50D"               # 🔍
+    emoji: "🔍"
     category: Cognitive
     owner: admin
     description: "Autonomous exploration engine — discovers under-explored topics and knowledge gaps. HITL gated."
 
   gms-insights:
-    emoji: "\U0001F517"               # 🔗
+    emoji: "🔗"
     category: Project
     owner: admin
     description: "Cross-Discipline Insight Engine — detect tacit connections between disciplines via shared KC tags. Pilier 1"
 
   gms-onboard:
-    emoji: "\U0001F393"               # 🎓
+    emoji: "🎓"
     category: Project
     owner: admin
     description: "Onboarding Auto-Playbook Generator — 4-week structured playbook for new MSE. Pilier 1 (RH)"
 
-  # ═══════════════════════════════════════
-  # DOMAIN-EXCLUSIVE skills
-  # ═══════════════════════════════════════
+  # ===========================================
+  # DOMAIN-EXCLUSIVE: infra
+  # ===========================================
   mesh-diagnostics:
-    emoji: "\U0001F50C"               # 🔌
+    emoji: "🔌"
     category: Infrastructure
     owner: infra
+    domains: [infra]
     description: "NetBird and Tailscale mesh network health diagnostics"
 
   network-audit:
-    emoji: "\U0001F310"               # 🌐
+    emoji: "🌐"
     category: Infrastructure
     owner: infra
+    domains: [infra]
     description: "Network infrastructure audit: DNS, ports, VLAN, SSL, firewall"
 
   proxmox-admin:
-    emoji: "\U0001F5A5\uFE0F"         # 🖥️
+    emoji: "🖥️"
     category: Infrastructure
     owner: infra
+    domains: [infra]
     description: "Proxmox VE administration: VM/LXC lifecycle, storage, GPU passthrough, clustering"
 
   iac-orchestrator:
-    emoji: "\U0001F3D7\uFE0F"         # 🏗️
+    emoji: "🏗️"
     category: Infrastructure
     owner: infra
+    domains: [infra]
     description: "Infrastructure as Code: Terraform/OpenTofu plans, cloud-init, state management"
 
   hardware-capacity:
-    emoji: "\U0001F4CA"               # 📊
+    emoji: "📊"
     category: Infrastructure
     owner: infra
+    domains: [infra]
     description: "Hardware inventory and capacity planning: CPU/RAM/disk/GPU audit and projections"
 
   infra-inventory:
-    emoji: "\U0001F50D"               # 🔍
+    emoji: "🔍"
     category: Infrastructure
     owner: infra
+    domains: [infra]
     description: "Live infrastructure scanning: PVE nodes, VMs, storage, GPUs. Drift detection."
 
+  # ===========================================
+  # DOMAIN-EXCLUSIVE: enterprise
+  # ===========================================
   self-propose:
-    emoji: "\U0001F504"               # 🔄
+    emoji: "🔄"
     category: Meta
     owner: enterprise
+    domains: [enterprise]
     description: "Self-improvement engine. Aggregates dream reports, retrospectives, workflow analytics"
+
