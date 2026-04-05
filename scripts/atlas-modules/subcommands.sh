@@ -122,6 +122,27 @@ _atlas_plans() {
   bash "$script" "$subcmd" "$plans_dir"
 }
 
+# atlas complexity "description" — Classify task complexity for model selection
+_atlas_complexity() {
+  local desc="$*"
+  [ -z "$desc" ] && { echo "Usage: atlas complexity \"task description\""; return 1; }
+  local script="${ATLAS_SHELL_DIR}/../scripts/task-complexity.sh"
+  [ -f "$script" ] || script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/task-complexity.sh"
+  [ -f "$script" ] || { echo "task-complexity.sh not found"; return 1; }
+  local result=$(bash "$script" "$desc")
+  local level=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" 2>/dev/null)
+  local model=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['model'])" 2>/dev/null)
+  local score=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['score'])" 2>/dev/null)
+  local icon="🟢"
+  case "$level" in
+    trivial) icon="🟢" ;;
+    moderate) icon="🟡" ;;
+    complex) icon="🟠" ;;
+    architectural) icon="🔴" ;;
+  esac
+  echo "${icon} ${level} → ${model} (score: ${score})"
+}
+
 # atlas ci — Show CI pipeline status from Forgejo Actions
 _atlas_ci() {
   _atlas_header

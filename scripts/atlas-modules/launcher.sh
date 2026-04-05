@@ -215,6 +215,7 @@ atlas() {
     topics)  _atlas_topics_list; return ;;
     update)  _atlas_update; return ;;
     ci) _atlas_ci; return ;;
+    complexity) shift; _atlas_complexity "$@"; return ;;
     plans) shift; _atlas_plans "$@"; return ;;
     worktrees|wt) _atlas_worktrees; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
