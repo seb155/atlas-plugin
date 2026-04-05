@@ -161,13 +161,19 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "TaskCreate",
+        "matcher": "TaskCreate|TaskUpdate",
         "hooks": [
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/task-created-log\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-state-writer\"",
+            "async": true,
+            "timeout": 3
           }
         ]
       },
