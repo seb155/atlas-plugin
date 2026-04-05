@@ -85,32 +85,30 @@ Every team follows this exact lifecycle:
 
 Fallback: if named agent not found, use `subagent_type: "general-purpose"` with the same prompt.
 
-### Model ID Reference — 1M Context (CRITICAL)
+### Model ID Reference (Updated 2026-04-04)
 
-**The `model:` shorthand and full ID activate different context windows:**
+**CC 2.1.75+ (Max subscription): Shorthand resolves to 1M natively.**
 
-| Use case | `model:` param | Context window |
-|----------|---------------|----------------|
-| Default (200K) | `"opus"` or `"sonnet"` | 200K tokens |
-| 1M context | `"claude-opus-4-6[1m]"` | 1M tokens |
-| 1M Sonnet | `"claude-sonnet-4-6[1m]"` | 1M tokens |
+| Model | Shorthand | Resolves to | Context | Max Output |
+|-------|-----------|-------------|---------|------------|
+| Opus 4.6 | `"opus"` | `claude-opus-4-6[1m]` | 1M | 128K |
+| Sonnet 4.6 | `"sonnet"` | `claude-sonnet-4-6` | 1M | 64K |
+| Haiku 4.5 | `"haiku"` | `claude-haiku-4-5-20251001` | 200K | 64K |
 
-**CRITICAL rules for 1M context agents**:
-- The `[1m]` suffix in the model ID is what activates 1M context — shorthand NEVER gets it
-- AGENT.md frontmatter `model:` is documentation only — CC does NOT auto-apply it when spawning
-- Always pass `model:` explicitly via the Agent tool `model:` parameter
-- For 1M context: pass the full ID `"claude-opus-4-6[1m]"` — not `"opus"`
+**Rules for Agent Teams:**
+- Shorthand `"opus"` and `"sonnet"` give 1M context on CC 2.1.75+ (Max). No workaround needed.
+- Omitting `model:` inherits from parent session (1M if parent is Opus/Sonnet 4.6)
+- AGENT.md frontmatter `model:` is respected by CC for agent spawning
+- `ANTHROPIC_DEFAULT_OPUS_MODEL='claude-opus-4-6[1m]'` env var in settings.json as safety net
 
 ```
-# 200K (default) — shorthand OK:
-Agent(name: "engineer", model: "sonnet", ...)
+# All agents get 1M context on CC 2.1.75+ (Max):
+Agent(name: "lead", model: "opus", ...)     # 1M context
+Agent(name: "engineer", model: "sonnet", ...)  # 1M context
+Agent(name: "scanner", model: "haiku", ...)    # 200K context (Haiku native)
 
-# 1M context — full ID required:
-Agent(name: "lead", model: "claude-opus-4-6[1m]", ...)
-
-# Caveat (CC 2.1.74): Agent tool model param only accepts shorthand OR full ID.
-# If 1M is needed for a worker, ensure the parent session is already on 1M model.
-# The [1m] suffix propagates via AGENT.md but NOT via Agent tool model: param shorthand.
+# Omit model to inherit from parent:
+Agent(name: "worker", ...)  # Inherits parent model + context
 ```
 
 ## Blueprints

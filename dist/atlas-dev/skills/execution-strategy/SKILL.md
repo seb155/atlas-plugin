@@ -13,6 +13,15 @@ optimal model, execution mode, parallelism, and cost for each task.
 
 **Announce**: "Analyzing plan and building execution strategy..."
 
+## Reference Files
+
+| File | Purpose |
+|------|---------|
+| `manifest-schema.yaml` | Full manifest schema with field docs, pricing reference, token heuristics |
+| `model-rules.yaml` | Task classification signals, model defaults, complexity factors, downgrade chain, parallelism rules |
+
+Load these YAML files from the skill directory to inform Steps 4-7 below.
+
 ## Invocation
 
 ```bash

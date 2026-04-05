@@ -1,6 +1,6 @@
 {
   "name": "atlas-worker",
-  "version": "4.26.2",
+  "version": "4.26.3",
   "description": "ATLAS Worker — AXOIQ AI Engineering Assistant (worker tier)",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
