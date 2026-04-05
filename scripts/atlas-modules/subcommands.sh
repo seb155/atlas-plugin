@@ -112,7 +112,7 @@ _atlas_plans() {
   [ -d "$plans_dir" ] || plans_dir="$(git rev-parse --show-toplevel 2>/dev/null)/.blueprint/plans"
   [ -d "$plans_dir" ] || { echo "No .blueprint/plans/ found"; return 1; }
 
-  local subcmd="${1:-scan}"
+  local subcmd="${1:-scan}"  # scan, stale, roadmap
   local script="${ATLAS_SHELL_DIR}/../scripts/plan-lifecycle.sh"
 
   # Fallback to plugin scripts if not in shell dir

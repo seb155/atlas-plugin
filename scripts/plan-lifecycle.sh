@@ -172,11 +172,72 @@ cmd_set() {
   fi
 }
 
+# ── Mermaid Roadmap ────────────────────────────────────────────
+
+cmd_roadmap() {
+  local plans_dir="${1:-.blueprint/plans}"
+  [ -d "$plans_dir" ] || { echo "ERROR: $plans_dir not found" >&2; exit 1; }
+  # Disable strict unbound for glob iteration
+  set +u
+
+  printf '```mermaid\n'
+  printf 'gantt\n'
+  printf '    title ATLAS Programme Roadmap\n'
+  printf '    dateFormat YYYY-MM-DD\n'
+  printf '    axisFormat %%b %%d\n'
+  printf '\n'
+
+  # Group by status
+  local -A SECTIONS
+  SECTIONS[EXECUTING]="section ⚡ Executing"
+  SECTIONS[APPROVED]="section 📋 Approved"
+  SECTIONS[DRAFT]="section 📝 Draft"
+
+  for state in EXECUTING APPROVED DRAFT; do
+    local found_in_section=false
+    for f in "$plans_dir"/sp*.md; do
+      [ -f "$f" ] || continue
+      local name=$(basename "$f" .md)
+      [[ "$name" == *"-agent-"* ]] && continue
+
+      local status=$(extract_status "$f")
+      [ "$status" != "$state" ] && continue
+
+      if ! $found_in_section; then
+        echo "    ${SECTIONS[$state]}"
+        found_in_section=true
+      fi
+
+      local effort=$(extract_effort "$f" | grep -oP '\d+' | head -1 || echo "40")
+      [ -z "$effort" ] && effort=40
+      local weeks=$(( (effort + 24) / 25 ))  # ~25h/week
+      [ "$weeks" -lt 1 ] && weeks=1
+
+      # Status tag
+      local tag=""
+      case "$state" in
+        EXECUTING) tag="active," ;;
+        APPROVED) tag="" ;;
+        DRAFT) tag="done," ;;  # Mermaid uses 'done' for completed visual, we invert for drafts
+      esac
+
+      # Display name (truncate)
+      local display="$name"
+      [ ${#display} -gt 30 ] && display="${display:0:27}..."
+
+      echo "    ${display} :${tag} ${weeks}w"
+    done
+  done
+
+  printf '```\n'
+}
+
 # ── Main ──────────────────────────────────────────────────────
 
 case "${1:-scan}" in
-  scan)  shift 2>/dev/null || true; cmd_scan "$@" ;;
-  stale) shift 2>/dev/null || true; cmd_stale "$@" ;;
-  set)   shift; cmd_set "$@" ;;
-  *)     echo "Usage: plan-lifecycle.sh {scan|stale|set} [args]"; exit 1 ;;
+  scan)    shift 2>/dev/null || true; cmd_scan "$@" ;;
+  stale)   shift 2>/dev/null || true; cmd_stale "$@" ;;
+  set)     shift; cmd_set "$@" ;;
+  roadmap) shift 2>/dev/null || true; cmd_roadmap "$@" ;;
+  *)       echo "Usage: plan-lifecycle.sh {scan|stale|set|roadmap} [args]"; exit 1 ;;
 esac
