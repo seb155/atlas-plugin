@@ -507,6 +507,45 @@ if [ -n "$_topic_msg" ]; then
   BADGE+=$'\n'"🏛️ ${_topic_msg}"
 fi
 
+# ─── Session Resume Check (SP-EVOLUTION P6.2) ──────────────────
+_resume_msg=""
+_session_state="${HOME}/.claude/session-state.json"
+if [ -f "$_session_state" ]; then
+  _resume_info=$(python3 -c "
+import json, os
+from datetime import datetime
+try:
+    with open('${_session_state}') as f:
+        s = json.load(f)
+    last = s.get('last_activity', '')
+    if not last:
+        exit(0)
+    # Check if session was active in last 24h
+    last_dt = datetime.fromisoformat(last)
+    age_h = (datetime.now() - last_dt).total_seconds() / 3600
+    if age_h > 24:
+        exit(0)
+    plan = s.get('active_plan', '')
+    progress = s.get('progress', '0/0')
+    branch = s.get('branch', '?')
+    wt = s.get('worktree', '')
+    wt_info = f' (worktree: {wt})' if wt else ''
+    tasks = s.get('tasks', {})
+    in_progress = [k for k, v in tasks.items() if v == 'in_progress']
+    ip_str = f', active: #{in_progress[0]}' if in_progress else ''
+    print(f'📋 Session resume: {progress} tasks{ip_str} | plan: {plan} | branch: {branch}{wt_info} | {age_h:.0f}h ago')
+except:
+    pass
+" 2>/dev/null || true)
+  if [ -n "$_resume_info" ]; then
+    _resume_msg="$_resume_info"
+  fi
+fi
+
+if [ -n "$_resume_msg" ]; then
+  BADGE+=$'\n'"🏛️ ${_resume_msg}"
+fi
+
 # Combine badge + feature summary into context
 FULL_CONTEXT="${BADGE}"
 if [ -n "$FEATURE_SUMMARY" ]; then
