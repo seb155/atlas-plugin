@@ -58,8 +58,10 @@ cmd_scan() {
     STATUS_FILES[$state]=""
   done
 
-  printf "  %-40s %-12s %-8s %-12s\n" "PLAN" "STATUS" "SCORE" "EFFORT"
-  printf "  %-40s %-12s %-8s %-12s\n" "────────────────────────────────────────" "────────────" "────────" "────────────"
+  local total_checked=0 total_unchecked=0 total_effort_h=0
+
+  printf "  %-36s %-10s %-8s %-10s %-12s\n" "PLAN" "STATUS" "SCORE" "PROGRESS" "EFFORT"
+  printf "  %-36s %-10s %-8s %-10s %-12s\n" "────────────────────────────────────" "──────────" "────────" "──────────" "────────────"
 
   for f in "$plans_dir"/*.md; do
     [ -f "$f" ] || continue
@@ -72,6 +74,30 @@ cmd_scan() {
     local status=$(extract_status "$f")
     local score=$(extract_score "$f")
     local effort=$(extract_effort "$f")
+
+    # Task completion (real progress)
+    local checked; checked=$(grep -cP '^\s*-\s*\[x\]' "$f" 2>/dev/null) || checked=0
+    local unchecked; unchecked=$(grep -cP '^\s*-\s*\[ \]' "$f" 2>/dev/null) || unchecked=0
+    local items=$((checked + unchecked))
+    local pct=0
+    [ "$items" -gt 0 ] && pct=$(( (checked * 100) / items ))
+    total_checked=$((total_checked + checked))
+    total_unchecked=$((total_unchecked + unchecked))
+
+    # Effort accumulation
+    local eff_num=$(echo "$effort" | grep -oP '^\~?\d+' | tr -d '~' || echo 0)
+    [ -n "$eff_num" ] && total_effort_h=$((total_effort_h + eff_num))
+
+    # Progress bar (10 chars)
+    local bar=""
+    if [ "$items" -gt 0 ]; then
+      local filled=$((pct / 10))
+      local empty=$((10 - filled))
+      bar=$(printf '%0.s█' $(seq 1 $filled 2>/dev/null) 2>/dev/null)$(printf '%0.s░' $(seq 1 $empty 2>/dev/null) 2>/dev/null)
+      bar="${bar} ${pct}%"
+    else
+      bar="—"
+    fi
 
     # Status emoji
     local icon="📝"
@@ -90,10 +116,14 @@ cmd_scan() {
 
     # Truncate name for display
     local display_name="$name"
-    [ ${#display_name} -gt 38 ] && display_name="${display_name:0:35}..."
+    [ ${#display_name} -gt 34 ] && display_name="${display_name:0:31}..."
 
-    printf "  %s %-38s %-12s %-8s %-12s\n" "$icon" "$display_name" "$status" "$score" "$effort"
+    printf "  %s %-34s %-10s %-8s %-12s %-12s\n" "$icon" "$display_name" "$status" "$score" "$bar" "$effort"
   done
+
+  local all_items=$((total_checked + total_unchecked))
+  local all_pct=0
+  [ "$all_items" -gt 0 ] && all_pct=$(( (total_checked * 100) / all_items ))
 
   echo ""
   echo "  Summary:"
@@ -103,6 +133,8 @@ cmd_scan() {
   done
   local unknown=${STATUS_COUNT[UNKNOWN]:-0}
   [ "$unknown" -gt 0 ] && echo "    UNKNOWN: $unknown (missing status field)"
+  echo ""
+  echo "  Programme: ${total_checked}/${all_items} tasks (${all_pct}%) │ ~${total_effort_h}h total"
 }
 
 cmd_stale() {
