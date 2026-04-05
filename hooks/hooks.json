@@ -248,6 +248,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/theory-of-mind\"",
+            "async": true,
             "timeout": 3
           },
           {
@@ -259,6 +260,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/affect-signal\"",
+            "async": true,
             "timeout": 3
           },
           {

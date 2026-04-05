@@ -46,6 +46,17 @@ if [ -z "$MEMORY_DIR" ] || [ ! -d "$MEMORY_DIR" ]; then
   exit 0
 fi
 
+# ── Fast-exit for simple commands (skip DCM for trivial prompts) ──
+INPUT=$(cat 2>/dev/null || echo '{}')
+PROMPT=$(echo "$INPUT" | jq -r '.prompt // .message // empty' 2>/dev/null || echo "")
+PROMPT_TRIMMED=$(echo "${PROMPT:-}" | tr -d '[:space:]')
+if [ ${#PROMPT_TRIMMED} -le 30 ]; then
+  if echo "$PROMPT" | grep -qE '^(/[a-z-]+|[0-9]+|y|yes|oui|ok|continue|go|done|stop|exit|quit|git |make |bun )'; then
+    _hook_log "skip:simple-cmd"
+    exit 0
+  fi
+fi
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 2. Find most recent episode file
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
