@@ -113,11 +113,22 @@ _atlas_plans() {
   [ -d "$plans_dir" ] || { echo "No .blueprint/plans/ found"; return 1; }
 
   local subcmd="${1:-scan}"  # scan, stale, roadmap
-  local script="${ATLAS_SHELL_DIR}/../scripts/plan-lifecycle.sh"
-
-  # Fallback to plugin scripts if not in shell dir
-  [ -f "$script" ] || script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/plan-lifecycle.sh"
-  [ -f "$script" ] || { echo "plan-lifecycle.sh not found"; return 1; }
+  local script=""
+  local search_paths=(
+    "${ATLAS_SHELL_DIR}/../scripts/plan-lifecycle.sh"
+    "${ATLAS_SHELL_DIR}/../../scripts/plan-lifecycle.sh"
+    "${HOME}/workspace_atlas/projects/atlas-dev-plugin/scripts/plan-lifecycle.sh"
+  )
+  # Also search plugin cache (shell-agnostic)
+  if command -v find >/dev/null 2>&1; then
+    while IFS= read -r p; do
+      [ -f "$p" ] && search_paths+=("$p")
+    done < <(find "${HOME}/.claude/plugins/cache" -maxdepth 3 -name "plan-lifecycle.sh" 2>/dev/null)
+  fi
+  for p in "${search_paths[@]}"; do
+    [ -f "$p" ] && { script="$p"; break; }
+  done
+  [ -z "$script" ] && { echo "plan-lifecycle.sh not found"; return 1; }
 
   bash "$script" "$subcmd" "$plans_dir"
 }
