@@ -79,7 +79,7 @@ _atlas_worktrees() {
     [ -d "$repo_root/.git" ] || continue
     local repo_name=$(basename "$repo_root")
 
-    for wt in "$wt_dir"/*/; do
+    for wt in "$wt_dir"/*(N/); do
       [ -d "$wt" ] || continue
       local name=$(basename "$wt")
       found=$((found + 1))
@@ -110,7 +110,7 @@ _atlas_worktrees() {
     # Also check .worktrees/ (manual)
     local manual_dir="$repo_root/.worktrees"
     if [ -d "$manual_dir" ]; then
-      for wt in "$manual_dir"/*/; do
+      for wt in "$manual_dir"/*(N/); do
         [ -d "$wt" ] || continue
         local name=$(basename "$wt")
         found=$((found + 1))
