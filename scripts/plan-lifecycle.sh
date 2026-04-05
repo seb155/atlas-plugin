@@ -234,10 +234,89 @@ cmd_roadmap() {
 
 # ── Main ──────────────────────────────────────────────────────
 
+cmd_archive() {
+  local plans_dir="${1:-.blueprint/plans}"
+  [ -d "$plans_dir" ] || { echo "ERROR: $plans_dir not found" >&2; exit 1; }
+
+  local archive_dir="$plans_dir/archive/completed"
+  mkdir -p "$archive_dir"
+  local archived=0
+
+  for f in "$plans_dir"/*.md; do
+    [ -f "$f" ] || continue
+    local name=$(basename "$f" .md)
+    [[ "$name" == "INDEX" ]] && continue
+
+    local status=$(extract_status "$f")
+    if [ "$status" = "COMPLETE" ]; then
+      mv "$f" "$archive_dir/"
+      archived=$((archived + 1))
+      echo "  📦 Archived: $name"
+    fi
+  done
+
+  [ "$archived" -eq 0 ] && echo "  ✅ No completed plans to archive."
+  [ "$archived" -gt 0 ] && echo "  📦 Archived $archived plan(s) to archive/completed/"
+}
+
+cmd_suggest() {
+  local plans_dir="${1:-.blueprint/plans}"
+  [ -d "$plans_dir" ] || { echo "ERROR: $plans_dir not found" >&2; exit 1; }
+
+  echo "🎯 Sprint Suggestion"
+  echo ""
+  echo "  Available plans (APPROVED or EXECUTING):"
+  echo ""
+
+  local total_h=0
+  local sprint_cap=25  # ~25h per sprint (5 days × 5h)
+  local candidates=""
+
+  # Collect EXECUTING plans first (highest priority)
+  for f in "$plans_dir"/sp*.md; do
+    [ -f "$f" ] || continue
+    local name=$(basename "$f" .md)
+    [[ "$name" == *"-agent-"* ]] && continue
+
+    local status=$(extract_status "$f")
+    [ "$status" != "EXECUTING" ] && [ "$status" != "APPROVED" ] && continue
+
+    local effort=$(extract_effort "$f" | grep -oP '\d+' | head -1)
+    [ -z "$effort" ] && effort=0
+    local score=$(extract_score "$f")
+
+    local priority="LOW"
+    [ "$status" = "EXECUTING" ] && priority="HIGH"
+    [ "$status" = "APPROVED" ] && priority="MED"
+
+    echo "    [$priority] $name (${effort}h, $status, score: $score)"
+
+    # Add to sprint if fits
+    if [ "$total_h" -lt "$sprint_cap" ] && [ "$effort" -gt 0 ]; then
+      total_h=$((total_h + effort))
+      candidates="$candidates $name"
+    fi
+  done
+
+  echo ""
+  echo "  📋 Suggested sprint scope (~${sprint_cap}h budget):"
+  if [ -n "$candidates" ]; then
+    echo "    Plans:$candidates"
+    echo "    Total: ${total_h}h"
+    [ "$total_h" -gt "$sprint_cap" ] && echo "    ⚠️  Over budget by $((total_h - sprint_cap))h — consider splitting"
+  else
+    echo "    No APPROVED or EXECUTING plans found."
+  fi
+}
+
+# ── Main ──────────────────────────────────────────────────────
+
 case "${1:-scan}" in
   scan)    shift 2>/dev/null || true; cmd_scan "$@" ;;
   stale)   shift 2>/dev/null || true; cmd_stale "$@" ;;
   set)     shift; cmd_set "$@" ;;
   roadmap) shift 2>/dev/null || true; cmd_roadmap "$@" ;;
-  *)       echo "Usage: plan-lifecycle.sh {scan|stale|set|roadmap} [args]"; exit 1 ;;
+  archive) shift 2>/dev/null || true; cmd_archive "$@" ;;
+  suggest) shift 2>/dev/null || true; cmd_suggest "$@" ;;
+  *)       echo "Usage: plan-lifecycle.sh {scan|stale|set|roadmap|archive|suggest} [args]"; exit 1 ;;
 esac
