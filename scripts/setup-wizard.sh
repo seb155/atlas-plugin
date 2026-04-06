@@ -580,8 +580,8 @@ _setup_plugins() {
   _setup_info "Scanning installed plugins..."
 
   if [ -d "$plugin_dir" ]; then
-    for marketplace_dir in "$plugin_dir"/*/; do
-      for plugin_dir_inner in "$marketplace_dir"/*/; do
+    for marketplace_dir in "$plugin_dir"/*/(N); do
+      for plugin_dir_inner in "$marketplace_dir"/*/(N); do
         local pname=$(basename "$plugin_dir_inner")
         local pver=$(ls -v "$plugin_dir_inner" 2>/dev/null | tail -1)
         [ -n "$pver" ] && _setup_success "${pname} v${pver}"
@@ -631,7 +631,7 @@ _setup_plugins_domain() {
   if [ -d "$marketplace_dir" ]; then
     local installed_count=$(find "$marketplace_dir" -maxdepth 1 -type d -name "atlas-*" 2>/dev/null | wc -l | tr -d ' ')
     _setup_info "Currently installed: ${installed_count}/6 domain plugins"
-    for d in "$marketplace_dir"/atlas-*/; do
+    for d in "$marketplace_dir"/atlas-*/(N); do
       [ -d "$d" ] && _setup_success "  $(basename "$d")"
     done
   else
@@ -935,10 +935,10 @@ print('Removed hooks block')
   _setup_info "Checking plugin hooks.json..."
   local plugin_cache="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
   local found_hooks=0
-  for tier_dir in "$plugin_cache"/atlas-*/; do
+  for tier_dir in "$plugin_cache"/atlas-*/(N); do
     [ -d "$tier_dir" ] || continue
     # Find the version directory
-    for ver_dir in "$tier_dir"*/; do
+    for ver_dir in "$tier_dir"*/(N); do
       [ -d "$ver_dir" ] || continue
       if [ -f "$ver_dir/hooks/hooks.json" ]; then
         local tier_name=$(basename "$tier_dir")
@@ -963,11 +963,12 @@ print(total)
   # Check 3: Stale local hook scripts
   _setup_info "Checking for stale local hooks..."
   local stale=0
-  for script in "$HOME/.claude/hooks/"*.sh; do
+  for script in "$HOME/.claude/hooks/"*.sh(N); do
     [ -f "$script" ] || continue
     local name=$(basename "$script" .sh)
-    # Check if this hook exists in the plugin
-    if [ -f "$plugin_cache/atlas-admin/"*/hooks/"$name" ] 2>/dev/null; then
+    # Check if this hook exists in the plugin (use glob array to avoid zsh crash)
+    local _hook_matches=("$plugin_cache/atlas-admin/"*/hooks/"$name"(N))
+    if [ ${#_hook_matches[@]} -gt 0 ] && [ -f "${_hook_matches[1]}" ]; then
       gum style --foreground 214 "  ⚠ Stale: $name.sh (exists in plugin as $name)"
       stale=$((stale + 1))
     fi

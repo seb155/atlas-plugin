@@ -345,7 +345,7 @@ print(handoffs[-1] if handoffs else '')
   if [ -f "${_plugin_src}/VERSION" ]; then
     local _src_time _cache_time
     _src_time=$(stat -c %Y "${_plugin_src}/VERSION" 2>/dev/null || echo 0)
-    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION 2>/dev/null | head -1 || echo 0)
+    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION(N) 2>/dev/null | head -1 || echo 0)
     if [ "${_src_time:-0}" -gt "${_cache_time:-0}" ]; then
       echo "🔄 Plugin source newer than cache, rebuilding..."
       (cd "${_plugin_src}" && make dev-admin 2>/dev/null) && echo "   ✅ Plugin rebuilt" || echo "   ⚠️  Plugin rebuild failed (non-blocking)"

@@ -632,9 +632,9 @@ _atlas_hooks() {
 
   # 1. Plugin hooks
   local found=0
-  for tier_dir in "$cache"/atlas-*/; do
+  for tier_dir in "$cache"/atlas-*/(N); do
     [ -d "$tier_dir" ] || continue
-    for ver_dir in "$tier_dir"*/; do
+    for ver_dir in "$tier_dir"*/(N); do
       [ -d "$ver_dir" ] || continue
       local hj="$ver_dir/hooks/hooks.json"
       [ -f "$hj" ] || continue
@@ -682,11 +682,11 @@ print(t)
   # 4. Stale local hooks
   echo ""
   local stale=0
-  for script in "$HOME/.claude/hooks/"*.sh; do
+  for script in "$HOME/.claude/hooks/"*.sh(N); do
     [ -f "$script" ] || continue
     local name=$(basename "$script" .sh)
-    for tier_dir in "$cache"/atlas-*/; do
-      for ver_dir in "$tier_dir"*/; do
+    for tier_dir in "$cache"/atlas-*/(N); do
+      for ver_dir in "$tier_dir"*/(N); do
         if [ -f "$ver_dir/hooks/$name" ] 2>/dev/null; then
           printf "  ⚠️  Stale: %s.sh (exists in plugin as %s)\n" "$name" "$name"
           stale=$((stale + 1))

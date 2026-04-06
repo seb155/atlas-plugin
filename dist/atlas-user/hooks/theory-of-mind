@@ -41,6 +41,16 @@ if [ -z "$PROMPT" ] || [ ${#PROMPT} -lt 3 ]; then
   exit 0
 fi
 
+# ── Fast-exit for simple commands (< 500ms) ──
+# Slash commands, numbers, single words, git ops — skip full cognitive analysis
+PROMPT_TRIMMED=$(echo "$PROMPT" | tr -d '[:space:]')
+if [ ${#PROMPT_TRIMMED} -le 30 ]; then
+  if echo "$PROMPT" | grep -qE '^(/[a-z-]+|[0-9]+|y|yes|oui|ok|continue|go|done|stop|exit|quit|git |make |bun |docker )'; then
+    _hook_log "skip:simple-cmd"
+    exit 0
+  fi
+fi
+
 PROMPT_LEN=${#PROMPT}
 PROMPT_LOWER=$(echo "$PROMPT" | tr '[:upper:]' '[:lower:]')
 

@@ -214,6 +214,22 @@ atlas() {
     hooks)   _atlas_hooks; return ;;
     topics)  _atlas_topics_list; return ;;
     update)  _atlas_update; return ;;
+    ci) _atlas_ci; return ;;
+    complexity) shift; _atlas_complexity "$@"; return ;;
+    dispatch) shift; _atlas_dispatch "$@"; return ;;
+    agents) shift; _atlas_agent_stats "$@"; return ;;
+    team) shift; _atlas_team_blueprint "$@"; return ;;
+    manifest) shift; _atlas_manifest "$@"; return ;;
+    repos) _atlas_repos; return ;;
+    cost) shift; _atlas_cost "$@"; return ;;
+    deps) _atlas_deps; return ;;
+    init) shift; _atlas_init "$@"; return ;;
+    plans) shift; _atlas_plans "$@"; return ;;
+    sessions) _atlas_sessions; return ;;
+    budget) _atlas_budget; return ;;
+    import-handoff) shift; _atlas_import_handoff "$@"; return ;;
+    replay) shift; _atlas_replay "$@"; return ;;
+    worktrees|wt) _atlas_worktrees; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
@@ -329,7 +345,7 @@ print(handoffs[-1] if handoffs else '')
   if [ -f "${_plugin_src}/VERSION" ]; then
     local _src_time _cache_time
     _src_time=$(stat -c %Y "${_plugin_src}/VERSION" 2>/dev/null || echo 0)
-    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION 2>/dev/null | head -1 || echo 0)
+    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION(N) 2>/dev/null | head -1 || echo 0)
     if [ "${_src_time:-0}" -gt "${_cache_time:-0}" ]; then
       echo "🔄 Plugin source newer than cache, rebuilding..."
       (cd "${_plugin_src}" && make dev-admin 2>/dev/null) && echo "   ✅ Plugin rebuilt" || echo "   ⚠️  Plugin rebuild failed (non-blocking)"
