@@ -442,6 +442,17 @@ if [ -n "$_handoff_files" ]; then
   done <<< "$_handoff_files"
 fi
 
+# ─── R1b: Stale handoff warning (SP-DEVOPS P3.7) ────────────────────────
+# Warn if handoff is > 24h old — suggest dream first before pickup
+if [ -d "$_memory_base" ]; then
+  _stale_handoffs=$(find "$_memory_base" -maxdepth 3 -path "*/memory/handoff-*.md" -mtime +1 -mtime -7 2>/dev/null | head -1 || true)
+  if [ -n "$_stale_handoffs" ] && [ -z "$_handoff_files" ]; then
+    _stale_name=$(basename "$_stale_handoffs")
+    _stale_age=$(( ($(date +%s) - $(stat -c %Y "$_stale_handoffs" 2>/dev/null || echo 0)) / 86400 ))
+    BADGE+=$'\n'"⚠️ ATLAS │ Stale handoff (${_stale_age}d): ${_stale_name} — consider \`/atlas dream\` before \`/pickup\`"
+  fi
+fi
+
 # ─── R4: Morning brief auto-suggest ─────────────────────────────────────
 # Weekday + morning (7-9 local) → suggest /atlas morning
 if [ "$(date +%u)" -le 5 ] 2>/dev/null; then
