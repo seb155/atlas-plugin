@@ -98,14 +98,23 @@ _setup_identity() {
   fi
 
   # Auto-detect vault
-  local ws="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
-  for vdir in "${ws}/vaults"/*/ ; do
-    if [ -f "${vdir}kernel/manifest.json" ]; then
-      vault_path="${vdir%/}"
-      _setup_success "Vault: $(basename "$vdir") at ${vdir}"
-      break
-    fi
-  done
+  local ws="${ATLAS_WORKSPACE_ROOT:-}"
+  if [ -z "$ws" ]; then
+    # Try config.json workspace_root, then fallback to convention
+    ws=$(python3 -c "import json; print(json.load(open('$HOME/.atlas/config.json')).get('launcher',{}).get('workspace_root',''))" 2>/dev/null)
+    [ -z "$ws" ] && ws="$HOME/workspace_atlas"
+  fi
+  if [ -d "${ws}/vaults" ]; then
+    for vdir in "${ws}/vaults"/*/(N) ; do
+      if [ -f "${vdir}kernel/manifest.json" ]; then
+        vault_path="${vdir%/}"
+        _setup_success "Vault: $(basename "$vdir") at ${vdir}"
+        break
+      fi
+    done
+  else
+    _setup_info "No vaults directory at ${ws}/vaults — skipping vault auto-detect"
+  fi
 
   # Confirm/edit
   name=$(gum input --header "Full name:" --placeholder "Your name" --value "${name:-$USER}" --width 50)
