@@ -101,11 +101,13 @@ with open(stats_file) as f:
     for line in f:
         try:
             e = json.loads(line)
-            if e.get('status') != 'completed':
+            # Support both formats: subagent-result-capture (success/timestamp/duration_ms)
+            # and legacy dispatch format (status/ts/duration_s)
+            if not (e.get('success', False) or e.get('status') == 'completed'):
                 continue
             model = e.get('model', 'sonnet')
-            duration = e.get('duration_s', 0)
-            date = e.get('ts', '')[:10]
+            duration = e.get('duration_s', e.get('duration_ms', 0) / 1000)
+            date = (e.get('ts', '') or e.get('timestamp', ''))[:10]
 
             # Estimate tokens
             out_tokens = duration * TOKEN_RATES.get(model, 100)
