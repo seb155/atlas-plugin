@@ -217,6 +217,16 @@
             "timeout": 3
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-replay-logger\"",
+            "async": true,
+            "timeout": 3
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
