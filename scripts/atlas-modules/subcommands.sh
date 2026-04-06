@@ -133,6 +133,52 @@ _atlas_plans() {
   bash "$script" "$subcmd" "$plans_dir"
 }
 
+# ── Plugin Tools (SP-EVOLUTION P9) ────────────────────────────
+
+_find_plugin_tools() {
+  local search_paths=(
+    "${ATLAS_SHELL_DIR}/../scripts/plugin-tools.sh"
+    "${ATLAS_SHELL_DIR}/../../scripts/plugin-tools.sh"
+    "${HOME}/workspace_atlas/projects/atlas-dev-plugin/scripts/plugin-tools.sh"
+  )
+  if command -v find >/dev/null 2>&1; then
+    while IFS= read -r p; do
+      [ -f "$p" ] && search_paths+=("$p")
+    done < <(find "${HOME}/.claude/plugins/cache" -maxdepth 3 -name "plugin-tools.sh" 2>/dev/null)
+  fi
+  for p in "${search_paths[@]}"; do
+    [ -f "$p" ] && { echo "$p"; return 0; }
+  done
+  return 1
+}
+
+# atlas repos — Multi-repo workspace overview
+_atlas_repos() {
+  local script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
+  bash "$script" repos
+}
+
+# atlas cost — Session cost estimates
+_atlas_cost() {
+  local script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
+  bash "$script" cost "$@"
+}
+
+# atlas deps — Plan dependency graph
+_atlas_deps() {
+  local plans_dir=".blueprint/plans"
+  [ -d "$plans_dir" ] || plans_dir="$(git rev-parse --show-toplevel 2>/dev/null)/.blueprint/plans"
+  [ -d "$plans_dir" ] || { echo "No .blueprint/plans/ found"; return 1; }
+  local script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
+  bash "$script" deps "$plans_dir"
+}
+
+# atlas init [template] [dir] — Project scaffolding
+_atlas_init() {
+  local script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
+  bash "$script" init "$@"
+}
+
 # ── Session Tools (SP-EVOLUTION P6) ───────────────────────────
 
 _find_session_tools() {

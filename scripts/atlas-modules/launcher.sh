@@ -220,6 +220,10 @@ atlas() {
     agents) shift; _atlas_agent_stats "$@"; return ;;
     team) shift; _atlas_team_blueprint "$@"; return ;;
     manifest) shift; _atlas_manifest "$@"; return ;;
+    repos) _atlas_repos; return ;;
+    cost) shift; _atlas_cost "$@"; return ;;
+    deps) _atlas_deps; return ;;
+    init) shift; _atlas_init "$@"; return ;;
     plans) shift; _atlas_plans "$@"; return ;;
     sessions) _atlas_sessions; return ;;
     budget) _atlas_budget; return ;;
