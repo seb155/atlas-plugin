@@ -91,6 +91,7 @@ atlas-dev-plugin/
 
 | Doc | Purpose |
 |-----|---------|
+| **`DEPLOYMENT.md`** | **Step-by-step install guide for any platform** |
 | `CLAUDE.md` | AI context (loaded by Claude Code sessions) |
 | `ARCHITECTURE.md` | This-level architecture guide |
 | `.blueprint/ARCHITECTURE.md` | Deep dive: build pipeline, inheritance, hooks |

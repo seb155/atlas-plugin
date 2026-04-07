@@ -2,8 +2,8 @@
 # test-worker-plugin.sh — Validate atlas-worker plugin in Claude Code
 #
 # Run from a FRESH terminal (not inside CC):
-#   cd ~/workspace_atlas/projects/atlas/synapse
-#   bash ~/workspace_atlas/projects/atlas-dev-plugin/scripts/test-worker-plugin.sh
+#   cd /path/to/your/synapse/project
+#   bash /path/to/atlas-dev-plugin/scripts/test-worker-plugin.sh
 #
 # Tests:
 # 1. CC starts with atlas-worker enabled → no hook errors
@@ -12,7 +12,9 @@
 set -euo pipefail
 
 CACHE="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
-VERSION=$(cat "$HOME/workspace_atlas/projects/atlas-dev-plugin/VERSION" | tr -d '[:space:]')
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+VERSION=$(cat "$PLUGIN_ROOT/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "0.0.0")
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  ATLAS Worker Plugin Validation"

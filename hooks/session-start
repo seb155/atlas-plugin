@@ -21,6 +21,9 @@ AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
 export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"  # suppress bw punycode warning
 
+# Portable Python 3 resolver (works on Linux, macOS, Windows Git Bash)
+. "$(dirname "$0")/lib/python.sh"
+
 # ─── Version Check: notify if newer version available ─────────────────
 # Lightweight check (~200ms). Uses Forgejo API to compare versions.
 # Actual update done via CC native: /plugin → Discover → toggle update.
@@ -28,16 +31,16 @@ export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"  # suppress bw punycode 
 _auto_update_msg=""
 if [ "${ATLAS_NO_VERSION_CHECK:-}" != "1" ]; then
   _INSTALLED_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "0.0.0")
-  _FORGEJO_API="${ATLAS_FORGEJO_API:-http://192.168.10.75:3000/api/v1}"
+  _FORGEJO_API="${ATLAS_FORGEJO_API:-}"
 
   # Source token early for API call
   [ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
 
-  if [ -n "${FORGEJO_TOKEN:-}" ]; then
+  if [ -n "${FORGEJO_TOKEN:-}" ] && [ -n "$_FORGEJO_API" ]; then
     _LATEST_TAG=$(curl -sf --connect-timeout 2 --max-time 2 \
       "${_FORGEJO_API}/repos/atlas/atlas-plugin/releases?limit=1" \
       -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null \
-      | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['tag_name'])" 2>/dev/null || echo "")
+      | $ATLAS_PYTHON -c "import sys,json; print(json.load(sys.stdin)[0]['tag_name'])" 2>/dev/null || echo "")
     _LATEST_VERSION="${_LATEST_TAG#v}"
 
     if [ -n "$_LATEST_VERSION" ] && [ "$_LATEST_VERSION" != "$_INSTALLED_VERSION" ] && [ "$_LATEST_VERSION" != "0.0.0" ]; then
@@ -51,7 +54,7 @@ fi
 
 # Auto-resolve secrets via keyring + Vaultwarden (if configured)
 VAULT_MSG=""
-_secrets_provider=$(python3 -c "
+_secrets_provider=$($ATLAS_PYTHON -c "
 import json, os
 try:
     with open(os.path.expanduser('~/.atlas/config.json')) as f:
@@ -98,7 +101,7 @@ fi
 # Read value from ~/.atlas/config.json with fallback
 atlas_config() {
   local key="$1" fallback="${2:-}"
-  python3 -c "
+  $ATLAS_PYTHON -c "
 import json, os
 try:
     with open(os.path.expanduser('~/.atlas/config.json')) as f:
@@ -271,8 +274,8 @@ if [ ! -f "$ATLAS_PROFILE" ]; then
   if [ -x "${PLUGIN_ROOT}/scripts/detect-platform.sh" ]; then
     PJSON=$("${PLUGIN_ROOT}/scripts/detect-platform.sh" 2>/dev/null || true)
     if [ -n "$PJSON" ]; then
-      PLATFORM_OS=$(echo "$PJSON" | python3 -c "import sys,json; print(json.load(sys.stdin).get('os','?'))" 2>/dev/null || echo "?")
-      PLATFORM_TERM=$(echo "$PJSON" | python3 -c "import sys,json; print(json.load(sys.stdin).get('terminal','?'))" 2>/dev/null || echo "?")
+      PLATFORM_OS=$(echo "$PJSON" | $ATLAS_PYTHON -c "import sys,json; print(json.load(sys.stdin).get('os','?'))" 2>/dev/null || echo "?")
+      PLATFORM_TERM=$(echo "$PJSON" | $ATLAS_PYTHON -c "import sys,json; print(json.load(sys.stdin).get('terminal','?'))" 2>/dev/null || echo "?")
     fi
   fi
   FIRST_RUN_MSG="🏛️ ATLAS │ 👋 FIRST RUN │ Welcome! Run /atlas setup to configure"
@@ -351,6 +354,10 @@ done
 # Ensure .zshrc sources atlas.sh (idempotent)
 if ! grep -q 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null; then
   echo '[ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"' >> "${HOME}/.zshrc"
+fi
+# Also add to .bashrc for Git Bash on Windows and bash-default systems
+if [ -f "${HOME}/.bashrc" ] && ! grep -q 'atlas/shell/atlas.sh' "${HOME}/.bashrc" 2>/dev/null; then
+  echo '[ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"' >> "${HOME}/.bashrc"
 fi
 
 # 6. Check if starship custom modules are missing → badge warning
@@ -448,7 +455,8 @@ if [ -d "$_memory_base" ]; then
   _stale_handoffs=$(find "$_memory_base" -maxdepth 3 -path "*/memory/handoff-*.md" -mtime +1 -mtime -7 2>/dev/null | head -1 || true)
   if [ -n "$_stale_handoffs" ] && [ -z "$_handoff_files" ]; then
     _stale_name=$(basename "$_stale_handoffs")
-    _stale_age=$(( ($(date +%s) - $(stat -c %Y "$_stale_handoffs" 2>/dev/null || echo 0)) / 86400 ))
+    _file_mtime=$(stat -c %Y "$_stale_handoffs" 2>/dev/null || stat -f %m "$_stale_handoffs" 2>/dev/null || echo 0)
+    _stale_age=$(( ($(date +%s) - $_file_mtime) / 86400 ))
     BADGE+=$'\n'"⚠️ ATLAS │ Stale handoff (${_stale_age}d): ${_stale_name} — consider \`/atlas dream\` before \`/pickup\`"
   fi
 fi
@@ -466,9 +474,9 @@ fi
 _exp_msg=""
 _PENDING="${HOME}/.claude/atlas-experiential-pending.json"
 if [ -f "$_PENDING" ]; then
-  _energy=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('energy_avg','?'))" 2>/dev/null || echo "?")
-  _mood=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('mood_dominant','?'))" 2>/dev/null || echo "?")
-  _signals=$(python3 -c "import json; print(json.load(open('$_PENDING')).get('signal_count',0))" 2>/dev/null || echo "0")
+  _energy=$($ATLAS_PYTHON -c "import json; print(json.load(open('$_PENDING')).get('energy_avg','?'))" 2>/dev/null || echo "?")
+  _mood=$($ATLAS_PYTHON -c "import json; print(json.load(open('$_PENDING')).get('mood_dominant','?'))" 2>/dev/null || echo "?")
+  _signals=$($ATLAS_PYTHON -c "import json; print(json.load(open('$_PENDING')).get('signal_count',0))" 2>/dev/null || echo "0")
   if [ "$_signals" -ge 3 ] 2>/dev/null; then
     _exp_msg="ATLAS | EXPERIENTIAL | Previous session: energy ${_energy}/5, mood ${_mood}. /atlas episode create to capture."
   fi
@@ -480,10 +488,10 @@ _today=$(date +%Y-%m-%d)
 _last_alert=$(cat "$_ALERT_FILE" 2>/dev/null || echo "")
 if [ "$_today" != "$_last_alert" ]; then
   # Find memory dir for current project
-  _mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
+  _mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
   if [ -n "$_mem_dir" ]; then
     _recent_energy=$(grep -l "type: episode" "$_mem_dir"/episode-*.md 2>/dev/null | sort -r | head -3 | xargs -I{} grep "^energy:" {} 2>/dev/null | awk -F: '{sum+=$2; n++} END{if(n>0) printf "%.1f", sum/n; else print "?"}')
-    if [ "$_recent_energy" != "?" ] && [ "$(echo "$_recent_energy < 2.5" | bc -l 2>/dev/null)" = "1" ]; then
+    if [ "$_recent_energy" != "?" ] && [ "$(awk "BEGIN {print ($_recent_energy < 2.5) ? 1 : 0}" 2>/dev/null)" = "1" ]; then
       _exp_msg="${_exp_msg:+$_exp_msg$'\n'}ATLAS | ALERT | Energy trend declining (avg ${_recent_energy}/5). Consider pacing."
       echo "$_today" > "$_ALERT_FILE"
     fi
@@ -505,7 +513,7 @@ if [ -n "${ATLAS_TOPIC:-}" ]; then
   fi
 
   # Create topic memory directory if needed
-  for _mem_dir in $(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1); do
+  for _mem_dir in $(find ~/.claude/projects -path "*/memory/MEMORY.md" 2>/dev/null | head -1 | xargs dirname 2>/dev/null); do
     _topic_parent="$(dirname "$_mem_dir")/.claude/topics/${ATLAS_TOPIC}"
     if [ ! -d "$_topic_parent" ]; then
       mkdir -p "$_topic_parent/handoffs" 2>/dev/null
@@ -522,7 +530,7 @@ fi
 _resume_msg=""
 _session_state="${HOME}/.claude/session-state.json"
 if [ -f "$_session_state" ]; then
-  _resume_info=$(python3 -c "
+  _resume_info=$($ATLAS_PYTHON -c "
 import json, os
 from datetime import datetime
 try:
@@ -564,5 +572,10 @@ if [ -n "$FEATURE_SUMMARY" ]; then
 fi
 
 # Output with branded context — proper JSON escaping via python
-ESCAPED=$(printf '%s' "$FULL_CONTEXT" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+ESCAPED=$(printf '%s' "$FULL_CONTEXT" | $ATLAS_PYTHON -c "import sys,json; print(json.dumps(sys.stdin.read()))" 2>/dev/null)
+if [ -z "$ESCAPED" ]; then
+  # Fallback: basic JSON escape without python
+  ESCAPED=$(printf '%s' "$FULL_CONTEXT" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/\\t/g' | tr '\n' '\\' | sed 's/\\/\\n/g')
+  ESCAPED="\"$ESCAPED\""
+fi
 echo "{\"continue\": true, \"additionalContext\": ${ESCAPED}}"

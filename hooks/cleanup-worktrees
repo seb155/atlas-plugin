@@ -13,7 +13,7 @@ _hook_log() {
     >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
 }
 
-WORKSPACE="${HOME}/workspace_atlas"
+WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME}"
 CLEANED=0
 KEPT=0
 AGED=0
