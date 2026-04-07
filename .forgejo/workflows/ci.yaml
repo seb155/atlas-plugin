@@ -225,6 +225,42 @@ jobs:
           [ $FAILED -eq 0 ] || exit 1
           echo "✅ All tiers at version $VERSION"
 
+      - name: Portability check (SP-PORTABLE)
+        shell: sh
+        run: |
+          echo "Checking for hardcoded paths and IPs..."
+          FAIL=0
+
+          # Check for /home/sgagnon (or any /home/user) in active code
+          HITS=$(grep -rn "/home/sgagnon\|/home/seb" skills/ hooks/ agents/ \
+            --include="*.sh" --include="*.ts" --include="*.md" \
+            2>/dev/null | grep -v "node_modules\|__pycache__\|references/" | wc -l)
+          if [ "$HITS" -gt 0 ]; then
+            echo "::error::Found $HITS hardcoded /home/ paths in active code"
+            grep -rn "/home/sgagnon\|/home/seb" skills/ hooks/ agents/ \
+              --include="*.sh" --include="*.ts" --include="*.md" \
+              2>/dev/null | grep -v "node_modules\|__pycache__\|references/" | head -10
+            FAIL=1
+          fi
+
+          # Check for hardcoded IPs in hooks (setup-wizard defaults are OK)
+          HITS=$(grep -rn "192\.168\." hooks/ --include="*.sh" 2>/dev/null | wc -l)
+          if [ "$HITS" -gt 0 ]; then
+            echo "::error::Found $HITS hardcoded IPs in hooks"
+            grep -rn "192\.168\." hooks/ --include="*.sh" 2>/dev/null | head -5
+            FAIL=1
+          fi
+
+          # Check for hardcoded python3 in hooks (should use $ATLAS_PYTHON)
+          HITS=$(grep -rn "python3 " hooks/ --include="*.sh" 2>/dev/null \
+            | grep -v "lib/python.sh" | wc -l)
+          if [ "$HITS" -gt 0 ]; then
+            echo "::error::Found $HITS hardcoded python3 in hooks (use \$ATLAS_PYTHON)"
+            FAIL=1
+          fi
+
+          [ $FAIL -eq 0 ] && echo "Portability check passed" || exit 1
+
       - name: Zero-duplication gate (SP-DEDUP)
         shell: sh
         run: |
