@@ -6,7 +6,7 @@
       "name": "atlas-admin",
       "description": "ATLAS Admin — AXOIQ AI Engineering Assistant (admin tier)",
       "version": "4.26.3",
-      "source": { "source": "url", "url": "https://forgejo.axoiq.com/atlas/atlas-plugin.git" },
+      "source": { "source": "url", "url": "https://github.com/seb155/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }
   ]

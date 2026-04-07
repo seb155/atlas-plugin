@@ -12,7 +12,7 @@
       "version": "4.26.3",
       "source": {
         "source": "url",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git"
+        "url": "https://github.com/seb155/atlas-plugin.git"
       },
       "author": {
         "name": "Seb Gagnon"
@@ -23,7 +23,7 @@
       "description": "ATLAS Core \u2014 Memory, session, context, vault, assist. Required by all ATLAS domain plugins.",
       "source": {
         "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "url": "https://github.com/seb155/atlas-plugin.git",
         "path": "dist/atlas-core"
       },
       "author": {
@@ -36,7 +36,7 @@
       "description": "ATLAS Dev \u2014 TDD, planning, debugging, code review, shipping workflows.",
       "source": {
         "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "url": "https://github.com/seb155/atlas-plugin.git",
         "path": "dist/atlas-dev"
       },
       "author": {
@@ -49,7 +49,7 @@
       "description": "ATLAS Frontend \u2014 Design, browser automation, visual QA.",
       "source": {
         "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "url": "https://github.com/seb155/atlas-plugin.git",
         "path": "dist/atlas-frontend"
       },
       "author": {
@@ -62,7 +62,7 @@
       "description": "ATLAS Infra \u2014 Infrastructure, deploy, security, network, DevOps.",
       "source": {
         "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "url": "https://github.com/seb155/atlas-plugin.git",
         "path": "dist/atlas-infra"
       },
       "author": {
@@ -75,7 +75,7 @@
       "description": "ATLAS Enterprise \u2014 Governance, knowledge engine, agent teams, programme management.",
       "source": {
         "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "url": "https://github.com/seb155/atlas-plugin.git",
         "path": "dist/atlas-enterprise"
       },
       "author": {
@@ -88,7 +88,7 @@
       "description": "ATLAS Experiential \u2014 Episode capture, intuition logging, relationship memory.",
       "source": {
         "source": "git-subdir",
-        "url": "http://192.168.10.75:3000/atlas/atlas-plugin.git",
+        "url": "https://github.com/seb155/atlas-plugin.git",
         "path": "dist/atlas-experiential"
       },
       "author": {

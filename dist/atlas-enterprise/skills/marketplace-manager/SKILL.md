@@ -139,8 +139,8 @@ grep -r '{PLUGIN_NAME}@{MARKETPLACE}' .claude/settings.json
 
 | Component | URL/Path |
 |-----------|----------|
-| Marketplace JSON | `https://forgejo.axoiq.com/atlas/atlas-plugin/raw/branch/main/.claude-plugin/marketplace.json` |
-| Plugin git source | `https://forgejo.axoiq.com/atlas/atlas-plugin.git` |
+| Marketplace JSON | `https://github.com/seb155/atlas-plugin/raw/branch/main/.claude-plugin/marketplace.json` |
+| Plugin git source | `https://github.com/seb155/atlas-plugin.git` |
 | Git auth | `git config --global http.extraheader` + URL rewrite (CF Access + Forgejo PAT) |
 | CF Access secrets | `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`, `FORGEJO_TOKEN` |
 
@@ -153,7 +153,7 @@ git config --global --add http.https://forgejo.axoiq.com/.extraheader "CF-Access
 git config --global url."https://atlas:<FORGEJO_TOKEN>@forgejo.axoiq.com/".insteadOf "https://forgejo.axoiq.com/"
 
 # 2. Add marketplace in CC
-# /plugin → Add marketplace → URL → https://forgejo.axoiq.com/atlas/atlas-plugin/raw/branch/main/.claude-plugin/marketplace.json
+# /plugin → Add marketplace → URL → https://github.com/seb155/atlas-plugin/raw/branch/main/.claude-plugin/marketplace.json
 
 # 3. Install plugin with user scope
 # /plugin → Browse → atlas-admin → Install → User scope
