@@ -45,3 +45,15 @@ style = "dim"
 [custom.atlas_context_size]
 command = "~/.local/share/atlas-statusline/atlas-context-size-module.sh"
 style = "bold cyan"
+
+[custom.atlas_version]
+command = "~/.local/share/atlas-statusline/atlas-resolve-version.sh"
+style = "bold cyan"
+
+[custom.atlas_tier]
+command = "jq -r '.tier // \"?\"' ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json 2>/dev/null || echo '?'"
+style = "bold yellow"
+
+[custom.atlas_alert]
+command = "~/.local/share/atlas-statusline/atlas-alert-module.sh"
+style = "bold red"

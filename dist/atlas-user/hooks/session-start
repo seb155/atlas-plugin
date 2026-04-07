@@ -351,6 +351,12 @@ for _pair in "atlas-cli.sh:${_cli_target}/atlas.sh" "setup-wizard.sh:${_cli_targ
     fi
   fi
 done
+# Inject real plugin version into deployed atlas.sh (fix version drift)
+_deployed_cli="${_cli_target}/atlas.sh"
+if [ -f "$_deployed_cli" ]; then
+  _real_version=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
+  sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"${_real_version}\"/" "$_deployed_cli"
+fi
 # Ensure .zshrc sources atlas.sh (idempotent)
 if ! grep -q 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null; then
   echo '[ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"' >> "${HOME}/.zshrc"

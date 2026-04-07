@@ -55,7 +55,18 @@ cache_valid() {
 
 # --- Tier (from existing state, never changes mid-session) ---
 TIER=$(echo "$EXISTING" | jq -r '.tier // "?"' 2>/dev/null || echo "?")
-VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
+# Resolve version: prefer CC marketplace registry (survives plugin updates mid-session)
+INSTALLED="${HOME}/.claude/plugins/installed_plugins.json"
+VERSION=""
+if [ -f "$INSTALLED" ]; then
+  VERSION=$(jq -r '.plugins["atlas-admin@atlas-admin-marketplace"] | max_by(.installedAt) | .version // empty' "$INSTALLED" 2>/dev/null)
+fi
+if [ -z "$VERSION" ]; then
+  VERSION=$(echo "$EXISTING" | jq -r '.plugin_version // empty' 2>/dev/null)
+fi
+if [ -z "$VERSION" ]; then
+  VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
+fi
 HOSTNAME_SHORT=$(echo "$EXISTING" | jq -r '.hostname // "?"' 2>/dev/null || echo "?")
 
 # --- Features (always recalculate, ~2ms) ---
