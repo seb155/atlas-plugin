@@ -1,163 +1,104 @@
-# ATLAS — AXOIQ's Unified AI Engineering Assistant
+# ATLAS -- AXOIQ's Unified AI Engineering Assistant
 
-ATLAS is AXOIQ's unified Claude Code plugin that replaces 18 individual plugins, 10 global commands,
-and 26 skills with a single auto-routing co-pilot. It activates at session start, detects context,
-and routes to the appropriate workflow — with HITL gates at every strategic decision point.
+ATLAS is a multi-tier Claude Code plugin that replaces 18+ individual plugins with one
+auto-routing co-pilot. It detects context at session start and routes to the appropriate
+skill -- with HITL gates at every strategic decision point.
 
-## Tiers
+**v4.26.3** | 81 skills | 6 refs | 16 agents | 37 hook handlers | 6 domain scopes
 
-ATLAS ships as three tiers, each inheriting from the one below it.
+## Architecture Overview
 
-| Feature | User | Dev | Admin |
-|---------|:----:|:---:|:-----:|
-| Personal assistant (notes, brief, research) | ✓ | ✓ | ✓ |
-| Browser automation | ✓ | ✓ | ✓ |
-| Document generation (PPTX/DOCX/XLSX) | ✓ | ✓ | ✓ |
-| TDD pipeline | | ✓ | ✓ |
-| Code review & simplify | | ✓ | ✓ |
-| Plan builder (15-section, quality gate 12/15) | | ✓ | ✓ |
-| Git worktrees | | ✓ | ✓ |
-| Subagent dispatch | | ✓ | ✓ |
-| Engineering ops & estimation | | ✓ | ✓ |
-| Deploy to any environment | | | ✓ |
-| Infrastructure ops | | | ✓ |
-| Security audit | | | ✓ |
-| Autonomous optimization (`/atlas tune`) | | | ✓ |
-| **Skills** | 10 | ~25 | ~29 |
-| **Agents** | 1 | 5 | 5 |
-| **Commands** | 10 | ~18 | ~22 |
+```
+profiles/*.yaml       build.sh        dist/atlas-{tier}/       ~/.claude/plugins/cache/
+  (tier defs)    -->  (resolve +  -->  (self-contained)    -->  (installed in CC)
+                       generate)
+```
 
-## Installation
+**Two build modes**:
+- **3-Tier** (legacy): `user` -> `dev` (inherits user) -> `admin` (inherits dev)
+- **6-Domain** (current): `core`, `dev`, `frontend`, `infra`, `enterprise`, `experiential`
 
-### From Forgejo Package Registry
+Each `dist/` artifact is self-contained -- no runtime inheritance or external deps.
+
+### Skill Routing
+
+Every tier/domain gets a generated `atlas-assist` master skill that:
+1. Lists all available skills with emoji + category + description
+2. Auto-routes user intent to the correct sub-skill
+3. Defines the tier persona and pipeline stages
+
+### Hook Lifecycle
+
+`hooks/hooks.json` is the SSoT. Events flow: `CC event -> hooks.json matcher -> hook script -> branded output`.
+Key events: `SessionStart`, `UserPromptSubmit`, `PostToolUse`, `PreCompact`, `Stop`.
+All hooks output with `ATLAS` branded prefix. Scripts have NO `.sh` extension.
+
+## Quick Start
 
 ```bash
-# Install a specific tier (replace {tier} with admin, dev, or user)
-VERSION=$(curl -s https://forgejo.axoiq.com/api/packages/atlas/generic/atlas-{tier}/index.json | jq -r '.versions[0]')
-curl -L "https://forgejo.axoiq.com/api/packages/atlas/generic/atlas-{tier}/${VERSION}/atlas-{tier}-${VERSION}.tar.gz" \
-  -o atlas-{tier}.tar.gz
-tar -xzf atlas-{tier}.tar.gz
-claude plugins add ./atlas-{tier}
+# Build + install to Claude Code (standard dev workflow)
+make dev
+
+# Build all 3 tiers
+./build.sh all
+
+# Build 6 domain plugins
+./build.sh domains
+
+# Run tests (always -x --tb=short)
+make test
+
+# Release (patch bump -> build -> test -> tag -> push)
+make publish-patch
 ```
 
-### From Git (latest)
-
-```bash
-# Clone and install directly
-git clone https://forgejo.axoiq.com/atlas/atlas-plugin.git
-cd atlas-plugin
-./build.sh dev          # or: admin, user, all
-claude plugins add ./dist/atlas-dev
-```
-
-### Remove old plugins
-
-```bash
-# Remove legacy plugins before installing ATLAS
-for p in superpowers feature-dev code-review frontend-design hookify; do
-  claude plugins remove "$p" 2>/dev/null || true
-done
-```
-
-## Building from Source
-
-Requires: `bash`, `yq` (via snap: `sudo snap install yq`)
-
-```bash
-./build.sh all      # Build all 3 tiers → dist/atlas-{admin,dev,user}/
-./build.sh dev      # Build one tier only
-./build.sh admin
-./build.sh user
-```
-
-Outputs land in `dist/atlas-{tier}/` with the full plugin structure:
+## Directory Structure
 
 ```
-dist/atlas-dev/
-├── .claude-plugin/
-│   ├── plugin.json
-│   └── marketplace.json
-├── commands/       # /atlas subcommands
-├── skills/         # Skill definitions (SKILL.md per skill)
-├── agents/         # Subagent configs
-└── hooks/          # SessionStart, SessionEnd, PostCompact hooks
+atlas-dev-plugin/
+  profiles/          # 3 tier YAMLs + 5 domain YAMLs (inheritance definitions)
+  skills/            # 81 skill dirs, each with SKILL.md (frontmatter + instructions)
+    refs/            # 6 reference skills (bundled docs, not routable)
+  agents/            # 16 agent dirs, each with AGENT.md (model, tools, constraints)
+  hooks/             # hooks.json (SSoT) + 37 executable handler scripts
+  scripts/           # Build, publish, CLI loader, and utilities
+    atlas-cli.sh     # Shell launcher (38-line loader)
+    atlas-modules/   # 7 CLI modules (dispatch, ui, completions, ...)
+    presets/          # Safety policy JSON presets
+  build.sh           # Main builder (tier inheritance + master skill generation)
+  Makefile           # Dev workflow: dev, test, lint, publish-patch
+  VERSION            # Semver SSoT (propagated to all manifests)
+  .blueprint/        # Deep architecture docs (ARCHITECTURE.md, PATTERNS.md, ...)
+  tests/             # 17 pytest files (frontmatter, coverage, hooks, build output)
 ```
 
-## Version Bumping
+## Creating a New Skill
 
-```bash
-# Bump patch (2.0.0 → 2.0.1), commit, and tag
-./scripts/bump-version.sh patch
-
-# Bump minor (2.0.0 → 2.1.0)
-./scripts/bump-version.sh minor
-
-# Bump major (2.0.0 → 3.0.0)
-./scripts/bump-version.sh major
-```
-
-The script writes the new version to `VERSION`, commits, and creates a `v{version}` git tag.
-Pushing the tag triggers the CI publish workflow.
-
-```bash
-git push && git push --tags
-```
-
-## Architecture
-
-```
-atlas-plugin/
-├── profiles/           # Tier definitions (YAML, with inheritance)
-│   ├── user.yaml       # Base tier
-│   ├── dev.yaml        # Inherits: user
-│   └── admin.yaml      # Inherits: dev
-│
-├── skills/             # Shared skill library
-│   ├── tdd/
-│   ├── plan-builder/
-│   ├── deep-research/
-│   └── refs/           # Reference docs bundled into tiers
-│
-├── commands/           # /atlas subcommand definitions (*.md)
-├── agents/             # Subagent configs (plan-architect, code-reviewer, …)
-├── hooks/              # hooks.json + session lifecycle scripts
-├── templates/          # Reusable templates
-│
-├── build.sh            # Builder: resolves inheritance → dist/
-├── scripts/
-│   ├── generate-master-skill.sh  # Generates atlas-assist SKILL.md per tier
-│   └── bump-version.sh           # Semver bump + git tag
-│
-└── dist/               # Build outputs (gitignored)
-    ├── atlas-admin/
-    ├── atlas-dev/
-    └── atlas-user/
-```
-
-Tier inheritance resolves at build time — `admin` inherits all `dev` skills/commands, which
-inherit all `user` skills/commands. No runtime resolution; each `dist/` artifact is self-contained.
+1. Create `skills/{name}/SKILL.md` with YAML frontmatter (`name`, `description`, `effort`)
+2. Add the skill name to the appropriate `profiles/{tier}.yaml` under `skills:`
+3. Update `scripts/generate-master-skill.sh` maps: `EMOJI_MAP`, `DESC_MAP`, `CATEGORY_MAP`
+4. Run `make test` -- validates frontmatter, profile coverage, cross-refs
+5. Run `make dev` -- builds + installs to CC for live testing
 
 ## CI/CD
 
-The `.forgejo/workflows/build-publish.yaml` workflow runs on every push to `main` and on tag pushes.
+| Trigger | Action |
+|---------|--------|
+| Push/PR | `make test` via Forgejo Actions |
+| Tag `v*` | Build all tiers + publish to Forgejo Package Registry |
 
-| Trigger | Jobs |
-|---------|------|
-| Push to `main` | build + verify |
-| Tag `v*` | build + verify + publish to Package Registry |
-| Manual dispatch | build + verify |
+## Documentation
 
-Published packages are available at:
-`https://forgejo.axoiq.com/atlas/-/packages/generic/atlas-{tier}`
-
-## Contributing
-
-1. Branch from `main`: `git checkout -b feature/my-change`
-2. Edit skills in `skills/`, commands in `commands/`, or tier profiles in `profiles/`
-3. Build and test locally: `./build.sh all && claude plugins add ./dist/atlas-dev`
-4. Commit with conventional format: `feat(skills): add new-skill`
-5. Open a PR on Forgejo — CI must be green before merge
+| Doc | Purpose |
+|-----|---------|
+| `CLAUDE.md` | AI context (loaded by Claude Code sessions) |
+| `ARCHITECTURE.md` | This-level architecture guide |
+| `.blueprint/ARCHITECTURE.md` | Deep dive: build pipeline, inheritance, hooks |
+| `.blueprint/SKILL-CATALOG.md` | Full skill inventory with categories |
+| `.blueprint/PATTERNS.md` | Copy-paste patterns for common tasks |
+| `ONBOARDING.md` | New contributor guide |
+| `PARALLELISM.md` | Parallelism safety rules |
 
 ## License
 
-UNLICENSED — Private use only. AXOIQ property.
+UNLICENSED -- Private use only. AXOIQ property.
