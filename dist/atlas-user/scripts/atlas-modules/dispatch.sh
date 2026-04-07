@@ -26,7 +26,7 @@ _atlas_dispatch() {
   # Auto-detect model if not specified
   if [ -z "$model" ]; then
     local complexity_script="${ATLAS_SHELL_DIR}/../scripts/task-complexity.sh"
-    [ -f "$complexity_script" ] || complexity_script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/task-complexity.sh"
+    [ -f "$complexity_script" ] || complexity_script="${${ATLAS_SHELL_DIR:h}:h}/scripts/task-complexity.sh"
     if [ -f "$complexity_script" ]; then
       local result=$(bash "$complexity_script" "$desc")
       model=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['model'])" 2>/dev/null || echo "sonnet")
@@ -53,7 +53,7 @@ _atlas_dispatch() {
   # Log dispatch
   local log_file="${HOME}/.claude/agent-stats.jsonl"
   printf '{"ts":"%s","task":"%s","model":"%s","status":"dispatched"}\n' \
-    "$(date -Iseconds)" "$desc" "$model" >> "$log_file" 2>/dev/null
+    "$(/usr/bin/date -Iseconds)" "$desc" "$model" >> "$log_file" 2>/dev/null
 
   # Find claude binary
   local claude_bin=$(command -v claude 2>/dev/null || echo "/usr/local/bin/claude")
@@ -89,28 +89,28 @@ _atlas_dispatch() {
     esac
 
     echo "   Running (${escalated_model})..."
-    local start_ts=$(date +%s)
+    local start_ts=$(/usr/bin/date +%s)
     local output=$($claude_bin --print --model "$model_id" "$desc" 2>&1)
     local exit_code=$?
-    local end_ts=$(date +%s)
+    local end_ts=$(/usr/bin/date +%s)
     local duration=$((end_ts - start_ts))
 
-    if [ "$exit_code" -eq 0 ] && [ -n "$output" ] && ! echo "$output" | grep -qi "error\|failed\|exception" | head -1 >/dev/null 2>&1; then
+    if [ "$exit_code" -eq 0 ] && [ -n "$output" ] && ! echo "$output" | grep -qi "error\|failed\|exception" | /usr/bin/head -1 >/dev/null 2>&1; then
       success=true
       printf '{"ts":"%s","task":"%s","model":"%s","status":"completed","duration_s":%d,"attempt":%d}\n' \
-        "$(date -Iseconds)" "$desc" "$escalated_model" "$duration" "$attempt" >> "$log_file" 2>/dev/null
+        "$(/usr/bin/date -Iseconds)" "$desc" "$escalated_model" "$duration" "$attempt" >> "$log_file" 2>/dev/null
 
       echo ""
       echo "─── Result (${duration}s, ${escalated_model}) ───"
-      echo "$output" | head -50
-      [ $(echo "$output" | wc -l) -gt 50 ] && echo "... (truncated, $(echo "$output" | wc -l) lines total)"
+      echo "$output" | /usr/bin/head -50
+      [ $(echo "$output" | /usr/bin/wc -l) -gt 50 ] && echo "... (truncated, $(echo "$output" | /usr/bin/wc -l) lines total)"
       echo ""
       [ "$attempt" -gt 1 ] && echo "✅ Done in ${duration}s (escalated: ${model} → ${escalated_model})" \
                             || echo "✅ Done in ${duration}s (model: ${escalated_model})"
       break
     else
       printf '{"ts":"%s","task":"%s","model":"%s","status":"failed","duration_s":%d,"attempt":%d}\n' \
-        "$(date -Iseconds)" "$desc" "$escalated_model" "$duration" "$attempt" >> "$log_file" 2>/dev/null
+        "$(/usr/bin/date -Iseconds)" "$desc" "$escalated_model" "$duration" "$attempt" >> "$log_file" 2>/dev/null
       echo "   ⚠️  ${escalated_model} failed (${duration}s)"
     fi
   done
@@ -244,7 +244,7 @@ plan_name = os.path.basename(plan_path).replace('.md', '')
 # Extract phases and tasks from table format:  | N.N | Task | Effort | Deliverable |
 manifest = {
     'plan': plan_name,
-    'generated': '$(date -Iseconds)',
+    'generated': '$(/usr/bin/date -Iseconds)',
     'phases': []
 }
 
@@ -341,7 +341,7 @@ with open(plan_path) as f:
     content = f.read()
 
 plan_name = os.path.basename(plan_path).replace('.md', '')
-manifest = {'plan': plan_name, 'generated': '$(date -Iseconds)', 'phases': []}
+manifest = {'plan': plan_name, 'generated': '$(/usr/bin/date -Iseconds)', 'phases': []}
 
 phase_pattern = r'###\s*Phase\s*(\d+)[:\s]*(.+?)(?:\(|—|\n)'
 for phase_match in re.finditer(phase_pattern, content):

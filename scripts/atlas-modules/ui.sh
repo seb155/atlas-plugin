@@ -26,7 +26,8 @@ _atlas_discover_projects() {
     [ -d "$scan_dir" ] || continue
     for d in "$scan_dir"/*/; do
       [ -d "$d/.git" ] || [ -d "$d/.claude" ] || continue
-      local name=$(basename "$d")
+      local name="${d%/}"
+      name="${name:t}"
       results+=("$name:${d%/}")
     done
   done

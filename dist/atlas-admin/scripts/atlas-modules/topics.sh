@@ -169,7 +169,7 @@ if archived > 0:
 
 # Run cleanup once per day (marker file guard)
 _atlas_maybe_cleanup_topics() {
-  local marker="$HOME/.atlas/.topics-cleaned-$(date +%Y-%m-%d)"
+  local marker="$HOME/.atlas/.topics-cleaned-$(/usr/bin/date +%Y-%m-%d)"
   [ -f "$marker" ] && return 0
   _atlas_cleanup_topics
   touch "$marker" 2>/dev/null

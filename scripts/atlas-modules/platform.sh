@@ -44,7 +44,7 @@ _atlas_detect_platform() {
   ATLAS_HOSTNAME="$(hostname -s 2>/dev/null || echo unknown)"
 
   # Claude Code version
-  ATLAS_CC_VERSION="$(claude --version 2>/dev/null | head -1 | grep -oP '[\d.]+' || echo "?")"
+  ATLAS_CC_VERSION="$(claude --version 2>/dev/null | /usr/bin/head -1 | grep -oP '[\d.]+' || echo "?")"
 }
 _atlas_detect_platform
 
