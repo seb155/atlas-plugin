@@ -37,7 +37,7 @@ _atlas_detect_platform() {
   ATLAS_HAS_GUM=$(command -v gum &>/dev/null && echo true || echo false)
   ATLAS_HAS_FZF=$(command -v fzf &>/dev/null && echo true || echo false)
   ATLAS_HAS_DOCKER=$(command -v docker &>/dev/null && echo true || echo false)
-  ATLAS_HAS_TMUX=$([ -x /usr/bin/tmux ] && echo true || echo false)
+  ATLAS_HAS_TMUX=$(command -v tmux &>/dev/null && echo true || echo false)
   ATLAS_HAS_BUN=$(command -v bun &>/dev/null && echo true || echo false)
 
   # Hostname (for multi-machine awareness)

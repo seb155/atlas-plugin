@@ -28,7 +28,7 @@ model: opus
 
 ```bash
 # Step 1: Vulture — global unused code detection
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/backend
+# From the project's backend directory:
 pip install vulture 2>/dev/null
 vulture app/ --min-confidence 80 --exclude "alembic/,migrations/" 2>&1 | head -50
 
@@ -51,7 +51,7 @@ for svc in sorted(services.rglob('*.py')):
 "
 
 # Step 3: Ruff unused imports
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/backend
+# From the project's backend directory:
 ruff check app/ --select F401 --output-format concise 2>&1 | head -30
 ```
 
@@ -59,7 +59,7 @@ ruff check app/ --select F401 --output-format concise 2>&1 | head -30
 
 ```bash
 # Madge — circular dependency detection + unused
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend
+# From the project's frontend directory:
 bunx madge --circular --extensions ts,tsx src/ 2>&1 | head -30
 
 # dependency-cruiser — full validation
@@ -74,7 +74,7 @@ bunx depcruise --output-type err-long src/ 2>&1 | head -50
 
 ```bash
 # Requires: pip install pydeps graphviz
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/backend
+# From the project's backend directory:
 
 # Service-level dependency graph (SVG output)
 pydeps app/services --max-bacon=2 --cluster --no-show \
@@ -88,7 +88,7 @@ pydeps app/services/rule_engine.py --max-bacon=3 --no-show \
 ### Frontend dependency graph
 
 ```bash
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend
+# From the project's frontend directory:
 
 # Full dependency graph (dot format → SVG)
 bunx madge --image /tmp/synapse-frontend-deps.svg src/App.tsx

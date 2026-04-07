@@ -133,7 +133,9 @@ claude update  # Only if user approves
 ⚠️ This updates the plugin for ALL users via the Forgejo marketplace. AskUserQuestion BEFORE every step.
 
 ```bash
-cd ~/workspace_atlas/projects/atlas-dev-plugin
+# Navigate to the ATLAS plugin source directory:
+# Check ATLAS_PLUGIN_SOURCE env var first, then search with: find "$HOME" -maxdepth 6 -name "atlas-dev-plugin" -type d 2>/dev/null | head -1
+cd "${ATLAS_PLUGIN_SOURCE:-$(find "$HOME" -maxdepth 6 -name "atlas-dev-plugin" -type d 2>/dev/null | head -1)}"
 git pull origin main
 
 # Build ALL tiers (admin + dev + user)

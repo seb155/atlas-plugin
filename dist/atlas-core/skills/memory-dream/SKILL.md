@@ -1,20 +1,20 @@
 ---
 name: memory-dream
-description: "Memory consolidation engine v5.5 (CC auto-dream pattern). 12-phase cycle with experiential + workflow + learning velocity layers: orient, docs audit, gather signal, validate, experiential audit, workflow audit, learning velocity audit, consolidate, session journal, experiential synthesis, prune & index (17D health), reflection generator, cross-project. 9 memory types (user, feedback, project, reference + episode, intuition, reflection, relationship, temporal). Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
+description: "Memory consolidation engine v6 (CC auto-dream pattern). 16-phase cycle: orient, docs audit, gather, validate, replay analysis, experiential, workflow, learning velocity, gap detection, consolidate, session journal, experiential synthesis, propose improvements, prune (17D health), dream quality metrics, auto-schedule, reflection, cross-project. 9 memory types. Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
 effort: high
 ---
 
-# Memory Dream v5.5 — Whole-Person Consolidation Engine
+# Memory Dream v6 — Self-Improving Consolidation Engine
 
-> Implements CC's auto-dream pattern: a 12-phase memory consolidation cycle inspired by
+> Implements CC's auto-dream pattern: a 16-phase memory consolidation cycle inspired by
 > sleep-time compute (UC Berkeley + Letta, 2025) and cognitive architectures (ACT-R/SOAR).
-> v5.5 adds **learning velocity audit** (Phase 2.8): feedback rate tracking, bias correction detection,
-> 17-dimension health scoring (D17 Learning Velocity), measuring how actively the system learns.
-> v5 added **workflow audit** (Phase 2.7): skill usage tracking, error rates, unused skill detection,
-> 16-dimension health scoring (D16 Workflow Efficiency), and learning verbosity configuration.
+> v6 adds **4 cognitive phases**: replay analysis (2.9), gap detection (2.10),
+> improvement proposals (4.7), auto-scheduling (4.8), and dream quality metrics (4.9).
+> The self-improvement loop: Dream proposes → User approves → System implements → Dream validates.
+> v5.5 added learning velocity audit (Phase 2.8).
+> v5 added workflow audit (Phase 2.7).
 > v4 added the experiential layer: 5 new memory types, inference-first capture, growth trajectory.
-> Scope: memory + handoffs + docs + plans + features + plugin state + experiential context + workflow.
-> Scope: memory + handoffs + docs + plans + features + plugin state + experiential context.
+> Scope: memory + handoffs + docs + plans + features + plugin state + experiential + workflow + replay.
 
 ## When to Use
 
@@ -326,6 +326,100 @@ Phase 2.6 — Experiential Audit
    D17 Score: {N}/10
    ```
 
+## Phase 2.9 — Replay Analysis (NEW, v6)
+
+> Runs with `--deep` or `--full`. Parses session-replay.jsonl to detect workflow patterns.
+> SP-EVOLUTION P8.1 — Foundation for workflow learning.
+
+### Prerequisites
+- `~/.claude/session-replay.jsonl` must exist (populated by session hooks or `atlas replay`)
+- At least 50 events for meaningful pattern extraction
+
+### Steps
+
+1. **Load replay data**: Read `session-replay.jsonl`. Parse tool names, timestamps, task context.
+   ```bash
+   REPLAY_FILE="${HOME}/.claude/session-replay.jsonl"
+   [ -f "$REPLAY_FILE" ] || { echo "No replay data. Run sessions first."; return; }
+   EVENT_COUNT=$(wc -l < "$REPLAY_FILE")
+   ```
+
+2. **Extract tool sequences**: Find recurring tool call patterns (bigrams/trigrams).
+   - Common sequences: `Read → Edit → Bash(test)`, `Grep → Read → Edit`
+   - Detect "anti-patterns": `Edit → Edit → Edit` (thrashing without verification)
+
+3. **Skill usage frequency**: Count which skills are invoked, measure time-between-invocations.
+   - Identify unused skills (installed but never triggered in 30+ days)
+   - Identify over-relied skills (>50% of invocations)
+
+4. **Session flow templates**: Extract typical session shapes:
+   - "explore → plan → implement → verify" (healthy)
+   - "implement → fix → fix → fix" (debugging spiral)
+   - "plan → plan → plan" (planning paralysis)
+
+5. **Output**:
+   ```
+   Phase 2.9 — Replay Analysis
+   Events: {N} | Sessions: {N} | Span: {days}d
+   
+   Top tool sequences:
+     Read → Edit → Bash(test)     42 occurrences (healthy TDD)
+     Grep → Read → Grep → Read    18 occurrences (exploration)
+     Edit → Edit → Edit           7 occurrences (⚠️ thrashing)
+   
+   Skill usage (30d):
+     systematic-debugging  28 invocations  ██████████
+     plan-builder          14 invocations  █████
+     tdd                    3 invocations  █ (underused?)
+   
+   Session shapes:
+     Explore→Plan→Implement  45% (healthy)
+     Fix→Fix→Fix             25% (⚠️ debug spiral)
+     Plan→Plan               15% (consider implementing)
+   ```
+
+## Phase 2.10 — Knowledge Gap Detection (NEW, v6)
+
+> Runs with `--deep` or `--full`. Cross-references skills used vs. outcomes achieved.
+> SP-EVOLUTION P8.2 + P8.6 — Identifies blind spots and unresolved topics.
+
+### Steps
+
+1. **Skill outcome tracking**: For each skill invocation, check if it led to a task completion.
+   - Parse `agent-stats.jsonl` for dispatch outcomes (success/fail per model).
+   - Parse `session-state.json` history for task completion rates.
+
+2. **Unresolved topic detection**: Search memory for topics that appear in 3+ handoffs but have no corresponding completed plan.
+   - Pattern: topic mentioned in handoff "remaining" sections repeatedly.
+   - Flag: "This topic has been deferred 3x. Escalate or archive."
+
+3. **Skill gap analysis**: Compare skills available (from plugin manifest) vs skills actually used.
+   - Unused skills → suggest removal or training
+   - Failed skills → suggest investigation or alternative
+
+4. **Cross-session pattern merge**: When multiple session-state.json files exist (from worktrees/tmux):
+   - Aggregate completion rates across sessions
+   - Identify tasks that stall across multiple sessions
+
+5. **Output**:
+   ```
+   Phase 2.10 — Knowledge Gap Detection
+   
+   Unresolved topics (deferred 3+ times):
+     ⚠️ "Telegram notifications" — deferred in 4 handoffs (network blocker)
+     ⚠️ "SP-COGNITION P2" — mentioned 3x, never started
+   
+   Skill gaps:
+     📊 tdd: installed but used 3x in 30d (target: every implementation)
+     📊 security-audit: 0 invocations (last audit: 26d ago)
+   
+   Model success rates (from dispatch):
+     Haiku: 91% (89 tasks) | Sonnet: 94% (147 tasks) | Opus: 96% (23 tasks)
+   
+   Cross-session stalls:
+     ❌ "Fix Caddy→VM560" — attempted in 3 sessions, unresolved
+   ```
+
 ## Phase 3 — Consolidate (Enhanced, HITL Required)
 
 Make changes with explicit user approval at every step.
@@ -630,6 +724,130 @@ For details, read `${SKILL_DIR}/references/reflection-template.md`
    Options: "Update ranking" / "Keep current" / "Discuss"
 
 9. **Write**: Update self-model.md with approved changes. Add `Updated: YYYY-MM-DD HH:MM TZ` to footer.
+
+## Phase 4.7 — Improvement Proposal Engine (NEW, v6)
+
+> Runs with `--deep` or `--full`. Aggregates insights from all phases → generates concrete proposals.
+> SP-EVOLUTION P8.3 + P8.8 — The self-improvement loop.
+
+### Steps
+
+1. **Collect insights**: Gather findings from Phases 2.9 (replay), 2.10 (gaps), 2.8 (velocity), 2.7 (workflow).
+
+2. **Generate proposals**: For each finding, propose a concrete action:
+   - Unused skill → "Remove skill X or create onboarding example"
+   - Debug spiral pattern → "Add pre-debug checklist to systematic-debugging skill"
+   - High Haiku failure rate → "Increase complexity threshold for Haiku dispatch"
+   - Deferred topic → "Create plan for X or explicitly archive with rationale"
+
+3. **Prioritize**: Score proposals by:
+   - **Impact** (1-5): How much does this improve workflow?
+   - **Effort** (1-5): How hard to implement?
+   - **Urgency** (1-5): Is this blocking other work?
+   - **Score** = Impact × Urgency / Effort
+
+4. **Track proposal lifecycle**:
+   - Write proposals to `~/.claude/dream-proposals.jsonl`
+   - Format: `{"date":"...","proposal":"...","type":"skill|hook|config|plan","impact":N,"effort":N,"status":"proposed|accepted|implemented|rejected"}`
+   - When a proposal matches a subsequent commit or skill change → auto-mark as "implemented"
+
+5. **Feedback loop closure** (P8.8): Compare previous proposals with current state:
+   - Read `dream-proposals.jsonl`, find "accepted" proposals
+   - Check if corresponding changes exist (grep for keywords in recent commits/files)
+   - Mark as "implemented" if evidence found, or "stale" if >30d without progress
+
+6. **Output** (HITL gate — user approves/rejects each):
+   ```
+   Phase 4.7 — Improvement Proposals
+   
+   🏆 Top 3 proposals (by score):
+   
+   1. [Score: 8.3] Add TDD guard hook
+      Type: hook | Impact: 5 | Effort: 3 | Urgency: 5
+      Why: Only 3 TDD invocations in 30d despite 47 implementation tasks
+      Action: Create hook that warns when implementing without test file open
+   
+   2. [Score: 5.0] Archive SP-COGNITION P2
+      Type: plan | Impact: 3 | Effort: 1 | Urgency: 5
+      Why: Deferred in 3 consecutive handoffs. No progress path visible.
+      Action: Move to archive/deferred/ with explicit rationale
+   
+   3. [Score: 4.2] Upgrade Haiku dispatch threshold
+      Type: config | Impact: 3 | Effort: 2 | Urgency: 4
+      Why: Haiku fails 9% of tasks. Increasing threshold from score≤2 to score≤1 reduces failures.
+      Action: Edit task-complexity.sh line 78: change `<= 2` to `<= 1`
+   
+   Previously proposed: 5 | Implemented: 3 | Stale: 1 | Rejected: 1
+   ```
+
+## Phase 4.8 — Auto-Schedule Next Dream (NEW, v6)
+
+> SP-EVOLUTION P8.5 — Auto-schedule next dream based on activity volume.
+
+### Steps
+
+1. **Measure activity since last dream**: Count events in session-replay.jsonl since last dream-report date.
+   ```bash
+   LAST_DREAM=$(ls -t "$MEMORY_DIR"/dream-report-*.md 2>/dev/null | head -1)
+   LAST_DATE=$(stat -c %Y "$LAST_DREAM" 2>/dev/null || echo 0)
+   ```
+
+2. **Determine schedule**:
+   - High activity (>200 events/week): Schedule dream in 3 days
+   - Medium activity (50-200 events/week): Schedule dream in 7 days
+   - Low activity (<50 events/week): Schedule dream in 14 days
+
+3. **Schedule via CronCreate** (if in interactive session):
+   ```
+   Suggest: "Schedule next dream for {date}?"
+   If approved: CronCreate with prompt "/atlas dream --deep"
+   ```
+
+4. **Output**:
+   ```
+   Phase 4.8 — Auto-Schedule
+   Activity: {N} events in last {N}d (HIGH/MEDIUM/LOW)
+   Recommendation: Next dream in {N} days ({date})
+   ```
+
+## Phase 4.9 — Dream Quality Metrics (NEW, v6)
+
+> SP-EVOLUTION P8.7 — Quantify dream effectiveness.
+
+### Steps
+
+1. **Pre/post metrics**: Compare state before and after consolidation:
+   - Memory file count (before → after)
+   - Total MEMORY.md lines (before → after)
+   - Orphan files removed
+   - Stale entries corrected
+   - Proposals generated
+
+2. **Track in history**: Append to `~/.claude/dream-history.jsonl`:
+   ```json
+   {"date":"2026-04-05","version":"v6","memory_before":195,"memory_after":192,"orphans_removed":3,"stale_fixed":2,"proposals":5,"duration_min":20,"health_score":78}
+   ```
+
+3. **Quality indicators**:
+   - **Compression ratio**: bytes saved / total bytes before
+   - **Freshness lift**: avg age_days reduction
+   - **Accuracy**: % of status claims verified as correct (from Phase 2.5)
+
+4. **Output**:
+   ```
+   Phase 4.9 — Dream Quality Metrics
+   ┌─────────────────────┬────────┬────────┐
+   │ Metric              │ Before │ After  │
+   ├─────────────────────┼────────┼────────┤
+   │ Memory files        │ 197    │ 194    │
+   │ MEMORY.md lines     │ 198    │ 185    │
+   │ Orphan files        │ 5      │ 0      │
+   │ Stale entries       │ 3      │ 0      │
+   │ Proposals generated │ —      │ 5      │
+   │ Health score        │ 72/100 │ 85/100 │
+   └─────────────────────┴────────┴────────┘
+   Dream effectiveness: +13 health points, 3 files archived
+   ```
 
 ## Phase 5 — Cross-Project (NEW)
 

@@ -175,7 +175,7 @@ _atlas_split_launch() {
 
   # Build the claude command string with full PATH export prefix
   # Append "; exit" so the tmux shell auto-closes when claude exits
-  local path_export="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\${HOME}/.local/bin:\${HOME}/.bun/bin:\${HOME}/.cargo/bin:\${HOME}/.npm-global/bin:/usr/local/go/bin:\${HOME}/go/bin:\${PATH}"
+  local path_export="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\${HOME}/.local/bin:\${HOME}/.bun/bin:\${HOME}/.cargo/bin:\${HOME}/.npm-global/bin:/usr/local/go/bin:\${HOME}/go/bin:\$PATH"
   local cmd_str="${cmd[*]}"
   local full_cmd="${path_export} && ${cmd_str}; exit"
 
@@ -195,7 +195,7 @@ _atlas_split_launch() {
 # ─── Main Entry Point ────────────────────────────────────────
 atlas() {
   # Ensure standard system paths are in PATH and clear stale command cache
-  export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin:${PATH}"
+  export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin:$PATH"
   hash -r 2>/dev/null  # Reset zsh command hash table (fixes stale "not found" cache)
 
   # No args = interactive menu
@@ -439,7 +439,7 @@ print(handoffs[-1] if handoffs else '')
   [ ${#extra_args[@]} -gt 0 ] && cmd+=("${extra_args[@]}")
 
   # Launch with full PATH guaranteed
-  local _full_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin"
+  local _full_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin:$PATH"
 
   if [[ "$split" == "true" ]] && ! $bare; then
     _atlas_split_launch "$project" "$path" "$tmux_session_name" "${cmd[@]}"

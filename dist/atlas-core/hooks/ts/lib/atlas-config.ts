@@ -15,8 +15,9 @@ import { dirname, join } from "node:path";
 
 // Path resolution
 export const ATLAS_ROOT = process.env.ATLAS_ROOT || process.cwd();
-export const PAI_DIR = process.env.PAI_DIR || `${process.env.HOME}/workspace/atlas/.claude`;
-export const ATLAS_DIR = process.env.ATLAS_DIR || `${process.env.HOME}/workspace/atlas/.atlas`;
+const WORKSPACE_ROOT = process.env.ATLAS_WORKSPACE_ROOT || process.env.HOME || "";
+export const PAI_DIR = process.env.PAI_DIR || `${WORKSPACE_ROOT}/.claude`;
+export const ATLAS_DIR = process.env.ATLAS_DIR || `${WORKSPACE_ROOT}/.atlas`;
 
 /** Get ATLAS workspace root directory */
 export function getAtlasRoot(): string {

@@ -126,13 +126,13 @@ jobs:
       - name: Mirror to GitHub
         shell: sh
         env:
-          GITHUB_MIRROR_TOKEN: ${{ secrets.GITHUB_MIRROR_TOKEN }}
+          GH_MIRROR_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
         run: |
-          if [ -z "${GITHUB_MIRROR_TOKEN:-}" ]; then
-            echo "⚠️ GITHUB_MIRROR_TOKEN not set — skipping GitHub mirror"
+          if [ -z "${GH_MIRROR_TOKEN:-}" ]; then
+            echo "⚠️ GH_MIRROR_TOKEN not set — skipping GitHub mirror"
             exit 0
           fi
           echo "Mirroring to GitHub..."
-          git remote add github "https://x-access-token:${GITHUB_MIRROR_TOKEN}@github.com/seb155/atlas-plugin.git" 2>/dev/null || true
+          git remote add github "https://x-access-token:${GH_MIRROR_TOKEN}@github.com/seb155/atlas-plugin.git" 2>/dev/null || true
           git push github HEAD:main --tags --force
           echo "✅ Mirrored to github.com/seb155/atlas-plugin"

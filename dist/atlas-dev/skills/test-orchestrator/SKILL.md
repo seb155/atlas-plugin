@@ -30,8 +30,9 @@ model: sonnet
 docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -x -q --tb=short -m smoke 2>/dev/null || python -m pytest tests/ -x -q --tb=short --co -q 2>&1 | head -5 && python -m pytest tests/test_health.py tests/test_api_instruments.py -x -q --tb=short 2>/dev/null || python -m pytest tests/ -x -q --tb=short -k 'health or smoke'"
 
 # Frontend vitest — unit + type check
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx vitest --run --reporter=verbose 2>&1 | tail -20
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bun run type-check 2>&1 | tail -10
+# From the project's frontend directory:
+bunx vitest --run --reporter=verbose 2>&1 | tail -20
+bun run type-check 2>&1 | tail -10
 ```
 
 ### `/atlas test unit`
@@ -40,7 +41,7 @@ cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bun run type
 docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -x -q --tb=short --ignore=tests/integration"
 
 # Frontend — vitest + type-check
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx vitest --run && bun run type-check
+# From the project's frontend directory: `bunx vitest --run && bun run type-check`
 ```
 
 ### `/atlas test integration`
@@ -53,10 +54,10 @@ docker exec synapse-backend bash -c "cd /app && python -m pytest tests/integrati
 ### `/atlas test e2e`
 ```bash
 # Full Playwright QA suite
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx playwright test e2e/qa-*.spec.ts
+# From the project's frontend directory: `bunx playwright test e2e/qa-*.spec.ts`
 
 # Single spec (faster iteration)
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx playwright test e2e/qa-instruments.spec.ts
+# From the project's frontend directory: `bunx playwright test e2e/qa-instruments.spec.ts`
 ```
 
 ### `/atlas test security`
@@ -64,21 +65,21 @@ cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx playwri
 # Backend security tests
 docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -x -q --tb=short -k 'security or rbac or auth'"
 
-# Frontend — grep for risky patterns
-grep -r "localStorage.*[Tt]oken" /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend/src/ && echo "WARNING: token in localStorage" || echo "OK: no token in localStorage"
-grep -r "allow_origins.*\*" /home/sgagnon/workspace_atlas/projects/atlas/synapse/backend/ && echo "WARNING: CORS wildcard" || echo "OK: no CORS wildcard"
+# Frontend — grep for risky patterns (run from the project root)
+grep -r "localStorage.*[Tt]oken" frontend/src/ && echo "WARNING: token in localStorage" || echo "OK: no token in localStorage"
+grep -r "allow_origins.*\*" backend/ && echo "WARNING: CORS wildcard" || echo "OK: no CORS wildcard"
 ```
 
 ### `/atlas test plugin`
 ```bash
 # Atlas Plugin structural tests (no Docker needed)
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/atlas-plugin && python -m pytest tests/ -x -q --tb=short
+# From the project's atlas-plugin directory: `python -m pytest tests/ -x -q --tb=short`
 ```
 
 ### `/atlas test infra`
 ```bash
-# Docker stack health
-docker compose -f /home/sgagnon/workspace_atlas/projects/atlas/synapse/compose.yml ps --format "{{.Name}} {{.Status}}"
+# Docker stack health (run from the project root)
+docker compose -f compose.yml ps --format "{{.Name}} {{.Status}}"
 
 # API health
 curl -s http://localhost:8001/health | python3 -m json.tool
@@ -93,24 +94,24 @@ docker exec synapse-backend bash -c "cd /app && python -c 'from app.db import ge
 ### `/atlas test full`
 ```bash
 # Run all suites sequentially (fail-fast at each level)
-# Step 1: Environment health
-docker compose -f /home/sgagnon/workspace_atlas/projects/atlas/synapse/compose.yml ps --format "{{.Name}} {{.Status}}"
+# Step 1: Environment health (run from the project root)
+docker compose -f compose.yml ps --format "{{.Name}} {{.Status}}"
 curl -sf http://localhost:8001/health > /dev/null && echo "Backend OK" || echo "Backend DOWN"
 
 # Step 2: Plugin (fastest, no Docker)
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/atlas-plugin && python -m pytest tests/ -x -q --tb=short
+# From the project's atlas-plugin directory: `python -m pytest tests/ -x -q --tb=short`
 
 # Step 3: Backend unit
 docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -x -q --tb=short --ignore=tests/integration"
 
 # Step 4: Frontend unit + types
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx vitest --run && bun run type-check
+# From the project's frontend directory: `bunx vitest --run && bun run type-check`
 
 # Step 5: Integration
 docker exec synapse-backend bash -c "cd /app && python -m pytest tests/integration/ -x -q --tb=short"
 
 # Step 6: E2E
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx playwright test e2e/qa-*.spec.ts
+# From the project's frontend directory: `bunx playwright test e2e/qa-*.spec.ts`
 ```
 
 ### `/atlas test coverage`
@@ -119,10 +120,10 @@ cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx playwri
 docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -q --tb=short --ignore=tests/integration --cov=app --cov-report=term-missing --cov-fail-under=15"
 
 # Frontend coverage
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/frontend && bunx vitest --run --coverage
+# From the project's frontend directory: `bunx vitest --run --coverage`
 
 # Plugin coverage
-cd /home/sgagnon/workspace_atlas/projects/atlas/synapse/atlas-plugin && python -m pytest tests/ -q --tb=short --cov=. --cov-report=term-missing --cov-fail-under=100 -k 'frontmatter or schema or structure'
+# From the project's atlas-plugin directory: `python -m pytest tests/ -q --tb=short --cov=. --cov-report=term-missing --cov-fail-under=100 -k 'frontmatter or schema or structure'`
 ```
 
 ## Coverage Thresholds

@@ -58,6 +58,8 @@ const ATLAS_ROOT = process.cwd();
 const METRICS_PATH = join(ATLAS_ROOT, ".atlas/data/subagent-metrics.jsonl");
 const RESEARCH_PATH = join(ATLAS_ROOT, ".atlas/knowledge/research");
 const ACTIVE_AGENTS_PATH = join(ATLAS_ROOT, ".atlas/data/subagent-active.json");
+// Global agent stats for Dream v6 Phase 2.10 (Knowledge Gap Detection)
+const GLOBAL_AGENT_STATS_PATH = join(process.env.HOME || "", ".claude/agent-stats.jsonl");
 
 interface AgentStartRecord {
 	agent_type: string;
@@ -188,6 +190,16 @@ function logMetrics(
 		};
 
 		appendFileSync(METRICS_PATH, JSON.stringify(metric) + "\n");
+
+		// Also write to global agent-stats for Dream v6 cross-project analysis
+		appendFileSync(
+			GLOBAL_AGENT_STATS_PATH,
+			JSON.stringify({
+				...metric,
+				project: ATLAS_ROOT.split("/").pop() || "unknown",
+				model: input.model_used,
+			}) + "\n",
+		);
 	} catch {
 		// Silent fail for metrics
 	}

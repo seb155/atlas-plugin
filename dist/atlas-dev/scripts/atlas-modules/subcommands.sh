@@ -78,11 +78,15 @@ _atlas_status() {
     printf "  🧠 %-14s %d files, ${mem_color}%d${ATLAS_RESET} lines index\n" "Memory" "$mem_count" "$mem_lines"
   fi
 
-  # CI status (if Forgejo token available)
+  # CI status (if Forgejo token and base URL available)
   if [ -n "${FORGEJO_TOKEN:-}" ]; then
-    local forgejo_url="${FORGEJO_BASE_URL:-http://192.168.10.75:3000}"
-    local ci_status=$(curl -sf --max-time 3 "${forgejo_url}/api/v1/repos/axoiq/synapse/statuses/$(git rev-parse HEAD 2>/dev/null)" \
-      -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null | python3 -c "
+    local forgejo_url="${FORGEJO_BASE_URL:-}"
+    if [ -z "$forgejo_url" ]; then
+      printf "  🔧 %-14s %s\n" "CI" "⚪ N/A (FORGEJO_BASE_URL not set)"
+    else
+      local ci_status
+      ci_status=$(curl -sf --max-time 3 "${forgejo_url}/api/v1/repos/axoiq/synapse/statuses/$(git rev-parse HEAD 2>/dev/null)" \
+        -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null | python3 -c "
 import json, sys
 try:
     data = json.load(sys.stdin)
@@ -95,7 +99,8 @@ try:
     else: print('⚪ N/A')
 except: print('⚪ N/A')
 " 2>/dev/null || echo "⚪ N/A")
-    printf "  🔧 %-14s %s\n" "CI" "$ci_status"
+      printf "  🔧 %-14s %s\n" "CI" "$ci_status"
+    fi
   fi
 
   # Plugin version
@@ -117,7 +122,7 @@ _atlas_plans() {
   local search_paths=(
     "${ATLAS_SHELL_DIR}/../scripts/plan-lifecycle.sh"
     "${ATLAS_SHELL_DIR}/../../scripts/plan-lifecycle.sh"
-    "${HOME}/workspace_atlas/projects/atlas-dev-plugin/scripts/plan-lifecycle.sh"
+    "${ATLAS_PLUGIN_SOURCE:-$HOME/workspace_atlas/projects/atlas-dev-plugin}/scripts/plan-lifecycle.sh"
   )
   # Also search plugin cache (shell-agnostic)
   if command -v find >/dev/null 2>&1; then
@@ -139,7 +144,7 @@ _find_plugin_tools() {
   local search_paths=(
     "${ATLAS_SHELL_DIR}/../scripts/plugin-tools.sh"
     "${ATLAS_SHELL_DIR}/../../scripts/plugin-tools.sh"
-    "${HOME}/workspace_atlas/projects/atlas-dev-plugin/scripts/plugin-tools.sh"
+    "${ATLAS_PLUGIN_SOURCE:-$HOME/workspace_atlas/projects/atlas-dev-plugin}/scripts/plugin-tools.sh"
   )
   if command -v find >/dev/null 2>&1; then
     while IFS= read -r p; do
@@ -185,7 +190,7 @@ _find_session_tools() {
   local search_paths=(
     "${ATLAS_SHELL_DIR}/../scripts/session-tools.sh"
     "${ATLAS_SHELL_DIR}/../../scripts/session-tools.sh"
-    "${HOME}/workspace_atlas/projects/atlas-dev-plugin/scripts/session-tools.sh"
+    "${ATLAS_PLUGIN_SOURCE:-$HOME/workspace_atlas/projects/atlas-dev-plugin}/scripts/session-tools.sh"
   )
   if command -v find >/dev/null 2>&1; then
     while IFS= read -r p; do
@@ -250,7 +255,7 @@ _atlas_ci() {
   _atlas_header
   printf "  ${ATLAS_BOLD}CI Pipeline Status${ATLAS_RESET}\n\n"
 
-  local forgejo_url="${FORGEJO_BASE_URL:-http://192.168.10.75:3000}"
+  local forgejo_url="${FORGEJO_BASE_URL:-}"
   local token="${FORGEJO_TOKEN:-}"
 
   if [ -z "$token" ]; then
@@ -263,6 +268,12 @@ _atlas_ci() {
     printf "  ${ATLAS_DIM}FORGEJO_TOKEN not set. Add to ~/.env${ATLAS_RESET}\n"
     _atlas_footer
     return 1
+  fi
+
+  if [ -z "$forgejo_url" ]; then
+    printf "  ${ATLAS_DIM}FORGEJO_BASE_URL not set — skipping${ATLAS_RESET}\n"
+    _atlas_footer
+    return 0
   fi
 
   # Detect repo from git remote
@@ -442,7 +453,7 @@ _atlas_dashboard() {
 
   # Plugin version (from VERSION file in source)
   local plugin_version="?"
-  local plugin_src="${HOME}/workspace_atlas/projects/atlas-dev-plugin"
+  local plugin_src="${ATLAS_PLUGIN_SOURCE:-$HOME/workspace_atlas/projects/atlas-dev-plugin}"
   [ -f "$plugin_src/VERSION" ] && plugin_version=$(cat "$plugin_src/VERSION" | tr -d '[:space:]')
 
   # Installed cache version

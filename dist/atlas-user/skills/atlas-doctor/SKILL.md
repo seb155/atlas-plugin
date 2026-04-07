@@ -312,7 +312,7 @@ done
 if [ $SKEW -eq 1 ]; then
   echo ""
   echo "⚠️ Plugin version skew detected"
-  echo "   [FIX] cd ~/workspace_atlas/projects/atlas-dev-plugin && make dev"
+  echo "   [FIX] Navigate to the plugin source directory (atlas-dev-plugin/) and run: make dev"
 fi
 ```
 
@@ -325,7 +325,7 @@ Plugin Version Sync:
   atlas-core:  v4.15.0 ⚠️ SKEW
 
 ⚠️ Plugin version skew detected
-   [FIX] cd ~/workspace_atlas/projects/atlas-dev-plugin && make dev
+   [FIX] Navigate to the plugin source directory (atlas-dev-plugin/) and run: make dev
 ```
 
 **NOTE**: Marketplace-cached plugins may store ONLY `plugin.json` + `marketplace.json` in `.claude-plugin/`.
@@ -367,7 +367,7 @@ For common issues, append a `[FIX]` hint inline with the warning. Use this forma
 
 ```
 ⚠️ Plugin version skew detected
-   [FIX] cd ~/workspace_atlas/projects/atlas-dev-plugin && make dev
+   [FIX] Navigate to the plugin source directory (atlas-dev-plugin/) and run: make dev
 
 ⚠️ Missing tool: yq
    [FIX] sudo snap install yq  (Ubuntu) | brew install yq (macOS)
@@ -428,7 +428,7 @@ grep -q "atlas()" "${HOME}/.$(basename ${SHELL})rc" 2>/dev/null
 [ -n "${ATLAS_ROOT:-}" ]
 
 # 7. Workspace directory exists
-[ -d "${ATLAS_ROOT:-$HOME/workspace_atlas}" ]
+[ -d "${ATLAS_ROOT:-}" ] || [ -n "${ATLAS_ROOT:-}" ]
 
 # 8. DX tools (fzf + zoxide + bat minimum)
 command -v fzf && command -v zoxide && (command -v bat || command -v batcat)
@@ -440,7 +440,7 @@ Platform-aware auto-fix suggestions:
 | CC missing | `curl -fsSL https://claude.ai/install \| sh` | same |
 | Aliases missing | `/atlas setup` or `scripts/shell-aliases.sh >> ~/.zshrc` | `>> ~/.zshrc` |
 | ATLAS_ROOT missing | `echo 'export ATLAS_ROOT=...' >> ~/.zshrc` | same |
-| Workspace missing | `mkdir -p ~/workspace_atlas` | same |
+| Workspace missing | `mkdir -p $ATLAS_ROOT` (set ATLAS_ROOT first) | same |
 
 Display platform summary:
 ```

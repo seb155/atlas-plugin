@@ -175,7 +175,7 @@ _atlas_split_launch() {
 
   # Build the claude command string with full PATH export prefix
   # Append "; exit" so the tmux shell auto-closes when claude exits
-  local path_export="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\${HOME}/.local/bin:\${HOME}/.bun/bin:\${HOME}/.cargo/bin:\${HOME}/.npm-global/bin:/usr/local/go/bin:\${HOME}/go/bin:\${PATH}"
+  local path_export="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\${HOME}/.local/bin:\${HOME}/.bun/bin:\${HOME}/.cargo/bin:\${HOME}/.npm-global/bin:/usr/local/go/bin:\${HOME}/go/bin:\$PATH"
   local cmd_str="${cmd[*]}"
   local full_cmd="${path_export} && ${cmd_str}; exit"
 
@@ -195,7 +195,7 @@ _atlas_split_launch() {
 # ─── Main Entry Point ────────────────────────────────────────
 atlas() {
   # Ensure standard system paths are in PATH and clear stale command cache
-  export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin:${PATH}"
+  export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin:$PATH"
   hash -r 2>/dev/null  # Reset zsh command hash table (fixes stale "not found" cache)
 
   # No args = interactive menu
@@ -214,6 +214,22 @@ atlas() {
     hooks)   _atlas_hooks; return ;;
     topics)  _atlas_topics_list; return ;;
     update)  _atlas_update; return ;;
+    ci) _atlas_ci; return ;;
+    complexity) shift; _atlas_complexity "$@"; return ;;
+    dispatch) shift; _atlas_dispatch "$@"; return ;;
+    agents) shift; _atlas_agent_stats "$@"; return ;;
+    team) shift; _atlas_team_blueprint "$@"; return ;;
+    manifest) shift; _atlas_manifest "$@"; return ;;
+    repos) _atlas_repos; return ;;
+    cost) shift; _atlas_cost "$@"; return ;;
+    deps) _atlas_deps; return ;;
+    init) shift; _atlas_init "$@"; return ;;
+    plans) shift; _atlas_plans "$@"; return ;;
+    sessions) _atlas_sessions; return ;;
+    budget) _atlas_budget; return ;;
+    import-handoff) shift; _atlas_import_handoff "$@"; return ;;
+    replay) shift; _atlas_replay "$@"; return ;;
+    worktrees|wt) _atlas_worktrees; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
@@ -329,7 +345,7 @@ print(handoffs[-1] if handoffs else '')
   if [ -f "${_plugin_src}/VERSION" ]; then
     local _src_time _cache_time
     _src_time=$(stat -c %Y "${_plugin_src}/VERSION" 2>/dev/null || echo 0)
-    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION 2>/dev/null | head -1 || echo 0)
+    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION(N) 2>/dev/null | head -1 || echo 0)
     if [ "${_src_time:-0}" -gt "${_cache_time:-0}" ]; then
       echo "🔄 Plugin source newer than cache, rebuilding..."
       (cd "${_plugin_src}" && make dev-admin 2>/dev/null) && echo "   ✅ Plugin rebuilt" || echo "   ⚠️  Plugin rebuild failed (non-blocking)"
@@ -423,7 +439,7 @@ print(handoffs[-1] if handoffs else '')
   [ ${#extra_args[@]} -gt 0 ] && cmd+=("${extra_args[@]}")
 
   # Launch with full PATH guaranteed
-  local _full_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin"
+  local _full_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin:$PATH"
 
   if [[ "$split" == "true" ]] && ! $bare; then
     _atlas_split_launch "$project" "$path" "$tmux_session_name" "${cmd[@]}"

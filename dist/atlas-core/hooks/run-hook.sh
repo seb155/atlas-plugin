@@ -1,12 +1,9 @@
 #!/bin/bash
 # TypeScript hook runner for ATLAS plugin
-# Adapted from atlas/.claude/scripts/run-hook.sh
 # Resolves to the ts/ directory within the plugin hooks
 #
 # Usage: run-hook.sh <hook-name>
 # Example: run-hook.sh inject-datetime
-#
-# The hook name maps to hooks/ts/<hook-name>.ts
 
 HOOK_NAME="$1"
 if [ -z "$HOOK_NAME" ]; then
@@ -23,13 +20,24 @@ if [ ! -f "$HOOK_FILE" ]; then
   exit 0
 fi
 
-# ATLAS_ROOT is needed for workspace module resolution (@atlas/core/*)
-# Some TS hooks import from the atlas monorepo workspace
-ATLAS_ROOT="${ATLAS_ROOT:-$HOME/workspace_atlas/atlas}"
+# Workspace root for module resolution (falls back to plugin root)
+ATLAS_ROOT="${ATLAS_ROOT:-$PLUGIN_ROOT}"
+cd "$ATLAS_ROOT" 2>/dev/null || cd "$PLUGIN_ROOT" 2>/dev/null || true
 
-# cd to atlas root so bun resolves workspace dependencies
-cd "$ATLAS_ROOT" 2>/dev/null || true
+# Detect JS runtime: bun (preferred) → npx tsx → skip
+if command -v bun &>/dev/null; then
+  JS_CMD="bun run"
+elif command -v npx &>/dev/null; then
+  JS_CMD="npx --yes tsx"
+else
+  # No JS runtime — skip TS hooks gracefully
+  exit 0
+fi
 
-# Run the hook with timeout (10s max) to prevent hanging
-# Use bun (preferred — workspace-aware) or fall back to tsx
-exec timeout 10 bun run "$HOOK_FILE"
+# Run with timeout if available (GNU coreutils), otherwise run directly
+# CC enforces its own hook timeout via hooks.json, so this is a safety net
+if command -v timeout &>/dev/null; then
+  exec timeout 10 $JS_CMD "$HOOK_FILE"
+else
+  exec $JS_CMD "$HOOK_FILE"
+fi
