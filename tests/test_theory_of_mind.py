@@ -1,9 +1,11 @@
 """
-test_theory_of_mind.py — Tests for the Theory of Mind hook (COG-4).
+test_cognitive_state.py — Tests for the Unified Cognitive State hook.
+
+Replaces separate theory-of-mind + tone-adaptation + affect-signal hooks.
 
 Tests:
 - Pattern detection accuracy for all 5 states (FR/EN/QC)
-- State file I/O (atlas-tom-state.json, atlas-tom-signals.json)
+- State file I/O (atlas-tom-state.json, atlas-tom-signals.json, atlas-tone-state.json)
 - Confidence thresholds (no injection below threshold)
 - Edge cases: empty prompt, very short, mixed signals
 - Hook exits cleanly (exit code 0)
@@ -28,7 +30,7 @@ from conftest import HOOKS_DIR, PLUGIN_ROOT
 # Helpers
 # ---------------------------------------------------------------------------
 
-HOOK_SCRIPT = HOOKS_DIR / "theory-of-mind"
+HOOK_SCRIPT = HOOKS_DIR / "cognitive-state"
 
 
 def _run_tom(
@@ -46,7 +48,7 @@ def _run_tom(
     env["THROTTLE_DIR_OVERRIDE"] = throttle_dir
 
     # Clean up throttle state to avoid false negatives
-    throttle_file = Path("/tmp/atlas-hook-throttle/tom-state")
+    throttle_file = Path("/tmp/atlas-hook-throttle/cognitive-tom")
     if throttle_file.exists():
         throttle_file.unlink()
 
