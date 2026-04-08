@@ -1,8 +1,16 @@
 {
   "name": "atlas-admin",
+<<<<<<< HEAD
   "version": "4.31.0",
   "description": "ATLAS Admin — AXOIQ AI Engineering Assistant (admin tier)",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
   "buildTimestamp": "2026-04-08T23:03:49Z"
+=======
+  "version": "4.32.0",
+  "description": "ATLAS Admin — AXOIQ AI Engineering Assistant (admin tier)",
+  "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "license": "UNLICENSED",
+  "buildTimestamp": "2026-04-08T22:53:48Z"
+>>>>>>> 05e06a0cdf51ea68e5b890a16eae997bd6ea65af
 }
