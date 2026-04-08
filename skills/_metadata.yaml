@@ -525,6 +525,13 @@ skills:
     owner: admin
     description: "Hook activity analytics dashboard — task-log, permission events, session stats"
 
+  cost-analytics:
+    emoji: "💰"
+    category: Meta
+    owner: admin
+    domains: [dev, core]
+    description: "Claude Code API cost tracking — real token usage from session JSONL, daily/weekly/monthly/sprint views via ccusage"
+
   gms-cockpit:
     emoji: "🏭"
     category: Project

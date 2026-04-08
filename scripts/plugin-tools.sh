@@ -54,100 +54,68 @@ cmd_repos() {
   echo "  Legend: ✅ clean | 🟡 dirty | 🟠 staged | * uncommitted | + staged"
 }
 
-# ── P9.3: Cost Tracker ───────────────────────────────────────
+# ── P9.3: Cost Tracker (v2 — real token data via ccusage) ────
 
 cmd_cost() {
-  local reset="${1:-}"
-  local stats_file="${HOME}/.claude/agent-stats.jsonl"
-  local cost_file="${HOME}/.claude/cost-tracker.jsonl"
+  local subcmd="${1:-today}"
+  shift 2>/dev/null || true
 
-  if [ "$reset" = "--reset" ]; then
-    > "$cost_file" 2>/dev/null
-    echo "✅ Cost tracker reset."
+  # Check if the modular cost.sh exists and delegate
+  local cost_module
+  for p in \
+    "${BASH_SOURCE[0]%/*}/atlas-modules/cost.sh" \
+    "${HOME}/.atlas/shell/modules/../scripts/atlas-modules/cost.sh" \
+    "$(find "${HOME}/.claude/plugins/cache" -maxdepth 5 -name "cost.sh" -path "*/atlas-modules/*" 2>/dev/null | head -1)"; do
+    [ -f "$p" ] && { cost_module="$p"; break; }
+  done
+
+  if [ -n "${cost_module:-}" ]; then
+    bash "$cost_module" "$subcmd" "$@"
     return
   fi
 
-  echo "💰 Session Cost Estimates"
-  echo ""
+  # Inline fallback: use ccusage directly if bun available
+  if command -v bun &>/dev/null; then
+    local since_flag=""
+    case "$subcmd" in
+      today)   since_flag="--since $(date '+%Y%m%d')" ;;
+      daily)   since_flag="--since $(date -d '-7 days' '+%Y%m%d' 2>/dev/null || date -v-7d '+%Y%m%d')" ;;
+      weekly)  since_flag="--since $(date -d '-30 days' '+%Y%m%d' 2>/dev/null || date -v-30d '+%Y%m%d')" ;;
+      sprint)  since_flag="--since $(date -d '-5 days' '+%Y%m%d' 2>/dev/null || date -v-5d '+%Y%m%d')" ;;
+      session) since_flag="--since $(date -d '-3 days' '+%Y%m%d' 2>/dev/null || date -v-3d '+%Y%m%d')" ;;
+      monthly) since_flag="" ;;
+      status)
+        local today_cost
+        today_cost=$(bun x ccusage@latest daily --since "$(date '+%Y%m%d')" --json 2>/dev/null | \
+          python3 -c "import json,sys; d=json.load(sys.stdin); print(f'{sum(e[\"totalCost\"] for e in d.get(\"daily\",[])):.2f}')" 2>/dev/null || echo "?")
+        echo "\$${today_cost} today"
+        return
+        ;;
+      help|--help|-h)
+        echo "atlas cost — Claude Code API cost analytics (reads session JSONL files)"
+        echo ""
+        echo "Subcommands: today | daily | weekly | monthly | session | sprint | status"
+        echo "Options: --since YYYYMMDD | --json | --no-breakdown"
+        echo ""
+        echo "Data: $(find "${HOME}/.claude/projects/" -name '*.jsonl' 2>/dev/null | wc -l) session files"
+        echo "Engine: ccusage (bun x ccusage@latest)"
+        return
+        ;;
+      *) echo "Unknown: $subcmd. Use: today|daily|weekly|monthly|session|sprint|status|help"; return 1 ;;
+    esac
 
-  # Model pricing (approximate $/1K output tokens, 2026 rates)
-  # These are rough estimates for tracking purposes only
-  python3 -c "
-import json, os, sys
-from collections import defaultdict
-from datetime import datetime, timedelta
+    local mode="daily"
+    [ "$subcmd" = "weekly" ] && mode="weekly"
+    [ "$subcmd" = "monthly" ] && mode="monthly"
+    [ "$subcmd" = "session" ] && mode="session"
 
-RATES = {
-    'opus': {'input': 15.0, 'output': 75.0},    # per 1M tokens
-    'sonnet': {'input': 3.0, 'output': 15.0},
-    'haiku': {'input': 0.25, 'output': 1.25},
-}
-
-# Estimate tokens from duration (rough: ~100 tokens/sec output for Sonnet)
-TOKEN_RATES = {
-    'opus': 50,     # tokens/sec output
-    'sonnet': 100,
-    'haiku': 200,
-}
-
-stats_file = '${stats_file}'
-if not os.path.exists(stats_file):
-    print('  No dispatch data yet. Run atlas dispatch first.')
-    sys.exit(0)
-
-sessions = defaultdict(lambda: {'tasks': 0, 'duration_s': 0, 'cost_usd': 0.0, 'models': defaultdict(int)})
-
-with open(stats_file) as f:
-    for line in f:
-        try:
-            e = json.loads(line)
-            # Support both formats: subagent-result-capture (success/timestamp/duration_ms)
-            # and legacy dispatch format (status/ts/duration_s)
-            if not (e.get('success', False) or e.get('status') == 'completed'):
-                continue
-            model = e.get('model', 'sonnet')
-            duration = e.get('duration_s', e.get('duration_ms', 0) / 1000)
-            date = (e.get('ts', '') or e.get('timestamp', ''))[:10]
-
-            # Estimate tokens
-            out_tokens = duration * TOKEN_RATES.get(model, 100)
-            in_tokens = out_tokens * 2  # rough: 2x input vs output
-
-            rate = RATES.get(model, RATES['sonnet'])
-            cost = (in_tokens * rate['input'] + out_tokens * rate['output']) / 1_000_000
-
-            sessions[date]['tasks'] += 1
-            sessions[date]['duration_s'] += duration
-            sessions[date]['cost_usd'] += cost
-            sessions[date]['models'][model] += 1
-        except:
-            pass
-
-if not sessions:
-    print('  No completed dispatches found.')
-    sys.exit(0)
-
-total_cost = 0
-total_tasks = 0
-total_duration = 0
-
-print(f'  {\"Date\":<12} {\"Tasks\":<8} {\"Duration\":<10} {\"Est. Cost\":<12} {\"Models\":<30}')
-print(f'  {\"─\"*12} {\"─\"*8} {\"─\"*10} {\"─\"*12} {\"─\"*30}')
-
-for date in sorted(sessions.keys()):
-    s = sessions[date]
-    models_str = ', '.join(f'{m}:{c}' for m, c in sorted(s['models'].items()))
-    dur = f'{s[\"duration_s\"]//60}m{s[\"duration_s\"]%60}s'
-    print(f'  {date:<12} {s[\"tasks\"]:<8} {dur:<10} \${s[\"cost_usd\"]:<11.4f} {models_str:<30}')
-    total_cost += s['cost_usd']
-    total_tasks += s['tasks']
-    total_duration += s['duration_s']
-
-print(f'  {\"─\"*12} {\"─\"*8} {\"─\"*10} {\"─\"*12}')
-print(f'  {\"Total\":<12} {total_tasks:<8} {total_duration//60}m      \${total_cost:.4f}')
-print()
-print(f'  ⚠️  Estimates only (token count approximated from duration)')
-"
+    # shellcheck disable=SC2086
+    bun x ccusage@latest "$mode" --breakdown $since_flag "$@" 2>/dev/null
+  else
+    echo "Cost tracking requires bun. Install: curl -fsSL https://bun.sh/install | bash"
+    echo ""
+    echo "Session files available: $(find "${HOME}/.claude/projects/" -name '*.jsonl' 2>/dev/null | wc -l)"
+  fi
 }
 
 # ── P9.4: Dependency Graph ────────────────────────────────────
