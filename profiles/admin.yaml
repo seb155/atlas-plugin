@@ -49,6 +49,9 @@ skills:
   - idle-curiosity
   - gms-insights
   - gms-onboard
+  # v4.29.0: Life skills (consolidated from atlas-core commands)
+  - morning-routine
+  - weekly-review
 
 hooks:
   - enterprise-check

@@ -1,0 +1,32 @@
+name: Sync to Forgejo
+# Reverse mirror: GitHub → Forgejo
+# Complements .forgejo/workflows/publish.yaml (Forgejo → GitHub)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Forgejo
+        env:
+          FORGEJO_PUSH_URL: ${{ secrets.FORGEJO_PUSH_URL }}
+        run: |
+          if [ -z "$FORGEJO_PUSH_URL" ]; then
+            echo "⚠️ FORGEJO_PUSH_URL not set — skipping Forgejo sync"
+            exit 0
+          fi
+          echo "Syncing to Forgejo..."
+          git remote add forgejo "$FORGEJO_PUSH_URL" 2>/dev/null || true
+          git push forgejo HEAD:main --tags --force
+          echo "✅ Synced to Forgejo"

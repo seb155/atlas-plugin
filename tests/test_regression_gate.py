@@ -24,13 +24,16 @@ class TestRegressionGate:
         assert len(skills) > 0, "REGRESSION: zero skills found"
         print(f"Skills: {len(skills)}")
 
-    def test_no_commands_dir(self):
-        """commands/ directory should NOT exist (migrated to skills in v3.26.0)."""
+    def test_commands_dir_has_metadata(self):
+        """commands/ directory must have _metadata.yaml if it exists (v4.29.0+).
+        Re-introduced as first-class citizen alongside skills for slash command distribution."""
         commands_dir = PLUGIN_ROOT / "commands"
-        assert not commands_dir.exists(), (
-            "REGRESSION: commands/ directory re-introduced. "
-            "All commands were migrated to skills/ in v3.26.0."
-        )
+        if commands_dir.exists():
+            metadata = commands_dir / "_metadata.yaml"
+            assert metadata.exists(), (
+                "commands/ directory exists but _metadata.yaml is missing. "
+                "All commands must be registered in _metadata.yaml."
+            )
 
     def test_has_agents(self):
         """Plugin must have at least one agent."""

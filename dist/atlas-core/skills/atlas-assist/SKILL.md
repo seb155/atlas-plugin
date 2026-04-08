@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Core — AXOIQ's unified AI engineering assistant. 20 skills, 1 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Core — AXOIQ's unified AI engineering assistant. 22 skills, 1 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: false
 ---
 
@@ -17,7 +17,7 @@ in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
 🏛️ ATLAS │ ✅ SESSION │ v4.28.1 Core
-   20 skills │ 1 agents │ Gate 12/15
+   22 skills │ 1 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -86,6 +86,8 @@ Phases: `DISCOVER → ASSIST → REMEMBER`
 | **scope-check** | 🛡️ | Meta |
 | **deep-research** | 📚 | Knowledge |
 | **morning-brief** | ☀️ | Personal |
+| **morning-routine** | 🌅 | Personal |
+| **weekly-review** | 📋 | Personal |
 | **reminder-scheduler** | ⏰ | Personal |
 | **youtube-transcript** | 🎬 | Knowledge |
 | **document-generator** | 📄 | Knowledge |
@@ -117,7 +119,7 @@ Phases: `DISCOVER → ASSIST → REMEMBER`
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (20)
+## Available Skills (22)
 
 ### 📚 Knowledge
 - 📚 **deep-research**: Multi-query decomposition → search → triangulate → synthesize
@@ -141,9 +143,11 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 ### 👤 Personal
 - 🧠 **knowledge-builder**: Learn facts/preferences/relationships. Confidence-based
 - ☀️ **morning-brief**: Compile daily brief: agenda + emails + tasks + suggestions
+- 🌅 **morning-routine**: Daily command center — energy check-in, brief, priorities, brain dump
 - 📝 **note-capture**: Quick capture notes with tags, context, linked to meetings/projects
 - ⏰ **reminder-scheduler**: Schedule reminders via CronCreate
 - 👤 **user-profiler**: Build and display user's complete profile
+- 📋 **weekly-review**: Weekly reflection — life domains survey, OKR progress, wins, next week planning
 
 ### 🏗️ Planning
 - 🔭 **context-discovery**: Auto-scan project + CLAUDE.md audit + codemap generation

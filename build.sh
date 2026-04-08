@@ -11,6 +11,7 @@ cd "$SCRIPT_DIR"
 VERSION=$(cat VERSION | tr -d '[:space:]')
 TIERS="${1:-all}"
 METADATA_FILE="skills/_metadata.yaml"
+CMD_METADATA_FILE="commands/_metadata.yaml"
 
 # Propagate VERSION to source JSON files (keeps them in sync)
 if command -v python3 &>/dev/null; then
@@ -88,6 +89,23 @@ get_domain_profile_skills() {
   fi
 }
 
+# Return commands OWNED by a given owner (from commands/_metadata.yaml)
+get_owned_commands() {
+  local owner="$1"
+  if [ -f "$CMD_METADATA_FILE" ]; then
+    yq -r ".commands | to_entries[] | select(.value.owner == \"$owner\") | .key" "$CMD_METADATA_FILE" 2>/dev/null || true
+  fi
+}
+
+# Return commands listed in a domain profile
+get_domain_profile_commands() {
+  local domain="$1"
+  local profile="profiles/domain-${domain}.yaml"
+  if [ -f "$profile" ]; then
+    yq -r '.commands // [] | .[]' "$profile" 2>/dev/null || true
+  fi
+}
+
 build_tier() {
   local tier="$1"
   local profile="profiles/${tier}.yaml"
@@ -101,7 +119,7 @@ build_tier() {
   echo "🔨 Building atlas-${tier} v${VERSION}..."
 
   rm -rf "$output"
-  mkdir -p "$output"/{.claude-plugin,skills,agents,hooks}
+  mkdir -p "$output"/{.claude-plugin,skills,agents,hooks,commands}
 
   # SP-DEDUP: Copy only OWNED skills (delta), not inherited
   # atlas-assist still gets the full list via resolve_field (line ~190)
@@ -115,6 +133,18 @@ build_tier() {
       cp -r "skills/$skill" "$output/skills/"
     else
       echo "  ⚠️  Skill not found: $skill (skipped)"
+    fi
+  done
+
+  # Copy owned commands (delta, like skills)
+  local owned_cmds
+  owned_cmds=$(get_owned_commands "$owner")
+
+  for cmd in $owned_cmds; do
+    if [ -f "commands/$cmd.md" ]; then
+      cp "commands/$cmd.md" "$output/commands/"
+    else
+      echo "  ⚠️  Command not found: $cmd (skipped)"
     fi
   done
 
@@ -266,9 +296,11 @@ EOF
   skill_count=$(find "$output/skills" -maxdepth 2 -name "SKILL.md" | wc -l)
   local agent_count
   agent_count=$(find "$output/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+  local cmd_count
+  cmd_count=$(find "$output/commands" -name "*.md" 2>/dev/null | wc -l)
 
   echo "✅ Built atlas-${tier} v${VERSION} → ${output}/"
-  echo "   ${skill_count} skills | ${agent_count} agents"
+  echo "   ${skill_count} skills | ${agent_count} agents | ${cmd_count} commands"
 }
 
 # ── Domain build (standalone, no inheritance) ─────────────────────
@@ -297,7 +329,7 @@ build_domain() {
   echo "🔨 Building atlas-${name} (domain) v${VERSION}..."
 
   rm -rf "$output"
-  mkdir -p "$output"/{.claude-plugin,skills,agents,hooks}
+  mkdir -p "$output"/{.claude-plugin,skills,agents,hooks,commands}
 
   # SP-DEDUP Phase 2: Domain plugins are functional bundles — copy ALL skills
   # from domain profile. Domains group by function, not by tier ownership.
@@ -309,6 +341,18 @@ build_domain() {
       cp -r "skills/$skill" "$output/skills/"
     else
       echo "  ⚠️  Skill not found: $skill (skipped)"
+    fi
+  done
+
+  # Copy domain commands from profile
+  local domain_cmds
+  domain_cmds=$(get_domain_profile_commands "$name")
+
+  for cmd in $domain_cmds; do
+    if [ -f "commands/$cmd.md" ]; then
+      cp "commands/$cmd.md" "$output/commands/"
+    else
+      echo "  ⚠️  Command not found: $cmd (skipped)"
     fi
   done
 
@@ -440,8 +484,11 @@ EOF
   local agent_count
   agent_count=$(find "$output/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
 
+  local cmd_count
+  cmd_count=$(find "$output/commands" -name "*.md" 2>/dev/null | wc -l)
+
   echo "✅ Built atlas-${name} (domain) v${VERSION} → ${output}/"
-  echo "   ${skill_count} skills | ${agent_count} agents"
+  echo "   ${skill_count} skills | ${agent_count} agents | ${cmd_count} commands"
 }
 
 # Main

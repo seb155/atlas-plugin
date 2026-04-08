@@ -1,0 +1,30 @@
+# ATLAS Commands Metadata — Single Source of Truth
+# Mirrors skills/_metadata.yaml pattern for command distribution.
+#
+# owner: which TIER plugin OWNS this command (where the .md lives in tier dist/)
+#   core = base tier (everyone), dev = dev delta, admin = admin delta
+#
+# domains: which DOMAIN plugins BUNDLE this command (functional grouping)
+#
+# Updated: 2026-04-08
+
+commands:
+  ship:
+    owner: dev
+    domains: [dev]
+    description: "Quick commit and push with auto-detect commit type"
+
+  end:
+    owner: dev
+    domains: [dev]
+    description: "Close and finalize session with summary and cleanup"
+
+  pickup:
+    owner: dev
+    domains: [dev]
+    description: "Resume previous session from handoff file"
+
+  handoff:
+    owner: dev
+    domains: [dev]
+    description: "Pause session with context preservation for seamless resume"

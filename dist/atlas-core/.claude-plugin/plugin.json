@@ -4,5 +4,5 @@
   "description": "Core foundation — memory, session, context, vault, assist. Required by all ATLAS plugins.",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-08T17:05:22Z"
+  "buildTimestamp": "2026-04-08T18:17:47Z"
 }

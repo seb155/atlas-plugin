@@ -1,0 +1,30 @@
+name: Mirror to GitHub
+# Forward mirror: Forgejo → GitHub on every main push
+# Complements publish.yaml (tag-only mirror) for continuous sync
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  mirror:
+    runs-on: ci-atlas
+    steps:
+      - name: Mirror to GitHub
+        shell: sh
+        env:
+          GH_MIRROR_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+        run: |
+          if [ -z "${GH_MIRROR_TOKEN:-}" ]; then
+            echo "⚠️ GH_MIRROR_TOKEN not set — skipping GitHub mirror"
+            exit 0
+          fi
+          echo "Mirroring to GitHub..."
+          # Clone bare to get all refs
+          git clone --bare "${{ github.server_url }}/${{ github.repository }}.git" repo 2>/dev/null || {
+            # Fallback: use SSH
+            git clone --bare "ssh://forgejo/${{ github.repository }}.git" repo
+          }
+          cd repo
+          git push --mirror "https://x-access-token:${GH_MIRROR_TOKEN}@github.com/seb155/atlas-plugin.git"
+          echo "✅ Mirrored to github.com/seb155/atlas-plugin"

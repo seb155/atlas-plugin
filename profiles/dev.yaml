@@ -40,6 +40,12 @@ skills:
   - session-pickup
   - ci-management
 
+commands:
+  - ship
+  - end
+  - pickup
+  - handoff
+
 hooks:
   - session-end-memory-cleanup
   - post-compact

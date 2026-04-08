@@ -32,6 +32,12 @@ skills:
   # Deep reasoning
   - ultrathink
 
+commands:
+  - ship
+  - end
+  - pickup
+  - handoff
+
 hooks:
   - code-quality-check
   - test-impact-analysis

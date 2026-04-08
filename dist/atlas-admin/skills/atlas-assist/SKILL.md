@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 72 skills, 15 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 74 skills, 15 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: true
 ---
 
@@ -17,7 +17,7 @@ in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
 🏛️ ATLAS │ ✅ SESSION │ v4.28.1 Admin
-   72 skills │ 15 agents │ Gate 12/15
+   74 skills │ 15 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -114,6 +114,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **marketplace-manager** | 🏪 | Meta |
 | **memory-dream** | 🌙 | Meta |
 | **morning-brief** | ☀️ | Personal |
+| **morning-routine** | 🌅 | Personal |
 | **note-capture** | 📝 | Personal |
 | **onboarding-check** | ✅ | Meta |
 | **plan-builder** | 🏗️ | Planning |
@@ -140,6 +141,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **verification** | 📊 | Quality |
 | **vision-alignment** | 🧭 | Planning |
 | **visual-generator** | 🎨 | Knowledge |
+| **weekly-review** | 📋 | Personal |
 | **youtube-transcript** | 🎬 | Knowledge |
 
 ### Breadcrumb Examples
@@ -169,7 +171,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (72)
+## Available Skills (74)
 
 ### 📌 Cognitive
 - 🔍 **idle-curiosity**: Autonomous exploration engine — discovers under-explored topics and knowledge gaps. HITL gated.
@@ -232,10 +234,12 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 💭 **intuition-log**: Capture gut feelings and emerging patterns as persistent intuition files
 - 🧠 **knowledge-builder**: Learn facts/preferences/relationships. Confidence-based
 - ☀️ **morning-brief**: Compile daily brief: agenda + emails + tasks + suggestions
+- 🌅 **morning-routine**: Daily command center — energy check-in, brief, priorities, brain dump
 - 📝 **note-capture**: Quick capture notes with tags, context, linked to meetings/projects
 - 🤝 **relationship-manager**: Create or update deep relationship profiles for team members and collaborators
 - ⏰ **reminder-scheduler**: Schedule reminders via CronCreate
 - 👤 **user-profiler**: Build and display user's complete profile
+- 📋 **weekly-review**: Weekly reflection — life domains survey, OKR progress, wins, next week planning
 
 ### 🏗️ Planning
 - 💡 **brainstorming**: Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval

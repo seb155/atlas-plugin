@@ -97,6 +97,20 @@ skills:
     domains: [core]
     description: "Compile daily brief: agenda + emails + tasks + suggestions"
 
+  morning-routine:
+    emoji: "🌅"
+    category: Personal
+    owner: admin
+    domains: [core]
+    description: "Daily command center — energy check-in, brief, priorities, brain dump"
+
+  weekly-review:
+    emoji: "📋"
+    category: Personal
+    owner: admin
+    domains: [core]
+    description: "Weekly reflection — life domains survey, OKR progress, wins, next week planning"
+
   note-capture:
     emoji: "📝"
     category: Personal
