@@ -305,7 +305,82 @@ If you have access to the AXOIQ homelab infrastructure, add:
 
 Without this section, all homelab features are **silently skipped** -- no errors.
 
-### 5.3 Claude Code Settings (Windows-specific)
+### 5.3 Status Line (CShip)
+
+ATLAS uses [CShip](https://cship.dev) for a rich 3-row status line in Claude Code showing model, context %, git status, rate limits, and alerts.
+
+#### Linux / macOS
+
+```bash
+# Option A: Official installer (recommended — downloads pre-compiled binary)
+curl -fsSL https://cship.dev/install.sh | bash
+
+# Option B: Cargo (requires Rust toolchain)
+cargo install cship
+
+# Install jq (required for CShip custom modules)
+sudo apt install -y jq   # Debian/Ubuntu
+brew install jq           # macOS
+```
+
+#### Windows (Git Bash)
+
+```bash
+# 1. Install jq (required)
+winget install --id jqlang.jq --accept-source-agreements --accept-package-agreements
+
+# 2. Install Starship (optional, for shell prompt outside CC)
+winget install --id Starship.Starship --accept-source-agreements --accept-package-agreements
+
+# 3. Install CShip (use PowerShell installer — NOT cargo)
+powershell.exe -NoProfile -Command "irm https://cship.dev/install.ps1 | iex"
+```
+
+> **Why not `cargo install cship` on Windows?** Git Bash's `/usr/bin/link` shadows MSVC's
+> `link.exe` linker, causing compilation to fail with "extra operand" errors. The PowerShell
+> installer downloads a pre-compiled `cship-x86_64-pc-windows-msvc.exe` binary directly.
+
+#### Deploy ATLAS CShip Config
+
+```bash
+# Copy the ATLAS v5 layout config (3 rows: model+git, context bar, alerts)
+cp ~/.atlas/plugin/scripts/cship-atlas.toml ~/.config/cship.toml
+
+# Deploy statusline helper scripts
+mkdir -p ~/.local/share/atlas-statusline/
+cp ~/.atlas/plugin/scripts/atlas-alert-module.sh ~/.local/share/atlas-statusline/
+cp ~/.atlas/plugin/scripts/atlas-context-size-module.sh ~/.local/share/atlas-statusline/
+cp ~/.atlas/plugin/scripts/atlas-resolve-version.sh ~/.local/share/atlas-statusline/
+chmod +x ~/.local/share/atlas-statusline/*.sh
+```
+
+#### Windows PATH Setup
+
+Winget installs tools to non-standard locations. Add to `~/.bashrc`:
+
+```bash
+# CShip binary
+[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+
+# jq (winget package directory)
+_jq_dir=$(find "$HOME/AppData/Local/Microsoft/WinGet/Packages" -maxdepth 1 -name "jqlang.jq*" -type d 2>/dev/null | head -1)
+[ -n "$_jq_dir" ] && export PATH="$_jq_dir:$PATH"
+unset _jq_dir
+
+# Starship (MSI installs to Program Files)
+[ -d "/c/Program Files/starship/bin" ] && export PATH="/c/Program Files/starship/bin:$PATH"
+```
+
+#### Verify
+
+```bash
+# Should render 3-row ATLAS status line with ANSI colors
+echo '{"model":{"id":"claude-opus-4-6","display_name":"Opus"},"context_window":{"used_percentage":42}}' | cship
+```
+
+Restart Claude Code for the new status line to take effect.
+
+### 5.4 Claude Code Settings (Windows-specific)
 
 If hooks fail on Windows, verify Git Bash is accessible:
 
@@ -426,6 +501,16 @@ cat ~/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/*/VERSION  # Plu
 | TS hooks fail | Bun not installed | Install Bun, or ignore (TS hooks are optional) |
 | `python3: command not found` | Windows uses `python` not `python3` | Install Python 3 and add to PATH |
 | `stat: invalid option -- 'c'` | macOS uses BSD stat | Update to latest plugin version (fixed) |
+
+### Status Line (CShip) Issues
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `cargo install cship` fails with `link.exe` errors | Git Bash `link` shadows MSVC linker | Use PowerShell installer: `irm cship.dev/install.ps1 \| iex` |
+| Starship install cancelled (error 1602) | UAC elevation was declined | Re-run `winget install Starship.Starship` and accept the UAC prompt |
+| `jq: command not found` after winget install | PATH not refreshed in current shell | Add winget package dir to `~/.bashrc` (see section 5.3) |
+| Empty status line in CC | CShip not in PATH or not configured | Verify `~/.claude/settings.json` has `statusLine.command: "cship"` |
+| Status line shows raw ANSI codes | Terminal doesn't support ANSI | Use Windows Terminal (not cmd.exe) |
 
 ### CLI Not Working
 
