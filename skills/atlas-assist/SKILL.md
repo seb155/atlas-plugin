@@ -90,7 +90,8 @@ Every skill has a unique emoji for instant visual identification in breadcrumbs 
 | **executing-plans** | ⚡ | Implementation |
 | **subagent-dispatch** | 🤖 | Implementation |
 | **git-worktrees** | 🌿 | Implementation |
-| **systematic-debugging** | 🔬 | Quality |
+| **codebase-audit** | 🔬 | Quality |
+| **systematic-debugging** | 🐛 | Quality |
 | **verification** | 📊 | Quality |
 | **code-review** | 🔍 | Quality |
 | **code-simplify** | ✨ | Quality |
@@ -175,7 +176,7 @@ echo "TMUX=$TMUX SPAWN=$CLAUDE_CODE_SPAWN_BACKEND TEAMS=$CLAUDE_CODE_EXPERIMENTA
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (27)
+## Available Skills (28)
 
 ### 🏗️ Planning & Design
 - 🔭 **context-discovery**: Auto-scan project + CLAUDE.md audit + codemap generation
@@ -193,6 +194,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 🌿 **git-worktrees**: Isolated branch per feature. Safety verification (Forgejo-native)
 
 ### 📊 Quality & Review
+- 🔬 **codebase-audit**: 20-dimension, 9-agent parallel codebase analysis. Weighted scoring, presets, remediation roadmap
 - 🔬 **systematic-debugging**: Hypothesize → verify → fix. Max 2 attempts then escalate
 - 📊 **verification**: L1-L4 tests + E2E + security scan + perf benchmarks
 - 🔍 **code-review**: Code review with confidence filtering. Local or PR mode
@@ -330,7 +332,7 @@ or "quelles skills sont disponibles", display a categorized table:
 🏗️ PLANNING        │ context-discovery, plan-builder, brainstorming, frontend-design, vision-alignment
 🎯 STRATEGY         │ execution-strategy (model alloc, parallelism, cost optimization)
 ⚡ IMPLEMENTATION   │ tdd, executing-plans, subagent-dispatch, git-worktrees, frontend-workflow
-📊 QUALITY          │ systematic-debugging, verification, code-review, code-simplify, test-orchestrator
+📊 QUALITY          │ codebase-audit, systematic-debugging, verification, code-review, code-simplify, test-orchestrator
 📌 PROJECT          │ feature-board, programme-manager, engineering-ops, scope-check
 📦 SHIP & DEPLOY   │ finishing-branch, ci-management, devops-deploy
 📚 KNOWLEDGE        │ deep-research, document-generator, knowledge-engine, knowledge-manager, youtube-transcript

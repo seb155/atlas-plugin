@@ -52,6 +52,8 @@ skills:
   # v4.29.0: Life skills (consolidated from atlas-core commands)
   - morning-routine
   - weekly-review
+  # v4.30.0: Codebase Ultrathink Audit (20-dim, 9-agent parallel)
+  - codebase-audit
 
 hooks:
   - enterprise-check

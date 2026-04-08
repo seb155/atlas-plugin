@@ -368,6 +368,13 @@ skills:
     domains: [infra]
     description: "Deploy to any env with health checks, validators, data sync"
 
+  codebase-audit:
+    emoji: "🔬"
+    category: Quality
+    owner: admin
+    domains: [enterprise, dev]
+    description: "20-dimension agent team codebase audit with weighted scoring and remediation roadmap"
+
   enterprise-audit:
     emoji: "🏢"
     category: Governance

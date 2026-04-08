@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 74 skills, 15 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 75 skills, 15 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: true
 ---
 
@@ -17,7 +17,7 @@ in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
 🏛️ ATLAS │ ✅ SESSION │ v4.29.1 Admin
-   74 skills │ 15 agents │ Gate 12/15
+   75 skills │ 15 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -83,6 +83,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **code-analysis** | 🔎 | Quality |
 | **code-review** | 🔍 | Quality |
 | **code-simplify** | ✨ | Quality |
+| **codebase-audit** | 🔬 | Quality |
 | **context-discovery** | 🔭 | Planning |
 | **decision-log** | 📋 | Meta |
 | **deep-research** | 📚 | Knowledge |
@@ -171,7 +172,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (74)
+## Available Skills (75)
 
 ### 📌 Cognitive
 - 🔍 **idle-curiosity**: Autonomous exploration engine — discovers under-explored topics and knowledge gaps. HITL gated.
@@ -262,6 +263,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 🔎 **code-analysis**: Codebase analysis: dead code, dependency graphs, dataflow tracing
 - 🔍 **code-review**: Code review with confidence filtering. Local or PR mode
 - ✨ **code-simplify**: Refactoring for clarity, consistency, maintainability
+- 🔬 **codebase-audit**: 20-dimension agent team codebase audit with weighted scoring and remediation roadmap
 - 🔍 **plan-review**: Iterative plan review with simulation, consolidation, and HITL gates
 - 🏥 **product-health**: Application reality audit — live validation via API, browser, and tests
 - 🔬 **systematic-debugging**: Hypothesize → verify → fix. Max 2 attempts then escalate
