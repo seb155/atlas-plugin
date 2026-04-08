@@ -11,7 +11,7 @@
 #
 # Modularized: main logic lives in atlas-modules/*.sh
 
-ATLAS_VERSION="4.32.0"
+ATLAS_VERSION="4.32.1"
 ATLAS_CONFIG="${HOME}/.atlas/config.json"
 ATLAS_HISTORY="${HOME}/.atlas/history.json"
 ATLAS_SHELL_DIR="${HOME}/.atlas/shell"
@@ -21,7 +21,7 @@ _ATLAS_MOD_DIR="${ATLAS_SHELL_DIR}/modules"
 
 if [ -d "$_ATLAS_MOD_DIR" ]; then
   # Module load order: platform → ui → topics → subcommands → launcher → completions
-  for _mod in platform ui topics subcommands dispatch launcher completions; do
+  for _mod in platform ui topics subcommands dispatch ab-testing launcher completions; do
     [ -f "$_ATLAS_MOD_DIR/${_mod}.sh" ] && source "$_ATLAS_MOD_DIR/${_mod}.sh"
   done
   unset _mod

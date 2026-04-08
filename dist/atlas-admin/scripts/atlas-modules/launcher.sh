@@ -229,6 +229,7 @@ atlas() {
     budget) _atlas_budget; return ;;
     import-handoff) shift; _atlas_import_handoff "$@"; return ;;
     replay) shift; _atlas_replay "$@"; return ;;
+    ab) shift; _atlas_ab "$@"; return ;;
     worktrees|wt) _atlas_worktrees; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
