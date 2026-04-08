@@ -1,6 +1,11 @@
 name: Sync to Forgejo
-# Reverse mirror: GitHub → Forgejo
+# Reverse mirror: GitHub → Forgejo (behind Cloudflare Access)
 # Complements .forgejo/workflows/publish.yaml (Forgejo → GitHub)
+#
+# Required GitHub Secrets:
+#   FORGEJO_TOKEN        — Forgejo API token with repo push access
+#   CF_ACCESS_CLIENT_ID  — Cloudflare Access Service Token ID
+#   CF_ACCESS_CLIENT_SECRET — Cloudflare Access Service Token Secret
 
 on:
   push:
@@ -18,15 +23,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Push to Forgejo
+      - name: Push to Forgejo (via CF Access)
         env:
-          FORGEJO_PUSH_URL: ${{ secrets.FORGEJO_PUSH_URL }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          if [ -z "$FORGEJO_PUSH_URL" ]; then
-            echo "⚠️ FORGEJO_PUSH_URL not set — skipping Forgejo sync"
+          if [ -z "$FORGEJO_TOKEN" ] || [ -z "$CF_ACCESS_CLIENT_ID" ]; then
+            echo "⚠️ Secrets not configured — skipping Forgejo sync"
+            echo "   Set FORGEJO_TOKEN, CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET"
             exit 0
           fi
-          echo "Syncing to Forgejo..."
-          git remote add forgejo "$FORGEJO_PUSH_URL" 2>/dev/null || true
-          git push forgejo HEAD:main --tags --force
+
+          echo "Syncing to Forgejo (via Cloudflare Access)..."
+          git \
+            -c http.extraHeader="CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
+            -c http.extraHeader="CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
+            push "https://oauth2:${FORGEJO_TOKEN}@forgejo.axoiq.com/atlas/atlas-plugin.git" \
+            HEAD:main --tags --force
+
           echo "✅ Synced to Forgejo"
