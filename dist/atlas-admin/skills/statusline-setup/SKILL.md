@@ -1,6 +1,6 @@
 ---
 name: statusline-setup
-description: "Configure CShip + Starship + ATLAS status line for Claude Code. Installs CShip binary, deploys Starship custom modules, wires settings.json. HITL at each step."
+description: "Configure CShip + Starship + ATLAS status line for Claude Code. Installs CShip binary, deploys Starship custom modules, wires settings.json. HITL at each step. Cross-platform: Linux, macOS, Windows."
 effort: low
 ---
 
@@ -11,33 +11,39 @@ Interactive setup for the ATLAS-enhanced Claude Code status line using CShip (Ru
 ## Layout
 
 ```
-Row 1: 🏛️ ATLAS 3.2  🟣 opus  📁 atlas/synapse  🌿 dev !+
-Row 2: 👑 admin  🐳 6/6  ✅ CI  🎯 7/13
-Row 3: 📊 ███████░░░░░ 42%  📈 +42/-8
-Row 4: ⚠️ alerts (conditional — CI fail, context >75%, Docker down)
+Row 1: 🏛️ ATLAS 4.28  👑admin  🟣 opus  📁 Documents/Claude  🌿 dev !+
+Row 2: 📊 ███████░░░░░ 42%  📈 +42/-8  ⏱ R12%
+Row 3: ⚠️ alerts (conditional — CI fail, context >75%, Docker down)
 ```
 
 ## Setup Steps
 
 ### Step 1: Pre-flight Checks
 
-Run these checks and report results:
+Detect platform first, then run checks:
 
 ```bash
+# Platform detection
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) _PLATFORM="windows" ;;
+  Darwin)               _PLATFORM="macos" ;;
+  *)                    _PLATFORM="linux" ;;
+esac
+
 # CShip installed?
-which cship && cship --version
+command -v cship && cship help 2>&1 | head -1
 
 # Starship installed?
-which starship && starship --version
-
-# Hostname (laptop vs VM 560)
-hostname -s
+command -v starship && starship --version
 
 # jq installed?
-which jq
+command -v jq && jq --version
+
+# Hostname
+hostname -s 2>/dev/null || hostname
 
 # Current statusline config
-cat ~/.claude/settings.json | jq '.statusLine'
+cat ~/.claude/settings.json | grep -A2 statusLine
 
 # Session state file exists?
 ls -la ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json 2>/dev/null
@@ -45,11 +51,65 @@ ls -la ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json 2>/dev/null
 
 Present results via AskUserQuestion. If CShip missing, proceed to Step 2. If present, skip to Step 3.
 
-### Step 2: Install CShip (if missing)
+### Step 2: Install Dependencies + CShip
 
-Present options via AskUserQuestion:
-- `cargo install cship` (if Rust toolchain available)
-- `curl -fsSL https://cship.dev/install.sh | bash` (auto-installer)
+Platform-specific installation. Present options via AskUserQuestion with HITL gate.
+
+#### Windows (Git Bash)
+
+**jq** (required for CShip custom modules):
+```bash
+winget install --id jqlang.jq --accept-source-agreements --accept-package-agreements
+```
+
+**Starship** (optional, for prompt outside CC):
+```bash
+winget install --id Starship.Starship --accept-source-agreements --accept-package-agreements
+```
+> Note: MSI installer may show a UAC elevation prompt. User must accept it manually.
+
+**CShip** (the status line binary):
+```powershell
+# Use the official PowerShell installer — downloads pre-compiled binary
+# This avoids needing Rust/Cargo + MSVC Build Tools
+powershell.exe -NoProfile -Command "irm https://cship.dev/install.ps1 | iex"
+```
+> Installs to `~/.local/bin/cship.exe`, writes default config to `~/.config/cship.toml`,
+> and updates `~/.claude/settings.json` with `statusLine.command = "cship"`.
+
+**IMPORTANT — Windows cargo compilation pitfall**: `cargo install cship` will likely FAIL
+on Windows without Visual Studio Build Tools because Git Bash's `/usr/bin/link` shadows
+MSVC's `link.exe` linker. The PowerShell installer downloads a pre-compiled binary instead.
+
+#### macOS
+
+```bash
+# jq
+brew install jq
+
+# Starship (optional)
+brew install starship
+
+# CShip (via installer)
+curl -fsSL https://cship.dev/install.sh | bash
+# OR with Homebrew: brew install cship (if available)
+# OR with cargo: cargo install cship
+```
+
+#### Linux
+
+```bash
+# jq
+sudo apt install -y jq  # Debian/Ubuntu
+# OR: sudo dnf install jq  # Fedora/RHEL
+
+# Starship (optional)
+curl -sS https://starship.rs/install.sh | sh
+
+# CShip
+curl -fsSL https://cship.dev/install.sh | bash
+# OR: cargo install cship
+```
 
 Wait for user confirmation before installing.
 
@@ -61,8 +121,8 @@ mkdir -p ~/.local/share/atlas-statusline/
 
 # Copy scripts from plugin
 PLUGIN_SCRIPTS="${CLAUDE_PLUGIN_ROOT}/scripts"
-cp "$PLUGIN_SCRIPTS/atlas-starship-module.sh" ~/.local/share/atlas-statusline/
 cp "$PLUGIN_SCRIPTS/atlas-alert-module.sh" ~/.local/share/atlas-statusline/
+cp "$PLUGIN_SCRIPTS/atlas-context-size-module.sh" ~/.local/share/atlas-statusline/
 cp "$PLUGIN_SCRIPTS/atlas-resolve-version.sh" ~/.local/share/atlas-statusline/
 chmod +x ~/.local/share/atlas-statusline/*.sh
 ```
@@ -77,13 +137,17 @@ Fragment source: `${CLAUDE_PLUGIN_ROOT}/scripts/starship-atlas-fragment.toml`
 
 ### Step 5: Configure CShip
 
-Copy or merge the CShip config template:
+The CShip installer may have already written a default config. Deploy the ATLAS-specific layout:
 
 ```bash
-# If no existing config, copy template
+mkdir -p ~/.config
+
 if [ ! -f ~/.config/cship.toml ]; then
-  mkdir -p ~/.config
+  # No config — deploy ATLAS v5 layout
   cp "${CLAUDE_PLUGIN_ROOT}/scripts/cship-atlas.toml" ~/.config/cship.toml
+elif ! grep -q "ATLAS" ~/.config/cship.toml 2>/dev/null; then
+  # Config exists but isn't ATLAS — HITL gate: ask before overwriting
+  echo "Existing non-ATLAS cship.toml found"
 fi
 ```
 
@@ -102,40 +166,76 @@ Change `statusLine.command` to point to `cship`:
 }
 ```
 
+> Note: On Windows, the CShip PowerShell installer already does this automatically.
+> Verify and correct if needed.
+
 **HITL gate**: Show before/after via AskUserQuestion.
 
-### Step 7: Verification
+### Step 7: Configure Shell PATH (Windows only)
+
+On Windows, newly installed tools may not be in the current shell's PATH. Add to `~/.bashrc`:
 
 ```bash
-# Test session-state.json exists and is valid
-cat ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json | python3 -m json.tool
+# CShip / Cargo binaries
+[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+[ -d "$HOME/.cargo/bin" ] && export PATH="$HOME/.cargo/bin:$PATH"
 
-# Test Starship module
-~/.local/share/atlas-statusline/atlas-starship-module.sh
+# jq (winget installs to a versioned package directory)
+_jq_dir=$(find "$HOME/AppData/Local/Microsoft/WinGet/Packages" -maxdepth 1 -name "jqlang.jq*" -type d 2>/dev/null | head -1)
+[ -n "$_jq_dir" ] && export PATH="$_jq_dir:$PATH"
+unset _jq_dir
 
-# Test alert module (should be empty if no alerts)
-~/.local/share/atlas-statusline/atlas-alert-module.sh
+# Starship (winget MSI installs to Program Files)
+[ -d "/c/Program Files/starship/bin" ] && export PATH="/c/Program Files/starship/bin:$PATH"
+```
+
+### Step 8: Verification
+
+```bash
+# Test tools
+command -v cship && echo "CShip: OK"
+command -v jq && echo "jq: $(jq --version)"
+command -v starship && echo "Starship: $(starship --version 2>&1 | head -1)"
 
 # Test CShip pipeline with mock data
-echo '{"model":{"display_name":"Opus"},"context_window":{"used_percentage":42},"cost":{"total_lines_added":42,"total_lines_removed":8}}' | cship
+echo '{"model":{"id":"claude-opus-4-6","display_name":"Opus"},"context_window":{"used_percentage":42,"remaining_percentage":58,"size":1000000},"cost":{"total_lines_added":42,"total_lines_removed":8,"total_cost_usd":0.05},"usage_limits":{"5h":{"used_percentage":12}}}' | cship
 
-# Explain CShip modules
+# Test CShip explain
 cship explain
+
+# Test statusline scripts
+ls -la ~/.local/share/atlas-statusline/
+
+# Verify settings.json
+grep -A2 statusLine ~/.claude/settings.json
 ```
 
 Present results via AskUserQuestion for visual confirmation.
 
+## Platform Reference
+
+| Step | Linux | macOS | Windows |
+|------|-------|-------|---------|
+| jq | `apt install jq` | `brew install jq` | `winget install jqlang.jq` |
+| Starship | `curl starship.rs` | `brew install starship` | `winget install Starship.Starship` |
+| CShip | `curl cship.dev` or `cargo install` | same | `irm cship.dev/install.ps1 \| iex` |
+| Config path | `~/.config/cship.toml` | same | same (Git Bash `~`) |
+| PATH setup | Not needed (system pkg) | Not needed (Homebrew) | Required in `~/.bashrc` |
+
 ## Troubleshooting
 
-| Issue | Fix |
-|-------|-----|
-| CShip not found | `cargo install cship` or curl installer |
-| Starship not found | `curl -sS https://starship.rs/install.sh \| sh` |
-| Empty status line | Check `cship explain` for missing modules |
-| No ATLAS row | Verify session-state.json exists |
-| Stale data | Check atlas-status-writer hook in hooks.json |
-| Stale version | Run: `~/.local/share/atlas-statusline/atlas-resolve-version.sh` to verify |
-| VM 560 no Docker | Expected — Docker segment auto-hides |
+| Issue | Platform | Fix |
+|-------|----------|-----|
+| CShip not found | All | See install commands above per platform |
+| `cargo install cship` fails with `link.exe` error | Windows | Use PowerShell installer instead: `irm cship.dev/install.ps1 \| iex` |
+| Starship MSI cancelled (error 1602) | Windows | UAC prompt was declined — re-run and accept the elevation dialog |
+| jq not found after winget install | Windows | Shell PATH not refreshed — add winget package dir to `~/.bashrc` PATH |
+| Starship not found after winget install | Windows | Add `/c/Program Files/starship/bin` to PATH in `~/.bashrc` |
+| Empty status line | All | Check `cship explain` for missing modules |
+| No ATLAS row | All | Verify session-state.json exists |
+| Stale data | All | Check atlas-status-writer hook in hooks.json |
+| Stale version | All | Run: `~/.local/share/atlas-statusline/atlas-resolve-version.sh` to verify |
+| VM 560 no Docker | Linux | Expected — Docker segment auto-hides |
 
 ## Uninstall
 
@@ -144,4 +244,7 @@ Present results via AskUserQuestion for visual confirmation.
 rm -rf ~/.local/share/atlas-statusline/
 # Remove [custom.atlas*] sections from starship.toml
 # Restore original statusLine config in settings.json
+# Windows: remove CShip binary
+rm -f ~/.local/bin/cship.exe  # Windows
+rm -f ~/.local/bin/cship      # Linux/macOS
 ```

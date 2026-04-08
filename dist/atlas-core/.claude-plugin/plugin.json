@@ -1,8 +1,8 @@
 {
   "name": "atlas-core",
-  "version": "4.27.0",
+  "version": "4.28.1",
   "description": "Core foundation — memory, session, context, vault, assist. Required by all ATLAS plugins.",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-07T21:29:39Z"
+  "buildTimestamp": "2026-04-08T17:05:22Z"
 }

@@ -5,7 +5,7 @@
 
 detect_platform() {
   local os="unknown" os_version="" arch="" shell_name="" terminal="" wsl=false
-  local has_docker=false has_bun=false has_yq=false has_starship=false has_cship=false
+  local has_docker=false has_bun=false has_yq=false has_starship=false has_cship=false has_jq=false has_winget=false
 
   # OS Detection
   case "$(uname -s)" in
@@ -59,6 +59,8 @@ detect_platform() {
   command -v yq &>/dev/null && has_yq=true
   command -v starship &>/dev/null && has_starship=true
   command -v cship &>/dev/null && has_cship=true
+  command -v jq &>/dev/null && has_jq=true
+  command -v winget &>/dev/null && has_winget=true
 
   local hostname
   hostname=$(hostname -s 2>/dev/null || echo "unknown")
@@ -78,7 +80,9 @@ detect_platform() {
     "bun": ${has_bun},
     "yq": ${has_yq},
     "starship": ${has_starship},
-    "cship": ${has_cship}
+    "cship": ${has_cship},
+    "jq": ${has_jq},
+    "winget": ${has_winget}
   }
 }
 EOF

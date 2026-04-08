@@ -12,8 +12,8 @@ _atlas_list() {
     printf "  ${ATLAS_BOLD}All projects${ATLAS_RESET} ${ATLAS_DIM}(scanning ${ATLAS_WORKSPACE_ROOT})${ATLAS_RESET}\n\n"
     _atlas_discover_projects | while IFS=: read pname ppath; do
       local desc=""
-      [ -f "$ppath/.claude/CLAUDE.md" ] && desc=$(head -1 "$ppath/.claude/CLAUDE.md" 2>/dev/null | sed 's/^#\s*//')
-      [ -z "$desc" ] && [ -f "$ppath/CLAUDE.md" ] && desc=$(head -1 "$ppath/CLAUDE.md" 2>/dev/null | sed 's/^#\s*//')
+      [ -f "$ppath/.claude/CLAUDE.md" ] && desc=$(/usr/bin/head -1 "$ppath/.claude/CLAUDE.md" 2>/dev/null | /usr/bin/sed 's/^#\s*//')
+      [ -z "$desc" ] && [ -f "$ppath/CLAUDE.md" ] && desc=$(/usr/bin/head -1 "$ppath/CLAUDE.md" 2>/dev/null | /usr/bin/sed 's/^#\s*//')
       printf "    ${ATLAS_CYAN}%-14s${ATLAS_RESET} %-44s ${ATLAS_DIM}%s${ATLAS_RESET}\n" "$pname" "$ppath" "$desc"
     done
   else
@@ -51,13 +51,14 @@ _atlas_status() {
 
   # Git branch
   local branch=$(git branch --show-current 2>/dev/null || echo "N/A")
-  local repo=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || echo "N/A")
+  local repo="${$(git rev-parse --show-toplevel 2>/dev/null):t}"
+  [ -z "$repo" ] && repo="N/A"
   printf "  📂 %-14s ${ATLAS_CYAN}%s${ATLAS_RESET} (branch: ${ATLAS_CYAN}%s${ATLAS_RESET})\n" "Repo" "$repo" "$branch"
 
   # Worktree count
   local WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
-  local wt_count=$(find "$WORKSPACE" -maxdepth 5 -path "*/.claude/worktrees/*/.git" -type f 2>/dev/null | wc -l)
-  local wt_manual=$(find "$WORKSPACE" -maxdepth 4 -path "*/.worktrees/*/.git" -type f 2>/dev/null | wc -l)
+  local wt_count=$(find "$WORKSPACE" -maxdepth 5 -path "*/.claude/worktrees/*/.git" -type f 2>/dev/null | /usr/bin/wc -l)
+  local wt_manual=$(find "$WORKSPACE" -maxdepth 4 -path "*/.worktrees/*/.git" -type f 2>/dev/null | /usr/bin/wc -l)
   printf "  🌿 %-14s %d CC + %d manual\n" "Worktrees" "$wt_count" "$wt_manual"
 
   # Tmux sessions
@@ -68,10 +69,10 @@ _atlas_status() {
   printf "  🖥️  %-14s %d active\n" "Sessions" "$tmux_count"
 
   # Memory files
-  local mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
+  local mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | /usr/bin/head -1)
   if [ -n "$mem_dir" ] && [ -d "$mem_dir" ]; then
-    local mem_count=$(ls "$mem_dir"/*.md 2>/dev/null | wc -l)
-    local mem_lines=$(wc -l < "$mem_dir/MEMORY.md" 2>/dev/null || echo 0)
+    local mem_count=$(ls "$mem_dir"/*.md 2>/dev/null | /usr/bin/wc -l)
+    local mem_lines=$(/usr/bin/wc -l < "$mem_dir/MEMORY.md" 2>/dev/null || echo 0)
     local mem_color="${ATLAS_GREEN}"
     [ "$mem_lines" -gt 150 ] && mem_color="${ATLAS_YELLOW}"
     [ "$mem_lines" -gt 200 ] && mem_color="${ATLAS_RED}"
@@ -234,7 +235,7 @@ _atlas_complexity() {
   local desc="$*"
   [ -z "$desc" ] && { echo "Usage: atlas complexity \"task description\""; return 1; }
   local script="${ATLAS_SHELL_DIR}/../scripts/task-complexity.sh"
-  [ -f "$script" ] || script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/task-complexity.sh"
+  [ -f "$script" ] || script="${${ATLAS_SHELL_DIR:h}:h}/scripts/task-complexity.sh"
   [ -f "$script" ] || { echo "task-complexity.sh not found"; return 1; }
   local result=$(bash "$script" "$desc")
   local level=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" 2>/dev/null)
@@ -277,8 +278,8 @@ _atlas_ci() {
   fi
 
   # Detect repo from git remote
-  local repo=$(git remote get-url origin 2>/dev/null | sed 's|.*[:/]\([^/]*/[^/]*\)\.git|\1|' || echo "axoiq/synapse")
-  local sha=$(git rev-parse HEAD 2>/dev/null | head -c 12 || echo "?")
+  local repo=$(git remote get-url origin 2>/dev/null | /usr/bin/sed 's|.*[:/]\([^/]*/[^/]*\)\.git|\1|' || echo "axoiq/synapse")
+  local sha=$(git rev-parse HEAD 2>/dev/null | /usr/bin/head -c 12 || echo "?")
   local branch=$(git branch --show-current 2>/dev/null || echo "?")
 
   printf "  📂 ${ATLAS_CYAN}%s${ATLAS_RESET} @ ${ATLAS_DIM}%s${ATLAS_RESET} (%s)\n\n" "$repo" "$sha" "$branch"
@@ -318,7 +319,7 @@ _atlas_worktrees() {
   printf "  ${ATLAS_BOLD}Git Worktrees${ATLAS_RESET} ${ATLAS_DIM}(scanning workspace)${ATLAS_RESET}\n\n"
 
   local WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
-  local NOW_EPOCH=$(date +%s)
+  local NOW_EPOCH=$(/usr/bin/date +%s)
   local found=0
 
   printf "  ${ATLAS_DIM}%-20s %-24s %-8s %-8s %-6s${ATLAS_RESET}\n" "WORKTREE" "BRANCH" "DIRTY" "AHEAD" "AGE"
@@ -327,25 +328,25 @@ _atlas_worktrees() {
   for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
     local wt_dir="$repo_dir/worktrees"
     [ -d "$wt_dir" ] || continue
-    local repo_root="$(dirname "$repo_dir")"
+    local repo_root="${repo_dir:h}"
     [ -d "$repo_root/.git" ] || continue
-    local repo_name=$(basename "$repo_root")
+    local repo_name="${repo_root:t}"
 
     for wt in "$wt_dir"/*(N/); do
       [ -d "$wt" ] || continue
-      local name=$(basename "$wt")
+      local name="${wt:t}"
       found=$((found + 1))
 
       # Get branch
       local branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
 
       # Check dirty
-      local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | wc -l)
+      local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
       local dirty_str="${ATLAS_GREEN}clean${ATLAS_RESET}"
       [ "$dirty_count" -gt 0 ] && dirty_str="${ATLAS_YELLOW}${dirty_count} files${ATLAS_RESET}"
 
       # Check ahead
-      local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | wc -l)
+      local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
       local ahead_str="${ATLAS_DIM}0${ATLAS_RESET}"
       [ "$ahead" -gt 0 ] && ahead_str="${ATLAS_CYAN}${ahead}${ATLAS_RESET}"
 
@@ -364,13 +365,13 @@ _atlas_worktrees() {
     if [ -d "$manual_dir" ]; then
       for wt in "$manual_dir"/*(N/); do
         [ -d "$wt" ] || continue
-        local name=$(basename "$wt")
+        local name="${wt:t}"
         found=$((found + 1))
         local branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
-        local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | wc -l)
+        local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
         local dirty_str="${ATLAS_GREEN}clean${ATLAS_RESET}"
         [ "$dirty_count" -gt 0 ] && dirty_str="${ATLAS_YELLOW}${dirty_count} files${ATLAS_RESET}"
-        local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | wc -l)
+        local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
         local ahead_str="${ATLAS_DIM}0${ATLAS_RESET}"
         [ "$ahead" -gt 0 ] && ahead_str="${ATLAS_CYAN}${ahead}${ATLAS_RESET}"
         local last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
@@ -395,7 +396,7 @@ _atlas_dashboard() {
   local TOPICS_FILE="${HOME}/.atlas/topics.json"
 
   echo ""
-  echo " ATLAS Sessions                                        $(date '+%Y-%m-%d %H:%M %Z')"
+  echo " ATLAS Sessions                                        $(/usr/bin/date '+%Y-%m-%d %H:%M %Z')"
   echo " ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   # Get tmux sessions
@@ -411,8 +412,8 @@ _atlas_dashboard() {
 
       # Extract project and topic from session name
       local project topic branch status
-      project=$(echo "$sess" | sed 's/^cc-//' | cut -d- -f1)
-      topic=$(echo "$sess" | sed 's/^cc-[^-]*-*//')
+      project=$(echo "$sess" | /usr/bin/sed 's/^cc-//' | /usr/bin/cut -d- -f1)
+      topic=$(echo "$sess" | /usr/bin/sed 's/^cc-[^-]*-*//')
       [ -z "$topic" ] && topic="(default)"
 
       # Get branch from cwd
@@ -473,7 +474,7 @@ _atlas_dashboard() {
 
   # Dream health score (last dream report)
   local memory_dir
-  memory_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
+  memory_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | /usr/bin/head -1)
   if [ -n "$memory_dir" ] && [ -f "$memory_dir/dream-history.jsonl" ]; then
     local dream_info
     dream_info=$(tail -1 "$memory_dir/dream-history.jsonl" | python3 -c "
@@ -534,7 +535,7 @@ else:
 
   # Installed plugins
   local plugin_count
-  plugin_count=$(find ~/.claude/plugins/cache/atlas-admin-marketplace/ -maxdepth 1 -type d 2>/dev/null | wc -l)
+  plugin_count=$(find ~/.claude/plugins/cache/atlas-admin-marketplace/ -maxdepth 1 -type d 2>/dev/null | /usr/bin/wc -l)
   plugin_count=$((plugin_count - 1))  # subtract the parent dir
   [ $plugin_count -lt 0 ] && plugin_count=0
   echo " Plugins: ${plugin_count} tiers installed"
@@ -649,7 +650,7 @@ _atlas_hooks() {
       [ -d "$ver_dir" ] || continue
       local hj="$ver_dir/hooks/hooks.json"
       [ -f "$hj" ] || continue
-      local tier=$(basename "$tier_dir")
+      local tier="${tier_dir:t}"
       local events=$(python3 -c "import json; d=json.load(open('$hj')); print(len(d.get('hooks',{})))" 2>/dev/null)
       local handlers=$(python3 -c "
 import json
@@ -682,8 +683,8 @@ print(t)
   for log in task-log.jsonl permission-log.jsonl atlas-audit.log compaction-log.txt; do
     local path="$HOME/.claude/$log"
     if [ -f "$path" ]; then
-      local lines=$(wc -l < "$path" 2>/dev/null)
-      local size=$(du -sh "$path" 2>/dev/null | cut -f1)
+      local lines=$(/usr/bin/wc -l < "$path" 2>/dev/null)
+      local size=$(du -sh "$path" 2>/dev/null | /usr/bin/cut -f1)
       printf "  ✅ %-25s %s lines (%s)\n" "$log" "$lines" "$size"
     else
       printf "  ⬚  %-25s (not yet created)\n" "$log"
@@ -695,7 +696,7 @@ print(t)
   local stale=0
   for script in "$HOME/.claude/hooks/"*.sh(N); do
     [ -f "$script" ] || continue
-    local name=$(basename "$script" .sh)
+    local name="${${script:t}%.sh}"
     for tier_dir in "$cache"/atlas-*/(N); do
       for ver_dir in "$tier_dir"*/(N); do
         if [ -f "$ver_dir/hooks/$name" ] 2>/dev/null; then
@@ -743,10 +744,10 @@ _atlas_doctor() {
   _check "PATH has /usr/bin" "echo \$PATH | grep -q '/usr/bin'" "/usr/bin in PATH" "BROKEN! Run: export PATH=/usr/bin:/bin:\$PATH"
   _check "PATH has /bin" "echo \$PATH | grep -q ':/bin'" "/bin in PATH" "BROKEN! Check ~/.zshenv"
   _check "Claude Code" "[ -x ${HOME}/.local/bin/claude ]" "v${ATLAS_CC_VERSION}" "NOT INSTALLED — see code.claude.com"
-  _check "gum (TUI)" "command -v gum" "$(gum --version 2>/dev/null | head -1)" "Install: ${_pkg} gum (or go install github.com/charmbracelet/gum@latest)"
+  _check "gum (TUI)" "command -v gum" "$(gum --version 2>/dev/null | /usr/bin/head -1)" "Install: ${_pkg} gum (or go install github.com/charmbracelet/gum@latest)"
   _check "fzf (fuzzy)" "command -v fzf" "$(fzf --version 2>/dev/null)" "Install: ${_pkg} fzf"
   _check "tmux" "command -v tmux" "$(tmux -V 2>/dev/null)" "Install: ${_pkg} tmux"
-  _check "Docker" "command -v docker" "$(docker --version 2>/dev/null | head -1)" "Optional"
+  _check "Docker" "command -v docker" "$(docker --version 2>/dev/null | /usr/bin/head -1)" "Optional"
   _check "bun" "command -v bun" "$(bun --version 2>/dev/null)" "Install: curl -fsSL https://bun.sh/install | bash"
   _check "python3" "command -v python3" "$(python3 --version 2>/dev/null)" "REQUIRED"
   _check "jq" "command -v jq" "$(jq --version 2>/dev/null)" "Install: ${_pkg} jq"
@@ -774,9 +775,9 @@ _atlas_doctor() {
   _check_zshrc_ordering() {
     [ ! -f "${HOME}/.zshrc" ] && return 1
     local atlas_line direnv_line zoxide_line
-    atlas_line=$(grep -n 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
-    direnv_line=$(grep -n 'direnv hook' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
-    zoxide_line=$(grep -n 'zoxide init' "${HOME}/.zshrc" 2>/dev/null | head -1 | cut -d: -f1)
+    atlas_line=$(grep -n 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null | /usr/bin/head -1 | /usr/bin/cut -d: -f1)
+    direnv_line=$(grep -n 'direnv hook' "${HOME}/.zshrc" 2>/dev/null | /usr/bin/head -1 | /usr/bin/cut -d: -f1)
+    zoxide_line=$(grep -n 'zoxide init' "${HOME}/.zshrc" 2>/dev/null | /usr/bin/head -1 | /usr/bin/cut -d: -f1)
     [ -z "$atlas_line" ] && return 1
     # If direnv/zoxide exist, they must come after atlas.sh
     [ -n "$direnv_line" ] && [ "$direnv_line" -lt "$atlas_line" ] && return 1
@@ -808,7 +809,7 @@ _atlas_doctor() {
   # Check 6: atlas.sh deployed to ~/.atlas/shell/
   _check "atlas.sh deployed" \
     "[ -f '${HOME}/.atlas/shell/atlas.sh' ]" \
-    "$(date -r "${HOME}/.atlas/shell/atlas.sh" '+%Y-%m-%d' 2>/dev/null || echo 'present')" \
+    "$(/usr/bin/date -r "${HOME}/.atlas/shell/atlas.sh" '+%Y-%m-%d' 2>/dev/null || echo 'present')" \
     "Start a CC session to auto-deploy"
 
   echo ""
@@ -828,7 +829,7 @@ _atlas_doctor() {
       case "$fail" in
         ".zshrc sources atlas.sh")
           if gum confirm "Add atlas.sh source to ~/.zshrc?" 2>/dev/null; then
-            cp "${HOME}/.zshrc" "${HOME}/.zshrc.atlas-backup.$(date +%s)"
+            cp "${HOME}/.zshrc" "${HOME}/.zshrc.atlas-backup.$(/usr/bin/date +%s)"
             echo '[ -f "$HOME/.atlas/shell/atlas.sh" ] && source "$HOME/.atlas/shell/atlas.sh"' >> "${HOME}/.zshrc"
             printf "    ${ATLAS_CYAN}✓${ATLAS_RESET} Added atlas.sh source to ~/.zshrc\n"
           fi ;;
