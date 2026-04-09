@@ -304,7 +304,7 @@ EOF
 }
 
 # ── Domain build (standalone, no inheritance) ─────────────────────
-DOMAIN_NAMES=(core dev frontend infra enterprise)
+DOMAIN_NAMES=(core dev frontend infra enterprise experiential)
 
 build_domain() {
   local name="$1"

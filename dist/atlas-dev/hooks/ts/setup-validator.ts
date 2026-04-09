@@ -190,7 +190,86 @@ async function initializeFirstRun(): Promise<void> {
 		if (!existsSync(activityPath)) {
 			writeFileSync(activityPath, "");
 		}
+
+		// Auto-deploy ATLAS CLI if missing
+		await deployCliIfMissing();
 	} catch {}
+}
+
+async function deployCliIfMissing(): Promise<void> {
+	const home = process.env.HOME || process.env.USERPROFILE || "";
+	if (!home) return;
+
+	const cliTarget = join(home, ".atlas", "shell", "atlas.sh");
+	const modulesTarget = join(home, ".atlas", "shell", "modules");
+	const pluginRoot =
+		process.env.CLAUDE_PLUGIN_ROOT ||
+		join(home, ".claude", "plugins", "cache", "atlas-admin-marketplace", "atlas-admin");
+
+	// Find the plugin scripts directory
+	let scriptsDir = "";
+	const directScripts = join(pluginRoot, "scripts");
+	if (existsSync(join(directScripts, "atlas-cli.sh"))) {
+		scriptsDir = directScripts;
+	} else {
+		// Try versioned directories (plugin cache structure: atlas-admin/4.32.1/scripts/)
+		const { readdirSync } = require("node:fs");
+		try {
+			const versions = readdirSync(pluginRoot).filter((d: string) =>
+				/^\d+\.\d+\.\d+$/.test(d),
+			);
+			if (versions.length > 0) {
+				versions.sort();
+				const latest = versions[versions.length - 1];
+				const candidate = join(pluginRoot, latest, "scripts");
+				if (existsSync(join(candidate, "atlas-cli.sh"))) {
+					scriptsDir = candidate;
+				}
+			}
+		} catch {}
+	}
+
+	if (!scriptsDir) return;
+
+	// Deploy atlas.sh if missing
+	if (!existsSync(cliTarget)) {
+		const { mkdirSync, copyFileSync } = require("node:fs");
+		try {
+			mkdirSync(join(home, ".atlas", "shell"), { recursive: true });
+			copyFileSync(join(scriptsDir, "atlas-cli.sh"), cliTarget);
+			// Make executable
+			const { chmodSync } = require("node:fs");
+			chmodSync(cliTarget, 0o755);
+		} catch {}
+	}
+
+	// Deploy modules if directory is missing or empty
+	if (!existsSync(modulesTarget) || readdirEmpty(modulesTarget)) {
+		const sourceModules = join(scriptsDir, "atlas-modules");
+		if (existsSync(sourceModules)) {
+			const { mkdirSync, copyFileSync, readdirSync } = require("node:fs");
+			try {
+				mkdirSync(modulesTarget, { recursive: true });
+				for (const file of readdirSync(sourceModules)) {
+					if (file.endsWith(".sh")) {
+						copyFileSync(
+							join(sourceModules, file),
+							join(modulesTarget, file),
+						);
+					}
+				}
+			} catch {}
+		}
+	}
+}
+
+function readdirEmpty(dir: string): boolean {
+	try {
+		const { readdirSync } = require("node:fs");
+		return readdirSync(dir).length === 0;
+	} catch {
+		return true;
+	}
 }
 
 function logSetupEvent(input: SetupInput, result: ValidationResult): void {

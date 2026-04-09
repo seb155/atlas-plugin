@@ -1,0 +1,22 @@
+# ATLAS Experiential Domain — Personal Growth & Relationship Memory
+# Episode capture, intuition logging, relationship tracking
+# NO inherits — standalone domain plugin
+tier: domain-experiential
+description: "Experiential — episode capture, intuition logging, relationship memory."
+
+skills:
+  # Master router (generated per-domain by build)
+  - atlas-assist
+  # Experiential capture
+  - episode-create
+  - intuition-log
+  - relationship-manager
+
+hooks:
+  - experiential-capture
+
+agents: []
+
+persona: "relationship architect"
+pipeline: "CAPTURE → REFLECT → REMEMBER"
+banner_label: "Experiential"

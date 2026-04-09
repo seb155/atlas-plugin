@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# ATLAS Plugin — Experiential Capture Hook (SessionEnd)
+# Reads accumulated experiential signals and creates pending summary
+# for next session's startup to propose episode creation.
+# Non-blocking, fast (<2s). NO HITL possible at SessionEnd.
+set -euo pipefail
+
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-SessionEnd}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
+SIGNALS_FILE="${HOME}/.claude/atlas-experiential-signals.json"
+PENDING_FILE="${HOME}/.claude/atlas-experiential-pending.json"
+
+# Exit if no signals accumulated
+[ -f "$SIGNALS_FILE" ] || exit 0
+
+# Count signals
+SIGNAL_COUNT=$(python3 -c "
+import json
+try:
+    with open('$SIGNALS_FILE') as f:
+        data = json.load(f)
+    print(len(data.get('signals', [])))
+except:
+    print(0)
+" 2>/dev/null || echo "0")
+
+# Need 3+ signals to create pending
+[ "$SIGNAL_COUNT" -ge 3 ] || { rm -f "$SIGNALS_FILE"; exit 0; }
+
+# Compute summary
+python3 -c "
+import json
+from datetime import datetime
+try:
+    with open('$SIGNALS_FILE') as f:
+        data = json.load(f)
+    signals = data.get('signals', [])
+
+    energy_vals = [s['value'] for s in signals if s['type'] == 'energy' and isinstance(s['value'], (int, float))]
+    mood_vals = [s['value'] for s in signals if s['type'] == 'mood']
+    tq_vals = [s['value'] for s in signals if s['type'] == 'time_quality']
+    conf_vals = [s['value'] for s in signals if s['type'] == 'confidence' and isinstance(s['value'], (int, float))]
+
+    from collections import Counter
+    pending = {
+        'session_date': datetime.now().strftime('%Y-%m-%d'),
+        'session_start': data.get('session_start', ''),
+        'session_end': datetime.now().isoformat(),
+        'signal_count': len(signals),
+        'energy_avg': round(sum(energy_vals) / len(energy_vals), 1) if energy_vals else None,
+        'mood_dominant': Counter(mood_vals).most_common(1)[0][0] if mood_vals else None,
+        'time_quality_dominant': Counter(tq_vals).most_common(1)[0][0] if tq_vals else None,
+        'confidence_avg': round(sum(conf_vals) / len(conf_vals), 2) if conf_vals else None,
+        'signals': signals
+    }
+
+    with open('$PENDING_FILE', 'w') as f:
+        json.dump(pending, f, indent=2)
+except Exception as e:
+    pass
+" 2>/dev/null
+
+# Clean up signals file after successful pending creation
+[ -f "$PENDING_FILE" ] && rm -f "$SIGNALS_FILE"
+_hook_log pass
