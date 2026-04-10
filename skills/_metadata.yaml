@@ -212,6 +212,13 @@ skills:
     domains: [dev]
     description: "Commit + push + PR + CI + cleanup (conventional commits)"
 
+  ship-all:
+    emoji: "🚀"
+    category: Ship
+    owner: dev
+    domains: [dev]
+    description: "Full repo ship: audit git state, clean branches/worktrees/stashes, merge PRs, deploy all envs, verify health"
+
   frontend-design:
     emoji: "🎨"
     category: Planning

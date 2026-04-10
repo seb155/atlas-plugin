@@ -1,0 +1,23 @@
+#!/bin/bash
+# Hook: SessionStart(startup) — Load project .env at session start
+# Sources safe env vars from .env if present in the working directory
+# Exit 0 always (never block session start)
+
+# Get current working directory from CC context or fallback
+CWD="${PWD:-$(pwd)}"
+
+# If .env exists, export key non-secret vars to stdout (CC captures stdout)
+if [ -f "$CWD/.env" ]; then
+  # Only surface safe vars (not secrets)
+  SAFE_VARS=$(grep -E '^(PROJECT_ID|DATABASE_URL|API_BASE_URL|NODE_ENV|VITE_)' "$CWD/.env" 2>/dev/null)
+  if [ -n "$SAFE_VARS" ]; then
+    echo "Loaded .env vars from $CWD"
+  fi
+fi
+
+# If direnv is available, note it
+if command -v direnv &>/dev/null && [ -f "$CWD/.envrc" ]; then
+  echo "direnv .envrc detected in $CWD"
+fi
+
+exit 0

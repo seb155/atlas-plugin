@@ -1,0 +1,13 @@
+{
+  "name": "atlas-admin-marketplace",
+  "owner": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "plugins": [
+    {
+      "name": "atlas-slim",
+      "description": "ATLAS Slim — AXOIQ AI Engineering Assistant (slim tier)",
+      "version": "4.33.0",
+      "source": { "source": "url", "url": "https://github.com/seb155/atlas-plugin.git" },
+      "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 75 skills, 15 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 76 skills, 15 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: true
 ---
 
@@ -17,7 +17,7 @@ in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
 🏛️ ATLAS │ ✅ SESSION │ v4.33.0 Admin
-   75 skills │ 15 agents │ Gate 12/15
+   76 skills │ 15 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -131,6 +131,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 | **session-pickup** | 🔄 | Meta |
 | **session-retrospective** | 🔄 | Meta |
 | **session-spawn** | 🚀 | Meta |
+| **ship-all** | 🚀 | Ship |
 | **skill-management** | 🧩 | Meta |
 | **statusline-setup** | 📟 | Infrastructure |
 | **subagent-dispatch** | 🤖 | Implementation |
@@ -172,7 +173,7 @@ Phases: `DISCOVER → PLAN → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFR
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (75)
+## Available Skills (76)
 
 ### 📌 Cognitive
 - 🔍 **idle-curiosity**: Autonomous exploration engine — discovers under-explored topics and knowledge gaps. HITL gated.
@@ -276,6 +277,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 
 ### 📦 Ship
 - 📦 **finishing-branch**: Commit + push + PR + CI + cleanup (conventional commits)
+- 🚀 **ship-all**: Full repo ship: audit git state, clean branches/worktrees/stashes, merge PRs, deploy all envs, verify health
 
 ## Pipeline (Automatic)
 

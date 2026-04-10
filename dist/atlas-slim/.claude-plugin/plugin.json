@@ -1,0 +1,8 @@
+{
+  "name": "atlas-slim",
+  "version": "4.33.0",
+  "description": "ATLAS Slim — AXOIQ AI Engineering Assistant (slim tier)",
+  "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "license": "UNLICENSED",
+  "buildTimestamp": "2026-04-10T01:30:41Z"
+}
