@@ -40,8 +40,9 @@ Comprehensive diagnostic of the entire ATLAS ecosystem. Runs bash checks across 
 | 11 | CC Settings      | 13/15 | ⚠️     | Missing language config |
 | 12 | MCP & Plugins    | 5/6   | ⚠️     | Figma optional          |
 | 13 | Domain Plugins   | 4/4   | ✅     |                         |
+| 14 | Observability    | 5/5   | ✅     |                         |
 
-OVERALL: 65/76 (86%) ⚠️
+OVERALL: 70/81 (86%) ⚠️
 ```
 
 Status thresholds: ✅ = 100%, ⚠️ = 50-99%, ❌ = <50%
@@ -68,6 +69,7 @@ ATLAS Doctor Summary
 │ 11. CC Settings          │ B     │ 1      │
 │ 12. MCP & Plugins        │ A     │ 0      │
 │ 13. Domain Plugins       │ A     │ 0      │
+│ 14. Observability        │ A     │ 0      │
 ├──────────────────────────┼───────┼────────┤
 │ OVERALL                  │ B+    │ 6      │
 └──────────────────────────┴───────┴────────┘
@@ -732,6 +734,42 @@ Status logic:
 - ❌ = no atlas-core and no legacy plugin
 
 Auto-fix: dispatch to `atlas setup plugins` for interactive domain selection, or run `scripts/migrate-marketplace.sh --preset dev` directly.
+
+### Cat 14: Observability Stack Health
+
+Check the LGTM observability stack on VM 602 (ref: `refs/observability-api`):
+
+```bash
+# 1. Loki reachable
+LOKI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://192.168.10.56:3100/ready" 2>/dev/null)
+[ "$LOKI_STATUS" = "200" ] && echo "✅ Loki ready" || echo "❌ Loki unreachable ($LOKI_STATUS)"
+
+# 2. Prometheus reachable
+PROM_STATUS=$(curl -s --max-time 5 "http://192.168.10.56:9090/-/healthy" 2>/dev/null)
+echo "$PROM_STATUS" | grep -q "Healthy" && echo "✅ Prometheus healthy" || echo "❌ Prometheus unreachable"
+
+# 3. Error rate acceptable (< 50 errors/h)
+ERROR_COUNT=$(curl -sG "http://192.168.10.56:3100/loki/api/v1/query" \
+  --data-urlencode 'query=sum(count_over_time({container=~"synapse-prod.*"} |~ "(?i)error" [1h]))' \
+  2>/dev/null | jq -r '.data.result[0].value[1] // "0"')
+[ "${ERROR_COUNT:-0}" -lt 50 ] && echo "✅ Error rate: $ERROR_COUNT/h" || echo "⚠️ Error rate high: $ERROR_COUNT/h"
+
+# 4. Scrape targets all UP
+DOWN_TARGETS=$(curl -sG "http://192.168.10.56:9090/api/v1/query" \
+  --data-urlencode 'query=up == 0' 2>/dev/null | jq -r '.data.result | length')
+[ "${DOWN_TARGETS:-0}" -eq 0 ] && echo "✅ All scrape targets UP" || echo "⚠️ $DOWN_TARGETS targets DOWN"
+
+# 5. No unhealthy containers (SSH to prod)
+UNHEALTHY=$(ssh root@192.168.10.50 "docker ps --filter 'health=unhealthy' --format '{{.Names}}' | grep synapse" 2>/dev/null | wc -l)
+[ "${UNHEALTHY:-0}" -eq 0 ] && echo "✅ All Synapse containers healthy" || echo "⚠️ $UNHEALTHY unhealthy containers"
+```
+
+Status logic:
+- ✅ = All 5 checks pass
+- ⚠️ = Error rate > 50/h OR targets down OR unhealthy containers
+- ❌ = Loki or Prometheus unreachable
+
+Auto-fix: restart obs-* containers on VM 602 via `ssh sgagnon@192.168.10.56 "cd /opt/observability && docker compose restart"`. For unhealthy Synapse containers, SSH to VM 550 and restart the affected service.
 
 ## Dream Health Integration (v2)
 
