@@ -329,6 +329,37 @@ Plugin Version Sync:
 ```
 
 **NOTE**: Marketplace-cached plugins may store ONLY `plugin.json` + `marketplace.json` in `.claude-plugin/`.
+
+#### 7c. Token Budget & Skill Usage (v3)
+
+Estimate system prompt token cost and show skill usage analytics:
+
+```bash
+# Token budget estimation (skills contribute ~2K tokens each to system prompt)
+SKILL_COUNT=$(find "$PLUGIN_ROOT" -path "*/skills/*/SKILL.md" 2>/dev/null | wc -l)
+ESTIMATED_TOKENS=$((SKILL_COUNT * 2000))
+echo "📊 Token Budget: ~${ESTIMATED_TOKENS} tokens (${SKILL_COUNT} skills × ~2K avg)"
+if [ $ESTIMATED_TOKENS -gt 150000 ]; then
+  echo "⚠️ HIGH token usage — consider 'make dev-slim' for daily work (~35K tokens)"
+fi
+
+# Skill usage analytics (from skill-usage-tracker hook)
+USAGE_FILE="$HOME/.atlas/skill-usage.jsonl"
+if [ -f "$USAGE_FILE" ]; then
+  TOTAL=$(wc -l < "$USAGE_FILE")
+  UNIQUE=$(jq -r '.skill' "$USAGE_FILE" 2>/dev/null | sort -u | wc -l)
+  echo "📈 Skill Usage: $TOTAL invocations across $UNIQUE unique skills"
+  echo "   Top 5:"
+  jq -r '.skill' "$USAGE_FILE" 2>/dev/null | sort | uniq -c | sort -rn | head -5 | \
+    awk '{printf "     %s (%d)\n", $2, $1}'
+  UNUSED=$((SKILL_COUNT - UNIQUE))
+  if [ $UNUSED -gt 10 ]; then
+    echo "   💤 $UNUSED skills never invoked — run: atlas plugin usage"
+  fi
+else
+  echo "📈 Skill Usage: no data yet (skill-usage-tracker hook collects this)"
+fi
+```
 Skills, agents, hooks, and commands are loaded at runtime by CC's plugin system — not as local files.
 If checks 2-8 return 0 but the plugin is functional (skills load in CC), this is expected for marketplace plugins.
 Score accordingly: version ✅ from plugin.json = 1pt, runtime-loaded = trust CC's plugin loader for remaining 7pts.

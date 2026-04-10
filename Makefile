@@ -1,7 +1,7 @@
 # ATLAS Plugin — Developer Makefile
 # Usage: make [target]
 
-.PHONY: build test install dev dev-domains lint sync publish clean help
+.PHONY: build test install dev dev-slim dev-domains lint sync publish clean help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -22,6 +22,17 @@ install: ## Build all 4 + install to CC plugin cache
 	./scripts/dev-install.sh
 
 dev: install ## Build all 4 + install (standard workflow)
+
+dev-slim: ## Build slim (15 skills) + install — lightweight daily driver
+	./build.sh slim
+	@VERSION=$$(cat VERSION | tr -d '[:space:]'); \
+	CACHE_DIR="$$HOME/.claude/plugins/cache"; \
+	dir="$$CACHE_DIR/atlas-admin-marketplace/atlas-slim/$$VERSION"; \
+	mkdir -p "$$dir"; \
+	cp -r "dist/atlas-slim/." "$$dir/" && \
+	cp -r "dist/atlas-slim/.claude-plugin" "$$dir/" 2>/dev/null; \
+	echo "✅ atlas-slim v$$VERSION → $$dir"; \
+	echo "�� Restart CC to use slim profile. Restore with: make dev"
 
 dev-admin: ## Quick admin-only build + install
 	./scripts/dev-install.sh --admin-only

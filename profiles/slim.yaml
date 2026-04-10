@@ -1,0 +1,54 @@
+# ATLAS Slim Tier — Lightweight Daily Driver
+# Top 15 skills for maximum signal, minimum token budget
+# NO inherits — standalone, minimal system prompt (~35K tokens vs ~200K admin)
+# Switch: make dev-slim | Restore: make dev
+tier: slim
+description: "Slim daily driver — 15 essential skills, minimal hooks, fast sessions"
+
+skills:
+  # Planning & Design (3)
+  - plan-builder
+  - brainstorming
+  - deep-research
+  # Implementation (3)
+  - tdd
+  - systematic-debugging
+  - git-worktrees
+  # Quality & Ship (3)
+  - code-review
+  - verification
+  - finishing-branch
+  # Context & Memory (3)
+  - context-discovery
+  - memory-dream
+  - session-retrospective
+  # Safety & Meta (3)
+  - scope-check
+  - decision-log
+  - atlas-doctor
+
+commands:
+  - ship
+  - end
+  - pickup
+  - handoff
+
+hooks:
+  # Essential only — 8 hooks vs 37+ in admin
+  - session-start
+  - timestamp-injector
+  - validate-bash
+  - protect-plugin-cache
+  - skill-usage-tracker
+  - atlas-status-writer
+  - cwd-changed-env
+  - pre-compact-context
+
+agents:
+  # 2 agents only
+  - context-scanner
+  - plan-architect
+
+persona: "focused engineering partner"
+pipeline: "PLAN → IMPLEMENT → VERIFY → SHIP"
+banner_label: "Slim"
