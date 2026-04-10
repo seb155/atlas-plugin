@@ -21,6 +21,26 @@ dist/atlas-{user,dev,user}/      ← Self-contained artifacts (no runtime deps)
 
 **3-Tier Inheritance**: `user` → `dev` (inherits user) → `admin` (inherits dev)
 
+### 6-Domain Overlay (standalone installs)
+
+In addition to tiers, ATLAS offers **domain plugins** — standalone installs for specific workflows.
+Each domain has its own `atlas-assist` router. **No inheritance** between domains.
+
+| Domain | Skills | Role | Audience |
+|--------|--------|------|----------|
+| `atlas-core` | 14 | Memory, session, context, vault, assist, doctor | Everyone |
+| `atlas-dev` | 25 | Planning, TDD, debugging, review, shipping | Developers |
+| `atlas-admin` | 27 | Deploy, security, infra, enterprise, experiments | Admins |
+| `atlas-frontend` | 5 | UI design, browser automation, visual QA | FE devs |
+| `atlas-infra` | 10 | VM/container ops, network, security audit | DevOps |
+| `atlas-enterprise` | 14 | Governance, knowledge engine, programme mgmt | Leads |
+| `atlas-experiential` | 5 | Episode capture, intuition, relationship memory | Personal |
+
+**⚠️ Duplication risk**: Skills listed in multiple domain profiles are built N times.
+Installing all 6 domains = ~282 registrations with ~75% duplication (~177K wasted tokens).
+**Recommendation**: Install the **tier** that matches your role (user/dev/admin), NOT all domains.
+SP-DEDUP (planned) will resolve this with shared-core + delta architecture.
+
 | Component | Location | Count (admin) |
 |-----------|----------|---------------|
 | Skills | `skills/*/SKILL.md` | ~67 (profile + atlas-assist) |
