@@ -1,137 +1,151 @@
-# ATLAS Team Onboarding Guide
+# ATLAS Developer Onboarding
 
-> Get a new developer productive in < 30 minutes.
-> ATLAS v4.0 — Modular plugin ecosystem with topic-based sessions.
+> Get a new developer up and running with Claude Code + ATLAS in < 30 minutes.
+>
+> Updated: 2026-04-10
 
 ---
 
-## Phase 1: Setup (5 minutes)
+## Quick Start (Admin)
+
+Run the onboarding script to create all accesses:
 
 ```bash
-# 1. Run the setup wizard
-atlas setup
-
-# The wizard handles:
-# - Plugin selection (Developer preset: core + dev)
-# - SSO authentication (Authentik → Forgejo, Coder, VPN)
-# - Coder workspace creation (synapse-fullstack template)
-# - Golden DB provisioning (13K+ instruments)
-# - VPN mesh enrollment (NetBird)
+# Requires: gh CLI authenticated + FORGEJO_TOKEN set
+./scripts/admin/onboard-developer.sh <github-username> <forgejo-username> <email>
 ```
 
-If `atlas` command not found: `source ~/.zshrc` or ask your lead for the shell setup.
+This script:
+1. Invites the developer as GitHub collaborator on all shared repos
+2. Adds them to the Forgejo `axoiq` org with write access
+3. Generates an onboarding message to send them
 
 ---
 
-## Phase 2: First Session (10 minutes)
+## Quick Start (New Developer — Windows)
+
+### Option A: Automated Setup
+
+```powershell
+# 1. Clone deploy scripts (ask admin for GitHub access first)
+git clone https://github.com/seb155/claude-deploy-scripts.git
+cd claude-deploy-scripts
+
+# 2. Run setup (replace with your GitHub token)
+.\windows\setup-developer.ps1 -GitHubToken "ghp_your_token_here"
+```
+
+### Option B: Manual Setup
+
+#### Prerequisites
+
+| Tool | Install |
+|------|---------|
+| Git for Windows | `winget install Git.Git` |
+| Claude Code | `irm https://claude.ai/install.ps1 \| iex` |
+| Python 3.13 | `winget install Python.Python.3.13` (check "Add to PATH") |
+
+#### Steps
+
+1. **Create GitHub Token**
+   - Go to [github.com/settings/tokens](https://github.com/settings/tokens)
+   - Create a **Fine-grained token** with:
+     - Repository access: `seb155/atlas-plugin`
+     - Permissions: `Contents: Read-only`
+
+2. **Set Token**
+   ```powershell
+   [Environment]::SetEnvironmentVariable("GITHUB_TOKEN", "ghp_xxx", "User")
+   ```
+
+3. **Configure Git Bash** (for Claude Code hooks)
+   ```powershell
+   # Add to %USERPROFILE%\.claude\settings.json:
+   # { "env": { "CLAUDE_CODE_GIT_BASH_PATH": "C:\\Program Files\\Git\\bin\\bash.exe" } }
+   ```
+
+4. **Install ATLAS Plugin**
+   ```
+   claude
+   /plugin marketplace add seb155/atlas-plugin
+   /plugin install atlas-admin@atlas-admin-marketplace
+   # Exit and restart Claude Code
+   ```
+
+5. **Verify**
+   ```
+   # You should see:
+   🏛️ ATLAS v4.x.x online | hostname
+   72 skills | 15 agents | Quality gate 16/20
+   ```
+
+6. **Clone Repos** (for contributing)
+   ```bash
+   mkdir ~/atlas-dev && cd ~/atlas-dev
+   git clone https://github.com/seb155/atlas-plugin.git
+   git clone https://github.com/seb155/gms-cowork-plugins.git
+   git clone https://github.com/seb155/genie-framework.git
+   ```
+
+---
+
+## Contributing Workflow
+
+```
+                    ┌─────────────┐
+                    │  Developer   │
+                    │  (Windows)   │
+                    └──────┬──────┘
+                           │ git push
+                           ▼
+                    ┌─────────────┐     GitHub Action     ┌─────────────┐
+                    │   GitHub     │ ──────────────────→   │   Forgejo    │
+                    │  (private)   │     sync-to-forgejo   │  (primary)   │
+                    │              │ ←────────────────── │              │
+                    └─────────────┘     publish.yaml      └─────────────┘
+                                        (on tag push)           │
+                                                                │ CI
+                                                                ▼
+                                                        ┌─────────────┐
+                                                        │  Build +    │
+                                                        │  Publish    │
+                                                        └─────────────┘
+```
+
+### Branch Convention
+
+- `feature/*` — development branches
+- `main` — stable, deployed
+- Push to GitHub → auto-mirrors to Forgejo → CI runs on Forgejo
+
+### Version Bump (maintainers only)
 
 ```bash
-# 1. Start your first topic
-atlas synapse my-first-feature
-
-# What happens automatically:
-# - Git worktree created (isolated branch)
-# - Tmux window opened
-# - Claude Code launched with full context
-# - ATLAS hooks inject project context
-
-# 2. In Claude Code, run pickup to see active sprint
-/pickup
-
-# 3. You're now in the code. Start working!
+cd atlas-plugin
+./scripts/publish.sh patch   # or: minor, major
+# Bumps VERSION, builds, commits, tags, pushes to both remotes
 ```
 
 ---
 
-## Phase 3: Daily Workflow
+## Shared Repos
 
-### Starting Work
-```bash
-atlas                          # See topic picker, choose what to work on
-# OR
-atlas synapse vault-fix        # Resume a specific topic directly
-```
-
-### During Work
-- Just code normally with Claude Code
-- The AI handles model selection automatically (Sonnet for code, Opus for architecture)
-- Type `ultrathink` before complex questions for maximum reasoning
-- Tests run with: `docker exec synapse-backend bash -c "cd /app && python -m pytest tests/ -x -q --tb=short"`
-
-### Ending Work
-```bash
-/handoff                       # Saves full context for next time
-# OR
-/end                           # Clean close with summary
-```
-
-### Parallel Work
-- Background: "lance les tests en background" → Claude backgrounds them
-- Multiple topics: open another terminal → `atlas synapse other-topic`
+| Repo | GitHub | Purpose | Access |
+|------|--------|---------|--------|
+| **atlas-plugin** | `seb155/atlas-plugin` | ATLAS plugin (72 skills) | All devs |
+| **gms-cowork-plugins** | `seb155/gms-cowork-plugins` | GMS discipline plugins | GMS team |
+| **genie-framework** | `seb155/genie-framework` | GEnie I&C/OT framework | GMS team |
+| **claude-deploy-scripts** | `seb155/claude-deploy-scripts` | Deploy/setup scripts | 🔒 Restricted |
 
 ---
 
-## Phase 4: What the AI Does (You Don't Need to Understand This)
-
-The ATLAS plugin runs hooks in the background that:
-- **Learn your preferences** (auto-learn hook captures patterns from your prompts)
-- **Track your energy** (if you say "tanné" or "pumped", it notices)
-- **Remember decisions** (logged to `.claude/decisions.jsonl` and topic memory)
-- **Consolidate memory** (weekly dream cycle cleans up and organizes)
-- **Suggest improvements** (monthly self-propose skill reviews workflow)
-
-All of this is **silent by default** (verbosity level 2 = max 2 notifications per session).
-
----
-
-## Phase 5: Commands to Remember
-
-| Command | When | What |
-|---------|------|------|
-| `atlas` | Morning | Start the day, pick a topic |
-| `atlas synapse {topic}` | Anytime | Resume or start a topic |
-| `atlas dashboard` | Anytime | See all active sessions |
-| `/handoff` | End of work | Save context |
-| `/end` | Done for the day | Clean close |
-| `ultrathink` | Complex problem | Force deep reasoning |
-| `/atlas episode create` | End of session | Capture how the session felt (optional) |
-
-**That's it.** Everything else is automatic.
-
----
-
-## Phase 6: Troubleshooting
+## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| `atlas` not found | `source ~/.zshrc` |
-| Session lost context | `/pickup` to reload from handoff |
-| Tests failing | `docker compose ps` → check containers are running |
-| Can't SSH to VMs | Check NetBird: `netbird status` |
-| Plugin not working | `atlas doctor` for full health check |
-| Need help | Ask your lead or check `.blueprint/INDEX.md` |
-
-### Key Paths
-
-| Path | What |
-|------|------|
-| `.blueprint/` | Project documentation (plans, features, handoffs) |
-| `.claude/memory/` | AI memory files |
-| `.claude/topics/` | Per-topic decisions and lessons |
-| `~/.atlas/topics.json` | Topic registry |
-| `~/.atlas/config.json` | ATLAS CLI configuration |
-
----
-
-## Plugin Presets by Role
-
-| Role | Preset | Command |
-|------|--------|---------|
-| Developer | core + dev | `atlas setup` → "Developer" |
-| Full-stack | core + dev + frontend + infra | `atlas setup` → "Full Stack" |
-| Infrastructure | core + infra | `atlas setup` → "Infra Only" |
-| Admin/Lead | all 6 plugins | `atlas setup` → "Admin" |
-
----
-
-*ATLAS v4.0 | AXOIQ | Updated: 2026-03-28*
+| `claude` not found after install | Restart terminal, check PATH |
+| Plugin install fails | Check `GITHUB_TOKEN` is set, repo is accessible |
+| Hooks error "bash not found" | Set `CLAUDE_CODE_GIT_BASH_PATH` in settings.json |
+| "Permission denied" on clone | Accept the GitHub collaborator invite in your email |
+| No ATLAS banner after restart | Run `/plugin list` to verify plugin is installed |
+| Mirror not syncing | Check GitHub Secrets: `FORGEJO_TOKEN`, `CF_ACCESS_CLIENT_ID/SECRET` |
