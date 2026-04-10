@@ -145,6 +145,28 @@ python3 ~/workspace_atlas/infrastructure/services/health/health-checker.py --tie
 | 3 | 20 personal | paperless, immich, pve1-3, truenas, budget, stirling |
 | 4 | 3 native-auth | vaultwarden, ha, immich (SSO bypass) |
 
+## Observability API Checks (Tier 2 enhancement, ref: `refs/observability-api`)
+
+Beyond HTTP health endpoints, query the LGTM APIs for deeper observability health:
+
+```bash
+# Loki data freshness — latest log timestamp should be < 5 min old
+LATEST=$(curl -sG "http://192.168.10.56:3100/loki/api/v1/query" \
+  --data-urlencode 'query={container=~"synapse.*"} | line_format "{{__timestamp__}}"' \
+  --data-urlencode "limit=1" 2>/dev/null | jq -r '.data.result[0].values[0][0] // "0"')
+
+# Prometheus scrape target summary
+curl -sG "http://192.168.10.56:9090/api/v1/query" \
+  --data-urlencode 'query=count(up == 1)' 2>/dev/null | jq -r '"Targets UP: \(.data.result[0].value[1])"'
+curl -sG "http://192.168.10.56:9090/api/v1/query" \
+  --data-urlencode 'query=count(up == 0)' 2>/dev/null | jq -r '"Targets DOWN: \(.data.result[0].value[1] // "0")"'
+
+# Error rate trend (should be < 50/h for healthy)
+curl -sG "http://192.168.10.56:3100/loki/api/v1/query" \
+  --data-urlencode 'query=sum(count_over_time({container=~"synapse-prod.*"} |~ "(?i)error" [1h]))' \
+  2>/dev/null | jq -r '"Errors (1h): \(.data.result[0].value[1] // "0")"'
+```
+
 ## Server-Side Cron
 
 The health-checker.py runs on VM 550 every 4 hours:

@@ -14,6 +14,13 @@ effort: medium
 - Note: what is EXPECTED vs what is ACTUAL
 - Check: when did it last work? What changed?
 
+#### Centralized Log Query (AXOIQ/Synapse projects)
+Before SSH + docker logs, query Loki for structured errors (ref: `refs/observability-api`):
+1. Error count by container: identifies which service is the hotspot
+2. Recent errors for the suspected service: exact error messages with timestamps
+3. If trace_id visible → trace correlation query to follow the request across services
+4. Prometheus `up` query to check if any scrape target is down
+
 ### 2. HYPOTHESIZE — What could cause this?
 - List 2-3 possible causes ranked by likelihood
 - For each: what evidence would confirm/deny it?
