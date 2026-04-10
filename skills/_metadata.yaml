@@ -205,6 +205,34 @@ skills:
     domains: [dev]
     description: "Analyze plan → optimal execution strategy: model allocation, parallel vs sequential, cost estimation"
 
+  forgejo-pr:
+    emoji: "🔀"
+    category: Ship
+    owner: dev
+    domains: [dev]
+    description: "Forgejo PR lifecycle: create, rebase, merge, cleanup. One command to promote dev→main."
+
+  deploy-hotfix:
+    emoji: "🩹"
+    category: Deploy
+    owner: admin
+    domains: [infra, dev]
+    description: "Deploy file hotfix to running container via docker cp + restart + health check. SSH jump host support."
+
+  api-healthcheck:
+    emoji: "🏥"
+    category: Quality
+    owner: dev
+    domains: [dev, infra]
+    description: "Batch test all API endpoints. Parallel curl, status codes, response times. Config-driven."
+
+  visual-qa:
+    emoji: "👁️"
+    category: Quality
+    owner: dev
+    domains: [dev, frontend]
+    description: "Multi-page visual QA via Chrome MCP. Auto-navigate routes, screenshot, error detection, pass/fail matrix."
+
   finishing-branch:
     emoji: "📦"
     category: Ship
