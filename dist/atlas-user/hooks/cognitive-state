@@ -1,0 +1,398 @@
+#!/usr/bin/env bash
+# cognitive-state — Unified Cognitive State Engine (replaces theory-of-mind + tone-adaptation + affect-signal)
+# Event: UserPromptSubmit (async) | P95 target: <100ms
+#
+# Merged from 3 hooks:
+#   1. theory-of-mind: regex-based user state inference (frustrated/curious/fatigued/flow/decision_fatigue)
+#   2. tone-adaptation: tone mode from experiential signals + ToM state
+#   3. affect-signal: DCM score from episode frontmatter
+#
+# Optimizations vs 3 separate hooks (~500ms combined):
+#   - 12 grep calls → 1 consolidated awk pass
+#   - 6 python3 subprocesses → 0 (pure bash + jq)
+#   - 3 separate stdin reads → 1
+#   - 3 hook startups → 1
+#
+# Output: system-reminder with ToM state + tone guidance + DCM
+# State files (backward compatible):
+#   ~/.claude/atlas-tom-state.json      (for downstream hooks)
+#   ~/.claude/atlas-tom-signals.json    (history log)
+#   ~/.claude/atlas-tone-state.json     (for downstream hooks)
+# Must complete in <3s (target <100ms)
+
+set -o pipefail
+trap 'exit 0' ERR
+
+_START_MS=$(date +%s%N 2>/dev/null | head -c13 || echo "0")
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true
+
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local end_ms
+  end_ms=$(date +%s%N 2>/dev/null | head -c13 || echo "0")
+  local elapsed=$(( end_ms - _START_MS ))
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-UserPromptSubmit}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null || true
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 1. Read prompt from stdin (single read for all 3 subsystems)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INPUT=$(cat 2>/dev/null || echo '{}')
+PROMPT=$(printf '%s' "$INPUT" | jq -r '.prompt // .message // empty' 2>/dev/null || echo "")
+
+if [ -z "$PROMPT" ] || [ ${#PROMPT} -lt 3 ]; then
+  _hook_log "skip:short"
+  exit 0
+fi
+
+# Fast-exit for simple commands (slash, numbers, single words, git ops)
+PROMPT_TRIMMED=$(printf '%s' "$PROMPT" | tr -d '[:space:]')
+if [ ${#PROMPT_TRIMMED} -le 30 ]; then
+  if printf '%s' "$PROMPT" | grep -qE '^(/[a-z-]+|[0-9]+|git |make |bun |docker |stop|exit|quit)'; then
+    _hook_log "skip:simple-cmd"
+    exit 0
+  fi
+fi
+
+PROMPT_LEN=${#PROMPT}
+HOUR=$(date +%H)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2. Single-pass regex scoring via awk (replaces 12 grep calls)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROMPT_LOWER=$(printf '%s' "$PROMPT" | tr '[:upper:]' '[:lower:]')
+
+# Run awk from external file (avoids shell quote escaping issues in heredoc)
+_AWK_PROG="$HOOK_DIR/lib/cognitive-scorer.awk"
+_SCORES=$(printf '%s\n' "$PROMPT_LOWER" | awk -v plen="$PROMPT_LEN" -v orig="$PROMPT" -f "$_AWK_PROG" 2>/dev/null) || true
+read -r SCORE_FRUSTRATED SCORE_CURIOUS SCORE_FATIGUED SCORE_FLOW SCORE_DECISION_FATIGUE CODE_MARKERS <<< "${_SCORES:-0 0 0 0 0 0}"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 3. Statistical baseline from TOM history (pure jq, no python3)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TOM_LOG="$HOME/.claude/atlas-tom-signals.json"
+CALIBRATED="false"
+AVG_LEN=100
+ENTRY_COUNT=0
+TREND="stable"
+SHORT_COUNT=0
+
+if [ -f "$TOM_LOG" ] && [ -s "$TOM_LOG" ] && command -v jq &>/dev/null; then
+  STATS=$(jq -r --argjson plen "$PROMPT_LEN" '
+    length as $count |
+    if $count >= 5 then
+      (map(.length // 100) | add / length) as $avg |
+      (.[-5:] | map(.length // 100) | add / length) as $recent_avg |
+      (if $recent_avg < ($avg * 0.6) then "decreasing" else "stable" end) as $trend |
+      (.[-5:] | map(select((.length // 100) < 15)) | length) as $short |
+      (if $count >= 30 then "true" else "false" end) as $cal |
+      "\($avg | floor)|\($cal)|\($count)|\($trend)|\($short)"
+    else
+      "100|false|\($count)|stable|0"
+    end
+  ' "$TOM_LOG" 2>/dev/null || echo "100|false|0|stable|0")
+
+  AVG_LEN=$(printf '%s' "$STATS" | cut -d'|' -f1)
+  CALIBRATED=$(printf '%s' "$STATS" | cut -d'|' -f2)
+  ENTRY_COUNT=$(printf '%s' "$STATS" | cut -d'|' -f3)
+  TREND=$(printf '%s' "$STATS" | cut -d'|' -f4)
+  SHORT_COUNT=$(printf '%s' "$STATS" | cut -d'|' -f5)
+
+  # Statistical boosts
+  if [ "$TREND" = "decreasing" ]; then
+    SCORE_FATIGUED=$((SCORE_FATIGUED + 2))
+  fi
+  if [ "${SHORT_COUNT:-0}" -ge 3 ]; then
+    SCORE_DECISION_FATIGUE=$((SCORE_DECISION_FATIGUE + 3))
+  fi
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 4. Temporal signals
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if [ "$HOUR" -ge 22 ] || [ "$HOUR" -lt 5 ]; then
+  SCORE_FATIGUED=$((SCORE_FATIGUED + 2))
+  TIME_LABEL="late-night"
+elif [ "$HOUR" -ge 6 ] && [ "$HOUR" -lt 10 ]; then
+  SCORE_CURIOUS=$((SCORE_CURIOUS + 1))
+  TIME_LABEL="morning"
+elif [ "$HOUR" -ge 10 ] && [ "$HOUR" -lt 14 ]; then
+  TIME_LABEL="midday"
+elif [ "$HOUR" -ge 14 ] && [ "$HOUR" -lt 18 ]; then
+  TIME_LABEL="afternoon"
+else
+  TIME_LABEL="evening"
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 5. Multi-signal scoring — determine top state
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STATE="standard"
+MAX_SCORE=2  # Threshold: must beat 2 to infer a state
+
+for pair in "frustrated:$SCORE_FRUSTRATED" "curious:$SCORE_CURIOUS" "fatigued:$SCORE_FATIGUED" "flow:$SCORE_FLOW" "decision_fatigue:$SCORE_DECISION_FATIGUE"; do
+  name="${pair%%:*}"
+  score="${pair##*:}"
+  if [ "$score" -gt "$MAX_SCORE" ]; then
+    MAX_SCORE=$score
+    STATE=$name
+  fi
+done
+
+# Confidence (0-100%)
+CONFIDENCE=0
+if [ "$MAX_SCORE" -ge 6 ]; then CONFIDENCE=90
+elif [ "$MAX_SCORE" -ge 5 ]; then CONFIDENCE=82
+elif [ "$MAX_SCORE" -ge 4 ]; then CONFIDENCE=75
+elif [ "$MAX_SCORE" -ge 3 ]; then CONFIDENCE=65
+fi
+
+# Behavioral guidance
+GUIDANCE=""
+case "$STATE" in
+  frustrated)        GUIDANCE="Actions directes, skip questions et Insights." ;;
+  curious)           GUIDANCE="Enrichir explications, explorer alternatives." ;;
+  fatigued)          GUIDANCE="Simplifier, suggérer pause si fin de session." ;;
+  flow)              GUIDANCE="Minimal output, zero commentary, execute." ;;
+  decision_fatigue)  GUIDANCE="Max 2 options, recommander un choix." ;;
+esac
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 6. Append to TOM signal history (jq, no python3)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if command -v jq &>/dev/null; then
+  CONF_FLOAT=$(awk "BEGIN{printf \"%.2f\", $CONFIDENCE/100}")
+  NEW_ENTRY=$(jq -n \
+    --arg ts "$(date -Iseconds)" \
+    --argjson hour "$HOUR" \
+    --argjson length "$PROMPT_LEN" \
+    --arg state "$STATE" \
+    --argjson confidence "$CONF_FLOAT" \
+    --argjson fr "$SCORE_FRUSTRATED" \
+    --argjson cu "$SCORE_CURIOUS" \
+    --argjson fa "$SCORE_FATIGUED" \
+    --argjson fl "$SCORE_FLOW" \
+    --argjson df "$SCORE_DECISION_FATIGUE" \
+    '{ts:$ts, hour:$hour, length:$length, state:$state, confidence:$confidence,
+      scores:{frustrated:$fr, curious:$cu, fatigued:$fa, flow:$fl, decision_fatigue:$df}}')
+
+  if [ -f "$TOM_LOG" ] && [ -s "$TOM_LOG" ]; then
+    jq --argjson entry "$NEW_ENTRY" '. + [$entry] | .[-200:]' "$TOM_LOG" > "${TOM_LOG}.tmp" 2>/dev/null \
+      && mv "${TOM_LOG}.tmp" "$TOM_LOG"
+  else
+    printf '[%s]' "$NEW_ENTRY" > "$TOM_LOG"
+  fi
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 7. Write TOM state file (backward compatible path)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TOM_STATE_FILE="$HOME/.claude/atlas-tom-state.json"
+CONF_FLOAT=$(awk "BEGIN{printf \"%.2f\", $CONFIDENCE/100}")
+
+if command -v jq &>/dev/null; then
+  jq -n \
+    --arg state "$STATE" \
+    --argjson confidence "$CONF_FLOAT" \
+    --arg guidance "$GUIDANCE" \
+    --argjson fr "$SCORE_FRUSTRATED" \
+    --argjson cu "$SCORE_CURIOUS" \
+    --argjson fa "$SCORE_FATIGUED" \
+    --argjson fl "$SCORE_FLOW" \
+    --argjson df "$SCORE_DECISION_FATIGUE" \
+    --argjson plen "$PROMPT_LEN" \
+    --argjson cal "$([ "$CALIBRATED" = "true" ] && echo true || echo false)" \
+    --argjson ec "${ENTRY_COUNT:-0}" \
+    --arg updated "$(date -Iseconds)" \
+    '{state:$state, confidence:$confidence, guidance:$guidance,
+      scores:{frustrated:$fr, curious:$cu, fatigued:$fa, flow:$fl, decision_fatigue:$df},
+      prompt_length:$plen, calibrated:$cal, entry_count:$ec, updated:$updated}' \
+    > "$TOM_STATE_FILE" 2>/dev/null
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 8. Tone adaptation (merged from tone-adaptation hook)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 8a. Read experiential signals (energy + mood from auto-learn)
+ENERGY=4
+MOOD="neutral"
+SIGNALS_FILE="$HOME/.claude/atlas-experiential-signals.json"
+
+if [ -f "$SIGNALS_FILE" ] && [ -s "$SIGNALS_FILE" ] && command -v jq &>/dev/null; then
+  LAST_ENERGY=$(jq -r '[.[] | select(.type == "energy")] | last | .value // 4' "$SIGNALS_FILE" 2>/dev/null)
+  ENERGY=${LAST_ENERGY:-4}
+  LAST_MOOD=$(jq -r '[.[] | select(.type == "mood")] | last | .value // "neutral"' "$SIGNALS_FILE" 2>/dev/null)
+  MOOD=${LAST_MOOD:-neutral}
+fi
+
+# 8b. Time-of-day energy adjustment
+if [ "$HOUR" -ge 22 ] || [ "$HOUR" -lt 6 ]; then
+  ENERGY=$((ENERGY > 1 ? ENERGY - 1 : 1))
+fi
+
+# 8c. Statistical low-energy signal (calibrated, late evening)
+if [ "$CALIBRATED" = "true" ] && [ "$HOUR" -ge 21 ]; then
+  THRESHOLD=$(awk "BEGIN{printf \"%.0f\", ${AVG_LEN:-100} * 0.4}")
+  if [ "$PROMPT_LEN" -lt "$THRESHOLD" ]; then
+    ENERGY=$((ENERGY > 1 ? ENERGY - 1 : 1))
+  fi
+fi
+
+# 8d. TOM-driven mood override (high confidence takes priority)
+if [ "$CONFIDENCE" -ge 70 ]; then
+  case "$STATE" in
+    frustrated) MOOD="frustrated" ;;
+    flow)       MOOD="flow" ;;
+  esac
+fi
+
+# 8e. Compute tone mode
+TONE="standard"
+STYLE=""
+
+if [ "$ENERGY" -le 2 ]; then
+  TONE="ultra-concise"
+  STYLE="Max 3 bullets. No brainstorm. No insights block. Actions only. Skip AskUserQuestion if the answer is obvious."
+elif [ "$ENERGY" -le 3 ] && [[ "$MOOD" == "frustrated" || "$MOOD" == "annoyed" || "$MOOD" == "stuck" ]]; then
+  TONE="empathetic-concise"
+  STYLE="Acknowledge the blocker briefly. Propose 1-2 concrete alternatives. Stay short and supportive."
+elif [ "$ENERGY" -ge 5 ] && [[ "$MOOD" == "curious" || "$MOOD" == "excited" ]]; then
+  TONE="exploration"
+  STYLE="Insights welcome. Explore alternatives. Encourage creative thinking. Longer responses OK."
+elif [[ "$MOOD" == "flow" || "$MOOD" == "dans-la-zone" ]]; then
+  TONE="flow-protect"
+  STYLE="MINIMAL output. Execute directly. No questions. No commentary. Just do the work."
+fi
+
+# 8f. Write tone state file (backward compatible)
+TONE_FILE="$HOME/.claude/atlas-tone-state.json"
+if command -v jq &>/dev/null; then
+  jq -n \
+    --arg tone "$TONE" \
+    --argjson energy "$ENERGY" \
+    --arg mood "$MOOD" \
+    --arg time_label "$TIME_LABEL" \
+    --argjson hour "$HOUR" \
+    --arg updated "$(date -Iseconds)" \
+    '{tone:$tone, energy:$energy, mood:$mood, time_label:$time_label, hour:$hour, updated:$updated}' \
+    > "$TONE_FILE" 2>/dev/null
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 9. DCM from episode (merged from affect-signal hook)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DCM_OUTPUT=""
+
+# Use cached memory dir from session state if available
+MEMORY_DIR=""
+SESSION_STATE="$HOME/.claude/atlas-session-state.json"
+if [ -f "$SESSION_STATE" ] && command -v jq &>/dev/null; then
+  MEMORY_DIR=$(jq -r '.memory_dir // empty' "$SESSION_STATE" 2>/dev/null)
+fi
+
+# Fallback: resolve from CWD (but skip expensive find)
+if [ -z "$MEMORY_DIR" ] || [ ! -d "$MEMORY_DIR" ]; then
+  CWD=$(pwd)
+  CWD_SLUG=$(printf '%s' "$CWD" | sed 's|/|-|g; s|^-||')
+  CANDIDATE="$HOME/.claude/projects/${CWD_SLUG}/memory"
+  if [ -d "$CANDIDATE" ]; then
+    MEMORY_DIR="$CANDIDATE"
+  fi
+fi
+
+if [ -n "$MEMORY_DIR" ] && [ -d "$MEMORY_DIR" ]; then
+  TODAY=$(date +%Y-%m-%d)
+  YESTERDAY=$(date -d "yesterday" +%Y-%m-%d 2>/dev/null || date -v-1d +%Y-%m-%d 2>/dev/null || echo "")
+
+  # Check today's episode, then yesterday's (no find, direct path)
+  EPISODE=""
+  for dt in "$TODAY" "$YESTERDAY"; do
+    for f in "$MEMORY_DIR"/episode-${dt}*.md; do
+      [ -f "$f" ] && EPISODE="$f" && break 2
+    done
+  done
+
+  if [ -n "$EPISODE" ] && [ -f "$EPISODE" ]; then
+    # Extract frontmatter with grep (3 calls, but on a single small file)
+    EP_ENERGY=$(grep "^energy:" "$EPISODE" 2>/dev/null | awk '{print $2}' | head -1)
+    EP_MOOD=$(grep "^mood:" "$EPISODE" 2>/dev/null | awk '{print $2}' | head -1)
+    EP_TIMEQ=$(grep "^time_quality:" "$EPISODE" 2>/dev/null | awk '{print $2}' | head -1)
+    EP_ENERGY=${EP_ENERGY:-5}
+    EP_MOOD=${EP_MOOD:-neutral}
+    EP_TIMEQ=${EP_TIMEQ:-mixed}
+
+    # Mood factor (pure bash case)
+    case "$EP_MOOD" in
+      positive|productive|methodical|creative|focused) MOOD_F=100 ;;
+      neutral|routine|reflective)                       MOOD_F=85 ;;
+      tired|frustrated|scattered|anxious)               MOOD_F=70 ;;
+      exhausted|overwhelmed)                            MOOD_F=50 ;;
+      *)                                                MOOD_F=85 ;;
+    esac
+
+    # Time quality factor
+    case "$EP_TIMEQ" in
+      deep)       TQ_F=100 ;;
+      focused)    TQ_F=95 ;;
+      mixed)      TQ_F=85 ;;
+      shallow)    TQ_F=70 ;;
+      distracted) TQ_F=60 ;;
+      *)          TQ_F=85 ;;
+    esac
+
+    # DCM = (energy/10) * mood_f * tq_f (integer math scaled by 10000)
+    DCM_RAW=$(( EP_ENERGY * MOOD_F * TQ_F ))
+    # Scale: /10000 for the two 100-scale factors, result is 0.XX
+    DCM_INT=$(( DCM_RAW / 100 ))  # now in 0-100 range
+    DCM_SCORE=$(awk "BEGIN{printf \"%.2f\", $DCM_INT/100}")
+
+    if [ "$DCM_INT" -ge 80 ]; then DCM_LEVEL="high"
+    elif [ "$DCM_INT" -ge 60 ]; then DCM_LEVEL="medium"
+    elif [ "$DCM_INT" -ge 40 ]; then DCM_LEVEL="low"
+    else DCM_LEVEL="minimal"
+    fi
+
+    DCM_OUTPUT=" | DCM:${DCM_SCORE}(${DCM_LEVEL})"
+  fi
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 10. Emit system-reminder (combined output)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT=""
+
+# ToM state injection (non-standard + confident, throttled 3min)
+if [ "$STATE" != "standard" ] && [ "$CONFIDENCE" -ge 65 ]; then
+  if ! type throttle_check &>/dev/null || throttle_check "cognitive-tom" 180; then
+    OUTPUT="🧠 ToM: ${STATE} (${CONFIDENCE}%) — ${GUIDANCE}"
+  fi
+fi
+
+# Tone injection (non-standard, throttled 5min)
+if [ "$TONE" != "standard" ]; then
+  if ! type throttle_check &>/dev/null || throttle_check "cognitive-tone" 300; then
+    if [ -n "$OUTPUT" ]; then
+      OUTPUT="${OUTPUT} | 🎭 Tone: ${TONE} (energy=${ENERGY}, mood=${MOOD}). ${STYLE}"
+    else
+      OUTPUT="🎭 Tone: ${TONE} (energy=${ENERGY}, mood=${MOOD}, time=${TIME_LABEL}). ${STYLE}"
+    fi
+  fi
+fi
+
+# DCM appended if available
+if [ -n "$DCM_OUTPUT" ] && [ -n "$OUTPUT" ]; then
+  OUTPUT="${OUTPUT}${DCM_OUTPUT}"
+fi
+
+# Emit final output
+if [ -n "$OUTPUT" ]; then
+  printf '%s\n' "$OUTPUT"
+fi
+
+_hook_log "pass:${STATE}:${CONFIDENCE}:${TONE}"

@@ -111,6 +111,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/focus-guard\"",
             "async": true,
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/cognitive-state\"",
+            "async": true,
+            "timeout": 3
           }
         ]
       }
