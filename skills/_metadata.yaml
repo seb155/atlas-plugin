@@ -74,6 +74,7 @@ skills:
     owner: core
     domains: [core]
     description: "Auto-scan project + CLAUDE.md audit + codemap generation"
+    triggers: ["scan project", "discover context", "audit claude.md", "codemap", "context scan"]
 
   deep-research:
     emoji: "📚"
@@ -81,6 +82,7 @@ skills:
     owner: core
     domains: [core]
     description: "Multi-query decomposition → search → triangulate → synthesize"
+    triggers: ["research", "deep dive", "investigate", "analyse approfondie", "recherche"]
 
   document-generator:
     emoji: "📄"
@@ -163,6 +165,7 @@ skills:
     description: "Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval"
     inputs: ["user_intent: string", "codebase_context?: string"]
     outputs: ["design_doc_path: string", "design_approval: bool", "phase_sketch: string[]"]
+    triggers: ["brainstorm", "explore ideas", "design options", "approaches", "how should we"]
 
   ci-management:
     emoji: "🔧"
@@ -179,6 +182,7 @@ skills:
     description: "Code review with confidence filtering. Local or PR mode"
     inputs: ["diff_content: git_diff", "claude_md_rules: string[]", "pr_url?: string"]
     outputs: ["review_findings: json", "false_positive_rate: float", "pr_comments?: posted"]
+    triggers: ["review code", "code review", "review PR", "check this code", "revue de code"]
 
   code-simplify:
     emoji: "✨"
@@ -255,6 +259,7 @@ skills:
     description: "Commit + push + PR + CI + cleanup (conventional commits)"
     inputs: ["branch_name: string", "test_results: passing", "dod_tier?: enum"]
     outputs: ["merge_option: enum", "commit_sha: string", "pr_url?: string", "branch_deleted: bool"]
+    triggers: ["commit", "finish branch", "create PR", "merge", "ship this", "push"]
 
   ship-all:
     emoji: "🚀"
@@ -283,6 +288,7 @@ skills:
     owner: dev
     domains: [dev]
     description: "Isolated branch per feature. Safety verification (Forgejo-native)"
+    triggers: ["worktree", "isolate branch", "feature branch", "nouvelle branche"]
 
   hookify:
     emoji: "🪝"
@@ -299,6 +305,7 @@ skills:
     description: "Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15"
     inputs: ["context_discovery_report?: string", "existing_plan?: string", "research_questions?: string[]"]
     outputs: ["plan_path: string", "quality_score: number", "approval: bool"]
+    triggers: ["write a plan", "create plan", "planifier", "plan for", "implementation plan"]
 
   plugin-builder:
     emoji: "🔌"
@@ -343,6 +350,7 @@ skills:
     owner: dev
     domains: [dev]
     description: "Hypothesize → verify → fix. Max 2 attempts then escalate"
+    triggers: ["debug", "bug", "fix error", "not working", "investigate issue", "ça marche pas"]
 
   tdd:
     emoji: "🧪"
@@ -352,6 +360,7 @@ skills:
     description: "Failing test → minimal impl → pass → commit. Strict TDD cycle"
     inputs: ["feature_spec: string", "test_framework: enum"]
     outputs: ["test_file_path: string", "test_status: passing", "commit_sha: string"]
+    triggers: ["write test", "test first", "tdd", "add test", "failing test"]
 
   test-orchestrator:
     emoji: "🧪"
@@ -368,6 +377,7 @@ skills:
     description: "L1-L4 tests + E2E + security scan + perf benchmarks"
     inputs: ["plan_path?: string", "code_changes: git_diff", "environment_health?: json"]
     outputs: ["verification_report: markdown", "dod_score: number", "dod_tier: enum", "security_scan: json"]
+    triggers: ["verify", "run tests", "check quality", "quality gate", "vérifier"]
 
   vision-alignment:
     emoji: "🧭"
@@ -428,6 +438,7 @@ skills:
     description: "Deploy to any env with health checks, validators, data sync"
     inputs: ["deploy_config: yaml", "branch_name: string", "deployment_type: enum"]
     outputs: ["deployment_status: enum", "health_check_results: json", "report: markdown"]
+    triggers: ["deploy", "ship to prod", "mise en prod", "push staging", "release to"]
 
   codebase-audit:
     emoji: "🔬"
@@ -510,6 +521,7 @@ skills:
     owner: admin
     domains: [core]
     description: "Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather, consolidate, prune"
+    triggers: ["dream", "consolidate memory", "clean memory", "memory maintenance"]
 
   onboarding-check:
     emoji: "✅"
@@ -558,6 +570,7 @@ skills:
     owner: admin
     domains: [infra]
     description: "Security scanning, RBAC audit, vulnerability assessment, compliance"
+    triggers: ["security audit", "vulnerability scan", "OWASP", "security check", "audit sécurité"]
 
   session-spawn:
     emoji: "🚀"
