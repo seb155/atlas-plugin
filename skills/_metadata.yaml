@@ -11,7 +11,13 @@
 #
 # SP-DEDUP Phase 2: Tier builds use 'owner', Domain builds use profile YAML directly.
 #
-# Updated: 2026-04-04
+# Optional fields (SOTA upgrade 2026-04-11):
+#   inputs: typed data the skill expects (e.g. ["plan_path: string", "overrides?: object"])
+#   outputs: typed data the skill produces (e.g. ["manifest_path: string", "cost_estimate: number"])
+#   depends_on: skills that must exist for this skill to work (e.g. [decision-log])
+#   triggers: keywords/phrases that should auto-suggest this skill (e.g. ["deploy", "ship to prod"])
+#
+# Updated: 2026-04-11
 
 # Category header emojis (for grouped skill lists)
 category_emojis:
@@ -155,6 +161,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval"
+    inputs: ["user_intent: string", "codebase_context?: string"]
+    outputs: ["design_doc_path: string", "design_approval: bool", "phase_sketch: string[]"]
 
   ci-management:
     emoji: "🔧"
@@ -169,6 +177,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "Code review with confidence filtering. Local or PR mode"
+    inputs: ["diff_content: git_diff", "claude_md_rules: string[]", "pr_url?: string"]
+    outputs: ["review_findings: json", "false_positive_rate: float", "pr_comments?: posted"]
 
   code-simplify:
     emoji: "✨"
@@ -197,6 +207,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "Load plan → TaskCreate per step → execute with subagents"
+    inputs: ["plan_path: string", "execution_manifest?: json", "override_flags?: object"]
+    outputs: ["task_list: created", "test_results: verified", "cost_report: json"]
 
   execution-strategy:
     emoji: "📋"
@@ -204,6 +216,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "Analyze plan → optimal execution strategy: model allocation, parallel vs sequential, cost estimation"
+    inputs: ["plan_path: string", "override_flags?: object", "model_pricing?: json"]
+    outputs: ["execution_manifest_path: string", "cost_estimate: number", "parallel_groups: json"]
 
   forgejo-pr:
     emoji: "🔀"
@@ -239,6 +253,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "Commit + push + PR + CI + cleanup (conventional commits)"
+    inputs: ["branch_name: string", "test_results: passing", "dod_tier?: enum"]
+    outputs: ["merge_option: enum", "commit_sha: string", "pr_url?: string", "branch_deleted: bool"]
 
   ship-all:
     emoji: "🚀"
@@ -281,6 +297,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15"
+    inputs: ["context_discovery_report?: string", "existing_plan?: string", "research_questions?: string[]"]
+    outputs: ["plan_path: string", "quality_score: number", "approval: bool"]
 
   plugin-builder:
     emoji: "🔌"
@@ -316,6 +334,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "Dispatch Sonnet subagents per task. 2-stage review"
+    inputs: ["plan_path: string", "execution_manifest: json", "task_id: string"]
+    outputs: ["subagent_output: string", "spec_compliance: bool", "code_quality: bool", "cost_actual: number"]
 
   systematic-debugging:
     emoji: "🔬"
@@ -330,6 +350,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "Failing test → minimal impl → pass → commit. Strict TDD cycle"
+    inputs: ["feature_spec: string", "test_framework: enum"]
+    outputs: ["test_file_path: string", "test_status: passing", "commit_sha: string"]
 
   test-orchestrator:
     emoji: "🧪"
@@ -344,6 +366,8 @@ skills:
     owner: dev
     domains: [dev]
     description: "L1-L4 tests + E2E + security scan + perf benchmarks"
+    inputs: ["plan_path?: string", "code_changes: git_diff", "environment_health?: json"]
+    outputs: ["verification_report: markdown", "dod_score: number", "dod_tier: enum", "security_scan: json"]
 
   vision-alignment:
     emoji: "🧭"
@@ -402,6 +426,8 @@ skills:
     owner: admin
     domains: [infra]
     description: "Deploy to any env with health checks, validators, data sync"
+    inputs: ["deploy_config: yaml", "branch_name: string", "deployment_type: enum"]
+    outputs: ["deployment_status: enum", "health_check_results: json", "report: markdown"]
 
   codebase-audit:
     emoji: "🔬"
