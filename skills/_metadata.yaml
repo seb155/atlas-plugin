@@ -705,6 +705,15 @@ skills:
   # ===========================================
   # DOMAIN-EXCLUSIVE: enterprise
   # ===========================================
+  persona-loadout:
+    emoji: "🎭"
+    category: Meta
+    owner: admin
+    domains: [core, dev]
+    description: "Switch ATLAS behavior to match work role. 6 personas: startup-cto, devops-lead, solo-founder, PM, security, ic-engineer"
+    triggers: ["persona", "switch role", "switch mode", "as a", "comme un"]
+    weight: 8
+
   self-propose:
     emoji: "🔄"
     category: Meta
