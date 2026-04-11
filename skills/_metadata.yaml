@@ -16,6 +16,9 @@
 #   outputs: typed data the skill produces (e.g. ["manifest_path: string", "cost_estimate: number"])
 #   depends_on: skills that must exist for this skill to work (e.g. [decision-log])
 #   triggers: keywords/phrases that should auto-suggest this skill (e.g. ["deploy", "ship to prod"])
+#   weight: 1-10, how prominent the skill is in atlas-assist (default 5)
+#           weight >= 8: description shown inline in atlas-assist listing
+#           weight < 8: name+emoji only (description loads on demand via Skill tool)
 #
 # Updated: 2026-04-11
 
@@ -75,6 +78,7 @@ skills:
     domains: [core]
     description: "Auto-scan project + CLAUDE.md audit + codemap generation"
     triggers: ["scan project", "discover context", "audit claude.md", "codemap", "context scan"]
+    weight: 9
 
   deep-research:
     emoji: "📚"
@@ -83,6 +87,7 @@ skills:
     domains: [core]
     description: "Multi-query decomposition → search → triangulate → synthesize"
     triggers: ["research", "deep dive", "investigate", "analyse approfondie", "recherche"]
+    weight: 8
 
   document-generator:
     emoji: "📄"
@@ -166,6 +171,7 @@ skills:
     inputs: ["user_intent: string", "codebase_context?: string"]
     outputs: ["design_doc_path: string", "design_approval: bool", "phase_sketch: string[]"]
     triggers: ["brainstorm", "explore ideas", "design options", "approaches", "how should we"]
+    weight: 9
 
   ci-management:
     emoji: "🔧"
@@ -183,6 +189,7 @@ skills:
     inputs: ["diff_content: git_diff", "claude_md_rules: string[]", "pr_url?: string"]
     outputs: ["review_findings: json", "false_positive_rate: float", "pr_comments?: posted"]
     triggers: ["review code", "code review", "review PR", "check this code", "revue de code"]
+    weight: 8
 
   code-simplify:
     emoji: "✨"
@@ -213,6 +220,7 @@ skills:
     description: "Load plan → TaskCreate per step → execute with subagents"
     inputs: ["plan_path: string", "execution_manifest?: json", "override_flags?: object"]
     outputs: ["task_list: created", "test_results: verified", "cost_report: json"]
+    weight: 9
 
   execution-strategy:
     emoji: "📋"
@@ -222,6 +230,7 @@ skills:
     description: "Analyze plan → optimal execution strategy: model allocation, parallel vs sequential, cost estimation"
     inputs: ["plan_path: string", "override_flags?: object", "model_pricing?: json"]
     outputs: ["execution_manifest_path: string", "cost_estimate: number", "parallel_groups: json"]
+    weight: 9
 
   forgejo-pr:
     emoji: "🔀"
@@ -260,6 +269,7 @@ skills:
     inputs: ["branch_name: string", "test_results: passing", "dod_tier?: enum"]
     outputs: ["merge_option: enum", "commit_sha: string", "pr_url?: string", "branch_deleted: bool"]
     triggers: ["commit", "finish branch", "create PR", "merge", "ship this", "push"]
+    weight: 9
 
   ship-all:
     emoji: "🚀"
@@ -289,6 +299,7 @@ skills:
     domains: [dev]
     description: "Isolated branch per feature. Safety verification (Forgejo-native)"
     triggers: ["worktree", "isolate branch", "feature branch", "nouvelle branche"]
+    weight: 8
 
   hookify:
     emoji: "🪝"
@@ -306,6 +317,7 @@ skills:
     inputs: ["context_discovery_report?: string", "existing_plan?: string", "research_questions?: string[]"]
     outputs: ["plan_path: string", "quality_score: number", "approval: bool"]
     triggers: ["write a plan", "create plan", "planifier", "plan for", "implementation plan"]
+    weight: 10
 
   plugin-builder:
     emoji: "🔌"
@@ -327,6 +339,7 @@ skills:
     owner: dev
     domains: [core]
     description: "End-of-session lessons + session close + handoff context"
+    weight: 8
 
   skill-management:
     emoji: "🧩"
@@ -343,6 +356,7 @@ skills:
     description: "Dispatch Sonnet subagents per task. 2-stage review"
     inputs: ["plan_path: string", "execution_manifest: json", "task_id: string"]
     outputs: ["subagent_output: string", "spec_compliance: bool", "code_quality: bool", "cost_actual: number"]
+    weight: 8
 
   systematic-debugging:
     emoji: "🔬"
@@ -351,6 +365,7 @@ skills:
     domains: [dev]
     description: "Hypothesize → verify → fix. Max 2 attempts then escalate"
     triggers: ["debug", "bug", "fix error", "not working", "investigate issue", "ça marche pas"]
+    weight: 8
 
   tdd:
     emoji: "🧪"
@@ -361,6 +376,7 @@ skills:
     inputs: ["feature_spec: string", "test_framework: enum"]
     outputs: ["test_file_path: string", "test_status: passing", "commit_sha: string"]
     triggers: ["write test", "test first", "tdd", "add test", "failing test"]
+    weight: 8
 
   test-orchestrator:
     emoji: "🧪"
@@ -378,6 +394,7 @@ skills:
     inputs: ["plan_path?: string", "code_changes: git_diff", "environment_health?: json"]
     outputs: ["verification_report: markdown", "dod_score: number", "dod_tier: enum", "security_scan: json"]
     triggers: ["verify", "run tests", "check quality", "quality gate", "vérifier"]
+    weight: 9
 
   vision-alignment:
     emoji: "🧭"
@@ -439,6 +456,7 @@ skills:
     inputs: ["deploy_config: yaml", "branch_name: string", "deployment_type: enum"]
     outputs: ["deployment_status: enum", "health_check_results: json", "report: markdown"]
     triggers: ["deploy", "ship to prod", "mise en prod", "push staging", "release to"]
+    weight: 8
 
   codebase-audit:
     emoji: "🔬"
@@ -594,6 +612,7 @@ skills:
     description: "Deep reasoning with structured frameworks (ADR, matrix, risk, tradeoff, compare, chain). Auto-detects analysis type. Persists via decision-log."
     depends_on: [decision-log]
     triggers: ["ultrathink", "think deeply", "analyze thoroughly", "deep analysis", "architectural decision"]
+    weight: 9
 
   atlas-analytics:
     emoji: "📊"
