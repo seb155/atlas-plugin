@@ -552,7 +552,9 @@ skills:
     category: Meta
     owner: admin
     domains: [dev]
-    description: "Deep reasoning mode — maximum thinking budget for complex architectural decisions"
+    description: "Deep reasoning with structured frameworks (ADR, matrix, risk, tradeoff, compare, chain). Auto-detects analysis type. Persists via decision-log."
+    depends_on: [decision-log]
+    triggers: ["ultrathink", "think deeply", "analyze thoroughly", "deep analysis", "architectural decision"]
 
   atlas-analytics:
     emoji: "📊"
