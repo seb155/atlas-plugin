@@ -73,6 +73,9 @@ dev-all: ## Build + install ALL (tiers + domains) to single marketplace
 	$(MAKE) dev
 	$(MAKE) dev-domains
 
+export-cursor: ## Export top 15 skills to Cursor .mdc rules format
+	bash scripts/export-cursor.sh
+
 clean: ## Remove build artifacts
 	rm -rf dist/
 	@echo "Cleaned dist/"

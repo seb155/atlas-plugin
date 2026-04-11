@@ -1,0 +1,79 @@
+---
+description: Isolated feature branch via git worktree. Auto-setup project. Safety: verify .gitignore. 1 worktree per feature.
+globs: []
+alwaysApply: false
+---
+
+
+
+# Git Worktrees
+
+## Overview
+
+Create isolated git worktrees for feature development. Each feature gets its own directory and branch. Auto-detect and run project setup.
+
+## When to Use
+
+- Non-trivial features (>= 3 tasks or multi-subsystem)
+- When you want to keep current branch clean
+- When the plan says "create worktree"
+
+## Process
+
+### 1. Create Worktree
+```bash
+# Use Claude Code's EnterWorktree tool
+# Branch name: feature/{subsystem}-{short-description}
+```
+
+Or manually:
+```bash
+git worktree add .worktrees/feature-name -b feature/subsystem-description
+```
+
+### 2. Safety Verification (CRITICAL)
+If using project-local `.worktrees/`:
+- Check if `.worktrees/` is in `.gitignore`
+- If NOT: add to `.gitignore` and commit BEFORE creating worktree
+- This prevents accidental commit of worktree contents
+
+### 3. Auto-Setup Project
+Detect and run project setup:
+
+```
+package.json → bun install (NEVER npm/yarn/pnpm)
+requirements.txt → pip install -r requirements.txt
+go.mod → go mod download
+Cargo.toml → cargo build
+docker-compose.yml → docker compose up -d
+```
+
+### 4. Verify Clean Baseline
+- Run tests in the new worktree
+- If tests fail BEFORE you change anything → something is wrong with setup
+- Fix setup issues before proceeding
+
+### 5. Work in Worktree
+- All implementation happens in the worktree
+- Commit frequently (after each TDD cycle)
+- Branch name follows convention: `feature/{subsystem}-{description}`
+
+### 6. Finish
+When done, use `finishing-branch` skill to:
+- Merge, create PR, keep, or discard
+- Clean up worktree if merging/discarding
+
+## Naming Convention
+
+```
+feature/{subsystem}-{short-description}
+bugfix/{subsystem}-{short-description}
+refactor/{subsystem}-{short-description}
+```
+
+Examples:
+```
+feature/rule-engine-ai-tune
+bugfix/import-edb-hash-error
+refactor/spec-grouping-cleanup
+```
