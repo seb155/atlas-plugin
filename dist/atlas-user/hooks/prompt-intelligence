@@ -62,6 +62,52 @@ if echo "$PROMPT_LC" | grep -qP '(push|ship|merge|deploy|release|publish)'; then
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# R10: Dynamic skill triggers (from _metadata.yaml)
+# Skills declare their own triggers — no hardcoding needed
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Locate _metadata.yaml (plugin root)
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$HOOK_DIR")}"
+METADATA_FILE="$PLUGIN_ROOT/skills/_metadata.yaml"
+
+if [ -f "$METADATA_FILE" ]; then
+  # Cache trigger map (rebuild if metadata changes)
+  CACHE_KEY=$(stat -c %Y "$METADATA_FILE" 2>/dev/null || stat -f %m "$METADATA_FILE" 2>/dev/null || echo "0")
+  TRIGGER_CACHE="/tmp/.atlas-trigger-cache-${CACHE_KEY}"
+
+  if [ ! -f "$TRIGGER_CACHE" ]; then
+    # Build trigger→skill mapping: "trigger_phrase|skill_name" per line
+    python3 -c "
+import yaml, sys
+with open('$METADATA_FILE') as f:
+    data = yaml.safe_load(f)
+skills = data.get('skills', {})
+for name, meta in skills.items():
+    triggers = meta.get('triggers', [])
+    for t in triggers:
+        print(f'{t.lower()}|{name}')
+" > "$TRIGGER_CACHE" 2>/dev/null || true
+  fi
+
+  # Match prompt against cached triggers (max 1 suggestion)
+  if [ -f "$TRIGGER_CACHE" ] && [ -s "$TRIGGER_CACHE" ]; then
+    MATCHED_SKILL=""
+    while IFS='|' read -r trigger skill; do
+      if echo "$PROMPT_LC" | grep -qiF "$trigger"; then
+        MATCHED_SKILL="$skill"
+        break
+      fi
+    done < "$TRIGGER_CACHE"
+
+    if [ -n "$MATCHED_SKILL" ] && type throttle_check &>/dev/null && throttle_check "trigger-$MATCHED_SKILL" 300; then
+      # Look up emoji from metadata
+      SKILL_EMOJI=$(grep -A2 "^  ${MATCHED_SKILL}:" "$METADATA_FILE" | grep "emoji:" | head -1 | sed 's/.*emoji: "\(.*\)"/\1/' || echo "🔧")
+      echo "💡 ATLAS │ SKILL MATCH │ ${SKILL_EMOJI} ${MATCHED_SKILL} — use /atlas-admin:${MATCHED_SKILL} or just describe what you need"
+    fi
+  fi
+fi
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # R9: Experiential context — relationship surfacing
 # When a person name matches a relationship memory file,
 # inject strengths + last interaction (rate-limited)
