@@ -23,5 +23,5 @@ fi
 cat <<EOF
 📡 CI Auto-Monitor: Push detected to branch '${BRANCH}'.
 To monitor CI status, use: /atlas ci status
-Or run: source ~/.env && curl -s -H "Authorization: token \$FORGEJO_TOKEN" "http://192.168.10.75:3000/api/v1/repos/axoiq/synapse/actions/runs?limit=1" | python3 -c "import sys,json; d=json.load(sys.stdin); runs=d.get('workflow_runs',[]); print(f'CI: {runs[0][\"status\"]}' if runs else 'No runs')"
+Or run: source ~/.env && curl -s -H "Authorization: Bearer \$WP_TOKEN" "http://192.168.10.76:8000/api/repos/1/pipelines?per_page=1" | python3 -c "import sys,json; p=json.load(sys.stdin); print(f'CI: #{p[0][\"number\"]} {p[0][\"status\"]}' if p else 'No pipelines')"
 EOF
