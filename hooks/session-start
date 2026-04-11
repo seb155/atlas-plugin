@@ -62,7 +62,13 @@ try:
 except: print('env')
 " 2>/dev/null || echo "env")
 
-if [ "$_secrets_provider" = "vaultwarden" ] && command -v bw &>/dev/null; then
+if [ "$_secrets_provider" = "infisical" ] && command -v atlas-env &>/dev/null; then
+  # Infisical provider: atlas-env loads secrets via Universal Auth API
+  # Fallback cascade: Infisical API → ~/.env
+  eval "$(atlas-env load 2>/dev/null)" && VAULT_MSG="" || {
+    VAULT_MSG="🏛️ ATLAS │ 🔐 INFISICAL │ ⚠️ Unreachable — using ~/.env fallback"
+  }
+elif [ "$_secrets_provider" = "vaultwarden" ] && command -v bw &>/dev/null; then
   # Try keyring-cached BW_SESSION
   if [ -z "${BW_SESSION:-}" ] && [ -x "${PLUGIN_ROOT}/scripts/atlas-keyring.sh" ]; then
     BW_SESSION=$("${PLUGIN_ROOT}/scripts/atlas-keyring.sh" get bw_session 2>/dev/null || true)
