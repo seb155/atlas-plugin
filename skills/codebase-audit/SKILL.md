@@ -3,6 +3,8 @@ name: codebase-audit
 description: "20-dimension codebase analysis via 9-agent parallel team. Architecture, security, testing, performance, DX, enterprise, and 14 more dimensions. Weighted scoring 0-10, configurable presets (generic/synapse/saas/library), HITL gates, phased remediation roadmap. This skill should be used when the user asks to 'audit codebase', 'analyze codebase', 'codebase health', 'quality audit', or 'ultrathink audit'."
 effort: high
 model: opus
+context: fork
+agent: context-scanner
 ---
 
 # Codebase Ultrathink Audit

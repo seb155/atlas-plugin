@@ -157,6 +157,11 @@ Agent tool:
 After parallel agents complete: review outputs, resolve any conflicts manually,
 then merge into main working branch.
 
+## Worktree Isolation (CC v2.1.101+)
+
+Pass `isolation: "worktree"` to the Agent() tool call for workers that modify code in parallel.
+CC v2.1.101 fixes R/W access inside isolated worktrees. This is a runtime parameter, not AGENT.md config.
+
 ### After parallel completion
 
 1. Collect all agent outputs

@@ -2,6 +2,11 @@
 name: plan-reviewer
 description: "Quality gate agent. Scores plans against 15 criteria. Identifies weak sections. Gate: 12/15."
 model: sonnet
+disallowedTools:
+  - Write
+  - Edit
+  - Bash
+  - NotebookEdit
 ---
 
 # Plan Reviewer Agent

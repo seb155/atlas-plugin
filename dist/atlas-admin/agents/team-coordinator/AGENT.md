@@ -2,6 +2,10 @@
 name: team-coordinator
 description: "Operations status checker for Agent Teams. Haiku agent. Monitors CI, Docker, deploy, infrastructure. Read-only — never modifies systems."
 model: haiku
+disallowedTools:
+  - Write
+  - Edit
+  - NotebookEdit
 ---
 
 # Team Coordinator Agent

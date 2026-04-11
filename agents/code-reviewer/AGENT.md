@@ -2,6 +2,10 @@
 name: code-reviewer
 description: "Code review a pull request or working tree diff. Sonnet agent. Checks CLAUDE.md compliance, patterns, security, tests, and produces structured feedback."
 model: sonnet
+disallowedTools:
+  - Write
+  - Edit
+  - NotebookEdit
 ---
 
 # Code Reviewer Agent

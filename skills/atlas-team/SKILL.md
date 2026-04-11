@@ -683,6 +683,25 @@ POOL = {
 | User wants to switch focus | Compact all workers, update scratchpad/context.md with new focus |
 | Session too long (2h+) | Relay all workers, clean scratchpad/tasks/ (keep relay/ files) |
 
+## MCP Server Inheritance (CC v2.1.101+)
+
+Since CC v2.1.101, subagents automatically inherit MCP tools from dynamically-injected servers
+in the parent project. Agent Teams workers now have access to MCP servers configured
+in `.mcp.json` (e.g., gms-knowledge, stitch, context7).
+
+**Exclusion**: To exclude a MCP from an agent, use `disallowedTools` in the AGENT.md
+frontmatter with glob patterns (e.g., `mcp__claude-in-chrome__*`).
+
+## Worktree Isolation (CC v2.1.101+)
+
+CC v2.1.101 fixes Read/Edit access for subagents running in isolated worktrees.
+Isolation is a **runtime parameter** of the `Agent()` tool call — NOT in AGENT.md frontmatter.
+
+Use when a worker modifies code in parallel:
+```
+Agent({ subagent_type: "team-engineer", isolation: "worktree", prompt: "..." })
+```
+
 ## Playbook Reference
 
 Full onboarding guide: `.blueprint/AGENT-TEAMS-PLAYBOOK.md`

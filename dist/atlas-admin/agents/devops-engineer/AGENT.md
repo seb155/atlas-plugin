@@ -3,6 +3,9 @@ name: devops-engineer
 description: "CI/CD and deployment specialist. Sonnet agent. Forgejo Actions, Docker builds, deploy pipelines, container optimization, monitoring setup."
 model: sonnet
 effort: medium
+disallowedTools:
+  - mcp__claude-in-chrome__*
+  - mcp__plugin_playwright_playwright__*
 ---
 
 # DevOps Engineer Agent

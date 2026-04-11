@@ -1,5 +1,38 @@
 # Changelog
 
+## v4.37.0 (2026-04-11)
+
+### CC v2.1.101 Alignment Release
+
+Leverages Claude Code v2.1.101 fixes to activate previously documented but non-functional features.
+
+#### Agent Frontmatter Enforcement (Phase 1)
+- 13 agents: added `disallowedTools` to YAML frontmatter (CC now enforces and explains)
+- 8 read-only agents: `Write, Edit, NotebookEdit` denied
+- 2 strict read-only: `Write, Edit, Bash, NotebookEdit` denied (domain-analyst, plan-reviewer)
+- 5 write-capable agents: browser MCP tools excluded via glob `mcp__claude-in-chrome__*`, `mcp__plugin_playwright_playwright__*`
+- 3 agents unchanged (plan-architect, experiment-runner, design-implementer — full access)
+
+#### Skill Context Fork (Phase 2)
+- 4 skills activated `context: fork` + `agent:` frontmatter (CC v2.1.101 fix)
+- `codebase-audit` → forks to `context-scanner` agent (isolates massive output)
+- `code-review` → forks to `code-reviewer` agent (independent review)
+- `plan-review` → forks to `plan-reviewer` agent (unbiased scoring)
+- `experiment-loop` → forks to `experiment-runner` agent (autonomous iterations)
+
+#### Configuration (Phase 3)
+- `settings.json`: added `API_TIMEOUT_MS: "600000"` (10 min, covers ultrathink)
+- New preset: `scripts/presets/debug-tracing.json` (OTEL_LOG_* env vars for debug)
+- `atlas-team` skill: documented MCP inheritance + worktree isolation (CC v2.1.101)
+- `subagent-dispatch` skill: documented worktree isolation runtime parameter
+
+#### Reference Update (Phase 4)
+- `cc-native-features` ref: added v2.1.101 section (16 changes)
+
+#### Cleanup (Phase 5)
+- Version bump: 4.36.0 → 4.37.0
+- `session-spawn`: documented `--resume <name>` accepts session titles
+
 ## v4.0.0 (2026-03-28)
 
 ### SP-ECO: ATLAS Ecosystem Architecture

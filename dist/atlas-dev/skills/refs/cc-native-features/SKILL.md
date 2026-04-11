@@ -243,6 +243,28 @@ Set to `null` to unbind. Chords: `"ctrl+k ctrl+s"` (space-separated). Reserved: 
 | `WorktreeCreate` | v2.1.50 | Worktree created |
 | `WorktreeRemove` | v2.1.50 | Worktree removed |
 
+## v2.1.101 (2026-04-11)
+
+| Feature | Impact |
+|---------|--------|
+| `/team-onboarding` | New — generate teammate ramp-up guide from local CC usage |
+| OS CA cert trust | Enterprise TLS proxies work by default (`CLAUDE_CODE_CERT_STORE=bundled` for bundled only) |
+| `/ultraplan` auto-env | Auto-creates cloud env, no web setup needed |
+| `OTEL_LOG_*` env vars | Beta tracing: `OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_TOOL_DETAILS`, `OTEL_LOG_TOOL_CONTENT` |
+| `API_TIMEOUT_MS` fix | No longer hardcoded 5min — respects env var |
+| `context: fork` fix | **Plugin skills can now fork to subagent** |
+| `agent` frontmatter fix | **Skill → agent delegation works in plugins** |
+| `disallowedTools` enforcement | Better tool-not-available error messages |
+| `--resume <name>` | Accepts session titles set via `/rename` or `--name` |
+| Settings resilience | Unrecognized hook event in settings.json no longer breaks entire file |
+| `allowManagedHooksOnly` | Plugin hooks from force-enabled plugins now run |
+| Subagent MCP inheritance | **Subagents inherit MCP tools from dynamic servers** |
+| Subagent worktree access | **Read/Edit access in isolated worktrees fixed** |
+| `permissions.deny` priority | Deny rules properly override hook `permissionDecision: "ask"` |
+| Memory leak fix | Long sessions no longer retain historical message copies |
+| Security: POSIX `which` | Command injection vulnerability patched |
+| Plugin fixes | `context: fork` and `agent` frontmatter fields honored; duplicate `name:` resolved |
+
 ## Bundled Commands
 
 | Command | Version | Purpose |

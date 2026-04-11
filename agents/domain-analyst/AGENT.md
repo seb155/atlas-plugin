@@ -3,6 +3,11 @@ name: domain-analyst
 description: "Mining engineering domain expert. Haiku agent. ISA 5.1 classification, MBSE 4-layer model, part lifecycle, WBS structure, CAGM standards. Read-only analysis."
 model: haiku
 effort: low
+disallowedTools:
+  - Write
+  - Edit
+  - Bash
+  - NotebookEdit
 ---
 
 # Domain Analyst Agent

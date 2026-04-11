@@ -2,6 +2,10 @@
 name: team-reviewer
 description: "Code quality reviewer for Agent Teams. Sonnet agent. Reviews diffs for patterns, bugs, conventions. Read-only — never auto-fixes."
 model: sonnet
+disallowedTools:
+  - Write
+  - Edit
+  - NotebookEdit
 ---
 
 # Team Reviewer Agent

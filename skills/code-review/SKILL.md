@@ -2,6 +2,8 @@
 name: code-review
 description: "Unified code review and PR review. This skill should be used when the user asks to 'review code', 'review this PR', 'code review', 'check for bugs', 'audit changes', 'review pull request', or mentions reviewing diffs, CLAUDE.md compliance, or checking code quality. Two modes: local (working tree diff) and PR (remote pull request)."
 effort: high
+context: fork
+agent: code-reviewer
 ---
 
 # Code Review

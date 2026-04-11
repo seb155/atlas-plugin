@@ -2,6 +2,8 @@
 name: experiment-loop
 description: "Autonomous optimization loop inspired by Karpathy's autoresearch. Loads experiment config, iterates (analyze→mutate→execute→measure→decide), HITL gates on significant changes. Uses experiment-runner agent."
 effort: high
+context: fork
+agent: experiment-runner
 ---
 
 # Experiment Loop — Autonomous Optimization

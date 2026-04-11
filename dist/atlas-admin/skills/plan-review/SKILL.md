@@ -2,6 +2,8 @@
 name: plan-review
 description: "Iterative plan review with simulation, consolidation, and HITL gates. Multi-pass quality improvement for sub-plans and mega plans. Use when reviewing, validating, or consolidating engineering plans."
 effort: high
+context: fork
+agent: plan-reviewer
 ---
 
 # Iterative Plan Review
