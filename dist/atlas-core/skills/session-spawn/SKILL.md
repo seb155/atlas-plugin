@@ -324,6 +324,10 @@ If not in tmux, the skill MUST:
 2. Suggest: `tmux new-session -s atlas && claude`
 3. NOT attempt to spawn (it will fail silently)
 
+### Session Resume
+
+**CC v2.1.101**: `--resume <name>` now accepts session titles set via `/rename` or `--name`, not just session IDs.
+
 ### Plan-Based (No API Key)
 
 All spawned sessions use `claude` CLI which authenticates via your Max plan.

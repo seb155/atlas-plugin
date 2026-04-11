@@ -2,6 +2,10 @@
 name: context-scanner
 description: "Scan project context for staleness, gaps, and drift. Haiku agent. Audits CLAUDE.md, memory, plans, and docs against actual codebase state."
 model: haiku
+disallowedTools:
+  - Write
+  - Edit
+  - NotebookEdit
 ---
 
 # Context Scanner Agent

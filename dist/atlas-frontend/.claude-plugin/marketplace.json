@@ -5,7 +5,7 @@
     {
       "name": "atlas-frontend",
       "description": "Frontend — UI design, browser automation, visual QA, product health.",
-      "version": "4.34.2",
+      "version": "4.40.0",
       "source": { "source": "url", "url": "https://github.com/seb155/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }

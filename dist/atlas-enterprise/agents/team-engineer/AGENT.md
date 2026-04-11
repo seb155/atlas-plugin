@@ -3,6 +3,9 @@ name: team-engineer
 description: "Implementation worker for Agent Teams. Sonnet agent. Writes code, fixes bugs, implements features. Full file access except browser MCP."
 model: sonnet
 effort: medium
+disallowedTools:
+  - mcp__claude-in-chrome__*
+  - mcp__plugin_playwright_playwright__*
 ---
 
 # Team Engineer Agent

@@ -79,29 +79,28 @@ _atlas_status() {
     printf "  🧠 %-14s %d files, ${mem_color}%d${ATLAS_RESET} lines index\n" "Memory" "$mem_count" "$mem_lines"
   fi
 
-  # CI status (if Forgejo token and base URL available)
-  if [ -n "${FORGEJO_TOKEN:-}" ]; then
-    local forgejo_url="${FORGEJO_BASE_URL:-}"
-    if [ -z "$forgejo_url" ]; then
-      printf "  🔧 %-14s %s\n" "CI" "⚪ N/A (FORGEJO_BASE_URL not set)"
-    else
-      local ci_status
-      ci_status=$(curl -sf --max-time 3 "${forgejo_url}/api/v1/repos/axoiq/synapse/statuses/$(git rev-parse HEAD 2>/dev/null)" \
-        -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null | python3 -c "
+  # CI status (Woodpecker CI)
+  if [ -n "${WP_TOKEN:-}" ]; then
+    local wp_url="${WP_URL:-http://192.168.10.76:8000}"
+    local ci_status
+    ci_status=$(curl -sf --max-time 3 "${wp_url}/api/repos/1/pipelines?per_page=1" \
+      -H "Authorization: Bearer ${WP_TOKEN}" 2>/dev/null | python3 -c "
 import json, sys
 try:
     data = json.load(sys.stdin)
-    if isinstance(data, list) and data:
-        states = set(s.get('status','?') for s in data)
-        if 'failure' in states: print('❌ FAIL')
-        elif 'pending' in states: print('⏳ PENDING')
-        elif 'success' in states: print('✅ PASS')
-        else: print('⚪ N/A')
+    if data:
+        p = data[0]
+        s = p.get('status','?')
+        n = p.get('number','?')
+        if s == 'success': print(f'✅ #{n}')
+        elif s == 'failure': print(f'❌ #{n}')
+        elif s in ('running','pending'): print(f'⏳ #{n}')
+        elif s == 'killed': print(f'⚠️ #{n} killed')
+        else: print(f'⚪ #{n} {s}')
     else: print('⚪ N/A')
 except: print('⚪ N/A')
 " 2>/dev/null || echo "⚪ N/A")
-      printf "  🔧 %-14s %s\n" "CI" "$ci_status"
-    fi
+    printf "  🔧 %-14s %s\n" "CI" "$ci_status"
   fi
 
   # Plugin version
@@ -251,65 +250,54 @@ _atlas_complexity() {
   echo "${icon} ${level} → ${model} (score: ${score})"
 }
 
-# atlas ci — Show CI pipeline status from Forgejo Actions
+# atlas ci — Show CI pipeline status from Woodpecker CI
 _atlas_ci() {
   _atlas_header
-  printf "  ${ATLAS_BOLD}CI Pipeline Status${ATLAS_RESET}\n\n"
+  printf "  ${ATLAS_BOLD}CI Pipeline Status (Woodpecker)${ATLAS_RESET}\n\n"
 
-  local forgejo_url="${FORGEJO_BASE_URL:-}"
-  local token="${FORGEJO_TOKEN:-}"
+  local token="${WP_TOKEN:-}"
+  local wp_url="${WP_URL:-http://192.168.10.76:8000}"
 
   if [ -z "$token" ]; then
-    # Try loading from ~/.env
     [ -f "$HOME/.env" ] && source "$HOME/.env" 2>/dev/null
-    token="${FORGEJO_TOKEN:-}"
+    token="${WP_TOKEN:-}"
   fi
 
   if [ -z "$token" ]; then
-    printf "  ${ATLAS_DIM}FORGEJO_TOKEN not set. Add to ~/.env${ATLAS_RESET}\n"
+    printf "  ${ATLAS_DIM}WP_TOKEN not set. Generate at ci.axoiq.com/user/cli-and-api${ATLAS_RESET}\n"
     _atlas_footer
     return 1
   fi
 
-  if [ -z "$forgejo_url" ]; then
-    printf "  ${ATLAS_DIM}FORGEJO_BASE_URL not set — skipping${ATLAS_RESET}\n"
-    _atlas_footer
-    return 0
-  fi
-
-  # Detect repo from git remote
-  local repo=$(git remote get-url origin 2>/dev/null | /usr/bin/sed 's|.*[:/]\([^/]*/[^/]*\)\.git|\1|' || echo "axoiq/synapse")
   local sha=$(git rev-parse HEAD 2>/dev/null | /usr/bin/head -c 12 || echo "?")
   local branch=$(git branch --show-current 2>/dev/null || echo "?")
 
-  printf "  📂 ${ATLAS_CYAN}%s${ATLAS_RESET} @ ${ATLAS_DIM}%s${ATLAS_RESET} (%s)\n\n" "$repo" "$sha" "$branch"
+  printf "  📂 ${ATLAS_CYAN}axoiq/synapse${ATLAS_RESET} @ ${ATLAS_DIM}%s${ATLAS_RESET} (%s)\n\n" "$sha" "$branch"
 
-  # Fetch commit statuses
-  curl -sf --max-time 5 "${forgejo_url}/api/v1/repos/${repo}/statuses/${sha}" \
-    -H "Authorization: token ${token}" 2>/dev/null | python3 -c "
+  # Fetch recent pipelines
+  curl -sf --max-time 5 "${wp_url}/api/repos/1/pipelines?per_page=5" \
+    -H "Authorization: Bearer ${token}" 2>/dev/null | python3 -c "
 import json, sys
 try:
     data = json.load(sys.stdin)
-    if not isinstance(data, list) or not data:
-        print('  No CI status for this commit.')
+    if not data:
+        print('  No pipelines found.')
         sys.exit(0)
-    seen = set()
-    for s in data:
-        ctx = s.get('context', '?')
-        if ctx in seen:
-            continue
-        seen.add(ctx)
-        status = s.get('status', '?')
-        desc = s.get('description', '')[:40]
-        icon = '✅' if status == 'success' else '❌' if status in ('failure','error') else '⏳' if status == 'pending' else '⚪'
-        print(f'  {icon} {ctx}')
-        if desc:
-            print(f'     {desc}')
+    for p in data:
+        n = p.get('number', '?')
+        status = p.get('status', '?')
+        branch = p.get('branch', '?')
+        sha = p.get('commit', '?')[:7]
+        msg = p.get('message', '')[:40]
+        icon = '✅' if status == 'success' else '❌' if status in ('failure','error') else '⏳' if status in ('running','pending') else '⚠️' if status == 'killed' else '⚪'
+        print(f'  {icon} #{n} {status:10s} {branch} ({sha})')
+        if msg:
+            print(f'     {msg}')
 except Exception as e:
     print(f'  Error: {e}')
-" 2>/dev/null || printf "  ${ATLAS_DIM}Could not reach Forgejo API${ATLAS_RESET}\n"
+" 2>/dev/null || printf "  ${ATLAS_DIM}Could not reach Woodpecker API at ${wp_url}${ATLAS_RESET}\n"
 
-  printf "\n"
+  printf "\n  🔗 ${ATLAS_DIM}https://ci.axoiq.com/repos/1${ATLAS_RESET}\n\n"
   _atlas_footer
 }
 

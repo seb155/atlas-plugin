@@ -84,6 +84,7 @@ source ~/.env && DEPLOY_SSH_HOST=docker01 ./scripts/deploy.sh promote
 | 5. HITL gate | Only in `gated`/`manual` mode for prod. AskUserQuestion (deploy/dry-run/abort) | **Gated** |
 | 6. Deploy | Execute per type (docker-compose, ssh-docker, ssh-bare, deploy_script) | No |
 | 7. Health check | `curl -sf <health_url>`, retry 3x/10s. Fail → rollback | No |
+| 7b. Log verify | Query Loki for new errors post-deploy (ref: observability-api) | No |
 | 8. Validators | Run custom checks from config (advisory, non-blocking) | No |
 | 9. Data sync | Optional: AskUserQuestion for DB sync (prod=HITL in gated mode) | **Gated** |
 | 10. Report | Show env/status/version/health summary table | No |
@@ -96,6 +97,32 @@ source ~/.env && DEPLOY_SSH_HOST=docker01 ./scripts/deploy.sh promote
 | `ssh-docker` | `ssh <host> "cd <dir> && git pull && docker compose up -d --build"` |
 | `ssh-bare` | `ssh <host> "cd <dir> && <deploy_commands>"` |
 | `deploy_script` | `DEPLOY_SSH_HOST=<host> ./scripts/deploy.sh <env>` |
+
+### Step 7b: Post-Deploy Log Verification (ref: `refs/observability-api`)
+
+After health check passes, verify no new errors appeared in centralized logs:
+
+```bash
+# Wait 60s for services to stabilize after restart
+sleep 60
+
+# Query Loki for errors in last 2 min from deployed containers
+ERRORS=$(curl -sG "http://192.168.10.56:3100/loki/api/v1/query_range" \
+  --data-urlencode 'query={container=~"synapse-prod.*"} |~ "(?i)error|critical|panic"' \
+  --data-urlencode "start=$(date -d '2 minutes ago' +%s)000000000" \
+  --data-urlencode "end=$(date +%s)000000000" \
+  --data-urlencode "limit=10" 2>/dev/null | jq -r '.data.result[].values[][1]')
+
+if [ -n "$ERRORS" ]; then
+  echo "⚠️ POST-DEPLOY: New errors detected in Loki"
+  echo "$ERRORS" | head -5
+  # Flag deploy as WARNING, don't auto-rollback (may be transient startup noise)
+else
+  echo "✅ POST-DEPLOY: Zero errors in Loki (2 min window)"
+fi
+```
+
+If errors detected: show the lines, ask user whether to continue or rollback. Transient startup errors (SIGTERM, socket close) are expected during restarts — only flag persistent errors.
 
 ### Quick Deploy (skip CI)
 
