@@ -236,9 +236,47 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - **refs/gmining-excel**: G Mining Excel document standards
 - **refs/web-design-guidelines**: Web design system principles
 
-## Pipeline (Automatic)
+## Complexity-Adaptive Orchestration (Invisible)
 
-When the user requests development work, this pipeline activates:
+Before routing to a skill or pipeline, atlas-assist AUTOMATICALLY assesses request complexity.
+The user never sees this decision — they just get results.
+
+### Complexity Gate (auto-detected, zero AskUserQuestion)
+
+| Path | Signals | Action | Model | Duration |
+|------|---------|--------|-------|----------|
+| **TRIVIAL** | 1-2 files, "fix/typo/update/change", explicit scope | Solo: do it directly | Opus (current session) | < 2 min |
+| **MODERATE** | 2-5 files, "implement/add/create", spec clear | Ad-hoc dispatch: 1-3 Sonnet subagents, no plan | Sonnet subagents | 5-30 min |
+| **COMPLEX** | 5+ files, "refactor/redesign/migrate", scope unclear | Full pipeline: brainstorm → plan → strategy → execute | Opus orchestrate + Sonnet workers | 30 min - 4h |
+
+### Moderate Path (60% of requests — biggest optimization)
+
+For MODERATE tasks, skip brainstorm + plan-builder and dispatch directly:
+1. Classify task type (model-rules.yaml signals: implementation, testing, review, etc.)
+2. Distill context: extract stack, conventions, relevant files (~20K tokens per subagent)
+3. Dispatch 1-3 Sonnet subagents with focused prompts (NOT full session context)
+4. Auto-verify: run tests + type-check after each subagent completes
+5. Present results with review gate
+
+### Context Distillation (when dispatching subagents)
+
+ALWAYS distill — never forward full session context to subagents:
+- **Include**: stack, conventions, specific files, test command, acceptance criteria
+- **Exclude**: conversation history, unrelated plans, other task decisions, full CLAUDE.md
+- Target: ~20K tokens per subagent prompt (not 200K+ of session context)
+
+### When to Stay Solo (Opus)
+
+- Architecture decisions (GPQA +17pts justifies premium)
+- Debugging cross-system (3+ interconnected files)
+- First exploration of unknown problem (subagent can't navigate)
+- Changes < 50 lines / 1-2 files (subagent overhead > savings)
+- HITL gates (brainstorm, plan approval)
+- Git operations (always sequential, always solo)
+
+## Pipeline (Automatic — for COMPLEX tasks)
+
+When the user requests development work AND complexity = COMPLEX, this pipeline activates:
 
 ```
 1. DISCOVER  → 🔭 context-discovery (detect stack, plans, patterns)

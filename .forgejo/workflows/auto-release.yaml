@@ -2,15 +2,23 @@ name: Auto-Release
 
 # Automatically bump version + create tag on push to main
 # Uses conventional commits to determine version bump:
-#   feat(*) → minor (3.21.0 → 3.22.0)
-#   fix(*)  → patch (3.21.0 → 3.21.1)
-#   feat!(*) or BREAKING CHANGE → major (3.21.0 → 4.0.0)
+#   feat(*) → minor (4.42.0 → 4.43.0)
+#   fix(*)  → patch (4.42.0 → 4.42.1)
+#   perf(*) → patch (4.42.0 → 4.42.1)
+#   feat!(*) or BREAKING CHANGE → major (4.42.0 → 5.0.0)
+#   chore/docs/build/ci/refactor/test/style → NO bump (skipped)
 
 on:
   push:
     branches: [main]
     paths-ignore:
-      - "*.md"
+      # Only ignore root-level docs — SKILL.md in skills/ MUST trigger CI
+      - "README.md"
+      - "CHANGELOG.md"
+      - "ONBOARDING.md"
+      - "DEPLOYMENT.md"
+      - "ARCHITECTURE.md"
+      - "PARALLELISM.md"
       - "docs/**"
       - "evals/**"
 
@@ -30,69 +38,21 @@ jobs:
           git config user.name "atlas-ci"
           git config user.email "ci@axoiq.com"
 
-      - name: Determine version bump
-        id: bump
-        shell: sh
-        run: |
-          set -eu
-          CURRENT=$(cat VERSION | tr -d '[:space:]')
-          echo "current=${CURRENT}"
-
-          # Get commits since last tag
-          LAST_TAG=$(git tag --sort=-version:refname | grep '^v' | head -1 || echo "")
-          if [ -z "$LAST_TAG" ]; then
-            echo "No previous tag, defaulting to patch"
-            BUMP="patch"
-          else
-            COMMITS=$(git log --pretty=format:"%s" "${LAST_TAG}..HEAD")
-
-            if echo "$COMMITS" | grep -qE "^feat!|BREAKING CHANGE"; then
-              BUMP="major"
-            elif echo "$COMMITS" | grep -qE "^feat(\(|:)"; then
-              BUMP="minor"
-            elif echo "$COMMITS" | grep -qE "^fix(\(|:)|^perf(\(|:)"; then
-              BUMP="patch"
-            else
-              echo "No version-worthy commits since ${LAST_TAG}, skipping"
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-          fi
-
-          # Calculate new version
-          IFS='.' read -r MAJOR MINOR PATCH <<EOF
-          ${CURRENT}
-          EOF
-          case "$BUMP" in
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH + 1)) ;;
-          esac
-          NEW="${MAJOR}.${MINOR}.${PATCH}"
-
-          echo "bump=${BUMP}" >> "$GITHUB_OUTPUT"
-          echo "new_version=${NEW}" >> "$GITHUB_OUTPUT"
-          echo "Version bump: ${CURRENT} → ${NEW} (${BUMP})"
-
-      - name: Bump version and tag
-        if: steps.bump.outputs.skip != 'true'
+      - name: Auto-release (SemVer from commits)
         shell: sh
         env:
           GIT_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
           FORGEJO_HOST: ${{ vars.FORGEJO_HOST }}
-          NEW_VERSION: ${{ steps.bump.outputs.new_version }}
+          FORGEJO_TOKEN: ${{ secrets.ATLAS_FORGEJO_TOKEN }}
+          FORGEJO_API_URL: https://${{ vars.FORGEJO_HOST }}/api/v1
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          set -eu
-          echo "${NEW_VERSION}" > VERSION
-
-          # Build all tiers with new version
-          ./build.sh all
-
-          # Commit + tag + push
-          git add -A
-          git commit -m "chore(release): v${NEW_VERSION}"
-          git tag "v${NEW_VERSION}"
-
+          # Set authenticated remote for push
           git remote set-url origin "http://oauth2:${GIT_TOKEN}@${FORGEJO_HOST}/${{ github.repository }}.git"
-          git push origin main --tags
-          echo "Tagged and pushed v${NEW_VERSION}"
+
+          # Single source of truth: auto-release.sh handles everything
+          # - Detect commits since last tag
+          # - Determine bump type (feat→minor, fix/perf→patch, breaking→major)
+          # - Update VERSION + plugin.json + marketplace.json + CHANGELOG.md
+          # - Commit + tag + push + create Forgejo Release
+          ./.forgejo/scripts/auto-release.sh

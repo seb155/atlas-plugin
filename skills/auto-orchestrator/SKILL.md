@@ -173,8 +173,13 @@ When a skill benefits from a specialized agent:
 
 ## Non-Negotiable Rules
 
-1. **ALWAYS AskUserQuestion** before executing — never auto-run without confirmation
+1. **Adaptive confirmation** based on complexity (not always AskUserQuestion):
+   - **TRIVIAL** (single skill, score > 90%): Auto-route, NO AskUserQuestion
+   - **MODERATE** (single skill, score > 70%): Auto-route, NO AskUserQuestion
+   - **COMPLEX** (multiple candidates, score < 70%, or chain needed): AskUserQuestion to confirm approach
+   - **GAP** (no skill matches > 60%): ALWAYS AskUserQuestion
 2. **Preserve HITL gates** from sub-skills — don't bypass them
 3. **Log the decision** via decision-log skill (what was chosen and why)
 4. **Gap flywheel**: every unmatched intent = opportunity to create a skill
 5. **Don't over-chain**: if one skill covers 80%+, use it alone
+6. **Context distillation**: when dispatching subagents, distill ~20K tokens focused prompt, never forward full session

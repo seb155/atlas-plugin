@@ -119,6 +119,37 @@ make lint                         # Frontmatter + coverage checks
 - Storage: `~/.atlas/` (profile.json, doctor-report.json)
 - Both skills available in ALL tiers (user, dev, admin)
 
+## VERSION BUMP CONVENTION
+
+Auto-release CI bumps version on push to `main` using conventional commits:
+
+| Commit Type | Bump | Example |
+|------------|------|---------|
+| `feat(scope):` | **minor** (4.42.0 → 4.43.0) | `feat(plugin): add orchestration` |
+| `fix(scope):` | **patch** (4.42.0 → 4.42.1) | `fix(ci): runner config` |
+| `perf(scope):` | **patch** (4.42.0 → 4.42.1) | `perf(plugin): model allocation` |
+| `feat!(scope):` / `BREAKING CHANGE` | **major** (4.42.0 → 5.0.0) | Breaking changes |
+| `chore\|docs\|build\|ci\|refactor\|test\|style` | **NO bump** (skipped) | Non-functional |
+
+**Manual release**: `make publish-patch` (or `publish-minor`) — bumps, builds, tests, tags, pushes.
+**NEVER use** `build(v4.X.0):` for version bumps — auto-release ignores this pattern.
+
+## ORCHESTRATION (Opus → Sonnet)
+
+Main session = **Opus 4.6 [1m]** (orchestrator). Subagents = **Sonnet 4.6** (workers).
+Both models have 1M context — the differentiator is reasoning quality, not context size.
+
+| Task | Model | Why |
+|------|-------|-----|
+| Planning, architecture, brainstorm | Opus | GPQA +17pts, extended thinking |
+| Implementation, tests, review, DB migration | Sonnet | SWE-bench gap 1.2pts, 5x cheaper, 2.7x faster |
+| Validation, search | Haiku | Cheapest capable |
+| Lint, format, type-check | DET (bash) | Zero AI tokens |
+
+**Complexity Gate**: TRIVIAL (solo) → MODERATE (Sonnet ad-hoc dispatch) → COMPLEX (full pipeline).
+**Context Distillation**: ~20K tokens focused prompt per subagent, never full session dump.
+**Details**: `skills/refs/model-benchmarks-2026-04/SKILL.md`
+
 ## SELF-DEVELOPMENT
 
 This plugin develops itself. When modifying atlas-plugin:

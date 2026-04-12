@@ -61,10 +61,11 @@ echo "📊 ${COMMIT_COUNT} commits since ${LAST_TAG}"
 # Count commit types
 FEAT_COUNT=$(echo "$COMMITS" | grep -cE '^feat(\(|:)' || true)
 FIX_COUNT=$(echo "$COMMITS" | grep -cE '^fix(\(|:)' || true)
+PERF_COUNT=$(echo "$COMMITS" | grep -cE '^perf(\(|:)' || true)
 BREAKING_COUNT=$(echo "$COMMITS" | grep -cE 'BREAKING[ _]CHANGE|^[a-z]+(\([^)]*\))?!:' || true)
-CHORE_COUNT=$(echo "$COMMITS" | grep -cE '^(chore|docs|style|refactor|perf|test|build|ci)(\(|:)' || true)
+CHORE_COUNT=$(echo "$COMMITS" | grep -cE '^(chore|docs|style|refactor|test|build|ci)(\(|:)' || true)
 
-echo "   feat: ${FEAT_COUNT} | fix: ${FIX_COUNT} | breaking: ${BREAKING_COUNT} | other: ${CHORE_COUNT}"
+echo "   feat: ${FEAT_COUNT} | fix: ${FIX_COUNT} | perf: ${PERF_COUNT} | breaking: ${BREAKING_COUNT} | other: ${CHORE_COUNT}"
 
 # ─── Determine bump type ─────────────────────────────────────────────
 BUMP="patch"
@@ -75,8 +76,8 @@ if [ "$BREAKING_COUNT" -gt 0 ]; then
   BUMP="major"
 fi
 
-# If only chore/docs/ci commits, still do a patch (or skip)
-if [ "$FEAT_COUNT" -eq 0 ] && [ "$FIX_COUNT" -eq 0 ] && [ "$BREAKING_COUNT" -eq 0 ]; then
+# Skip release if only chore/docs/ci commits (no feat, fix, perf, or breaking)
+if [ "$FEAT_COUNT" -eq 0 ] && [ "$FIX_COUNT" -eq 0 ] && [ "$PERF_COUNT" -eq 0 ] && [ "$BREAKING_COUNT" -eq 0 ]; then
   echo "ℹ️  Only non-functional commits (chore/docs/ci). Skipping release."
   exit 0
 fi
