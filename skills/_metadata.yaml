@@ -839,3 +839,32 @@ skills:
     domains: [enterprise]
     description: "Self-improvement engine. Aggregates dream reports, retrospectives, workflow analytics"
 
+  # Added by v5 audit (2026-04-12)
+  secret-manager:
+    emoji: "🔑"
+    category: "Security"
+    owner: "admin"
+    plugin: "admin"
+    description: "Manage infrastructure secrets via Infisical with .env fallback"
+
+  skill-security-audit:
+    emoji: "🛡️"
+    category: "Security"
+    owner: "admin"
+    plugin: "admin"
+    description: "Scan skills and hooks for security anti-patterns"
+
+  agent-readiness:
+    emoji: "🤖"
+    category: "Quality"
+    owner: "admin"
+    plugin: "admin"
+    description: "Factory.ai 9-Pillar Agent Readiness scoring"
+
+  infra-health:
+    emoji: "🏥"
+    category: "Infrastructure"
+    owner: "admin"
+    plugin: "admin"
+    description: "Infrastructure health audit — 57 endpoints, auto-heal recipes"
+

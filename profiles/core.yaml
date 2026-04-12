@@ -1,76 +1,56 @@
-# ATLAS Core v5.0 — Shared Base (installed by EVERYONE)
-# Contains: session management, memory, context, personal assistant, experiential
-# NO inheritance — this is the foundation all addons build on
 tier: core
-description: "Shared base — session, memory, context, personal, experiential"
-
+description: Shared base — session, memory, context, personal, experiential
 skills:
-  # Session & Memory
-  - session-pickup
-  - session-retrospective
-  - session-spawn
-  - memory-dream
-  - atlas-workspace-setup
-
-  # Context & Discovery
-  - context-discovery
-  - deep-research
-  - scope-check
-  - youtube-transcript
-
-  # Personal Assistant
-  - knowledge-builder
-  - user-profiler
-  - morning-brief
-  - morning-routine
-  - weekly-review
-  - note-capture
-  - reminder-scheduler
-  - document-generator
-
-  # System
-  - atlas-doctor
-  - atlas-location
-  - atlas-onboarding
-  - atlas-vault
-  - cost-analytics
-
-  # Experiential (episodes, intuitions, relationships)
-  - episode-create
-  - intuition-log
-  - relationship-manager
-
+- session-pickup
+- session-retrospective
+- session-spawn
+- memory-dream
+- atlas-workspace-setup
+- context-discovery
+- deep-research
+- scope-check
+- youtube-transcript
+- knowledge-builder
+- user-profiler
+- morning-brief
+- morning-routine
+- weekly-review
+- note-capture
+- reminder-scheduler
+- document-generator
+- atlas-doctor
+- atlas-location
+- atlas-onboarding
+- atlas-vault
+- cost-analytics
+- episode-create
+- intuition-log
+- relationship-manager
 refs:
-  - atlas-visual-identity
-  - external-tools
-  - model-benchmarks-2026-04
-
+- atlas-visual-identity
+- external-tools
+- model-benchmarks-2026-04
+- cc-native-features
 hooks:
-  # Session lifecycle
-  - session-start
-  - experiential-capture
-  - pre-compact-context
-  - auto-learn
-  - cognitive-state
-  - morning-brief
-  # Input processing
-  - timestamp-injector
-  - prompt-intelligence
-  - focus-guard
-  # Safety
-  - protect-plugin-cache
-  - validate-bash
-  - permission-request
-  - permission-denied-log
-  - policy-drift-detector
-  - cwd-changed-env
-  - stop-failure
-  # External
-  - external-capabilities
-
+- session-start
+- experiential-capture
+- pre-compact-context
+- auto-learn
+- cognitive-state
+- morning-brief
+- timestamp-injector
+- prompt-intelligence
+- focus-guard
+- protect-plugin-cache
+- validate-bash
+- permission-request
+- permission-denied-log
+- policy-drift-detector
+- cwd-changed-env
+- stop-failure
+- external-capabilities
 agents:
-  - context-scanner
-
-persona: "helpful assistant"
-pipeline: "DISCOVER → ASSIST"
-banner_label: "Core"
+- context-scanner
+persona: helpful assistant
+pipeline: DISCOVER → ASSIST
+banner_label: Core

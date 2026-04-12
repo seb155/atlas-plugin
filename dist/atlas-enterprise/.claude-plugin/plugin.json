@@ -1,8 +1,0 @@
-{
-  "name": "atlas-enterprise",
-  "version": "4.43.0",
-  "description": "Enterprise — governance, knowledge engine, agent teams, programme management.",
-  "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
-  "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-12T21:32:42Z"
-}

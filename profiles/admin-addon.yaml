@@ -60,6 +60,10 @@ skills:
 - gms-insights
 - atlas-analytics
 - ultrathink
+- secret-manager
+- skill-security-audit
+- agent-readiness
+- infra-health
 refs:
 - composition-patterns
 - react-best-practices

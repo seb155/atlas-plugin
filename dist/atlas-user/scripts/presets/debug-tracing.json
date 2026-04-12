@@ -1,9 +1,0 @@
-{
-  "$schema": "atlas-preset-v1",
-  "$comment": "Enable CC beta OTEL tracing for debug sessions. Activates detailed tool logging. Apply via: atlas --preset debug-tracing",
-  "env": {
-    "OTEL_LOG_TOOL_DETAILS": "true",
-    "OTEL_LOG_TOOL_CONTENT": "true",
-    "OTEL_LOG_USER_PROMPTS": "false"
-  }
-}

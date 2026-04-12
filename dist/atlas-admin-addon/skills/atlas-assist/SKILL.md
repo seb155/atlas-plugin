@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 59 skills, 16 agents. Auto-routing co-pilot with HITL gates."
+description: "Master skill for ATLAS Admin — AXOIQ's unified AI engineering assistant. 63 skills, 16 agents. Auto-routing co-pilot with HITL gates."
 user-invocable: false
 ---
 
@@ -17,7 +17,7 @@ in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
 🏛️ ATLAS │ ✅ SESSION │ v5.0.0 Admin
-   59 skills │ 16 agents │ Gate 12/15
+   63 skills │ 16 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 
@@ -76,7 +76,7 @@ Phases: `DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP → DE
 If you think there is even a 1% chance an ATLAS skill might apply, you MUST invoke it.
 This is not optional. Check available skills BEFORE responding. Skills tell you HOW to work.
 
-## Available Skills (59)
+## Available Skills (63)
 
 ### 📌 Cognitive
 - 🔍 idle-curiosity
@@ -97,7 +97,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 🧪 **tdd**: Failing test → minimal impl → pass → commit. Strict TDD cycle
 
 ### 🔧 Infrastructure
-- 🏗️ infrastructure-change | 🔧 infrastructure-ops | 📟 statusline-setup
+- 🏥 infra-health | 🏗️ infrastructure-change | 🔧 infrastructure-ops | 📟 statusline-setup
 
 ### 📚 Knowledge
 - 🗂️ knowledge-engine | 📖 knowledge-manager | 🎨 visual-generator
@@ -124,7 +124,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 📌 feature-board | 🏭 gms-cockpit | 🔗 gms-insights | 🎓 gms-onboard | 👤 gms-profiler | 📊 programme-manager
 
 ### 📊 Quality
-- 🏥 api-healthcheck | 🔎 code-analysis
+- 🤖 agent-readiness | 🏥 api-healthcheck | 🔎 code-analysis
 - 🔍 **code-review**: Code review with confidence filtering. Local or PR mode
 - ✨ code-simplify | 🔬 codebase-audit | 🔍 plan-review | 🏥 product-health
 - 🔬 **systematic-debugging**: Hypothesize → verify → fix. Max 2 attempts then escalate
@@ -133,7 +133,7 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 - 👁️ visual-qa
 
 ### 🔐 Security
-- 🔐 security-audit
+- 🔑 secret-manager | 🔐 security-audit | 🛡️ skill-security-audit
 
 ### 📦 Ship
 - 📦 **finishing-branch**: Commit + push + PR + CI + cleanup (conventional commits)
