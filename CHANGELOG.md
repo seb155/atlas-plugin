@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.45.0 (2026-04-12)
+
+### ✨ Features
+- feat(dedup): SP-DEDUP Phase 0 — skill classification + v5 profiles
+
+
+
 ## v4.44.1 (2026-04-12)
 
 ### 🐛 Bug Fixes
