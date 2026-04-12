@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.43.1 (2026-04-12)
+
+### 🐛 Bug Fixes
+- fix(ci): use Forgejo native port in WP agents (bypass Caddy SSO)
+- fix(ci): escape shell vars in Woodpecker configs ($$ for shell, ${} for WP)
+- fix(ci): migrate to Woodpecker CI + consolidate repo to axoiq/atlas-plugin
+
+### 🔧 Other Changes
+- ci: trigger Woodpecker CI pipeline [first run]
+
+
+
 ## v4.37.0 (2026-04-11)
 
 ### CC v2.1.101 Alignment Release
