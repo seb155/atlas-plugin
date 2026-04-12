@@ -379,6 +379,87 @@ _atlas_worktrees() {
   _atlas_footer
 }
 
+# atlas cleanup [--age N] [--dry-run]
+# Remove stale worktrees (default: older than 14 days, clean, no unmerged commits)
+_atlas_cleanup() {
+  local age_threshold=14
+  local dry_run=false
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --age)   age_threshold="$2"; shift 2 ;;
+      --age=*) age_threshold="${1#*=}"; shift ;;
+      --dry-run|-n) dry_run=true; shift ;;
+      *) shift ;;
+    esac
+  done
+
+  _atlas_header
+  printf "  ${ATLAS_BOLD}Worktree Cleanup${ATLAS_RESET} ${ATLAS_DIM}(stale > ${age_threshold}d, clean, no unmerged)${ATLAS_RESET}\n\n"
+
+  local WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
+  local NOW_EPOCH=$(/usr/bin/date +%s)
+  local removed=0
+  local skipped=0
+
+  for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
+    local repo_root="${repo_dir:h}"
+    [ -d "$repo_root/.git" ] || continue
+    local repo_name="${repo_root:t}"
+
+    # Scan both .claude/worktrees/ (CC-auto) and .worktrees/ (manual)
+    for wt_parent in "$repo_dir/worktrees" "$repo_root/.worktrees"; do
+      [ -d "$wt_parent" ] || continue
+      for wt in "$wt_parent"/*(N/); do
+        [ -d "$wt" ] || continue
+        local name="${wt:t}"
+
+        # Skip if dirty
+        local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
+        if [ "$dirty_count" -gt 0 ]; then
+          printf "  ${ATLAS_DIM}⊘${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_YELLOW}(${dirty_count} dirty files, skipping)${ATLAS_RESET}\n"
+          skipped=$((skipped + 1)); continue
+        fi
+
+        # Skip if ahead of dev (unmerged commits)
+        local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
+        if [ "$ahead" -gt 0 ]; then
+          printf "  ${ATLAS_DIM}⊘${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_CYAN}(${ahead} unmerged commits, skipping)${ATLAS_RESET}\n"
+          skipped=$((skipped + 1)); continue
+        fi
+
+        # Check age
+        local last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
+        local age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
+        if [ "$age_days" -lt "$age_threshold" ]; then
+          # Not old enough, skip silently
+          continue
+        fi
+
+        # Candidate for removal
+        if $dry_run; then
+          printf "  ${ATLAS_YELLOW}would remove${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_DIM}(${age_days}d old)${ATLAS_RESET}\n"
+        else
+          if (cd "$repo_root" && git worktree remove --force "$wt" 2>/dev/null); then
+            printf "  ${ATLAS_GREEN}✓ removed${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_DIM}(${age_days}d old)${ATLAS_RESET}\n"
+            removed=$((removed + 1))
+          else
+            printf "  ${ATLAS_RED}✗ failed${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_DIM}(try: git worktree prune)${ATLAS_RESET}\n"
+          fi
+        fi
+      done
+    done
+  done
+
+  printf "\n"
+  if $dry_run; then
+    printf "  ${ATLAS_DIM}Dry run. Rerun without --dry-run to apply.${ATLAS_RESET}\n"
+  else
+    printf "  ${ATLAS_BOLD}Summary${ATLAS_RESET}: ${ATLAS_GREEN}${removed} removed${ATLAS_RESET}, ${ATLAS_DIM}${skipped} skipped${ATLAS_RESET}\n"
+  fi
+  _atlas_footer
+}
+
 # atlas dashboard (aliases: dash, d)
 _atlas_dashboard() {
   local TOPICS_FILE="${HOME}/.atlas/topics.json"
@@ -851,5 +932,209 @@ _atlas_update() {
   cp -r "$skel/modules/"* "$HOME/.atlas/shell/modules/"
   cp "$skel/atlas.sh" "$HOME/.atlas/shell/atlas.sh"
   echo "✅ ATLAS CLI updated from skel"
+}
+
+# ═══════════════════════════════════════════════════════════════════
+# v4.42 additions — Bridge CI/CD + toolkit integration
+# ═══════════════════════════════════════════════════════════════════
+
+# atlas --check [project]
+# Pre-flight validation without launching Claude Code.
+# Reports: docker containers, Forgejo reachable, Woodpecker CI, .env, graph fresh, CC settings
+_atlas_preflight() {
+  local project="$1"
+  _atlas_header
+  printf "  ${ATLAS_BOLD}Pre-flight Checks${ATLAS_RESET}"
+  [ -n "$project" ] && printf " ${ATLAS_DIM}(${project})${ATLAS_RESET}"
+  printf "\n\n"
+
+  local failures=0
+  local warnings=0
+
+  _check() {
+    local name="$1" check_cmd="$2" fix_hint="$3"
+    if eval "$check_cmd" &>/dev/null; then
+      printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} %s\n" "$name"
+    else
+      printf "  ${ATLAS_RED}✗${ATLAS_RESET} %s ${ATLAS_DIM}— %s${ATLAS_RESET}\n" "$name" "$fix_hint"
+      failures=$((failures + 1))
+    fi
+  }
+
+  _warn() {
+    local name="$1" check_cmd="$2" hint="$3"
+    if eval "$check_cmd" &>/dev/null; then
+      printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} %s\n" "$name"
+    else
+      printf "  ${ATLAS_YELLOW}⚠${ATLAS_RESET} %s ${ATLAS_DIM}— %s${ATLAS_RESET}\n" "$name" "$hint"
+      warnings=$((warnings + 1))
+    fi
+  }
+
+  # 1. Claude binary available
+  _check "Claude Code installed" "command -v claude" "install: curl -fsSL https://claude.ai/install.sh | sh"
+
+  # 2. Docker running (for synapse backend, etc.)
+  if $ATLAS_HAS_DOCKER; then
+    _warn "Docker daemon reachable" "docker ps" "start Docker: systemctl start docker"
+  fi
+
+  # 3. Git worktree support
+  _check "Git available" "command -v git" "install git"
+
+  # 4. .env loaded
+  _warn ".env vars loaded" "[ -n \"\$FORGEJO_TOKEN\" ] || [ -f \"\$HOME/.env\" ]" "source ~/.env"
+
+  # 5. Forgejo reachable
+  if [ -n "${FORGEJO_URL:-}" ] || [ -n "${FORGEJO_TOKEN:-}" ]; then
+    _warn "Forgejo reachable" "curl -sf -o /dev/null https://forgejo.axoiq.com/api/v1/version" "check VPN / Forgejo status"
+  fi
+
+  # 6. Woodpecker CI reachable
+  if [ -n "${WP_TOKEN:-}" ]; then
+    _warn "Woodpecker CI reachable" "curl -sf -o /dev/null https://ci.axoiq.com/api/user -H 'Authorization: Bearer $WP_TOKEN'" "check VPN / WP status"
+  fi
+
+  # 7. Tmux (if split enabled)
+  if [ "$ATLAS_DEFAULT_SPLIT" = "true" ]; then
+    _check "Tmux installed" "command -v tmux" "install tmux (split: true requires it)"
+  fi
+
+  # 8. Code intelligence graph freshness (if project specified or CWD is synapse)
+  local workspace_root="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
+  local proj_path=""
+  if [ -n "$project" ] && [ -d "$workspace_root/projects/atlas/$project" ]; then
+    proj_path="$workspace_root/projects/atlas/$project"
+  elif [ -d "$(pwd)/toolkit/code_intelligence" ]; then
+    proj_path="$(pwd)"
+  fi
+
+  if [ -n "$proj_path" ] && [ -f "$proj_path/.code-intelligence/graph.db" ]; then
+    local graph_age=$(( ($(/usr/bin/date +%s) - $(/usr/bin/stat -c %Y "$proj_path/.code-intelligence/graph.db" 2>/dev/null || echo 0)) / 3600 ))
+    if [ "$graph_age" -lt 1 ]; then
+      printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} Code graph fresh (${graph_age}h old)\n"
+    else
+      printf "  ${ATLAS_YELLOW}⚠${ATLAS_RESET} Code graph stale (${graph_age}h old) ${ATLAS_DIM}— will rebuild on launch${ATLAS_RESET}\n"
+      warnings=$((warnings + 1))
+    fi
+  fi
+
+  printf "\n"
+  if [ "$failures" -gt 0 ]; then
+    printf "  ${ATLAS_RED}✗ ${failures} failure(s)${ATLAS_RESET}, ${ATLAS_YELLOW}${warnings} warning(s)${ATLAS_RESET}\n"
+    _atlas_footer
+    return 1
+  elif [ "$warnings" -gt 0 ]; then
+    printf "  ${ATLAS_YELLOW}⚠ ${warnings} warning(s)${ATLAS_RESET} ${ATLAS_DIM}(non-blocking)${ATLAS_RESET}\n"
+  else
+    printf "  ${ATLAS_GREEN}✓ All checks passed${ATLAS_RESET}\n"
+  fi
+  _atlas_footer
+  return 0
+}
+
+# atlas feature <name>
+# Create a CI-triggering feature branch with date prefix
+# Naming: feature/YYYY-MM-DD-<slug>
+_atlas_feature() {
+  local name="$1"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas feature <name>"
+    echo "Creates: feature/$(/usr/bin/date +%Y-%m-%d)-<slug> (CI-triggering)"
+    return 1
+  fi
+
+  # Slug: lowercase, replace spaces/special with dashes
+  local slug=$(echo "$name" | /usr/bin/tr '[:upper:] ' '[:lower:]-' | /usr/bin/sed 's/[^a-z0-9-]//g; s/--*/-/g; s/^-//; s/-$//')
+  local branch="feature/$(/usr/bin/date +%Y-%m-%d)-${slug}"
+
+  printf "  ${ATLAS_BOLD}New feature branch${ATLAS_RESET}\n"
+  printf "    Branch: ${ATLAS_CYAN}%s${ATLAS_RESET}\n" "$branch"
+  printf "    CI: ${ATLAS_GREEN}enabled${ATLAS_RESET} (matches feature/* pattern)\n"
+
+  # Check if in a git repo
+  if ! git rev-parse --git-dir &>/dev/null; then
+    echo "  Error: not in a git repository"
+    return 1
+  fi
+
+  git checkout -b "$branch" 2>&1 | head -3
+  printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} Branch created. Now: atlas \"${name}\" to launch Claude Code\n"
+}
+
+# atlas promote <worktree-name>
+# Convert worktree-X (experimental, no CI) → feature/YYYY-MM-DD-X (CI-ready)
+_atlas_promote() {
+  local wt_name="$1"
+  if [ -z "$wt_name" ]; then
+    echo "Usage: atlas promote <worktree-name>"
+    echo "Converts worktree-<name> branch to feature/$(/usr/bin/date +%Y-%m-%d)-<name> (CI-ready)"
+    return 1
+  fi
+
+  # Strip worktree- prefix if user included it
+  wt_name="${wt_name#worktree-}"
+  local old_branch="worktree-${wt_name}"
+  local new_branch="feature/$(/usr/bin/date +%Y-%m-%d)-${wt_name}"
+
+  if ! git show-ref --verify --quiet "refs/heads/${old_branch}"; then
+    echo "  Error: branch ${old_branch} not found"
+    return 1
+  fi
+
+  printf "  ${ATLAS_BOLD}Promote worktree → feature${ATLAS_RESET}\n"
+  printf "    %s → ${ATLAS_CYAN}%s${ATLAS_RESET}\n" "$old_branch" "$new_branch"
+
+  git branch -m "$old_branch" "$new_branch" 2>&1 | head -3
+  printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} Branch renamed. Push to trigger CI: git push -u origin %s\n" "$new_branch"
+}
+
+# atlas review [files...]
+# Standalone Pass 0 (DET) code review via toolkit/code_intelligence
+_atlas_review() {
+  local repo_root
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+  if [ -z "$repo_root" ]; then
+    echo "  Error: not in a git repository"
+    return 1
+  fi
+
+  if [ ! -d "$repo_root/toolkit/code_intelligence" ]; then
+    echo "  Error: toolkit/code_intelligence not found in $repo_root"
+    echo "  This command requires Synapse v1+ (PR #164 merged)."
+    return 1
+  fi
+
+  cd "$repo_root" || return 1
+  if [ $# -eq 0 ]; then
+    # Default: review diff vs dev
+    python3 -m toolkit.code_intelligence.review_pass0 --range "origin/dev...HEAD" --format markdown
+  else
+    python3 -m toolkit.code_intelligence.review_pass0 --files "$@" --format markdown
+  fi
+}
+
+# atlas blast <files...>
+# Blast-radius analysis via toolkit/code_intelligence
+_atlas_blast() {
+  local repo_root
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+  if [ -z "$repo_root" ]; then
+    echo "  Error: not in a git repository"
+    return 1
+  fi
+
+  if [ ! -d "$repo_root/toolkit/code_intelligence" ]; then
+    echo "  Error: toolkit/code_intelligence not found in $repo_root"
+    return 1
+  fi
+
+  if [ $# -eq 0 ]; then
+    echo "Usage: atlas blast <files...>"
+    return 1
+  fi
+
+  cd "$repo_root" || return 1
+  python3 -m toolkit.code_intelligence impact "$@"
 }
 
