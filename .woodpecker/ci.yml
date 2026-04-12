@@ -43,6 +43,17 @@ steps:
       - apt-get update -qq && apt-get install -y -qq bash yq > /dev/null 2>&1 || true
       - pip install pyyaml -q
       - ./build.sh domains
+      # Sync legacy tiers (worker, slim) version to match VERSION file
+      - |
+        python3 -c "
+        import json, glob
+        v = open('VERSION').read().strip()
+        for f in glob.glob('dist/*/.claude-plugin/plugin.json'):
+            with open(f) as fh: d = json.load(fh)
+            if d.get('version') != v:
+                d['version'] = v
+                with open(f, 'w') as fh: json.dump(d, fh, indent=2); fh.write('\n')
+        "
     depends_on: [build-tiers]
 
   # ═══════════════════════════════════════════════════════════════
