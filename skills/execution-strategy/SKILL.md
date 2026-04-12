@@ -84,7 +84,7 @@ and consumed by `executing-plans`.
       "name": "DB migration",
       "phase": "P1",
       "type": "db_migration",
-      "model": "opus",
+      "model": "sonnet",
       "mode": "solo",
       "files": ["backend/alembic/versions/xxxx.py"],
       "estimated_tokens": 15000,

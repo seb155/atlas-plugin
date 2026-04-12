@@ -15,8 +15,8 @@ Execute plan tasks by dispatching specialized subagents. Each task gets a subage
 
 When an execution manifest is available (from `execution-strategy` skill):
 - **Read task.model from manifest** → use that model for the subagent
-- **Opus**: Architecture, DB migration, cross-system design tasks
-- **Sonnet**: Implementation, bug fixes, tests, code review (default)
+- **Opus**: Architecture, cross-system design, complex debugging (GPQA +17pts justifies premium)
+- **Sonnet**: Implementation, bug fixes, tests, code review, DB migrations (default — SWE-bench gap only 1.2pts)
 - **Haiku**: Validation, search, spec checklists (read-only tasks)
 - **DET**: Lint, format, type-check (bash command, no subagent needed)
 
@@ -167,6 +167,37 @@ CC v2.1.101 fixes R/W access inside isolated worktrees. This is a runtime parame
 1. Collect all agent outputs
 2. Run full verification (L1-L4) — see verification skill
 3. Proceed with dependent tasks (sequential from this point)
+
+## Prompt Caching Preamble (Cost Optimization)
+
+Structure subagent prompts in 3 blocks to maximize prompt cache hits (90% input token savings):
+
+**Block 1 — Project Context (cacheable, shared across ALL subagents):**
+```
+You are working on {project_name}. Stack: {stack_summary}.
+Conventions: {key conventions from CLAUDE.md — kebab-case files, PascalCase components, strict TS, bun only}.
+Testing: {test commands and patterns}.
+```
+
+**Block 2 — Skill/Type Instructions (cacheable, shared per task type):**
+```
+You are implementing a {task_type} task. Guidelines:
+- {type-specific rules from model-rules.yaml}
+- {quality criteria}
+- Run verification: {verification command}
+```
+
+**Block 3 — Task Context (unique per task):**
+```
+Specific task: {full task description}
+Files to modify: {paths}
+Dependencies: {blockers}
+Test command: {exact command}
+```
+
+**Why**: Anthropic's prompt cache has a 5-min TTL. Blocks 1+2 (~7K tokens) stay cached across
+sequential subagent dispatches. 5 subagents sharing the preamble saves ~35K input tokens at
+standard price ($0.10 Sonnet) → cache price ($0.01 Sonnet). Over a month: ~$30-50 savings.
 
 ## Rules
 

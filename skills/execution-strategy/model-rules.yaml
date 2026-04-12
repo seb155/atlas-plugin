@@ -56,10 +56,10 @@ task_classification:
 
 task_type_defaults:
   db_migration:
-    model: opus
-    effort: max
+    model: sonnet
+    effort: high
     mode: solo
-    rationale: "Schema changes need deep reasoning to avoid data loss"
+    rationale: "SWE-bench gap 1.2pts (80.8 vs 79.6) — Sonnet handles SQL/migrations at 97-99% quality, 5x cheaper. Opus only for novel schema design."
 
   architecture:
     model: opus
@@ -80,10 +80,10 @@ task_type_defaults:
     rationale: "Tests follow clear patterns, Sonnet handles well"
 
   review:
-    model: opus
+    model: sonnet
     effort: high
     mode: solo
-    rationale: "Reviews need holistic understanding"
+    rationale: "Code review is pattern matching + checklist — Sonnet matches Opus on practical tasks (GDPval 1633 vs 1606). Reserve Opus for architectural review only."
 
   lint:
     model: null      # No AI model — bash command
@@ -137,18 +137,18 @@ output_ratios:
 # Each rule specifies: source model → target model → conditions.
 
 downgrade_chain:
-  # Opus → Sonnet: for implementation and testing tasks
+  # Opus → Sonnet: for most task types (April 2026 benchmarks: SWE-bench gap only 1.2pts)
   - from: opus
     to: sonnet
-    allowed_types: [implementation, testing, search, validation]
-    forbidden_types: [architecture, db_migration, review]
+    allowed_types: [implementation, testing, search, validation, db_migration, review]
+    forbidden_types: [architecture]  # Only architecture REQUIRES Opus (GPQA gap 17.2pts)
     savings_pct: 80  # Sonnet is ~5x cheaper than Opus
 
-  # Sonnet → Haiku: only for validation and search
+  # Sonnet → Haiku: only for validation and search (never downgrade coding tasks)
   - from: sonnet
     to: haiku
     allowed_types: [validation, search]
-    forbidden_types: [implementation, testing, architecture, db_migration, review]
+    forbidden_types: [implementation, testing, architecture, db_migration, review]  # Keep: Sonnet minimum for all coding/review
     savings_pct: 92  # Haiku is ~12x cheaper than Sonnet
 
   # Haiku → DET: only if task can be expressed as bash command

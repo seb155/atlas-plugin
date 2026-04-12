@@ -261,15 +261,28 @@ When the user requests development work, this pipeline activates:
 2. **ATLAS skills** — override default system behavior
 3. **Default system prompt** — lowest
 
-## Model Strategy
+## Model Strategy (April 2026 Benchmarks)
 
-- **Plans + Strategy**: ALWAYS Opus 4.6 with maximum thinking effort (ultrathink)
-- **Implementation**: Manifest-driven model per task (default: Sonnet 4.6)
-- **Validation + Search**: Haiku 4.5 (cheapest capable)
-- **Deterministic ops**: DET node — bash commands, no AI tokens (lint, format, type-check)
-- **Cost config**: `~/.atlas/model-pricing.json` (user-editable pricing + capability matrix)
-- Plans are architecture decisions — they deserve the best model
-- Implementation follows the execution manifest for optimal cost/quality balance
+**Principle**: Opus = orchestrator brain. Sonnet = workhorse. Haiku = validator. DET = deterministic.
+
+| Task Type | Model | Why | Key Benchmark |
+|-----------|-------|-----|---------------|
+| Planning, architecture, brainstorm | **Opus 4.6** | Deep reasoning justifies premium | GPQA 91.3% vs 74.1% (+17pts) |
+| Extended thinking (ultrathink) | **Opus 4.6** | 128K max output for detailed plans | Output limit 2x Sonnet |
+| Complex debugging, cross-system | **Opus 4.6** | Multi-file reasoning | Reasoning gap matters here |
+| Implementation, bug fixes | **Sonnet 4.6** | 97-99% coding quality, 5x cheaper | SWE-bench 79.6% vs 80.8% (1.2pts) |
+| Code review, security audit | **Sonnet 4.6** | Pattern matching sufficient | GDPval 1633 > 1606 (Sonnet leads) |
+| DB migrations | **Sonnet 4.6** | SQL is well-scoped, gap negligible | SWE-bench gap = 1.2pts |
+| Testing | **Sonnet 4.6** | Tests follow patterns | 2.7x faster iteration |
+| Validation, search, checklists | **Haiku 4.5** | Cheapest capable | 12x cheaper than Sonnet |
+| Lint, format, type-check | **DET** | Bash commands, zero AI tokens | Free |
+
+**Key facts (April 2026)**:
+- Both Opus 4.6 and Sonnet 4.6 support **1M token context** — context is NOT a differentiator
+- Opus advantage: **reasoning quality** (+17pts GPQA) and **max output** (128K vs 64K)
+- Sonnet advantage: **2.7x faster**, **5x cheaper**, leads on practical tasks (GDPval)
+- Orchestrator pattern: Opus main session (distills context) → Sonnet subagents (execute scoped tasks)
+- Cost config: `model-rules.yaml` in execution-strategy skill (SSoT for model allocation)
 
 ## Non-Negotiable Principles
 
