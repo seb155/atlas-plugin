@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.0.3 (2026-04-12)
+
+### 🐛 Bug Fixes
+- fix(marketplace): remove unbuilt plugins (frontend/infra/enterprise)
+
+
+
 ## v5.0.2 (2026-04-12)
 
 ### 🐛 Bug Fixes
