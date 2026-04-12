@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.46.1 (2026-04-12)
+
+### 🐛 Bug Fixes
+- fix(ci): update CI pipeline for v5 build (build.sh v5 replaces build.sh all)
+
+### 🔧 Other Changes
+- feat!(dedup): ATLAS v5.0.0 — Core + Addon architecture, zero duplication
+
+
+
 ## v4.46.0 (2026-04-12)
 
 ### ✨ Features

@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "atlas-core",
-      "version": "5.0.0",
+      "version": "4.46.1",
       "description": "ATLAS Core v5 \u2014 shared base (25 skills)",
       "source": {
         "source": "git-subdir",
@@ -21,7 +21,7 @@
     },
     {
       "name": "atlas-admin",
-      "version": "5.0.0",
+      "version": "4.46.1",
       "description": "ATLAS Admin v5 \u2014 superuser addon (59 skills)",
       "source": {
         "source": "git-subdir",
@@ -34,7 +34,7 @@
     },
     {
       "name": "atlas-dev",
-      "version": "5.0.0",
+      "version": "4.46.1",
       "description": "ATLAS Dev v5 \u2014 developer addon (29 skills)",
       "source": {
         "source": "git-subdir",
@@ -47,7 +47,7 @@
     },
     {
       "name": "atlas-frontend",
-      "version": "5.0.0",
+      "version": "4.46.1",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -59,7 +59,7 @@
     },
     {
       "name": "atlas-infra",
-      "version": "5.0.0",
+      "version": "4.46.1",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -71,7 +71,7 @@
     },
     {
       "name": "atlas-enterprise",
-      "version": "5.0.0",
+      "version": "4.46.1",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
