@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.44.1 (2026-04-12)
+
+### 🐛 Bug Fixes
+- fix(ci): sync legacy tier versions (worker/slim) in build step
+
+
+
 ## v4.44.0 (2026-04-12)
 
 ### ✨ Features
