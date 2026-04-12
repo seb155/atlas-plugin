@@ -1,7 +1,8 @@
-# ATLAS Plugin — 3-Tier CI Pipeline (Woodpecker)
-# L1 structural runs IMMEDIATELY (no deps, <25s, ~2,900 tests)
-# L2 build-verify runs AFTER build (dist/ integrity, ~100 tests)
-# L3 integration runs on main only (non-blocking, hook execution)
+# ATLAS Plugin v5.0 — 3-Tier CI Pipeline (Woodpecker)
+# L1 structural: immediate, no deps, <25s
+# Build v5: core + addons
+# L2 build-verify: after build, version + artifact integrity
+# L3 integration: main only, non-blocking
 # NOTE: Use $$ for shell variables (WP eats single $)
 
 when:
@@ -10,8 +11,7 @@ when:
 
 steps:
   # ═══════════════════════════════════════════════════════════════
-  # L1 STRUCTURAL — fast gate, no deps, catches 90% of regressions
-  # Runs IMMEDIATELY in parallel with build — ~20-25s
+  # L1 STRUCTURAL — fast gate, <25s, ~2,700 tests
   # ═══════════════════════════════════════════════════════════════
 
   l1-structural:
@@ -21,29 +21,22 @@ steps:
       - python3 -m pytest tests/ -m "not build and not integration and not broken" -x -q --tb=short
 
   # ═══════════════════════════════════════════════════════════════
-  # BUILD — produce dist/ artifacts for L2 + release
+  # BUILD v5 — core + addons (replaces old tier build)
   # ═══════════════════════════════════════════════════════════════
 
-  build-tiers:
+  build-v5:
     image: python:3.13-slim
     commands:
       - apt-get update -qq && apt-get install -y -qq bash yq > /dev/null 2>&1 || true
       - pip install pyyaml -q
-      - ./build.sh all
+      - ./build.sh v5
       - |
-        for tier in admin dev user; do
-          if [ ! -f "dist/atlas-$${tier}/.claude-plugin/plugin.json" ]; then
-            echo "Missing dist/atlas-$${tier}" && exit 1
+        for plugin in atlas-core atlas-dev-addon atlas-admin-addon; do
+          if [ ! -f "dist/$${plugin}/.claude-plugin/plugin.json" ]; then
+            echo "Missing dist/$${plugin}" && exit 1
           fi
         done
-
-  build-domains:
-    image: python:3.13-slim
-    commands:
-      - apt-get update -qq && apt-get install -y -qq bash yq > /dev/null 2>&1 || true
-      - pip install pyyaml -q
-      - ./build.sh domains
-      # Sync legacy tiers (worker, slim) version to match VERSION file
+      # Sync legacy dist versions (if any remain)
       - |
         python3 -c "
         import json, glob
@@ -54,10 +47,9 @@ steps:
                 d['version'] = v
                 with open(f, 'w') as fh: json.dump(d, fh, indent=2); fh.write('\n')
         "
-    depends_on: [build-tiers]
 
   # ═══════════════════════════════════════════════════════════════
-  # L2 BUILD VERIFICATION — dist/ artifact integrity + version sync
+  # L2 BUILD VERIFICATION — dist/ integrity + version sync
   # ═══════════════════════════════════════════════════════════════
 
   l2-build-verify:
@@ -65,10 +57,10 @@ steps:
     commands:
       - pip install pytest pyyaml -q
       - python3 -m pytest tests/ -m "build" -x -q --tb=short
-    depends_on: [build-domains]
+    depends_on: [build-v5]
 
   # ═══════════════════════════════════════════════════════════════
-  # L3 INTEGRATION — main only, non-blocking, hook execution
+  # L3 INTEGRATION — main only, non-blocking
   # ═══════════════════════════════════════════════════════════════
 
   l3-integration:
@@ -79,5 +71,5 @@ steps:
       - apt-get update -qq && apt-get install -y -qq jq > /dev/null 2>&1 || true
       - pip install pytest pyyaml -q
       - python3 -m pytest tests/ -m "integration" -q --tb=short || echo "L3 warnings (non-blocking)"
-    depends_on: [build-domains]
+    depends_on: [build-v5]
     failure: ignore
