@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.0.2 (2026-04-12)
+
+### 🐛 Bug Fixes
+- fix(audit): v5 completeness — 4 missing skills, cc-native-features ref, clean dist/
+
+
+
 ## v5.0.1 (2026-04-12)
 
 ### 🐛 Bug Fixes
