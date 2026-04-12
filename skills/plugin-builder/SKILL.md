@@ -45,7 +45,7 @@ claude plugin validate ./my-plugin # Validate
 | Commands | `commands/{name}.md` | Simple markdown (legacy, prefer skills) |
 | Hooks | `hooks/hooks.json` + scripts | `references/hooks-spec.md` (20+ events) |
 | MCP | `.mcp.json` | `references/mcp-lsp-spec.md` |
-| LSP | `.lsp.json` | `references/mcp-lsp-spec.md` |
+| LSP | `.lsp.json` | `references/mcp-lsp-spec.md` (schema), `references/lsp-deployment-guide.md` (ops) |
 
 ## Key Variables
 
