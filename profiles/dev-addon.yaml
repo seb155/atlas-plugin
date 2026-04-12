@@ -1,0 +1,78 @@
+# ATLAS Dev Addon v5.0 — Developer Tools (plugin:dev skills)
+# Install: atlas-core + atlas-dev
+# Contains: planning, implementation, testing, shipping, code quality
+# NO inheritance — pure delta on top of core
+tier: dev-addon
+description: "Developer tools — planning, TDD, review, shipping"
+
+skills:
+  # Planning & Design
+  - brainstorming
+  - plan-builder
+  - execution-strategy
+  - frontend-design
+  - frontend-workflow
+  - vision-alignment
+  - interactive-flow
+
+  # Implementation
+  - executing-plans
+  - subagent-dispatch
+  - tdd
+  - git-worktrees
+  - browser-automation
+
+  # Quality & Review
+  - code-review
+  - code-simplify
+  - systematic-debugging
+  - verification
+  - test-orchestrator
+  - visual-qa
+  - api-healthcheck
+
+  # Ship
+  - finishing-branch
+  - ship-all
+  - forgejo-pr
+  - ci-management
+
+  # Meta / Tooling
+  - decision-log
+  - hookify
+  - plugin-builder
+  - skill-management
+  - engineering-ops
+  - visual-generator
+
+refs:
+  - composition-patterns
+  - react-best-practices
+  - web-design-guidelines
+  - gmining-excel
+
+hooks:
+  # Post-edit quality gates
+  - post-edit-lint
+  - enterprise-check
+  - test-impact-analysis
+  - code-quality-check
+  - frontend-ux-gate
+  - skill-usage-tracker
+  - ci-auto-monitor
+  # Worktree management
+  - enforce-worktree-name
+  - cleanup-worktrees
+
+agents:
+  - plan-architect
+  - plan-reviewer
+  - code-reviewer
+  - team-engineer
+  - team-tester
+  - team-researcher
+  - design-implementer
+
+persona: "senior engineering architect"
+pipeline: "DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP"
+banner_label: "Dev"
