@@ -1,8 +1,8 @@
 {
   "name": "atlas-infra",
-  "version": "4.42.0",
+  "version": "4.43.0",
   "description": "Infrastructure — deploy, security, network, DevOps, engineering ops.",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-12T18:26:44Z"
+  "buildTimestamp": "2026-04-12T21:32:42Z"
 }

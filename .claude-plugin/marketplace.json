@@ -9,7 +9,7 @@
     {
       "name": "atlas-admin",
       "description": "ATLAS monolith \u2014 all 76 skills in one plugin. Use domain plugins instead for modular install.",
-      "version": "4.42.0",
+      "version": "4.43.0",
       "source": {
         "source": "url",
         "url": "https://github.com/seb155/atlas-plugin.git"
@@ -29,7 +29,7 @@
       "author": {
         "name": "Seb Gagnon"
       },
-      "version": "4.42.0"
+      "version": "4.43.0"
     },
     {
       "name": "atlas-dev",
@@ -42,7 +42,7 @@
       "author": {
         "name": "Seb Gagnon"
       },
-      "version": "4.42.0"
+      "version": "4.43.0"
     },
     {
       "name": "atlas-frontend",
@@ -55,7 +55,7 @@
       "author": {
         "name": "Seb Gagnon"
       },
-      "version": "4.42.0"
+      "version": "4.43.0"
     },
     {
       "name": "atlas-infra",
@@ -68,7 +68,7 @@
       "author": {
         "name": "Seb Gagnon"
       },
-      "version": "4.42.0"
+      "version": "4.43.0"
     },
     {
       "name": "atlas-enterprise",
@@ -81,7 +81,7 @@
       "author": {
         "name": "Seb Gagnon"
       },
-      "version": "4.42.0"
+      "version": "4.43.0"
     },
     {
       "name": "atlas-experiential",
@@ -94,7 +94,7 @@
       "author": {
         "name": "Seb Gagnon"
       },
-      "version": "4.42.0"
+      "version": "4.43.0"
     }
   ]
 }
