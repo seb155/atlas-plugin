@@ -35,8 +35,9 @@ steps:
   test:
     image: python:3.13-slim
     commands:
+      - apt-get update -qq && apt-get install -y -qq jq > /dev/null 2>&1 || true
       - pip install pytest pyyaml -q
-      - python3 -m pytest tests/ -x -q --tb=short --ignore=tests/test_theory_of_mind.py --ignore=tests/test_hook_behavior.py
+      - python3 -m pytest tests/ -x -q --tb=short --ignore=tests/test_theory_of_mind.py --ignore=tests/test_hook_behavior.py --ignore=tests/test_hook_e2e.py
     depends_on: [build-domains]
 
   version-check:

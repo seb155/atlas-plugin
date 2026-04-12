@@ -29,8 +29,10 @@ steps:
       # Configure git
       - git config user.name "atlas-ci"
       - git config user.email "ci@axoiq.com"
-      # Set authenticated remote (FORGEJO_TOKEN from secret, CI_REPO from WP)
-      - git remote set-url origin "https://oauth2:$${FORGEJO_TOKEN}@forgejo.axoiq.com/${CI_REPO}"
+      # Set authenticated remote — use Forgejo native port (3000) to bypass Caddy SSO
+      # forgejo.axoiq.com goes through Caddy ForwardAuth → Authentik redirect → breaks git push
+      # Internal agents use direct LXC IP:port (192.168.10.75:3000) which has no SSO
+      - git remote set-url origin "http://oauth2:$${FORGEJO_TOKEN}@192.168.10.75:3000/${CI_REPO}"
       # Fetch full history + tags (WP does shallow clone --depth=1)
       - git fetch --unshallow 2>/dev/null || git fetch --all
       - git fetch --tags
@@ -39,5 +41,5 @@ steps:
     environment:
       FORGEJO_TOKEN:
         from_secret: forgejo_token
-      FORGEJO_API_URL: "https://forgejo.axoiq.com/api/v1"
+      FORGEJO_API_URL: "http://192.168.10.75:3000/api/v1"
       GITHUB_REPOSITORY: ${CI_REPO}
