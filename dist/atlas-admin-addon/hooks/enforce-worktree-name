@@ -1,0 +1,33 @@
+#!/bin/bash
+# Hook: PreToolUse(EnterWorktree) — Enforce descriptive worktree names
+# Rejects empty names and random-looking names (less than 3 chars or gibberish).
+# Exit 0 = allow, Exit 2 = block with message
+
+INPUT=$(cat)
+NAME=$(echo "$INPUT" | jq -r '.tool_input.name // empty')
+
+# If no name provided → block and suggest
+if [ -z "$NAME" ]; then
+  cat <<'EOF' >&2
+⚠️ Worktree name required. Use a descriptive kebab-case name:
+  EnterWorktree(name: "ci-runner-fix")
+  EnterWorktree(name: "store-consolidation")
+  EnterWorktree(name: "sp18-teg-phase1")
+NEVER use random or empty names — they make cleanup impossible.
+EOF
+  exit 2
+fi
+
+# Reject names shorter than 3 characters
+if [ ${#NAME} -lt 3 ]; then
+  echo "⚠️ Worktree name '$NAME' too short. Use at least 3 characters (e.g., 'ci-fix', 'sp18-teg')." >&2
+  exit 2
+fi
+
+# Reject the default CC placeholder name
+if [ "$NAME" = "-" ] || [ "$NAME" = "--" ] || [ "$NAME" = "tree" ]; then
+  echo "⚠️ '$NAME' is a generic placeholder. Use a descriptive name (e.g., 'audit-sprint', 'deploy-fix')." >&2
+  exit 2
+fi
+
+exit 0

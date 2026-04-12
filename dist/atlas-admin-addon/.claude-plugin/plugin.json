@@ -1,0 +1,8 @@
+{
+  "name": "atlas-admin-addon",
+  "version": "5.0.0",
+  "description": "Superuser — includes dev tools + infra, security, governance, GMS",
+  "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "license": "UNLICENSED",
+  "buildTimestamp": "2026-04-12T23:09:41Z"
+}

@@ -1,29 +1,10 @@
 {
-  "name": "atlas-admin",
-  "description": "ATLAS \u2014 AXOIQ's unified AI engineering assistant. Multi-tier co-pilot with skills, agents, commands, and lifecycle hooks. HITL gates.",
-  "version": "4.46.0",
+  "name": "atlas-core",
+  "version": "5.0.0",
+  "description": "ATLAS Core v5 \u2014 shared base",
   "author": {
-    "name": "Seb Gagnon",
-    "email": "seb@axoiq.com"
+    "name": "AXOIQ",
+    "email": "dev@axoiq.com"
   },
-  "license": "UNLICENSED",
-  "keywords": [
-    "planning",
-    "engineering",
-    "enterprise",
-    "quality-gate",
-    "context-discovery",
-    "tdd",
-    "debugging",
-    "forgejo",
-    "devops",
-    "code-review",
-    "frontend-design",
-    "frontend-workflow",
-    "optimization",
-    "auto-tune",
-    "hitl",
-    "co-pilot",
-    "enterprise-audit"
-  ]
+  "license": "UNLICENSED"
 }

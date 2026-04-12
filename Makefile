@@ -1,16 +1,71 @@
-# ATLAS Plugin — Developer Makefile
+# ATLAS Plugin v5.0 — Developer Makefile
 # Usage: make [target]
 
-.PHONY: build test install dev dev-slim dev-domains lint sync publish clean help
+.PHONY: build build-v5 test install dev dev-v5 lint publish clean help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-build: ## Build all 4 tiers (admin/dev/user/worker)
+# ── v5 Targets (PRIMARY — core + addons) ──────────────────────
+
+build-v5: ## Build v5 plugins (core + all addons)
+	./build.sh v5
+
+build-core: ## Build atlas-core only
+	./build.sh v5-core
+
+build-admin: ## Build atlas-admin addon only
+	./build.sh v5-admin
+
+build-dev-addon: ## Build atlas-dev addon only
+	./build.sh v5-dev
+
+dev: ## Build core + admin + install to CC cache (standard workflow)
+	./build.sh v5
+	@VERSION=$$(cat VERSION | tr -d '[:space:]'); \
+	CACHE_DIR="$$HOME/.claude/plugins/cache/atlas-marketplace"; \
+	echo ""; \
+	echo "📦 Installing v5 plugins to CC cache..."; \
+	for plugin in atlas-core atlas-admin-addon; do \
+		name=$$(echo $$plugin | sed 's/-addon//'); \
+		dir="$$CACHE_DIR/$${name}/$$VERSION"; \
+		mkdir -p "$$dir"; \
+		cp -r "dist/$${plugin}/." "$$dir/" && \
+		cp -r "dist/$${plugin}/.claude-plugin" "$$dir/" 2>/dev/null; \
+		echo "  ✅ $${name} → $$dir"; \
+	done; \
+	if [ -f "scripts/atlas-cli.sh" ]; then \
+		mkdir -p "$$HOME/.atlas/shell"; \
+		cp scripts/atlas-cli.sh "$$HOME/.atlas/shell/atlas.sh"; \
+		sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"$$VERSION\"/" "$$HOME/.atlas/shell/atlas.sh"; \
+		chmod +x "$$HOME/.atlas/shell/atlas.sh"; \
+		echo "  ✅ atlas-cli.sh → $$HOME/.atlas/shell/atlas.sh (v$$VERSION)"; \
+	fi; \
+	if [ -d "scripts/atlas-modules" ]; then \
+		mkdir -p "$$HOME/.atlas/shell/modules"; \
+		cp scripts/atlas-modules/*.sh "$$HOME/.atlas/shell/modules/"; \
+		chmod +x "$$HOME/.atlas/shell/modules/"*.sh; \
+		echo "  ✅ atlas-modules/ → $$HOME/.atlas/shell/modules/ ($$(ls scripts/atlas-modules/*.sh | wc -l) modules)"; \
+	fi; \
+	echo ""; \
+	echo "✅ Installed v5 plugins v$$VERSION"; \
+	echo "   Cache: $$CACHE_DIR/"; \
+	echo ""; \
+	echo "⚠️  Restart Claude Code to apply changes."; \
+	echo ""; \
+	echo "📋 Next steps:"; \
+	echo "   1. Restart Claude Code      (picks up plugin changes)"; \
+	echo "   2. source ~/.zshrc          (reload shell with new atlas.sh)"
+
+# ── Legacy Targets (backward compat) ─────────────────────────
+
+build: ## Build legacy tiers (admin/dev/user) — DEPRECATED, use build-v5
 	./build.sh all
 
-build-admin: ## Build admin tier only
-	./build.sh admin
+install: ## Legacy install — DEPRECATED, use 'make dev'
+	./scripts/dev-install.sh
+
+# ── Testing ──────────────────────────────────────────────────
 
 test: ## Run full test suite
 	python3 -m pytest tests/ -x -q --tb=short
@@ -18,50 +73,14 @@ test: ## Run full test suite
 test-v: ## Run tests with verbose output
 	python3 -m pytest tests/ -x --tb=short -v
 
-install: ## Build all 4 + install to CC plugin cache
-	./scripts/dev-install.sh
+test-l1: ## Run L1 structural tests only (<25s)
+	python3 -m pytest tests/ -m "not build and not integration and not broken" -x -q --tb=short
 
-dev: install ## Build all 4 + install (standard workflow)
-
-dev-slim: ## Build slim (15 skills) + install — lightweight daily driver
-	./build.sh slim
-	@VERSION=$$(cat VERSION | tr -d '[:space:]'); \
-	CACHE_DIR="$$HOME/.claude/plugins/cache"; \
-	dir="$$CACHE_DIR/atlas-admin-marketplace/atlas-slim/$$VERSION"; \
-	mkdir -p "$$dir"; \
-	cp -r "dist/atlas-slim/." "$$dir/" && \
-	cp -r "dist/atlas-slim/.claude-plugin" "$$dir/" 2>/dev/null; \
-	echo "✅ atlas-slim v$$VERSION → $$dir"; \
-	echo "�� Restart CC to use slim profile. Restore with: make dev"
-
-dev-admin: ## Quick admin-only build + install
-	./scripts/dev-install.sh --admin-only
-
-dev-domains: ## Build all 6 domain plugins + install to CC cache
-	./build.sh domains
-	@VERSION=$$(cat VERSION | tr -d '[:space:]'); \
-	CACHE_DIR="$$HOME/.claude/plugins/cache"; \
-	echo ""; \
-	echo "📦 Installing domain plugins to CC cache..."; \
-	for name in core dev frontend infra enterprise experiential; do \
-		dir="$$CACHE_DIR/atlas-admin-marketplace/atlas-$${name}/$$VERSION"; \
-		mkdir -p "$$dir"; \
-		cp -r "dist/atlas-$${name}/." "$$dir/" && \
-		cp -r "dist/atlas-$${name}/.claude-plugin" "$$dir/" 2>/dev/null; \
-		echo "  ✅ atlas-$${name} → $$dir"; \
-	done; \
-	echo ""; \
-	echo "✅ Installed 6 domain plugins v$$VERSION"
-
-lint: ## Validate plugin structure (frontmatter, refs, profiles)
+lint: ## Validate plugin structure (frontmatter, refs)
 	@echo "Running structural checks..."
-	@python3 -m pytest tests/test_skill_frontmatter.py tests/test_skill_coverage.py -x -q --tb=short 2>/dev/null || python3 -m pytest tests/ -k "frontmatter or coverage" -x -q --tb=short
+	@python3 -m pytest tests/test_skill_frontmatter.py tests/test_skill_coverage.py -x -q --tb=short
 
-sync: ## Show diff between synapse and dev-plugin repos
-	./scripts/sync-repos.sh --status
-
-sync-both: ## Sync both directions
-	./scripts/sync-repos.sh --both
+# ── Release ──────────────────────────────────────────────────
 
 publish-patch: ## Release patch version bump
 	./scripts/publish.sh patch
@@ -69,9 +88,7 @@ publish-patch: ## Release patch version bump
 publish-minor: ## Release minor version bump
 	./scripts/publish.sh minor
 
-dev-all: ## Build + install ALL (tiers + domains) to single marketplace
-	$(MAKE) dev
-	$(MAKE) dev-domains
+# ── Utilities ────────────────────────────────────────────────
 
 export-cursor: ## Export top 15 skills to Cursor .mdc rules format
 	bash scripts/export-cursor.sh

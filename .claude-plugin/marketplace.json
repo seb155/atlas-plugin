@@ -1,100 +1,85 @@
 {
-  "name": "atlas-admin-marketplace",
-  "description": "AXOIQ marketplace for the ATLAS AI engineering assistant ecosystem",
+  "name": "atlas-marketplace",
+  "description": "AXOIQ marketplace \u2014 ATLAS AI engineering assistant v5.",
   "owner": {
     "name": "Seb Gagnon",
     "email": "seb@axoiq.com"
   },
   "plugins": [
     {
-      "name": "atlas-admin",
-      "description": "ATLAS monolith \u2014 all 76 skills in one plugin. Use domain plugins instead for modular install.",
-      "version": "4.46.0",
+      "name": "atlas-core",
+      "version": "5.0.0",
+      "description": "ATLAS Core v5 \u2014 shared base (25 skills)",
       "source": {
-        "source": "url",
-        "url": "https://github.com/seb155/atlas-plugin.git"
+        "source": "git-subdir",
+        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
+        "path": "dist/atlas-core"
       },
       "author": {
         "name": "Seb Gagnon"
       }
     },
     {
-      "name": "atlas-core",
-      "description": "ATLAS Core \u2014 Memory, session, context, vault, assist. Required by all ATLAS domain plugins.",
+      "name": "atlas-admin",
+      "version": "5.0.0",
+      "description": "ATLAS Admin v5 \u2014 superuser addon (59 skills)",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/seb155/atlas-plugin.git",
-        "path": "dist/atlas-core"
+        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
+        "path": "dist/atlas-admin-addon"
       },
       "author": {
         "name": "Seb Gagnon"
-      },
-      "version": "4.46.0"
+      }
     },
     {
       "name": "atlas-dev",
-      "description": "ATLAS Dev \u2014 TDD, planning, debugging, code review, shipping workflows.",
+      "version": "5.0.0",
+      "description": "ATLAS Dev v5 \u2014 developer addon (29 skills)",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/seb155/atlas-plugin.git",
-        "path": "dist/atlas-dev"
+        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
+        "path": "dist/atlas-dev-addon"
       },
       "author": {
         "name": "Seb Gagnon"
-      },
-      "version": "4.46.0"
+      }
     },
     {
       "name": "atlas-frontend",
-      "description": "ATLAS Frontend \u2014 Design, browser automation, visual QA.",
+      "version": "5.0.0",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/seb155/atlas-plugin.git",
+        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
         "path": "dist/atlas-frontend"
       },
       "author": {
         "name": "Seb Gagnon"
-      },
-      "version": "4.46.0"
+      }
     },
     {
       "name": "atlas-infra",
-      "description": "ATLAS Infra \u2014 Infrastructure, deploy, security, network, DevOps.",
+      "version": "5.0.0",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/seb155/atlas-plugin.git",
+        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
         "path": "dist/atlas-infra"
       },
       "author": {
         "name": "Seb Gagnon"
-      },
-      "version": "4.46.0"
+      }
     },
     {
       "name": "atlas-enterprise",
-      "description": "ATLAS Enterprise \u2014 Governance, knowledge engine, agent teams, programme management.",
+      "version": "5.0.0",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/seb155/atlas-plugin.git",
+        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
         "path": "dist/atlas-enterprise"
       },
       "author": {
         "name": "Seb Gagnon"
-      },
-      "version": "4.46.0"
-    },
-    {
-      "name": "atlas-experiential",
-      "description": "ATLAS Experiential \u2014 Episode capture, intuition logging, relationship memory.",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/seb155/atlas-plugin.git",
-        "path": "dist/atlas-experiential"
-      },
-      "author": {
-        "name": "Seb Gagnon"
-      },
-      "version": "4.46.0"
+      }
     }
   ]
 }

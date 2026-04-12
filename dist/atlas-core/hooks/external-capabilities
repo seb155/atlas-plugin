@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+# external-capabilities — Discover non-ATLAS plugins, MCP servers, and LSP servers
+# Event: SessionStart (async, 5s timeout)
+# Output: Compact banner of external tools available in this environment
+# Cache: ~/.atlas/data/external-tools-cache.json (fingerprint-based, 24h TTL)
+
+set -euo pipefail
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+# shellcheck source=lib/python.sh
+. "$PLUGIN_ROOT/hooks/lib/python.sh"
+
+REGISTRY="$HOME/.claude/plugins/installed_plugins.json"
+CACHE_DIR="$HOME/.atlas/data"
+CACHE_FILE="$CACHE_DIR/external-tools-cache.json"
+
+# Guard: need python + registry
+[ "$ATLAS_PYTHON" = "false" ] && exit 0
+[ -f "$REGISTRY" ] || exit 0
+
+mkdir -p "$CACHE_DIR"
+
+# Fingerprint: mtime of registry + project .mcp.json
+FP_SRC="$REGISTRY"
+[ -f ".mcp.json" ] && FP_SRC="$FP_SRC .mcp.json"
+[ -f ".claude/settings.local.json" ] && FP_SRC="$FP_SRC .claude/settings.local.json"
+FINGERPRINT=$(stat -c '%Y' $FP_SRC 2>/dev/null | md5sum 2>/dev/null | cut -d' ' -f1 || echo "none")
+
+# Fast path: use cache if fingerprint matches and age < 24h
+if [ -f "$CACHE_FILE" ]; then
+  CACHED_FP=$(_atlas_py -c "
+import json, sys
+try:
+    d = json.load(open('$CACHE_FILE'))
+    print(d.get('fingerprint', ''))
+except: print('')
+" 2>/dev/null || echo "")
+  if [ "$CACHED_FP" = "$FINGERPRINT" ]; then
+    CACHE_AGE=$(( $(date +%s) - $(stat -c '%Y' "$CACHE_FILE" 2>/dev/null || echo 0) ))
+    if [ "$CACHE_AGE" -lt 86400 ]; then
+      # Cache is fresh — output summary from cache
+      _atlas_py -c "
+import json, sys
+try:
+    d = json.load(open('$CACHE_FILE'))
+    print(d.get('summary', ''))
+except: pass
+" 2>/dev/null
+      exit 0
+    fi
+  fi
+fi
+
+# Full scan — read registries and build cache
+_atlas_py -c "
+import json, os, sys, glob
+from datetime import datetime, timezone
+
+registry_path = '$REGISTRY'
+cache_path = '$CACHE_FILE'
+fingerprint = '$FINGERPRINT'
+plugin_cache_root = os.path.expanduser('~/.claude/plugins/cache')
+
+# --- Read installed plugins ---
+with open(registry_path) as f:
+    registry = json.load(f)
+
+plugins = []
+lsp_servers = []
+atlas_marketplaces = {'atlas-admin-marketplace', 'atlas-marketplace'}
+
+for key, installs in registry.get('plugins', {}).items():
+    parts = key.rsplit('@', 1)
+    name = parts[0] if len(parts) == 2 else key
+    marketplace = parts[1] if len(parts) == 2 else 'unknown'
+
+    # Skip ATLAS-owned plugins
+    if marketplace in atlas_marketplaces or name.startswith('atlas-'):
+        continue
+
+    # Use the first install entry for metadata
+    inst = installs[0] if installs else {}
+    install_path = inst.get('installPath', '')
+    scope = inst.get('scope', 'unknown')
+    version = inst.get('version', 'unknown')
+
+    # Check for MCP server declaration
+    mcp_tools = []
+    tool_prefix = ''
+    mcp_json_path = os.path.join(install_path, '.mcp.json')
+    if os.path.isfile(mcp_json_path):
+        try:
+            with open(mcp_json_path) as mf:
+                mcp_data = json.load(mf)
+            servers = mcp_data.get('mcpServers', mcp_data)
+            for srv_name, srv_conf in servers.items():
+                if isinstance(srv_conf, dict):
+                    tool_prefix = f'mcp__plugin_{name}_{srv_name}__' if 'command' in srv_conf or 'args' in srv_conf else f'mcp__{srv_name}__'
+        except:
+            pass
+
+    # Read plugin.json for description
+    description = ''
+    pjson_path = os.path.join(install_path, '.claude-plugin', 'plugin.json')
+    if os.path.isfile(pjson_path):
+        try:
+            with open(pjson_path) as pf:
+                pdata = json.load(pf)
+            description = pdata.get('description', '')[:100]
+        except:
+            pass
+
+    # Detect LSP plugins
+    is_lsp = name.endswith('-lsp')
+    if is_lsp:
+        # Read README for supported languages
+        langs = []
+        if 'typescript' in name or 'ts' in name:
+            langs = ['ts', 'tsx', 'js', 'jsx', 'mts', 'cts', 'mjs', 'cjs']
+        elif 'jdtls' in name or 'java' in name:
+            langs = ['java']
+        elif 'python' in name or 'pyright' in name:
+            langs = ['py']
+        lsp_servers.append({
+            'id': name,
+            'languages': langs,
+            'installed': True,
+            'marketplace': marketplace,
+            'version': version
+        })
+
+    # Check for reference file
+    ref_dir = os.path.join('$PLUGIN_ROOT', 'skills', 'refs', 'external-tools')
+    has_ref = os.path.isfile(os.path.join(ref_dir, f'{name}.md'))
+
+    plugins.append({
+        'id': f'{name}@{marketplace}',
+        'name': name,
+        'description': description,
+        'marketplace': marketplace,
+        'scope': scope,
+        'version': version,
+        'has_mcp': bool(tool_prefix),
+        'tool_prefix': tool_prefix,
+        'is_lsp': is_lsp,
+        'has_reference': has_ref
+    })
+
+# --- Read project-local MCP servers ---
+mcp_servers = []
+for mcp_path in ['.mcp.json']:
+    if os.path.isfile(mcp_path):
+        try:
+            with open(mcp_path) as f:
+                mdata = json.load(f)
+            servers = mdata.get('mcpServers', mdata)
+            for srv_name, srv_conf in servers.items():
+                if isinstance(srv_conf, dict):
+                    mcp_servers.append({
+                        'name': srv_name,
+                        'source': 'project',
+                        'command': srv_conf.get('command', srv_conf.get('url', '')),
+                        'enabled': True
+                    })
+        except:
+            pass
+
+# --- Build summary ---
+ext_plugins = [p for p in plugins if not p['is_lsp']]
+mcp_plugins = [p for p in plugins if p['has_mcp']]
+total_mcp = len(mcp_plugins) + len(mcp_servers)
+
+parts = []
+parts.append(f'{len(ext_plugins)} plugins')
+if total_mcp > 0:
+    parts.append(f'{total_mcp} MCP')
+if lsp_servers:
+    parts.append(f'{len(lsp_servers)} LSP')
+
+summary_lines = []
+summary_lines.append(f'\U0001f50c EXTERNAL \u2502 {\" \u2502 \".join(parts)}')
+
+# Group by capability
+doc_tools = [p['name'] for p in plugins if 'doc' in p.get('description', '').lower() or p['name'] in ('context7',)]
+browser_tools = [p['name'] for p in plugins if p['name'] in ('playwright', 'figma')]
+lsp_names = [l['id'].replace('-lsp', '') for l in lsp_servers]
+code_tools = [p['name'] for p in plugins if p['name'] in ('code-simplifier', 'code-review', 'frontend-design')]
+
+detail = []
+if doc_tools: detail.append(f'Docs: {\", \".join(doc_tools)}')
+if browser_tools: detail.append(f'Browser: {\", \".join(browser_tools)}')
+if lsp_names: detail.append(f'LSP: {\", \".join(lsp_names)}')
+if code_tools: detail.append(f'Code: {\", \".join(code_tools)}')
+if mcp_servers: detail.append(f'Project MCP: {\", \".join(s[\"name\"] for s in mcp_servers)}')
+if detail:
+    summary_lines.append(f'   {\", \".join(detail)}')
+
+no_ref = [p['name'] for p in plugins if not p['has_reference'] and (p['has_mcp'] or p['is_lsp'])]
+if no_ref:
+    summary_lines.append(f'   \u26a0\ufe0f No usage docs: {\", \".join(no_ref[:5])}')
+
+summary = '\n'.join(summary_lines)
+
+# --- Write cache ---
+cache = {
+    'version': 1,
+    'scanned_at': datetime.now(timezone.utc).isoformat(),
+    'fingerprint': fingerprint,
+    'plugins': plugins,
+    'mcp_servers': mcp_servers,
+    'lsp_servers': lsp_servers,
+    'summary': summary
+}
+
+with open(cache_path, 'w') as f:
+    json.dump(cache, f, indent=2)
+
+# --- Output summary ---
+print(summary)
+" 2>/dev/null || echo "🔌 EXTERNAL │ scan failed (check ~/.atlas/data/)"

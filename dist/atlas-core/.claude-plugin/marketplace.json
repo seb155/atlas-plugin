@@ -1,12 +1,12 @@
 {
-  "name": "atlas-core-marketplace",
+  "name": "atlas-marketplace",
   "owner": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "plugins": [
     {
       "name": "atlas-core",
-      "description": "Core foundation — memory, session, context, vault, assist. Required by all ATLAS plugins.",
-      "version": "4.43.0",
-      "source": { "source": "url", "url": "https://github.com/seb155/atlas-plugin.git" },
+      "description": "Shared base — session, memory, context, personal, experiential",
+      "version": "5.0.0",
+      "source": { "source": "git", "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }
   ]

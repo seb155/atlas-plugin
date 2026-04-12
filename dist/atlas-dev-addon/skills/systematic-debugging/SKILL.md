@@ -1,0 +1,99 @@
+---
+name: systematic-debugging
+description: "Structured debugging: observe → hypothesize → test → fix. Max 2 fix attempts, then escalate. Never guess-and-check randomly."
+effort: medium
+---
+
+# Systematic Debugging
+
+## Process (STRICT ORDER)
+
+### 1. OBSERVE — What exactly is happening?
+- Read the error message/stack trace completely
+- Reproduce the issue (run the failing test/command)
+- Note: what is EXPECTED vs what is ACTUAL
+- Check: when did it last work? What changed?
+
+#### Centralized Log Query (AXOIQ/Synapse projects)
+Before SSH + docker logs, query Loki for structured errors (ref: `refs/observability-api`):
+1. Error count by container: identifies which service is the hotspot
+2. Recent errors for the suspected service: exact error messages with timestamps
+3. If trace_id visible → trace correlation query to follow the request across services
+4. Prometheus `up` query to check if any scrape target is down
+
+### 2. HYPOTHESIZE — What could cause this?
+- List 2-3 possible causes ranked by likelihood
+- For each: what evidence would confirm/deny it?
+
+```
+🔍 Hypotheses:
+1. {most likely} — evidence needed: {check X}
+2. {second} — evidence needed: {check Y}
+3. {least likely} — evidence needed: {check Z}
+```
+
+### 3. TEST — Verify the hypothesis
+- Test ONE hypothesis at a time
+- Use the LEAST invasive check first (read logs, check data, print values)
+- Don't change code to test — observe first
+
+### 4. FIX — Apply the minimal fix
+- Fix the ROOT CAUSE, not the symptom
+- Write a test that reproduces the bug FIRST (TDD)
+- Apply the fix
+- Run the test — it must pass
+- Run ALL related tests — no regressions
+
+### 5. VERIFY — Confirm the fix
+- Run the original failing scenario
+- Run the broader test suite
+- Check for side effects
+
+## Retry Cap (NON-NEGOTIABLE)
+
+- **Attempt 1**: Observe → Hypothesize → Test → Fix → Verify
+- **Attempt 2**: If first fix didn't work → new hypothesis → Fix → Verify
+- **After 2 attempts**: STOP. Use AskUserQuestion with:
+  - (a) What you observed
+  - (b) What you tried
+  - (c) 2-3 alternative approaches
+
+**Never loop endlessly trying fixes.** 2 attempts maximum.
+
+## Common Debugging Patterns
+
+### "It works locally but fails in CI"
+- Check: environment variables, Docker volumes, port conflicts
+- Check: database state (migrations applied?)
+- Check: file permissions, path differences
+
+### "Test passes alone but fails in suite"
+- Check: shared state between tests (DB not cleaned up)
+- Check: import side effects
+- Check: test order dependency
+
+### "TypeError: X is not a function"
+- Check: import path (default vs named export)
+- Check: circular dependencies
+- Check: version mismatch
+
+## Output Format
+
+```
+🐛 Bug: {one-line description}
+
+📋 Observation:
+- Expected: {X}
+- Actual: {Y}
+- Last worked: {when}
+
+🔍 Hypothesis 1: {description}
+- Evidence: {what I checked}
+- Result: {confirmed/denied}
+
+🔧 Fix: {description}
+- File: {path:line}
+- Change: {before → after}
+
+✅ Verified: {test command + result}
+```

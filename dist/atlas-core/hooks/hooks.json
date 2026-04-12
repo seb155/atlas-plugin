@@ -12,25 +12,7 @@
           },
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" inject-datetime",
-            "async": false,
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" session-diff",
-            "async": true,
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" statusline-sync",
-            "async": true,
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" checkpoint-restore",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/external-capabilities\"",
             "async": true,
             "timeout": 5
           }
@@ -41,13 +23,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" detect-stale-plans",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/morning-brief\"",
             "async": true,
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/morning-brief\"",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/cwd-changed-env\"",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/policy-drift-detector\"",
             "async": true,
             "timeout": 5
           }
@@ -57,17 +45,6 @@
     "SessionEnd": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-end-memory-cleanup\"",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" session-end-cleanup",
-            "async": true,
-            "timeout": 10
-          },
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/experiential-capture\"",
@@ -87,6 +64,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/protect-plugin-cache\"",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreCompact": [
@@ -101,23 +88,6 @@
             "type": "command",
             "command": "echo 'PRESERVE through compaction: ATLAS Admin persona + breadcrumb, current TaskList state, modified file paths (absolute), branch/worktree name, active skill context, architecture decisions made this session, test commands used, error traces being debugged. DISCARD: verbose tool outputs, intermediate search results, raw file contents already processed.'",
             "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" precompact-snapshot",
-            "async": true,
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PostCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/post-compact\"",
-            "timeout": 10
           }
         ]
       }
@@ -135,12 +105,6 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/prompt-intelligence\"",
             "async": true,
             "timeout": 3
-          },
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" contextual-rules-injector",
-            "async": true,
-            "timeout": 5
           },
           {
             "type": "command",
@@ -170,17 +134,12 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/permission-request\"",
             "timeout": 5
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
+          },
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" session-checkpoint",
-            "timeout": 10
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/permission-denied-log\"",
+            "async": true,
+            "timeout": 5
           }
         ]
       }
@@ -192,53 +151,6 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/stop-failure\"",
             "timeout": 5
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" subagent-context-injector",
-            "async": true,
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" subagent-result-capture",
-            "async": true,
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" notification-handler",
-            "async": true,
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "Setup": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" setup-validator",
-            "timeout": 10
           }
         ]
       }

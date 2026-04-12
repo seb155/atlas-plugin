@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# ConfigChange — Audit settings changes during session
+# CC v2.1.41+ | ATLAS Admin Plugin
+set -euo pipefail
+
+INPUT=$(cat)
+TS=$(date '+%H:%M')
+
+echo "🏛️ ATLAS │ ⚙️ CONFIG │ Settings changed at ${TS}"
+
+# Audit log
+echo "${TS} CONFIG-CHANGE" >> "${HOME}/.claude/atlas-audit.log" 2>/dev/null || true

@@ -1,6 +1,0 @@
-#!/bin/bash
-# Hook UserPromptSubmit — Inject timestamp into Claude's context
-# Migrated from ~/.claude/settings.json inline echo
-# Required by CLAUDE.md: "Afficher ce timestamp exact au début de chaque réponse"
-
-echo "📅 $(date '+%Y-%m-%d %H:%M %Z') — OBLIGATOIRE: Afficher ce timestamp exact au début de chaque réponse."

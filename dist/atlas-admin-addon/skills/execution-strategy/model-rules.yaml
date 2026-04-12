@@ -1,0 +1,212 @@
+# Model Allocation Rules v1.0
+# Maps task characteristics to optimal model + execution mode.
+# Used by execution-strategy skill (Step 4 + Step 5).
+# Source of truth for task classification and model assignment.
+
+# ============================================================
+# TASK TYPE CLASSIFICATION
+# ============================================================
+# Signal keywords → task type mapping.
+# First match wins (ordered by specificity).
+
+task_classification:
+  - type: db_migration
+    signals: ["migration", "CREATE TABLE", "ALTER TABLE", "alembic", "schema change"]
+    constraints:
+      - never_parallel  # DB migrations are always sequential
+      - always_first    # Run before services that use new tables
+
+  - type: architecture
+    signals: ["architecture", "design", "diagram", "plan", "brainstorm", "RFC"]
+    constraints:
+      - never_haiku     # Minimum Sonnet for design work
+
+  - type: implementation
+    signals: ["implement", "create", "build", "add", "service", "endpoint", "API", "hook", "component", "page", "frontend"]
+    constraints:
+      - never_haiku     # Minimum Sonnet for implementation
+
+  - type: testing
+    signals: ["test", "pytest", "vitest", "spec", "coverage", "e2e", "playwright"]
+    constraints: []
+
+  - type: review
+    signals: ["review", "audit", "check", "code review", "security scan"]
+    constraints: []
+
+  - type: lint
+    signals: ["lint", "format", "type-check", "ruff", "biome", "tsc --noEmit"]
+    constraints:
+      - always_det      # Bash command, no AI needed
+
+  - type: search
+    signals: ["search", "explore", "find", "investigate", "discover"]
+    constraints:
+      - read_only       # Never write during search
+
+  - type: validation
+    signals: ["validate", "verify", "confirm", "check result", "assert"]
+    constraints: []
+
+# ============================================================
+# MODEL ALLOCATION DEFAULTS
+# ============================================================
+# Default model per task type.
+# Can be overridden by --force-opus, --force-sonnet, --budget flags.
+
+task_type_defaults:
+  db_migration:
+    model: sonnet
+    effort: high
+    mode: solo
+    rationale: "SWE-bench gap 1.2pts (80.8 vs 79.6) — Sonnet handles SQL/migrations at 97-99% quality, 5x cheaper. Opus only for novel schema design."
+
+  architecture:
+    model: opus
+    effort: max
+    mode: solo
+    rationale: "Deep reasoning required for architectural decisions"
+
+  implementation:
+    model: sonnet
+    effort: high
+    mode: subagent  # parallelizable when no shared files
+    rationale: "98% coding quality at 5x lower cost"
+
+  testing:
+    model: sonnet
+    effort: medium
+    mode: subagent
+    rationale: "Tests follow clear patterns, Sonnet handles well"
+
+  review:
+    model: sonnet
+    effort: high
+    mode: solo
+    rationale: "Code review is pattern matching + checklist — Sonnet matches Opus on practical tasks (GDPval 1633 vs 1606). Reserve Opus for architectural review only."
+
+  lint:
+    model: null      # No AI model — bash command
+    effort: low
+    mode: det        # Deterministic: bash command
+    rationale: "Linting/formatting is deterministic — bash, not AI"
+
+  search:
+    model: sonnet
+    effort: low
+    mode: subagent
+    rationale: "Search is read-only, Sonnet is sufficient"
+
+  validation:
+    model: haiku
+    effort: low
+    mode: det        # Most validations are bash commands
+    rationale: "Cheapest capable for verification tasks"
+
+# ============================================================
+# COMPLEXITY FACTORS
+# ============================================================
+# Used for token estimation (Step 7 in SKILL.md).
+# Input tokens = complexity_factor * files_count * avg_lines * 4 (tokens/char)
+
+complexity_factors:
+  architecture: 3.0    # Lots of context needed
+  implementation: 2.0  # Standard coding
+  testing: 1.5         # Follows patterns
+  review: 2.5          # Reads everything
+  validation: 1.0      # Quick checks
+  search: 0.5          # Lightweight reads
+  lint: 0.0            # DET — no tokens
+  db_migration: 2.5    # Schema + data implications
+
+# Output/input ratio (how much output vs input)
+output_ratios:
+  architecture: 0.8    # Lots of reasoning output
+  implementation: 1.5  # More output than input (generates code)
+  testing: 1.2         # Generates test code
+  review: 0.3          # Mostly reads, short output
+  validation: 0.3      # Pass/fail result
+  search: 0.1          # Returns file paths, minimal output
+  lint: 0.0            # DET — no output tokens
+  db_migration: 1.0    # Migration script output
+
+# ============================================================
+# COST-AWARE DOWNGRADE RULES
+# ============================================================
+# When budget is constrained, models can be downgraded.
+# Each rule specifies: source model → target model → conditions.
+
+downgrade_chain:
+  # Opus → Sonnet: for most task types (April 2026 benchmarks: SWE-bench gap only 1.2pts)
+  - from: opus
+    to: sonnet
+    allowed_types: [implementation, testing, search, validation, db_migration, review]
+    forbidden_types: [architecture]  # Only architecture REQUIRES Opus (GPQA gap 17.2pts)
+    savings_pct: 80  # Sonnet is ~5x cheaper than Opus
+
+  # Sonnet → Haiku: only for validation and search (never downgrade coding tasks)
+  - from: sonnet
+    to: haiku
+    allowed_types: [validation, search]
+    forbidden_types: [implementation, testing, architecture, db_migration, review]  # Keep: Sonnet minimum for all coding/review
+    savings_pct: 92  # Haiku is ~12x cheaper than Sonnet
+
+  # Haiku → DET: only if task can be expressed as bash command
+  - from: haiku
+    to: det
+    allowed_types: [validation, lint]
+    forbidden_types: [implementation, testing, architecture, db_migration, review, search]
+    savings_pct: 100 # Free
+
+# ============================================================
+# PARALLEL SAFETY RULES
+# ============================================================
+# Determine which tasks can run simultaneously.
+
+parallelism:
+  never_parallel_types:
+    - db_migration    # Schema changes must be sequential
+    - lint            # DET — runs fast, no benefit from parallelism
+
+  parallel_safe_conditions:
+    - no_shared_files          # Tasks must not touch the same files
+    - no_dependency_edge       # No direct or transitive dependency
+    - no_git_operations        # Commits are always sequential
+    - same_phase_preferred     # Cross-phase parallelism needs explicit approval
+
+  team_mode_threshold:
+    min_tasks: 2               # At least 2 tasks to justify team mode
+    min_speedup_pct: 15        # At least 15% time savings
+    overhead_tokens: 2000      # Coordination overhead per team
+    per_worker_tokens: 500     # Context overhead per worker
+
+# ============================================================
+# EXECUTION MODE DECISION TREE
+# ============================================================
+# Maps (task_type, environment) → execution mode.
+
+execution_modes:
+  det:
+    description: "Deterministic bash command — no AI"
+    when: "task.type in [lint] OR task can be expressed as single bash command"
+    cost: 0
+
+  solo:
+    description: "Execute in current session"
+    when: "single task OR environment lacks tmux/subagent support"
+    cost: "model rate * tokens"
+
+  subagent:
+    description: "Dispatch via Agent tool with specific model"
+    when: "2+ tasks AND (no tmux OR speedup < 15%)"
+    cost: "model rate * tokens + 500 tokens overhead per agent"
+
+  team:
+    description: "tmux Agent Teams — parallel workers in split panes"
+    when: "2+ tasks AND tmux available AND agent_teams_enabled AND speedup >= 15%"
+    cost: "model rate * tokens + 2000 tokens coordination + 500/worker"
+
+  hybrid:
+    description: "Mix of modes across different task groups"
+    when: "plan has both parallelizable and sequential sections"
+    cost: "sum of individual mode costs"

@@ -1,0 +1,38 @@
+#!/bin/bash
+# Hook: PostToolUse(Skill) — Track skill invocation for usage analytics
+# Appends one JSON line per skill invocation to ~/.atlas/skill-usage.jsonl
+# Used by: `atlas plugin usage`, dream Phase 2.7 (Workflow Audit), self-propose
+#
+# Enhanced (SOTA upgrade 2026-04-11):
+#   - duration_ms: how long the skill took
+#   - success: whether tool_output indicates success
+#   - model: which Claude model was used
+#   - context_tokens: approximate context size at invocation time
+#
+# Exit 0 always (never block)
+
+INPUT=$(cat)
+SKILL_NAME=$(echo "$INPUT" | jq -r '.tool_input.skill // "unknown"')
+SKILL_ARGS=$(echo "$INPUT" | jq -r '.tool_input.args // ""')
+TIMESTAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
+
+# Enhanced fields
+DURATION_MS=$(echo "$INPUT" | jq -r '.duration_ms // 0')
+TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_output // ""' | head -c 200)
+MODEL="${CLAUDE_MODEL:-unknown}"
+
+# Detect success: no "error" or "Error" in first 200 chars of output
+SUCCESS="true"
+if echo "$TOOL_OUTPUT" | grep -qiE '(error|failed|exception|denied)'; then
+  SUCCESS="false"
+fi
+
+# Ensure directory exists
+mkdir -p "$HOME/.atlas" 2>/dev/null
+
+LOG_FILE="$HOME/.atlas/skill-usage.jsonl"
+echo "{\"ts\":\"$TIMESTAMP\",\"skill\":\"$SKILL_NAME\",\"args\":\"$SKILL_ARGS\",\"session\":\"$SESSION_ID\",\"duration_ms\":$DURATION_MS,\"success\":$SUCCESS,\"model\":\"$MODEL\"}" \
+  >> "$LOG_FILE" 2>/dev/null
+
+exit 0

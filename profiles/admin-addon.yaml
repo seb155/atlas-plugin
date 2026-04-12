@@ -1,148 +1,103 @@
-# ATLAS Admin Addon v5.0 — Superuser Tools (plugin:dev + plugin:admin skills)
-# Install: atlas-core + atlas-admin (gives ALL dev + admin capabilities)
-# Admin users do NOT need dev-addon separately — this includes dev skills
 tier: admin-addon
-description: "Superuser — includes dev tools + infra, security, governance, GMS"
-
+description: Superuser — includes dev tools + infra, security, governance, GMS
 skills:
-  # === DEV SKILLS (included so admin doesn't need separate dev-addon) ===
-  # Planning & Design
-  - brainstorming
-  - plan-builder
-  - execution-strategy
-  - frontend-design
-  - frontend-workflow
-  - vision-alignment
-  - interactive-flow
-
-  # Implementation
-  - executing-plans
-  - subagent-dispatch
-  - tdd
-  - git-worktrees
-  - browser-automation
-
-  # Quality & Review
-  - code-review
-  - code-simplify
-  - systematic-debugging
-  - verification
-  - test-orchestrator
-  - visual-qa
-  - api-healthcheck
-
-  # Ship
-  - finishing-branch
-  - ship-all
-  - forgejo-pr
-  - ci-management
-
-  # Meta / Tooling
-  - decision-log
-  - hookify
-  - plugin-builder
-  - skill-management
-  - engineering-ops
-  - visual-generator
-
-  # === ADMIN-ONLY SKILLS ===
-  # Infrastructure & Deploy
-  - devops-deploy
-  - deploy-hotfix
-  - infrastructure-ops
-  - infrastructure-change
-  - statusline-setup
-
-  # Security & Governance
-  - security-audit
-  - enterprise-audit
-  - codebase-audit
-  - code-analysis
-  - product-health
-  - plan-review
-
-  # Programme & Feature Management
-  - programme-manager
-  - feature-board
-  - onboarding-check
-  - marketplace-manager
-  - persona-loadout
-  - auto-orchestrator
-  - platform-update
-
-  # Knowledge & Research
-  - knowledge-engine
-  - knowledge-manager
-  - experiment-loop
-  - idle-curiosity
-
-  # Teams & Sessions
-  - atlas-team
-  - atlas-dev-self
-
-  # GMS (G Mining)
-  - gms-cockpit
-  - gms-profiler
-  - gms-onboard
-  - gms-insights
-
-  # Analytics
-  - atlas-analytics
-  - ultrathink
-
+- brainstorming
+- plan-builder
+- execution-strategy
+- frontend-design
+- frontend-workflow
+- vision-alignment
+- interactive-flow
+- executing-plans
+- subagent-dispatch
+- tdd
+- git-worktrees
+- browser-automation
+- code-review
+- code-simplify
+- systematic-debugging
+- verification
+- test-orchestrator
+- visual-qa
+- api-healthcheck
+- finishing-branch
+- ship-all
+- forgejo-pr
+- ci-management
+- decision-log
+- hookify
+- plugin-builder
+- skill-management
+- engineering-ops
+- visual-generator
+- devops-deploy
+- deploy-hotfix
+- infrastructure-ops
+- infrastructure-change
+- statusline-setup
+- security-audit
+- enterprise-audit
+- codebase-audit
+- code-analysis
+- product-health
+- plan-review
+- programme-manager
+- feature-board
+- onboarding-check
+- marketplace-manager
+- persona-loadout
+- auto-orchestrator
+- platform-update
+- knowledge-engine
+- knowledge-manager
+- experiment-loop
+- idle-curiosity
+- atlas-team
+- atlas-dev-self
+- gms-cockpit
+- gms-profiler
+- gms-onboard
+- gms-insights
+- atlas-analytics
+- ultrathink
 refs:
-  - composition-patterns
-  - react-best-practices
-  - web-design-guidelines
-  - gmining-excel
-  - model-benchmarks-2026-04
-
+- composition-patterns
+- react-best-practices
+- web-design-guidelines
+- gmining-excel
+- model-benchmarks-2026-04
 hooks:
-  # All dev hooks
-  - post-edit-lint
-  - enterprise-check
-  - test-impact-analysis
-  - code-quality-check
-  - frontend-ux-gate
-  - skill-usage-tracker
-  - ci-auto-monitor
-  - enforce-worktree-name
-  - cleanup-worktrees
-  # Admin-specific hooks
-  - detect-stale-plans
-  - session-end-memory-cleanup
-  - session-end-cleanup
-  - precompact-snapshot
-  - post-compact
-  - session-checkpoint
-  - suggest-episode
-  - subagent-context-injector
-  - subagent-result-capture
-  - notification-handler
-  - config-change
-  - instructions-loaded
-  - setup-validator
-
+- post-edit-lint
+- enterprise-check
+- test-impact-analysis
+- code-quality-check
+- frontend-ux-gate
+- skill-usage-tracker
+- ci-auto-monitor
+- enforce-worktree-name
+- cleanup-worktrees
+- session-end-memory-cleanup
+- post-compact
+- suggest-episode
+- config-change
+- instructions-loaded
 agents:
-  # Dev agents
-  - plan-architect
-  - plan-reviewer
-  - code-reviewer
-  - team-engineer
-  - team-tester
-  - team-researcher
-  - design-implementer
-  # Admin agents
-  - context-scanner
-  - experiment-runner
-  - team-reviewer
-  - team-security
-  - team-coordinator
-  - data-engineer
-  - devops-engineer
-  - domain-analyst
-  - infra-expert
-
-persona: "infrastructure architect"
-pipeline: "DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFRA"
-banner_label: "Admin"
+- plan-architect
+- plan-reviewer
+- code-reviewer
+- team-engineer
+- team-tester
+- team-researcher
+- design-implementer
+- context-scanner
+- experiment-runner
+- team-reviewer
+- team-security
+- team-coordinator
+- data-engineer
+- devops-engineer
+- domain-analyst
+- infra-expert
+persona: infrastructure architect
+pipeline: DISCOVER → PLAN → STRATEGY → IMPLEMENT → VERIFY → SHIP → DEPLOY → INFRA
+banner_label: Admin

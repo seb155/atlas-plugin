@@ -58,6 +58,9 @@ def _get_hook_scripts_on_disk() -> set[str]:
         if item.name in SKIP_NAMES:
             continue
         if item.is_dir():
+            # Support directory-based hooks (e.g., ci-auto-monitor/handler.sh)
+            if (item / "handler.sh").exists():
+                scripts.add(item.name)
             continue
         if item.is_file():
             scripts.add(item.name)
@@ -102,9 +105,10 @@ class TestHookConsistency:
         in_json = _extract_script_names_from_hooks_json()
 
         orphans = on_disk - in_json
-        # Filter: run-hook.sh subcommands are referenced as "run-hook.sh:name"
-        # So standalone scripts in hooks/ that ARE referenced are fine
-        # Orphans = scripts that exist on disk but are never invoked
+        # Directory-based hooks (e.g. ci-auto-monitor/) are registered via profile YAML,
+        # not hooks.json — exclude them from orphan check
+        dir_hooks = {d.name for d in HOOKS_DIR.iterdir() if d.is_dir() and d.name not in ("lib", "ts")}
+        orphans -= dir_hooks
         assert not orphans, (
             f"Orphaned hook scripts (on disk but not in hooks.json): {orphans}\n"
             f"These scripts should either be referenced in hooks.json or removed."
