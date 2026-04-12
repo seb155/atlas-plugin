@@ -38,6 +38,14 @@ EXTRA_ARGS=("$@")
 JSON_FLAG=""
 SINCE_FLAG=""
 UNTIL_FLAG=""
+WITH_EVALS=""
+
+# v4.42: parse --with-evals flag (includes eval harness runs in cost summary)
+for arg in "${EXTRA_ARGS[@]}"; do
+  if [[ "$arg" == "--with-evals" ]]; then
+    WITH_EVALS="true"
+  fi
+done
 BREAKDOWN_FLAG="--breakdown"
 
 # Parse extra args
@@ -357,3 +365,39 @@ print(f'\${total_cost:.2f} today')
     exit 1
     ;;
 esac
+
+# v4.42: --with-evals adds summary of eval harness costs from .blueprint/eval-runs/
+if [ "$WITH_EVALS" = "true" ]; then
+  echo ""
+  echo -e "${BOLD}Eval Harness Activity${NC}"
+  EVAL_DIR=""
+  for candidate in "$(pwd)/.blueprint/eval-runs" "$HOME/workspace_atlas/projects/atlas/synapse/.blueprint/eval-runs"; do
+    if [ -d "$candidate" ]; then
+      EVAL_DIR="$candidate"
+      break
+    fi
+  done
+  if [ -n "$EVAL_DIR" ]; then
+    RUN_COUNT=$(ls "$EVAL_DIR"/eval-*.json 2>/dev/null | wc -l)
+    echo "  Eval runs: ${RUN_COUNT} in $EVAL_DIR"
+    if [ "$RUN_COUNT" -gt 0 ]; then
+      LATEST=$(ls -t "$EVAL_DIR"/eval-*.json 2>/dev/null | head -1)
+      LATEST_NAME=$(basename "$LATEST" .json)
+      echo "  Latest:    $LATEST_NAME"
+      python3 -c "
+import json
+try:
+    with open('$LATEST') as f:
+        d = json.load(f)
+    s = d.get('summary', {})
+    print(f\"  Pass rate: {s.get('pass_rate', 0)*100:.1f}% ({s.get('passed', 0)}/{s.get('total', 0)})\")
+    print(f\"  Tokens:    {s.get('total_tokens', 0):,}\")
+    print(f\"  Cost:      \${s.get('total_cost_usd', 0):.4f}\")
+except Exception as e:
+    print(f\"  (could not parse: {e})\")
+"
+    fi
+  else
+    echo "  ${DIM}(no eval harness data found; run 'python3 -m toolkit.evals run' first)${NC}"
+  fi
+fi

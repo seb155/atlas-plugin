@@ -16,7 +16,7 @@ When this skill is injected at session start (via SessionStart hook), your VERY 
 in the conversation MUST begin with this banner to confirm the plugin is loaded:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.41.0 Core
+🏛️ ATLAS │ ✅ SESSION │ v4.42.0 Core
    22 skills │ 1 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
@@ -98,6 +98,29 @@ This is not optional. Check available skills BEFORE responding. Skills tell you 
 
 ### 🔐 Security
 - 🔐 atlas-vault
+
+## External Tools (auto-detected at SessionStart)
+
+Non-ATLAS capabilities discovered in this environment. Protocol docs: `skills/refs/external-tools/{name}.md`
+
+### Routing Heuristics
+
+| User Intent | Primary Tool | Fallback | Priority |
+|-------------|-------------|----------|----------|
+| Library/framework docs | context7 | WebSearch → WebFetch | 9 |
+| Browser automation (headless) | playwright | chrome MCP | 8 |
+| Browser automation (interactive) | chrome MCP | playwright | 8 |
+| TS/JS symbol navigation | typescript-lsp (LSP tool) | Grep + Read | 7 |
+| Java symbol navigation | jdtls-lsp (LSP tool) | Grep + Read | 6 |
+| Diagrams / visual | excalidraw | Mermaid in markdown | 5 |
+| Code quality post-edit | code-simplifier agent | Manual review | 4 |
+| UI from mockup | frontend-design agent | Manual coding | 4 |
+
+### External Tool Rules
+- Check tool availability before calling (deferred tools need ToolSearch first)
+- Read `references/external-tools/{name}.md` for detailed protocol on first use
+- If tool call fails → use fallback, don't retry > 2 times
+- Tools not in this table may still be available — check SessionStart banner
 
 ## Pipeline (Automatic)
 
