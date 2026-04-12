@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "atlas-core",
-      "version": "4.46.1",
-      "description": "ATLAS Core v5 \u2014 shared base (25 skills)",
+      "version": "5.0.0",
+      "description": "ATLAS Core \u2014 shared base (25 skills). Session, memory, context, personal.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -21,8 +21,8 @@
     },
     {
       "name": "atlas-admin",
-      "version": "4.46.1",
-      "description": "ATLAS Admin v5 \u2014 superuser addon (59 skills)",
+      "version": "5.0.0",
+      "description": "ATLAS Admin \u2014 superuser addon (59 skills). Dev tools + infra, security, governance.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -34,8 +34,8 @@
     },
     {
       "name": "atlas-dev",
-      "version": "4.46.1",
-      "description": "ATLAS Dev v5 \u2014 developer addon (29 skills)",
+      "version": "5.0.0",
+      "description": "ATLAS Dev \u2014 developer addon (29 skills). Planning, TDD, review, shipping.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -47,7 +47,7 @@
     },
     {
       "name": "atlas-frontend",
-      "version": "4.46.1",
+      "version": "5.0.0",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -55,11 +55,12 @@
       },
       "author": {
         "name": "Seb Gagnon"
-      }
+      },
+      "description": "ATLAS Frontend \u2014 FE addon (5 skills). Design, browser, visual QA."
     },
     {
       "name": "atlas-infra",
-      "version": "4.46.1",
+      "version": "5.0.0",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -67,11 +68,12 @@
       },
       "author": {
         "name": "Seb Gagnon"
-      }
+      },
+      "description": "ATLAS Infra \u2014 ops addon (6 skills). Infrastructure, deploy, network."
     },
     {
       "name": "atlas-enterprise",
-      "version": "4.46.1",
+      "version": "5.0.0",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -79,7 +81,8 @@
       },
       "author": {
         "name": "Seb Gagnon"
-      }
+      },
+      "description": "ATLAS Enterprise \u2014 governance addon (1 skill). Self-improvement engine."
     }
   ]
 }

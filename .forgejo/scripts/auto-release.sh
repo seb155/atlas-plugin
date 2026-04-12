@@ -62,7 +62,7 @@ echo "📊 ${COMMIT_COUNT} commits since ${LAST_TAG}"
 FEAT_COUNT=$(echo "$COMMITS" | grep -cE '^feat(\(|:)' || true)
 FIX_COUNT=$(echo "$COMMITS" | grep -cE '^fix(\(|:)' || true)
 PERF_COUNT=$(echo "$COMMITS" | grep -cE '^perf(\(|:)' || true)
-BREAKING_COUNT=$(echo "$COMMITS" | grep -cE 'BREAKING[ _]CHANGE|^[a-z]+(\([^)]*\))?!:' || true)
+BREAKING_COUNT=$(echo "$COMMITS" | grep -cE 'BREAKING[ _]CHANGE|^[a-z]+!(\(|:)|^[a-z]+(\([^)]*\))?!:' || true)
 CHORE_COUNT=$(echo "$COMMITS" | grep -cE '^(chore|docs|style|refactor|test|build|ci)(\(|:)' || true)
 
 echo "   feat: ${FEAT_COUNT} | fix: ${FIX_COUNT} | perf: ${PERF_COUNT} | breaking: ${BREAKING_COUNT} | other: ${CHORE_COUNT}"

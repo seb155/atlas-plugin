@@ -1,7 +1,7 @@
 {
   "name": "atlas-core",
-  "version": "4.46.1",
-  "description": "ATLAS Core v5 \u2014 shared base",
+  "version": "5.0.0",
+  "description": "ATLAS Core \u2014 shared base (25 skills)",
   "author": {
     "name": "AXOIQ",
     "email": "dev@axoiq.com"
