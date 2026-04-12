@@ -22,6 +22,7 @@ skills:
 refs:
   - web-design-guidelines
   - atlas-visual-identity
+  - external-tools
 
 hooks:  # Hook scripts — run automatically on CC lifecycle events
   - session-start
@@ -42,6 +43,8 @@ hooks:  # Hook scripts — run automatically on CC lifecycle events
   - permission-denied-log
   - cwd-changed-env
   - policy-drift-detector
+  # SP-EXT: External capabilities discovery (LSP, MCP, plugins)
+  - external-capabilities
 
 agents:
   - context-scanner

@@ -1,6 +1,6 @@
 ---
 name: atlas-doctor
-description: "System health check with auto-fix for the ATLAS ecosystem. 8-category diagnostic: OS, permissions, tools, tokens, services, Claude Code, plugin, project context. Use when 'doctor', 'diagnose', 'health check', 'verify installation', 'system status', or 'troubleshoot'."
+description: "System health check with auto-fix for the ATLAS ecosystem. 8-category diagnostic: OS, permissions, tools, tokens, services, Claude Code, plugin, project context. Use when 'doctor', 'diagnose', 'health check', 'verify installation', 'system status', 'troubleshoot', 'doctor plugins', 'check plugins', 'external tools health', or 'plugin health'."
 effort: medium
 ---
 
@@ -13,6 +13,7 @@ Comprehensive diagnostic of the entire ATLAS ecosystem. Runs bash checks across 
 | Command | Action |
 |---------|--------|
 | `/atlas doctor` | Full health dashboard (read-only) |
+| `/atlas doctor plugins` | External tools health only (Cat 12) — fast check + auto-fix |
 | `/atlas doctor --fix` | Dashboard + HITL review: explain each issue, propose fix, validate one by one |
 | `/atlas doctor --fix-all` | Dashboard + apply all fixes automatically (no HITL per issue) |
 | `/atlas doctor tokens` | Check tokens only |
@@ -640,52 +641,121 @@ Auto-fix suggestions:
 | Missing PostCompact hook | Wire `$HOME/.claude/hooks/post-compact.sh` in global hooks |
 | Missing StopFailure hook | Add API error logging hook to global settings |
 
-### Cat 12: MCP Servers & Plugins (6 checks)
+### Cat 12: External Tools Health (dynamic, score 0-10)
+
+**Trigger shortcut**: `/atlas doctor plugins` — runs ONLY this category for quick checks.
+
+**How it works**: Reads the external capabilities cache (`~/.atlas/data/external-tools-cache.json`) produced by the SessionStart `external-capabilities` hook. If cache is missing or stale (>48h), re-runs the discovery hook first.
 
 ```bash
-PROJECT=".claude/settings.json"
+CACHE="$HOME/.atlas/data/external-tools-cache.json"
+REGISTRY="$HOME/.claude/plugins/installed_plugins.json"
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
+REF_DIR="${PLUGIN_ROOT}/skills/refs/external-tools"
 
-# 1. Context7 MCP configured
-cat .mcp.json 2>/dev/null | python3 -c "
-import sys,json; d=json.load(sys.stdin)
-s=d.get('mcpServers',{})
-print('ok' if 'context7' in s else 'MISSING')
-" 2>/dev/null || echo "no .mcp.json"
+# Re-scan if cache missing or stale
+if [ ! -f "$CACHE" ] || [ $(($(date +%s) - $(stat -c '%Y' "$CACHE" 2>/dev/null || echo 0))) -gt 172800 ]; then
+  "$PLUGIN_ROOT/hooks/external-capabilities" >/dev/null 2>&1 || true
+fi
 
-# 2. Playwright MCP configured
-cat .mcp.json 2>/dev/null | python3 -c "
-import sys,json; d=json.load(sys.stdin)
-print('ok' if 'playwright' in d.get('mcpServers',{}) else 'MISSING')
-" 2>/dev/null || echo "no .mcp.json"
+# Dynamic health check
+python3 -c "
+import json, os, sys
 
-# 3. Official plugins installed (from project settings enabledPlugins)
-cat "$PROJECT" 2>/dev/null | python3 -c "
-import sys,json; d=json.load(sys.stdin)
-p=d.get('enabledPlugins',{})
-expected=['context7','playwright','pr-review-toolkit','commit-commands','plugin-dev']
-installed=[k.split('@')[0] for k in p if p[k]]
-missing=[e for e in expected if e not in installed]
-print(f'{len(installed)} installed' + (f', MISSING: {missing}' if missing else ''))
+cache_path = '$CACHE'
+ref_dir = '$REF_DIR'
+registry_path = '$REGISTRY'
+
+if not os.path.isfile(cache_path):
+    print('❌ Cache missing — run: hooks/external-capabilities')
+    sys.exit(0)
+
+with open(cache_path) as f:
+    cache = json.load(f)
+
+score = 10
+issues = []
+fixes = []
+
+# Check each discovered plugin
+for p in cache.get('plugins', []):
+    name = p['name']
+    has_mcp = p.get('has_mcp', False)
+    has_ref = os.path.isfile(os.path.join(ref_dir, f'{name}.md'))
+
+    # MCP plugin without reference doc
+    if has_mcp and not has_ref:
+        issues.append(f'⚠️  {name}: MCP active but no usage docs')
+        fixes.append(f'Create references/external-tools/{name}.md from _TEMPLATE.md')
+        score -= 0.5
+
+# Check for reference orphans (reference file but plugin not installed)
+if os.path.isdir(ref_dir):
+    installed_names = {p['name'] for p in cache.get('plugins', [])}
+    for ref_file in os.listdir(ref_dir):
+        if ref_file.startswith('_') or not ref_file.endswith('.md'):
+            continue
+        ref_name = ref_file.replace('.md', '')
+        # LSP refs use the LSP tool directly, not a plugin
+        if ref_name in ('typescript-lsp', 'jdtls-lsp'):
+            continue
+        if ref_name not in installed_names:
+            issues.append(f'⚠️  {ref_name}.md: reference exists but plugin not installed')
+            fixes.append(f'Install: /plugin install {ref_name}  OR  remove stale ref')
+            score -= 0.5
+
+# Check LSP servers
+for lsp in cache.get('lsp_servers', []):
+    lsp_id = lsp['id']
+    has_ref = os.path.isfile(os.path.join(ref_dir, f'{lsp_id}.md'))
+    if not has_ref:
+        issues.append(f'⚠️  {lsp_id}: LSP installed but no usage docs')
+        score -= 0.5
+
+# Check project MCP servers
+for mcp in cache.get('mcp_servers', []):
+    if not mcp.get('enabled', True):
+        issues.append(f'❌ {mcp[\"name\"]}: project MCP server disabled')
+        fixes.append(f'Enable in .claude/settings.local.json enabledMcpjsonServers')
+        score -= 1
+
+score = max(0, min(10, int(score)))
+status = '✅' if score >= 8 else '⚠️' if score >= 5 else '❌'
+
+# Output
+total_plugins = len(cache.get('plugins', []))
+total_mcp = sum(1 for p in cache.get('plugins', []) if p.get('has_mcp'))
+total_lsp = len(cache.get('lsp_servers', []))
+
+print(f'{status} External Tools: {score}/10 — {total_plugins} plugins, {total_mcp} MCP, {total_lsp} LSP')
+for issue in issues:
+    print(f'   {issue}')
+if fixes:
+    print()
+    print('🔧 Auto-fix suggestions (HITL gate required):')
+    for i, fix in enumerate(fixes, 1):
+        print(f'   {i}. {fix}')
 "
-
-# 4. Figma MCP (optional)
-cat .mcp.json 2>/dev/null | python3 -c "
-import sys,json; d=json.load(sys.stdin)
-print('ok' if 'figma' in d.get('mcpServers',{}) else 'optional: not configured')
-" 2>/dev/null || echo "optional"
-
-# 5. Chrome MCP (claude-in-chrome) responding
-# Can't test directly — check if --chrome flag is available
-claude --help 2>/dev/null | grep -q "chrome" && echo "ok" || echo "MISSING chrome support"
-
-# 6. .mcp.json is valid JSON
-cat .mcp.json 2>/dev/null | python3 -c "import sys,json; json.load(sys.stdin); print('valid')" 2>/dev/null || echo "no .mcp.json"
 ```
+
+**Scoring**:
+- 10/10: All tools healthy, all MCP-active plugins have reference docs
+- 7-9: Minor issues (missing reference files for optional plugins)
+- 4-6: MCP servers disabled or critical tools without docs
+- 0-3: Cache missing or major configuration problems
+
+**Auto-fix actions** (all require HITL confirmation via AskUserQuestion):
+- Plugin not installed → `/plugin install {name}`
+- MCP not enabled → add to `enabledMcpjsonServers` in settings
+- Reference orphan → remove stale `.md` file or install missing plugin
+- Cache stale → re-run `hooks/external-capabilities`
 
 Display:
 ```
-🏛️ ATLAS │ 🔌 PLUGINS │ {N} MCP servers │ {N} plugins
-   └─ Context7: {ok} │ Playwright: {ok} │ Figma: {ok} │ Chrome: {ok}
+🏛️ ATLAS │ 🔌 PLUGINS │ {score}/10
+   {N} plugins │ {N} MCP │ {N} LSP
+   ⚠️ {issues if any}
+   🔧 {N} fixes available
 ```
 
 ### Cat 13: Domain Plugin Health (SP-ECO v4)
