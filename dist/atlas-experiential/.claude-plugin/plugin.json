@@ -1,8 +1,8 @@
 {
   "name": "atlas-experiential",
-  "version": "4.40.0",
+  "version": "4.41.0",
   "description": "Experiential — episode capture, intuition logging, relationship memory.",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-11T23:42:30Z"
+  "buildTimestamp": "2026-04-12T01:18:37Z"
 }
