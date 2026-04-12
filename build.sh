@@ -491,6 +491,151 @@ EOF
   echo "   ${skill_count} skills | ${agent_count} agents | ${cmd_count} commands"
 }
 
+# ── v5 Plugin build (core + addons, zero duplication) ─────────
+# Reads skills directly from profile YAML (like domain builds).
+# Profile path: profiles/{name}.yaml or profiles/{name}-addon.yaml
+V5_PLUGINS=(core dev-addon admin-addon)
+
+build_v5_plugin() {
+  local name="$1"
+  local profile=""
+  local output_name=""
+
+  # Resolve profile path and output name
+  if [ -f "profiles/${name}.yaml" ]; then
+    profile="profiles/${name}.yaml"
+    output_name="$name"
+  elif [ -f "profiles/${name}-addon.yaml" ]; then
+    profile="profiles/${name}-addon.yaml"
+    output_name="${name%-addon}"  # dev-addon → dev
+  else
+    echo "❌ v5 profile not found for: $name"
+    exit 1
+  fi
+
+  local output="dist/atlas-${output_name}"
+  local desc
+  desc=$(yq -r '.description // "ATLAS v5 plugin"' "$profile")
+
+  echo "🔨 Building atlas-${output_name} (v5) v${VERSION}..."
+
+  rm -rf "$output"
+  mkdir -p "$output"/{.claude-plugin,skills,agents,hooks}
+
+  # Skills: read directly from profile YAML
+  local skills
+  skills=$(yq -r '.skills // [] | .[]' "$profile" 2>/dev/null || true)
+
+  for skill in $skills; do
+    if [ -d "skills/$skill" ]; then
+      cp -r "skills/$skill" "$output/skills/"
+    else
+      echo "  ⚠️  Skill not found: $skill (skipped)"
+    fi
+  done
+
+  # Refs
+  local refs
+  refs=$(yq -r '.refs // [] | .[]' "$profile" 2>/dev/null || true)
+  if [ -n "$refs" ]; then
+    mkdir -p "$output/skills/refs"
+    for ref in $refs; do
+      [ -d "skills/refs/$ref" ] && cp -r "skills/refs/$ref" "$output/skills/refs/"
+    done
+  fi
+
+  # Agents
+  local agents
+  agents=$(yq -r '.agents // [] | .[]' "$profile" 2>/dev/null || true)
+  for agent in $agents; do
+    [ -d "agents/$agent" ] && cp -r "agents/$agent" "$output/agents/"
+  done
+
+  # Hooks
+  local hooks
+  hooks=$(yq -r '.hooks // [] | .[]' "$profile" 2>/dev/null || true)
+  if [ -z "$hooks" ]; then
+    echo '{"hooks":{}}' > "$output/hooks/hooks.json"
+  else
+    # shellcheck disable=SC2086
+    python3 scripts/filter-hooks-json.py hooks/hooks.json $hooks > "$output/hooks/hooks.json"
+    for hook_name in $hooks; do
+      if [ -d "hooks/$hook_name" ]; then
+        cp -r "hooks/$hook_name" "$output/hooks/"
+      elif [ -x "hooks/$hook_name" ]; then
+        cp "hooks/$hook_name" "$output/hooks/"
+      fi
+    done
+    [ -d "hooks/lib" ] && mkdir -p "$output/hooks/lib" && cp hooks/lib/*.sh "$output/hooks/lib/" 2>/dev/null || true
+    [ -x "hooks/run-hook.sh" ] && cp "hooks/run-hook.sh" "$output/hooks/"
+    [ -d "hooks/ts" ] && cp -r "hooks/ts" "$output/hooks/"
+  fi
+
+  # Runtime scripts: core plugin gets scripts/, addons don't
+  if [ "$output_name" = "core" ]; then
+    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh)
+    mkdir -p "$output/scripts"
+    for script in "${runtime_scripts[@]}"; do
+      [ -f "scripts/$script" ] && cp "scripts/$script" "$output/scripts/" && chmod +x "$output/scripts/$script"
+    done
+    [ -d "scripts/atlas-modules" ] && mkdir -p "$output/scripts/atlas-modules" && cp scripts/atlas-modules/*.sh "$output/scripts/atlas-modules/" && chmod +x "$output/scripts/atlas-modules/"*.sh
+    [ -d "scripts/presets" ] && mkdir -p "$output/scripts/presets" && cp scripts/presets/*.json "$output/scripts/presets/" 2>/dev/null || true
+    [ -f "scripts/cship.toml" ] && cp "scripts/cship.toml" "$output/scripts/"
+    [ -f "$output/scripts/atlas-cli.sh" ] && sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"${VERSION}\"/" "$output/scripts/atlas-cli.sh"
+  fi
+
+  # VERSION + settings
+  cp VERSION "$output/VERSION"
+  [ -f "settings.json" ] && cp settings.json "$output/settings.json"
+
+  # Generate atlas-assist for this v5 plugin
+  local tier_label
+  tier_label=$(yq -r '.tier // "core"' "$profile")
+  mkdir -p "$output/skills/atlas-assist"
+  if [ -f "scripts/generate-master-skill.sh" ]; then
+    ./scripts/generate-master-skill.sh "$tier_label" "$output/skills/atlas-assist/SKILL.md" 2>/dev/null || \
+    echo "⚠️  atlas-assist generation skipped (generate-master-skill.sh needs tier=${tier_label})"
+  fi
+
+  # plugin.json
+  local build_ts
+  build_ts=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+  cat > "$output/.claude-plugin/plugin.json" <<EOF
+{
+  "name": "atlas-${output_name}",
+  "version": "${VERSION}",
+  "description": "${desc}",
+  "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "license": "UNLICENSED",
+  "buildTimestamp": "${build_ts}"
+}
+EOF
+
+  # marketplace.json — single marketplace for v5
+  cat > "$output/.claude-plugin/marketplace.json" <<EOF
+{
+  "name": "atlas-marketplace",
+  "owner": { "name": "AXOIQ", "email": "dev@axoiq.com" },
+  "plugins": [
+    {
+      "name": "atlas-${output_name}",
+      "description": "${desc}",
+      "version": "${VERSION}",
+      "source": { "source": "git", "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git" },
+      "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
+    }
+  ]
+}
+EOF
+
+  local skill_count agent_count
+  skill_count=$(find "$output/skills" -maxdepth 2 -name "SKILL.md" | wc -l)
+  agent_count=$(find "$output/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+
+  echo "✅ Built atlas-${output_name} (v5) v${VERSION} → ${output}/"
+  echo "   ${skill_count} skills | ${agent_count} agents"
+}
+
 # Main
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  ATLAS Plugin Builder v${VERSION}"
@@ -521,6 +666,20 @@ elif [ "$TIERS" = "domain" ]; then
     exit 1
   fi
   build_domain "$DOMAIN_NAME"
+elif [ "$TIERS" = "v5" ]; then
+  for p in "${V5_PLUGINS[@]}"; do
+    build_v5_plugin "$p"
+    echo ""
+  done
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  All v5 plugins built successfully!"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+elif [ "$TIERS" = "v5-core" ]; then
+  build_v5_plugin "core"
+elif [ "$TIERS" = "v5-dev" ]; then
+  build_v5_plugin "dev-addon"
+elif [ "$TIERS" = "v5-admin" ]; then
+  build_v5_plugin "admin-addon"
 else
   build_tier "$TIERS"
 fi
