@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.46.0 (2026-04-12)
+
+### ✨ Features
+- feat(dedup): SP-DEDUP Phase 1 — v5 build system (core + addons)
+
+
+
 ## v4.45.0 (2026-04-12)
 
 ### ✨ Features
