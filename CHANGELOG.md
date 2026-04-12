@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.44.0 (2026-04-12)
+
+### ✨ Features
+- feat(ci): 3-tier test strategy — L1 structural, L2 build, L3 integration
+
+
+
 ## v4.43.1 (2026-04-12)
 
 ### 🐛 Bug Fixes
