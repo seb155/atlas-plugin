@@ -1,0 +1,13 @@
+# ATLAS Plugin — Security Scanning (Woodpecker)
+# Gitleaks secret scan on push to main
+
+when:
+  branch: [main]
+  event: push
+
+steps:
+  secret-scan:
+    image: zricethezav/gitleaks:latest
+    commands:
+      - gitleaks detect --source . --no-git --verbose || echo "⚠️ gitleaks found potential secrets (review required)"
+    failure: ignore

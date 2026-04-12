@@ -578,7 +578,7 @@ For contributors developing the ATLAS plugin itself:
 
 ```bash
 # Clone the source repo (Forgejo or GitHub)
-git clone ssh://forgejo/atlas/atlas-plugin.git ~/workspace_atlas/projects/atlas-dev-plugin
+git clone ssh://forgejo/axoiq/atlas-plugin.git ~/workspace_atlas/projects/atlas-dev-plugin
 cd ~/workspace_atlas/projects/atlas-dev-plugin
 
 # Install dependencies

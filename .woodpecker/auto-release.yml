@@ -1,0 +1,45 @@
+# ATLAS Plugin — Auto-Release Pipeline (Woodpecker)
+# Conventional commits → SemVer bump → tag → Forgejo Release
+#
+# Triggers: push to main (excludes root .md files)
+# Uses: .forgejo/scripts/auto-release.sh (SSoT for release logic)
+#
+# Commit types → bump:
+#   feat(*) → minor | fix(*)/perf(*) → patch | feat!(*) → major
+#   chore/docs/build/ci/refactor/test/style → NO bump (skipped)
+
+when:
+  branch: main
+  event: push
+  path:
+    exclude:
+      - "README.md"
+      - "CHANGELOG.md"
+      - "ONBOARDING.md"
+      - "DEPLOYMENT.md"
+      - "ARCHITECTURE.md"
+      - "PARALLELISM.md"
+      - "docs/**"
+      - "evals/**"
+
+steps:
+  auto-release:
+    image: python:3.13-slim
+    commands:
+      - apt-get update -qq && apt-get install -y -qq bash git curl yq > /dev/null 2>&1 || true
+      - pip install pyyaml -q
+      # Configure git for the release commit
+      - git config user.name "atlas-ci"
+      - git config user.email "ci@axoiq.com"
+      # Set authenticated remote for push
+      - git remote set-url origin "https://oauth2:${FORGEJO_TOKEN}@forgejo.axoiq.com/${CI_REPO}"
+      # Fetch full history + tags (Woodpecker does shallow clone by default)
+      - git fetch --unshallow 2>/dev/null || git fetch --all
+      - git fetch --tags
+      # Run the SSoT auto-release script
+      - ./.forgejo/scripts/auto-release.sh
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
+      FORGEJO_API_URL: "https://forgejo.axoiq.com/api/v1"
+      GITHUB_REPOSITORY: ${CI_REPO}

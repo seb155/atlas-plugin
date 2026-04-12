@@ -1,7 +1,7 @@
 # ATLAS Plugin — Claude Code AI Engineering Assistant
 
 > **Stack**: Bash + yq + Python (tests) | **Version**: `cat VERSION` | **Branch**: `main`
-> **Repo**: `forgejo.axoiq.com/atlas/atlas-plugin` | **Owner**: Seb Gagnon (AXOIQ)
+> **Repo**: `forgejo.axoiq.com/axoiq/atlas-plugin` | **Owner**: Seb Gagnon (AXOIQ)
 
 ## IDENTITY
 

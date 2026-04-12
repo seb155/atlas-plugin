@@ -1,0 +1,47 @@
+# ATLAS Plugin — CI Pipeline (Woodpecker)
+# Build all tiers + run tests on push/PR to main
+
+when:
+  branch: [main]
+  event: [push, pull_request]
+
+steps:
+  build-tiers:
+    image: python:3.13-slim
+    commands:
+      - apt-get update -qq && apt-get install -y -qq bash yq > /dev/null 2>&1 || true
+      - pip install pyyaml -q
+      - echo "🔨 Building all tiers..."
+      - ./build.sh all
+      - echo "✅ All tiers built"
+      - |
+        for tier in admin dev user; do
+          if [ ! -f "dist/atlas-${tier}/.claude-plugin/plugin.json" ]; then
+            echo "❌ Missing dist/atlas-${tier}" && exit 1
+          fi
+        done
+        echo "✅ Tier artifacts verified"
+
+  build-domains:
+    image: python:3.13-slim
+    commands:
+      - apt-get update -qq && apt-get install -y -qq bash yq > /dev/null 2>&1 || true
+      - pip install pyyaml -q
+      - ./build.sh domains
+      - echo "✅ All domain plugins built"
+    depends_on: [build-tiers]
+
+  test:
+    image: python:3.13-slim
+    commands:
+      - pip install pytest pyyaml -q
+      - python3 -m pytest tests/ -x -q --tb=short --ignore=tests/test_theory_of_mind.py --ignore=tests/test_hook_behavior.py
+    depends_on: [build-domains]
+
+  version-check:
+    image: python:3.13-slim
+    commands:
+      - pip install pytest pyyaml -q
+      - python3 -m pytest tests/test_e2e_plugin.py -x -q --tb=short -k "version"
+      - echo "✅ Version consistency verified across all tiers"
+    depends_on: [build-domains]

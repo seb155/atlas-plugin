@@ -38,7 +38,7 @@ if [ "${ATLAS_NO_VERSION_CHECK:-}" != "1" ]; then
 
   if [ -n "${FORGEJO_TOKEN:-}" ] && [ -n "$_FORGEJO_API" ]; then
     _LATEST_TAG=$(curl -sf --connect-timeout 2 --max-time 2 \
-      "${_FORGEJO_API}/repos/atlas/atlas-plugin/releases?limit=1" \
+      "${_FORGEJO_API}/repos/axoiq/atlas-plugin/releases?limit=1" \
       -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null \
       | $ATLAS_PYTHON -c "import sys,json; print(json.load(sys.stdin)[0]['tag_name'])" 2>/dev/null || echo "")
     _LATEST_VERSION="${_LATEST_TAG#v}"

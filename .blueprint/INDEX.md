@@ -1,7 +1,7 @@
 # .blueprint/ Documentation Index
 
 > Auto-loaded by context-discovery. Tier 1 = always relevant, Tier 2 = on-demand.
-> Plugin repo: `forgejo.axoiq.com/atlas/atlas-plugin` | Version: `cat VERSION`
+> Plugin repo: `forgejo.axoiq.com/axoiq/atlas-plugin` | Version: `cat VERSION`
 
 | T | File | Role — Maintain When |
 |:-:|------|---------------------|

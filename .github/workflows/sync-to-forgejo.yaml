@@ -39,7 +39,7 @@ jobs:
           git \
             -c http.extraHeader="CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
             -c http.extraHeader="CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
-            push "https://oauth2:${FORGEJO_TOKEN}@forgejo.axoiq.com/atlas/atlas-plugin.git" \
+            push "https://oauth2:${FORGEJO_TOKEN}@forgejo.axoiq.com/axoiq/atlas-plugin.git" \
             HEAD:main --tags --force
 
           echo "✅ Synced to Forgejo"
