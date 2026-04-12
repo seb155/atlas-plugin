@@ -66,7 +66,8 @@ ssh root@192.168.10.76 'sqlite3 /var/lib/docker/volumes/woodpecker_woodpecker-da
 - Woodpecker v3 breaking changes: no `:latest` tag, `from_secret:` syntax, no `mem_limit`
 - Frontend typecheck/test use `failure: ignore` (pre-existing TS debt)
 - Deploy steps have `failure: ignore` (infra-dependent, shouldn't block CI)
-- Forgejo Actions disabled since 2026-04-11 (workflows in `.forgejo/workflows-disabled/`)
+- Forgejo Actions REMOVED from Synapse 2026-04-11 (Woodpecker is sole CI for synapse repo)
+- ATLAS plugin repo still uses Forgejo Actions (separate CI)
 - Use `ci-feedback-loop` skill for automated push → CI green workflow
 
 ## Delegation

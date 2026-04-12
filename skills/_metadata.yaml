@@ -714,6 +714,33 @@ skills:
     triggers: ["persona", "switch role", "switch mode", "as a", "comme un"]
     weight: 8
 
+  # ===========================================
+  # META: Orchestration & Pipeline
+  # ===========================================
+  auto-orchestrator:
+    emoji: "🧠"
+    category: Meta
+    owner: admin
+    domains: [core, dev, admin]
+    weight: 10
+    description: "Intelligent meta-skill: analyze intent, score 89+ skills, detect gaps, chain optimal pipelines, recommend agents"
+    triggers: ["auto", "atlas auto", "what should I use", "quel skill", "comment faire", "do the thing", "fais-le", "which skill", "recommend"]
+    inputs: ["intent: string"]
+    outputs: ["recommended_skills: list", "execution_plan: markdown"]
+    depends_on: [skill-management, decision-log]
+
+  interactive-flow:
+    emoji: "🔄"
+    category: Implementation
+    owner: dev
+    domains: [dev]
+    weight: 9
+    description: "Conversational dev pipeline: discover → brainstorm → plan → implement → verify → ship. Full feature flow with HITL at every phase."
+    triggers: ["flow", "pipeline", "brainstorm et implémente", "full workflow", "do everything", "feature complète", "du début à la fin"]
+    inputs: ["feature_description: string"]
+    outputs: ["commit_sha: string", "verification_report: markdown"]
+    depends_on: [context-discovery, brainstorming, plan-builder, executing-plans, verification, finishing-branch]
+
   self-propose:
     emoji: "🔄"
     category: Meta

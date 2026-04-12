@@ -58,7 +58,7 @@ The `promote` type uses `scripts/deploy.sh promote` which automates:
 2. ci-bot approves (via `$FORGEJO_CI_BOT_TOKEN`)
 3. Update branch (merge main into dev if behind)
 4. Force-merge PR (`force_merge: true` — bypasses branch protection for admin)
-5. Prod auto-deploy triggered by Forgejo Actions on main push
+5. Prod auto-deploy triggered by Woodpecker CI on main push (synapse) or Forgejo Actions (other repos)
 
 ```bash
 # One-liner promote:
