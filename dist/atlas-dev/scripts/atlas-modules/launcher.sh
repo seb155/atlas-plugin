@@ -231,6 +231,12 @@ atlas() {
     replay) shift; _atlas_replay "$@"; return ;;
     ab) shift; _atlas_ab "$@"; return ;;
     worktrees|wt) _atlas_worktrees; return ;;
+    cleanup) shift; _atlas_cleanup "$@"; return ;;
+    feature|-f) shift; _atlas_feature "$@"; return ;;
+    promote) shift; _atlas_promote "$@"; return ;;
+    review) shift; _atlas_review "$@"; return ;;
+    blast) shift; _atlas_blast "$@"; return ;;
+    --check) shift; _atlas_preflight "$@"; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
