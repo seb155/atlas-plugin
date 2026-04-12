@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.0.1 (2026-04-12)
+
+### 🐛 Bug Fixes
+- fix(release): force VERSION=5.0.0 + fix breaking change regex + clean descriptions
+
+
+
 ## v4.46.1 (2026-04-12)
 
 ### 🐛 Bug Fixes
