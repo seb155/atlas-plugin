@@ -19,6 +19,8 @@ import yaml
 
 from conftest import PLUGIN_ROOT, VERSION_FILE, resolved_tier
 
+pytestmark = pytest.mark.build  # L2: requires dist/ artifacts from build step
+
 
 DIST_DIR = PLUGIN_ROOT / "dist"
 

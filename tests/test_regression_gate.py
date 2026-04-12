@@ -96,6 +96,35 @@ class TestRegressionGate:
         assert "name" in data, "plugin.json missing 'name'"
         assert "version" in data, "plugin.json missing 'version'"
 
+    def test_all_test_files_are_tiered(self):
+        """Every test_*.py must be reachable by at least one CI tier.
+
+        L1 (structural) = default (no marker needed).
+        L2 (build) = pytestmark = pytest.mark.build
+        L3 (integration) = pytestmark = pytest.mark.integration
+        Broken = pytestmark = pytest.mark.broken
+
+        Fails if any test file uses unconditional pytest.mark.skip (invisible to CI).
+        """
+        test_dir = PLUGIN_ROOT / "tests"
+        NON_L1_MARKERS = {"build", "integration", "broken"}
+        all_test_files = sorted(test_dir.glob("test_*.py"))
+        assert len(all_test_files) >= 15, f"Expected 15+ test files, found {len(all_test_files)}"
+        for tf in all_test_files:
+            # Check each non-comment, non-string line for unconditional skip
+            for line in tf.read_text().splitlines():
+                stripped = line.strip()
+                if stripped.startswith("#") or stripped.startswith('"') or stripped.startswith("'"):
+                    continue
+                if "pytestmark" in stripped and "mark.skip" in stripped and "mark.broken" not in stripped:
+                    pytest.fail(
+                        f"{tf.name} uses unconditional skip — use @pytest.mark.broken for CI visibility"
+                    )
+        l1_count = sum(1 for tf in all_test_files
+                       if not any(f"pytest.mark.{m}" in tf.read_text()
+                                  for m in NON_L1_MARKERS))
+        print(f"Tier coverage: L1={l1_count}, L2+L3+broken={len(all_test_files)-l1_count}, total={len(all_test_files)}")
+
     def test_version_file_exists(self):
         """VERSION file must exist and contain a semver string."""
         vf = PLUGIN_ROOT / "VERSION"

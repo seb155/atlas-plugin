@@ -13,6 +13,9 @@ from pathlib import Path
 
 import pytest
 
+# BROKEN: needs network access (curl/wget) + system tools (docker, bun, yq)
+pytestmark = pytest.mark.broken
+
 from conftest import PLUGIN_ROOT
 
 SCRIPTS_DIR = PLUGIN_ROOT / "scripts"

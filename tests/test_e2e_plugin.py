@@ -28,6 +28,8 @@ import yaml
 
 from conftest import PLUGIN_ROOT, VERSION_FILE
 
+pytestmark = pytest.mark.build  # L2: requires dist/ artifacts from build step
+
 DIST_ROOT = PLUGIN_ROOT / "dist"
 METADATA_FILE = PLUGIN_ROOT / "skills" / "_metadata.yaml"
 

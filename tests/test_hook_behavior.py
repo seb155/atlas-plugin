@@ -24,6 +24,8 @@ import pytest
 
 from conftest import HOOKS_DIR, PLUGIN_ROOT
 
+pytestmark = pytest.mark.integration  # L3: requires bash subprocess execution
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
