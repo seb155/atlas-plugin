@@ -21,7 +21,7 @@ _ATLAS_MOD_DIR="${ATLAS_SHELL_DIR}/modules"
 
 if [ -d "$_ATLAS_MOD_DIR" ]; then
   # Module load order: platform → ui → topics → subcommands → launcher → completions
-  for _mod in platform ui topics subcommands dispatch ab-testing launcher completions; do
+  for _mod in platform ui topics subcommands dispatch agents ab-testing launcher completions; do
     [ -f "$_ATLAS_MOD_DIR/${_mod}.sh" ] && source "$_ATLAS_MOD_DIR/${_mod}.sh"
   done
   unset _mod

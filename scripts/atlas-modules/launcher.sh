@@ -217,7 +217,7 @@ atlas() {
     ci) _atlas_ci; return ;;
     complexity) shift; _atlas_complexity "$@"; return ;;
     dispatch) shift; _atlas_dispatch "$@"; return ;;
-    agents) shift; _atlas_agent_stats "$@"; return ;;
+    agents) shift; _atlas_agents_cmd "$@"; return ;;
     team) shift; _atlas_team_blueprint "$@"; return ;;
     manifest) shift; _atlas_manifest "$@"; return ;;
     repos) _atlas_repos; return ;;

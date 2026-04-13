@@ -41,8 +41,17 @@ category_emojis:
 # Per-skill metadata
 skills:
   # ===========================================
-  # CORE tier (base — 14 skills)
+  # CORE tier (base — 15 skills)
   # ===========================================
+  agent-visibility:
+    emoji: "👁️"
+    category: Observability
+    owner: core
+    plugin: core
+    domains: [core]
+    description: "Subagent visibility — statusline 🤖 counter + atlas agents CLI + tmux auto-tail (SP-AGENT-VIS v5.2.0)"
+    triggers: ["what are agents doing", "show agent output", "tail the agent", "agent status", "atlas agents", "background agent visibility"]
+
   atlas-doctor:
     emoji: "🩺"
     category: Meta
