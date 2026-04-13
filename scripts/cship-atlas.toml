@@ -5,7 +5,7 @@
 
 [cship]
 lines = [
-  "🏛️ ATLAS $custom.atlas_version 👑$custom.atlas_tier  $cship.model  $directory  $git_branch $git_status  $cship.worktree  $cship.session",
+  "🏛️ ATLAS $custom.atlas_version 👑$custom.atlas_tier  $cship.model  $directory  $git_branch $git_status  $cship.worktree  $cship.session  $custom.atlas_agents",
   "$cship.context_bar  $custom.atlas_features  📈 $cship.cost.total_lines_added $cship.cost.total_lines_removed",
   "$custom.atlas_alert"
 ]
@@ -37,3 +37,9 @@ style = "bold green"
 [cship.session]
 symbol = "📋 "
 style = "bold blue"
+
+[custom.atlas_agents]
+# SP-AGENT-VIS Layer 2 — Subagent visibility indicator
+# Format: "🤖 2▶ 1✓" (running / completed last 30min / failed)
+command = "~/.local/share/atlas-statusline/atlas-agents-module.sh"
+style = "bold yellow"

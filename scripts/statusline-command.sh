@@ -77,6 +77,43 @@ context_color=$GREEN
 session_display=""
 [ -n "$session_name" ] && session_display=" ${PURPLE}[${session_name}]${RESET}"
 
+# Agents indicator (SP-AGENT-VIS Layer 2) — reads ~/.atlas/runtime/agents.json
+# Format: " 🤖2▶ 1✓" — running / completed last 30min / failed
+# Empty if no agents tracked. Python3 preferred for time-math filter, jq fallback.
+agents_display=""
+agents_file="${ATLAS_DIR:-$HOME/.atlas}/runtime/agents.json"
+if [ -f "$agents_file" ]; then
+    if command -v python3 &>/dev/null; then
+        agents_display=$(python3 -c "
+import json, sys
+from datetime import datetime, timezone, timedelta
+try:
+    with open('${agents_file}') as f: data = json.load(f)
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+    running = sum(1 for a in data.values() if a.get('status') in ('running', 'spawning'))
+    done = 0; failed = 0
+    for a in data.values():
+        finished = a.get('finished_at')
+        if not finished: continue
+        try: ts = datetime.fromisoformat(finished.replace('Z', '+00:00'))
+        except: continue
+        if ts < cutoff: continue
+        if a.get('status') == 'completed': done += 1
+        elif a.get('status') == 'failed': failed += 1
+    parts = []
+    if running > 0: parts.append(f'\033[1;33m{running}▶\033[0m')
+    if done > 0: parts.append(f'\033[0;32m{done}✓\033[0m')
+    if failed > 0: parts.append(f'\033[1;31m{failed}✗\033[0m')
+    if parts: print(' 🤖' + ' '.join(parts))
+except: pass
+" 2>/dev/null)
+    elif command -v jq &>/dev/null; then
+        # jq fallback: running count only
+        running=$(jq -r '[.[] | select(.status == "running" or .status == "spawning")] | length' "$agents_file" 2>/dev/null || echo 0)
+        [ "$running" -gt 0 ] 2>/dev/null && agents_display=" 🤖${YELLOW}${running}▶${RESET}"
+    fi
+fi
+
 # Rate limit % with color (v2.1.80)
 rate_int="${rate_5h%.*}"
 rate_color=$GREEN
@@ -90,5 +127,5 @@ effort_sym="◐"
 [ "$effort" = "low" ] && effort_sym="○"
 [ "$effort" = "high" ] && effort_sym="●"
 
-# Output: dir branch git-status session ctx% rate% effort model
-printf "${CYAN}${dir_display}${RESET}${git_branch}${git_status_str}${session_display} ${context_color}${used_int}%%${RESET}${rate_display} ${effort_sym} ${YELLOW}${model_short}${RESET}"
+# Output: dir branch git-status session agents ctx% rate% effort model
+printf "${CYAN}${dir_display}${RESET}${git_branch}${git_status_str}${session_display}${agents_display} ${context_color}${used_int}%%${RESET}${rate_display} ${effort_sym} ${YELLOW}${model_short}${RESET}"
