@@ -1,48 +1,30 @@
 #!/usr/bin/env bash
-# atlas-resolve-version.sh — Resolve ATLAS plugin version from CC marketplace
+# atlas-resolve-version.sh — Resolve ATLAS plugin version.
 #
 # Contract: Plugin distributes this script, Statusline calls it.
 # Both sides reference this single file — change once, fix everywhere.
 #
-# Fallback chain:
-#   1. CC marketplace registry (installed_plugins.json) — always current after /plugin
-#   2. Hook-written session state (session-state.json) — current after first prompt
-#   3. VERSION file in CLAUDE_PLUGIN_ROOT — available during hook execution
-#   4. "?" — last resort
+# Strategy chain:
+#   1. capabilities.json (SessionStart-refreshed SSoT, written by atlas-discover-addons.sh)
+#   2. Filesystem scan of plugin cache (zero-dep absolute fallback)
+#   3. "?" literal
 #
-# Used by: Starship [custom.atlas_version], atlas-doctor, atlas-assist banner
+# Used by: Starship [custom.atlas_version], atlas-doctor, atlas-assist banner.
 # Deployed to: ~/.local/share/atlas-statusline/atlas-resolve-version.sh
 
-INSTALLED="${HOME}/.claude/plugins/installed_plugins.json"
-STATE="${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
-VERSION_FILE="${CLAUDE_PLUGIN_ROOT:-}/VERSION"
-
-# Strategy 1: CC marketplace registry (always current)
-# Iterate over all 3 ATLAS plugins (admin/dev/core) — return most recently installed version.
-# Fixes prior typo (was: "atlas-admin@atlas-admin-marketplace" — wrong marketplace name).
-if [ -f "$INSTALLED" ]; then
-  v=$(jq -r '
-    [
-      (.plugins["atlas-admin@atlas-marketplace"] // []),
-      (.plugins["atlas-core@atlas-marketplace"]  // []),
-      (.plugins["atlas-dev@atlas-marketplace"]   // [])
-    ]
-    | flatten
-    | map(select(.version != null and .version != ""))
-    | (max_by(.installedAt) // {}).version // empty
-  ' "$INSTALLED" 2>/dev/null)
+# Strategy 1: capabilities.json — single source of truth
+CAPS="$HOME/.atlas/runtime/capabilities.json"
+if [ -r "$CAPS" ]; then
+  v=$(jq -r '.version // empty' "$CAPS" 2>/dev/null)
   [ -n "$v" ] && echo "$v" && exit 0
 fi
 
-# Strategy 2: Hook-written session state
-if [ -f "$STATE" ]; then
-  v=$(jq -r '.plugin_version // empty' "$STATE" 2>/dev/null)
-  [ -n "$v" ] && echo "$v" && exit 0
-fi
-
-# Strategy 3: VERSION file in plugin root
-if [ -n "$VERSION_FILE" ] && [ -f "$VERSION_FILE" ]; then
-  v=$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]')
+# Strategy 2: filesystem scan — absolute fallback (zero-dep, pure shell)
+CACHE="$HOME/.claude/plugins/cache/atlas-marketplace"
+if [ -d "$CACHE" ]; then
+  v=$(find "$CACHE" -maxdepth 2 -mindepth 2 -type d \
+    -regex '.*/[0-9]+\.[0-9]+\.[0-9]+$' 2>/dev/null \
+    | awk -F/ '{print $NF}' | sort -V | tail -1)
   [ -n "$v" ] && echo "$v" && exit 0
 fi
 
