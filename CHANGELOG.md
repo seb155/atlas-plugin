@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.2.0 (2026-04-13)
+
+### ✨ Features
+- feat(hooks): sp-agent-vis phase 1 — subagent visibility telemetry layer
+- feat(hooks,scripts): tdd guard hook + tighter haiku threshold
+
+
+
 ## v5.1.0 (2026-04-13)
 
 ### ✨ Features (SP-ATLAS-MASTER)
