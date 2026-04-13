@@ -1,49 +1,66 @@
 #!/usr/bin/env bash
-# atlas-resolve-version.sh — Resolve ATLAS plugin version from CC marketplace
+# atlas-resolve-version.sh — Resolve ATLAS plugin version + update indicator.
 #
 # Contract: Plugin distributes this script, Statusline calls it.
 # Both sides reference this single file — change once, fix everywhere.
 #
-# Fallback chain:
-#   1. CC marketplace registry (installed_plugins.json) — always current after /plugin
-#   2. Hook-written session state (session-state.json) — current after first prompt
-#   3. VERSION file in CLAUDE_PLUGIN_ROOT — available during hook execution
-#   4. "?" — last resort
+# Output formats:
+#   "5.5.1"           → installed version, no update available
+#   "5.5.1 ↗ 5.5.2"   → installed + arrow + available update (marketplace ahead)
+#   "?"               → unresolvable
 #
-# Used by: Starship [custom.atlas_version], atlas-doctor, atlas-assist banner
+# Strategy chain (for installed version):
+#   1. capabilities.json (SessionStart-refreshed SSoT, written by atlas-discover-addons.sh)
+#   2. Filesystem scan of plugin cache (zero-dep absolute fallback)
+#   3. "?" literal
+#
+# Update indicator (appended if marketplace registry > installed):
+#   - Reads ~/.claude/plugins/marketplaces/atlas-marketplace/.claude-plugin/marketplace.json
+#   - Max plugin version across registry (sort -V)
+#   - Appends "↗ X.Y.Z" only when strictly newer than installed
+#
+# Used by: Starship [custom.atlas_version], atlas-doctor, atlas-assist banner.
 # Deployed to: ~/.local/share/atlas-statusline/atlas-resolve-version.sh
 
-INSTALLED="${HOME}/.claude/plugins/installed_plugins.json"
-STATE="${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
-VERSION_FILE="${CLAUDE_PLUGIN_ROOT:-}/VERSION"
+# --- Resolve INSTALLED version ---
+INSTALLED=""
 
-# Strategy 1: CC marketplace registry (always current)
-# Iterate over all 3 ATLAS plugins (admin/dev/core) — return most recently installed version.
-# Fixes prior typo (was: "atlas-admin@atlas-admin-marketplace" — wrong marketplace name).
-if [ -f "$INSTALLED" ]; then
-  v=$(jq -r '
-    [
-      (.plugins["atlas-admin@atlas-marketplace"] // []),
-      (.plugins["atlas-core@atlas-marketplace"]  // []),
-      (.plugins["atlas-dev@atlas-marketplace"]   // [])
-    ]
-    | flatten
-    | map(select(.version != null and .version != ""))
-    | (max_by(.installedAt) // {}).version // empty
-  ' "$INSTALLED" 2>/dev/null)
-  [ -n "$v" ] && echo "$v" && exit 0
+# Strategy 1: capabilities.json (SSoT)
+CAPS="$HOME/.atlas/runtime/capabilities.json"
+if [ -r "$CAPS" ]; then
+  INSTALLED=$(jq -r '.version // empty' "$CAPS" 2>/dev/null)
 fi
 
-# Strategy 2: Hook-written session state
-if [ -f "$STATE" ]; then
-  v=$(jq -r '.plugin_version // empty' "$STATE" 2>/dev/null)
-  [ -n "$v" ] && echo "$v" && exit 0
+# Strategy 2: filesystem scan fallback
+if [ -z "$INSTALLED" ] || [ "$INSTALLED" = "null" ]; then
+  CACHE="$HOME/.claude/plugins/cache/atlas-marketplace"
+  if [ -d "$CACHE" ]; then
+    INSTALLED=$(find "$CACHE" -maxdepth 2 -mindepth 2 -type d \
+      -regex '.*/[0-9]+\.[0-9]+\.[0-9]+$' 2>/dev/null \
+      | awk -F/ '{print $NF}' | sort -V | tail -1)
+  fi
 fi
 
-# Strategy 3: VERSION file in plugin root
-if [ -n "$VERSION_FILE" ] && [ -f "$VERSION_FILE" ]; then
-  v=$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]')
-  [ -n "$v" ] && echo "$v" && exit 0
+# Unresolvable
+[ -z "$INSTALLED" ] && { echo "?"; exit 0; }
+
+# --- Check for AVAILABLE update in marketplace registry ---
+AVAILABLE=""
+MARKETPLACE="$HOME/.claude/plugins/marketplaces/atlas-marketplace/.claude-plugin/marketplace.json"
+if [ -r "$MARKETPLACE" ]; then
+  # Extract all plugin versions, sort -V, take highest (semver-correct vs jq's lex max)
+  AVAILABLE=$(jq -r '.plugins[]?.version // empty' "$MARKETPLACE" 2>/dev/null \
+    | sort -V | tail -1)
 fi
 
-echo "?"
+# --- Append indicator if update strictly newer ---
+if [ -n "$AVAILABLE" ] && [ "$AVAILABLE" != "$INSTALLED" ]; then
+  # sort -V: if AVAILABLE is last, it's newer than INSTALLED
+  LATEST=$(printf '%s\n%s\n' "$INSTALLED" "$AVAILABLE" | sort -V | tail -1)
+  if [ "$LATEST" = "$AVAILABLE" ]; then
+    echo "$INSTALLED ↗ $AVAILABLE"
+    exit 0
+  fi
+fi
+
+echo "$INSTALLED"

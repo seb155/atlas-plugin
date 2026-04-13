@@ -51,6 +51,12 @@ hooks:
 - cwd-changed-env
 - stop-failure
 - external-capabilities
+# v5.6.1+: SP-AGENT-VIS subagent hooks (context-injector + result-capture were
+# silently broken pre-SP-AGENT-VIS — fixed alongside output-capture + track-stop)
+- subagent-context-injector   # SubagentStart
+- subagent-result-capture     # SubagentStop (existing functionality)
+- subagent-output-capture     # PostToolUse[matcher=Agent] (SP-AGENT-VIS Layer 1)
+- subagent-track-stop         # SubagentStop (SP-AGENT-VIS Layer 3 cleanup)
 agents:
 - context-scanner
 persona: helpful assistant

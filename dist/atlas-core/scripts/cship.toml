@@ -5,7 +5,7 @@
 
 [cship]
 lines = [
-  "🏛️ ATLAS $custom.atlas_version 👑$custom.atlas_tier  $cship.model ($custom.atlas_context_size)  $directory  $git_branch $git_status  $cship.worktree  $cship.session",
+  "🏛️ ATLAS $custom.atlas_version 👑$custom.atlas_tier  $cship.model ($custom.atlas_context_size)  $directory  $git_branch $git_status  $cship.worktree  $cship.session  $custom.atlas_agents",
   "$cship.context_bar  📈 $cship.cost.total_lines_added $cship.cost.total_lines_removed  $cship.usage_limits",
   "$custom.atlas_alert"
 ]
@@ -57,3 +57,10 @@ style = "bold yellow"
 [custom.atlas_alert]
 command = "~/.local/share/atlas-statusline/atlas-alert-module.sh"
 style = "bold red"
+
+[custom.atlas_agents]
+# SP-AGENT-VIS Layer 2 — Subagent visibility indicator
+# Format: "🤖 2▶ 1✓" (running / completed last 30min / failed)
+# Empty output = module hidden (no agents tracked yet)
+command = "~/.local/share/atlas-statusline/atlas-agents-module.sh"
+style = "bold yellow"
