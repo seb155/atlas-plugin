@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.6.2 (2026-04-13)
+
+### 🐛 Bug Fixes
+- fix(hooks): wire subagent hooks in core profile (SP-AGENT-VIS unblock)
+
+### 🔧 Other Changes
+- refactor(hook): centralize atlas-core latest resolution in deploy block
+
+
+
 ## v5.6.1 (2026-04-13)
 
 ### 🐛 Bug Fixes
