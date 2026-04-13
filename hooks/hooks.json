@@ -402,6 +402,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" subagent-result-capture",
             "async": true,
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" subagent-track-stop",
+            "async": true,
+            "timeout": 5
           }
         ]
       }

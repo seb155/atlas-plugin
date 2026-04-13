@@ -20,7 +20,10 @@
  * @plan .blueprint/plans/keen-nibbling-umbrella.md Layer 1
  */
 
-import { registerSpawn } from "./lib/agent-registry";
+import { execSync } from "node:child_process";
+import { dirname, join, resolve } from "node:path";
+
+import { registerSpawn, updateVisibility } from "./lib/agent-registry";
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -135,11 +138,104 @@ async function main(): Promise<void> {
 	// (SubagentStart will upgrade status when it fires)
 	await registerSpawn(agentId, outputFile, agentType, sessionId);
 
-	// Phase 4 will add: tmux/WT auto-tail spawn here (conditional on env).
-	// For Phase 1, we stop at telemetry capture.
+	// ─── Layer 3: Cross-platform auto-tail (always-on default, opt-out via env) ──
+	// Only spawn visibility surface if we have an output_file (background agent)
+	if (outputFile) {
+		await spawnVisibility(agentId);
+	}
 
 	const output: HookOutput = { continue: true };
 	console.log(JSON.stringify(output));
+}
+
+// ─── Layer 3 helpers ───────────────────────────────────────────────
+
+function getScriptsDir(): string {
+	// hooks/ts/subagent-output-capture.ts → ../scripts
+	const self = import.meta.url.replace(/^file:\/\//, "");
+	return resolve(dirname(self), "..", "..", "scripts");
+}
+
+function detectEnv(): "tmux" | "wt" | "fallback" | "none" {
+	try {
+		const scriptsDir = getScriptsDir();
+		const out = execSync(`bash "${scriptsDir}/lib/detect-visibility-env.sh"`, {
+			encoding: "utf-8",
+			timeout: 1500,
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
+		if (out === "tmux" || out === "wt" || out === "fallback" || out === "none") return out;
+	} catch {
+		// fall through
+	}
+	return "fallback";
+}
+
+function getTmuxPaneCount(): number {
+	try {
+		const out = execSync("tmux list-panes 2>/dev/null | wc -l", {
+			encoding: "utf-8",
+			timeout: 1000,
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
+		return parseInt(out, 10) || 0;
+	} catch {
+		return 0;
+	}
+}
+
+async function spawnVisibility(agentId: string): Promise<void> {
+	const env = detectEnv();
+	const scriptsDir = getScriptsDir();
+
+	if (env === "none") return; // user opt-out
+
+	if (env === "tmux") {
+		const maxPanes = parseInt(process.env.ATLAS_MAX_TAIL_PANES || "2", 10);
+		const currentPanes = getTmuxPaneCount();
+		// Cap auto-spawn: allow up to maxPanes tails (in addition to main pane)
+		if (currentPanes > maxPanes) return;
+		try {
+			const tailScript = join(scriptsDir, "atlas-agent-tail.sh");
+			const paneId = execSync(
+				`tmux split-window -h -p 35 -d -P -F '#{pane_id}' "${tailScript} ${agentId}" 2>/dev/null`,
+				{ encoding: "utf-8", timeout: 1500, stdio: ["ignore", "pipe", "ignore"] },
+			).trim();
+			if (paneId) {
+				await updateVisibility(agentId, { tmux_pane: paneId, visibility_mode: "tmux" });
+			}
+		} catch {
+			// Tmux command failed (maybe pane limit) — fallback silently
+		}
+		return;
+	}
+
+	if (env === "wt") {
+		try {
+			const tailScript = join(scriptsDir, "atlas-agent-tail.sh");
+			// Use wt.exe new-tab; Windows Terminal doesn't return tab id from CLI
+			execSync(
+				`wt.exe new-tab --title "agent:${agentId}" bash -c "${tailScript} ${agentId}"`,
+				{ timeout: 1500, stdio: "ignore" },
+			);
+			await updateVisibility(agentId, { visibility_mode: "wt" });
+		} catch {
+			// wt.exe failed — fall through to hint
+		}
+		return;
+	}
+
+	if (env === "fallback") {
+		try {
+			execSync(`bash "${scriptsDir}/lib/show-hint.sh"`, {
+				timeout: 500,
+				stdio: "ignore",
+			});
+		} catch {
+			// hint failed — silent
+		}
+		await updateVisibility(agentId, { visibility_mode: "none" });
+	}
 }
 
 // Fail-open error handlers — visibility is best-effort, must not block CC.
