@@ -1,0 +1,21 @@
+# ATLAS Addon Manifest — Static metadata for capability discovery.
+# Version + skills/agents counts are computed at runtime by atlas-discover-addons.sh.
+schema_version: "1.0"
+
+name: atlas-admin-addon
+tier: admin
+tier_priority: 3   # 1=core, 2=dev, 3=admin (highest wins for persona)
+
+persona_contribution: "infrastructure architect"
+pipeline_phases:
+  - DISCOVER
+  - PLAN
+  - STRATEGY
+  - IMPLEMENT
+  - VERIFY
+  - SHIP
+  - DEPLOY
+  - INFRA
+
+banner_label: "Admin"
+description: "Superuser — includes dev tools + infra, security, governance, GMS"

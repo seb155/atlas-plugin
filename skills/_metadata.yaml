@@ -51,6 +51,14 @@ skills:
     domains: [core]
     description: "System health check with 8-category dashboard and auto-fix"
 
+  discovery:
+    emoji: "🔍"
+    category: Meta
+    owner: core
+    plugin: core
+    domains: [core]
+    description: "Inspect/refresh ATLAS capability discovery (installed addons, tier, persona)"
+
   atlas-location:
     emoji: "📍"
     category: Meta

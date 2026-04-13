@@ -1,0 +1,19 @@
+# ATLAS Addon Manifest — Static metadata for capability discovery.
+# Version + skills/agents counts are computed at runtime by atlas-discover-addons.sh.
+schema_version: "1.0"
+
+name: atlas-dev-addon
+tier: dev
+tier_priority: 2   # 1=core, 2=dev, 3=admin (highest wins for persona)
+
+persona_contribution: "senior engineering architect"
+pipeline_phases:
+  - DISCOVER
+  - PLAN
+  - STRATEGY
+  - IMPLEMENT
+  - VERIFY
+  - SHIP
+
+banner_label: "Dev"
+description: "Developer tools — planning, TDD, review, shipping"

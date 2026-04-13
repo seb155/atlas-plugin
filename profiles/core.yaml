@@ -26,6 +26,7 @@ skills:
 - episode-create
 - intuition-log
 - relationship-manager
+- discovery   # v5.1+: capability scanner inspector
 refs:
 - atlas-visual-identity
 - external-tools

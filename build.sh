@@ -121,6 +121,12 @@ build_tier() {
   rm -rf "$output"
   mkdir -p "$output"/{.claude-plugin,skills,agents,hooks,commands}
 
+  # v5.1+: Copy capability discovery manifest (declarative metadata for scanner)
+  # Source: manifests/atlas-{tier}.yaml → dist/atlas-{tier}/_addon-manifest.yaml
+  if [ -f "manifests/atlas-${tier}.yaml" ]; then
+    cp "manifests/atlas-${tier}.yaml" "$output/_addon-manifest.yaml"
+  fi
+
   # SP-DEDUP: Copy only OWNED skills (delta), not inherited
   # atlas-assist still gets the full list via resolve_field (line ~190)
   local owner
@@ -217,7 +223,8 @@ build_tier() {
   fi
 
   # Copy runtime scripts (exclude build-only scripts)
-  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh)
+  # v5.1+: atlas-discover-addons.sh added (capability scanner for adaptive master)
+  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh)
   mkdir -p "$output/scripts"
   for script in "${runtime_scripts[@]}"; do
     if [ -f "scripts/$script" ]; then
