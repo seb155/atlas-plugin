@@ -9,6 +9,11 @@
 # Updated: 2026-04-08
 
 commands:
+  atlas:
+    owner: core
+    domains: [core]
+    description: "Activate ATLAS master (adaptive entry point — auto-detects installed addons)"
+
   ship:
     owner: dev
     domains: [dev]
