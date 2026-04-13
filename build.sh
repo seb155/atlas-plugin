@@ -224,7 +224,7 @@ build_tier() {
 
   # Copy runtime scripts (exclude build-only scripts)
   # v5.1+: atlas-discover-addons.sh added (capability scanner for adaptive master)
-  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh)
+  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh atlas-agents-module.sh atlas-agent-tail.sh atlas-jsonl-format.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh)
   mkdir -p "$output/scripts"
   for script in "${runtime_scripts[@]}"; do
     if [ -f "scripts/$script" ]; then
@@ -232,6 +232,12 @@ build_tier() {
       chmod +x "$output/scripts/$script"
     fi
   done
+
+  # v5.5+: Copy scripts/lib/ (SP-AGENT-VIS Layer 3 helpers: detect-visibility-env.sh, show-hint.sh)
+  if [ -d "scripts/lib" ]; then
+    cp -r "scripts/lib" "$output/scripts/"
+    find "$output/scripts/lib" -name "*.sh" -exec chmod +x {} \;
+  fi
 
   # Inject VERSION into atlas-cli.sh (fix version drift)
   if [ -f "$output/scripts/atlas-cli.sh" ]; then
@@ -425,7 +431,7 @@ build_domain() {
 
   # Runtime scripts — only core domain gets scripts/
   if [ "$name" = "core" ]; then
-    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh)
+    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh atlas-agents-module.sh atlas-agent-tail.sh atlas-jsonl-format.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh)
     mkdir -p "$output/scripts"
     for script in "${runtime_scripts[@]}"; do
       if [ -f "scripts/$script" ]; then
@@ -596,13 +602,14 @@ build_modular_plugin() {
   # Runtime scripts: core plugin gets scripts/, addons don't
   # v5.1+: atlas-discover-addons.sh (capability scanner) + atlas-resolve-version.sh (statusline)
   if [ "$output_name" = "core" ]; then
-    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh)
+    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh atlas-agents-module.sh atlas-agent-tail.sh atlas-jsonl-format.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh)
     mkdir -p "$output/scripts"
     for script in "${runtime_scripts[@]}"; do
       [ -f "scripts/$script" ] && cp "scripts/$script" "$output/scripts/" && chmod +x "$output/scripts/$script"
     done
     [ -d "scripts/atlas-modules" ] && mkdir -p "$output/scripts/atlas-modules" && cp scripts/atlas-modules/*.sh "$output/scripts/atlas-modules/" && chmod +x "$output/scripts/atlas-modules/"*.sh
     [ -d "scripts/presets" ] && mkdir -p "$output/scripts/presets" && cp scripts/presets/*.json "$output/scripts/presets/" 2>/dev/null || true
+    [ -d "scripts/lib" ] && mkdir -p "$output/scripts/lib" && cp scripts/lib/*.sh "$output/scripts/lib/" && chmod +x "$output/scripts/lib/"*.sh   # v5.5+ SP-AGENT-VIS Layer 3 helpers
     [ -f "scripts/cship.toml" ] && cp "scripts/cship.toml" "$output/scripts/"
     [ -f "$output/scripts/atlas-cli.sh" ] && sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"${VERSION}\"/" "$output/scripts/atlas-cli.sh"
   fi
