@@ -18,8 +18,19 @@ STATE="${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json"
 VERSION_FILE="${CLAUDE_PLUGIN_ROOT:-}/VERSION"
 
 # Strategy 1: CC marketplace registry (always current)
+# Iterate over all 3 ATLAS plugins (admin/dev/core) — return most recently installed version.
+# Fixes prior typo (was: "atlas-admin@atlas-admin-marketplace" — wrong marketplace name).
 if [ -f "$INSTALLED" ]; then
-  v=$(jq -r '.plugins["atlas-admin@atlas-admin-marketplace"] | max_by(.installedAt) | .version // empty' "$INSTALLED" 2>/dev/null)
+  v=$(jq -r '
+    [
+      (.plugins["atlas-admin@atlas-marketplace"] // []),
+      (.plugins["atlas-core@atlas-marketplace"]  // []),
+      (.plugins["atlas-dev@atlas-marketplace"]   // [])
+    ]
+    | flatten
+    | map(select(.version != null and .version != ""))
+    | (max_by(.installedAt) // {}).version // empty
+  ' "$INSTALLED" 2>/dev/null)
   [ -n "$v" ] && echo "$v" && exit 0
 fi
 
