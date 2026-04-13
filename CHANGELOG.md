@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.5.0 (2026-04-13)
+
+### ✨ Features
+- feat(hooks,scripts): sp-agent-vis phase 4 — layer 3 cross-platform auto-tail
+
+
+
 ## v5.4.0 (2026-04-13)
 
 ### ✨ Features
