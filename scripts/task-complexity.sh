@@ -69,7 +69,10 @@ if file_match:
 
 score = max(0, score)
 
-if score <= 2:
+if score <= 1:
+    # Threshold tightened 2026-04-13 (was <= 2): Haiku had 33% failure on borderline tasks.
+    # Reducing to <= 1 (trivial only) increases Sonnet usage but improves success rate.
+    # Source: dream-proposals.jsonl proposal #2 (score 9.0).
     level, model, effort = 'trivial', 'haiku', 'low'
 elif score <= 7:
     level, model, effort = 'moderate', 'sonnet', 'medium'
