@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.6.1 (2026-04-13)
+
+### 🐛 Bug Fixes
+- fix(hook): SessionStart deploys statusline modules from highest cache version
+
+
+
 ## v5.6.0 (2026-04-13)
 
 ### ✨ Features
