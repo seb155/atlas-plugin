@@ -19,6 +19,16 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && p
 SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"
 AUDIT_LOG="${HOME}/.claude/atlas-audit.log"
 
+# ─── Capability Discovery (v5.1+) ────────────────────────────────────────
+# Scan ~/.claude/plugins/cache/atlas-marketplace/ for installed addons,
+# write ~/.atlas/runtime/capabilities.json with tier/persona/pipeline.
+# Master atlas-assist reads this JSON to adapt its behavior.
+# Silent failure: scanner writes a minimal fallback if anything goes wrong.
+_DISCOVER_SCRIPT="${PLUGIN_ROOT}/scripts/atlas-discover-addons.sh"
+if [ -x "$_DISCOVER_SCRIPT" ]; then
+  "$_DISCOVER_SCRIPT" 2>/dev/null || true
+fi
+
 export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"  # suppress bw punycode warning
 
 # Portable Python 3 resolver (works on Linux, macOS, Windows Git Bash)

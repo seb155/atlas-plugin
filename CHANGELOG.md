@@ -1,5 +1,35 @@
 # Changelog
 
+## v5.1.0 (2026-04-13)
+
+### ✨ Features (SP-ATLAS-MASTER)
+- **feat(master)**: Unified adaptive `atlas-assist` skill (single source in atlas-core).
+  - Replaces 3× tier-specific atlas-assist (was generated per addon: core/dev/admin)
+  - Adapts persona/pipeline/banner at runtime by reading `~/.atlas/runtime/capabilities.json`
+  - Resolves `/atlas-admin-addon:atlas-assist` namespace conflict (`user-invocable` failure)
+- **feat(discovery)**: Capability Discovery infrastructure
+  - 3× `_addon-manifest.yaml` declarative metadata (tier, persona, pipeline, priority)
+  - `scripts/atlas-discover-addons.sh` Bash scanner (~130 lines, idempotent)
+  - `skills/discovery/SKILL.md` user-invocable inspector
+  - SessionStart hook integrates scanner before badge construction
+- **feat(ux)**: New `/atlas` slash command (user-invocable in atlas-core)
+- **feat(build)**: Renamed build mode `v5` → `modular` (descriptive vs version-tied; `v5` kept as deprecated alias)
+- **docs(quickstart)**: New `QUICKSTART-V5.md` (3 install patterns, troubleshooting, v4→v5 migration)
+
+### 🐛 Bug Fixes
+- **fix(statusline)**: `atlas-resolve-version.sh:22` typo (was `atlas-admin@atlas-admin-marketplace`,
+  now correctly queries `atlas-admin@atlas-marketplace` with multi-key fallback for all 3 plugins).
+  Resolves status bar showing v4.43.1 instead of actual v5.x.
+- **fix(build)**: `atlas-resolve-version.sh` was referenced by session-start hook but never copied
+  from `scripts/` to dist/. Added to runtime_scripts list (latent bug).
+
+### 🔧 Other Changes
+- Architecture: Core stays mandatory (25 skills + 1 agent base) — dev/admin addons optional
+- Net code change: +325 / -487 lines (158 lines deduplicated)
+- Build pipeline: rebuild reproducibility verified (sources fully synced to dist/)
+
+---
+
 ## v5.0.3 (2026-04-12)
 
 ### 🐛 Bug Fixes

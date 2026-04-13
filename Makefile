@@ -1,31 +1,33 @@
-# ATLAS Plugin v5.0 — Developer Makefile
+# ATLAS Plugin — Developer Makefile (modular architecture)
 # Usage: make [target]
 
-.PHONY: build build-v5 test install dev dev-v5 lint publish clean help
+.PHONY: build build-modular build-v5 test install dev dev-modular lint publish clean help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-# ── v5 Targets (PRIMARY — core + addons) ──────────────────────
+# ── Modular Targets (PRIMARY — core + addons) ──────────────────────
 
-build-v5: ## Build v5 plugins (core + all addons)
-	./build.sh v5
+build-modular: ## Build modular plugins (core + all addons)
+	./build.sh modular
+
+build-v5: build-modular ## DEPRECATED alias for build-modular
 
 build-core: ## Build atlas-core only
-	./build.sh v5-core
+	./build.sh modular-core
 
 build-admin: ## Build atlas-admin addon only
-	./build.sh v5-admin
+	./build.sh modular-admin
 
 build-dev-addon: ## Build atlas-dev addon only
-	./build.sh v5-dev
+	./build.sh modular-dev
 
 dev: ## Build core + admin + install to CC cache (standard workflow)
-	./build.sh v5
+	./build.sh modular
 	@VERSION=$$(cat VERSION | tr -d '[:space:]'); \
 	CACHE_DIR="$$HOME/.claude/plugins/cache/atlas-marketplace"; \
 	echo ""; \
-	echo "📦 Installing v5 plugins to CC cache..."; \
+	echo "📦 Installing modular plugins to CC cache..."; \
 	for plugin in atlas-core atlas-admin-addon; do \
 		name=$$(echo $$plugin | sed 's/-addon//'); \
 		dir="$$CACHE_DIR/$${name}/$$VERSION"; \
@@ -48,7 +50,7 @@ dev: ## Build core + admin + install to CC cache (standard workflow)
 		echo "  ✅ atlas-modules/ → $$HOME/.atlas/shell/modules/ ($$(ls scripts/atlas-modules/*.sh | wc -l) modules)"; \
 	fi; \
 	echo ""; \
-	echo "✅ Installed v5 plugins v$$VERSION"; \
+	echo "✅ Installed modular plugins v$$VERSION"; \
 	echo "   Cache: $$CACHE_DIR/"; \
 	echo ""; \
 	echo "⚠️  Restart Claude Code to apply changes."; \
@@ -59,7 +61,7 @@ dev: ## Build core + admin + install to CC cache (standard workflow)
 
 # ── Legacy Targets (backward compat) ─────────────────────────
 
-build: ## Build legacy tiers (admin/dev/user) — DEPRECATED, use build-v5
+build: ## Build legacy tiers (admin/dev/user) — DEPRECATED, use build-modular
 	./build.sh all
 
 install: ## Legacy install — DEPRECATED, use 'make dev'

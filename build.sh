@@ -504,12 +504,15 @@ EOF
   echo "   ${skill_count} skills | ${agent_count} agents | ${cmd_count} commands"
 }
 
-# ── v5 Plugin build (core + addons, zero duplication) ─────────
+# ── Modular Plugin build (core + addons, zero duplication) ─────────
+# This is the v5+ default architecture. Each plugin is self-contained.
 # Reads skills directly from profile YAML (like domain builds).
 # Profile path: profiles/{name}.yaml or profiles/{name}-addon.yaml
-V5_PLUGINS=(core dev-addon admin-addon)
+MODULAR_PLUGINS=(core dev-addon admin-addon)
+# Backward-compat alias (deprecated; use MODULAR_PLUGINS)
+V5_PLUGINS=("${MODULAR_PLUGINS[@]}")
 
-build_v5_plugin() {
+build_modular_plugin() {
   local name="$1"
   local profile=""
   local output_name=""
@@ -522,18 +525,24 @@ build_v5_plugin() {
     profile="profiles/${name}-addon.yaml"
     output_name="${name%-addon}"  # dev-addon → dev
   else
-    echo "❌ v5 profile not found for: $name"
+    echo "❌ modular profile not found for: $name"
     exit 1
   fi
 
   local output="dist/atlas-${output_name}"
   local desc
-  desc=$(yq -r '.description // "ATLAS v5 plugin"' "$profile")
+  desc=$(yq -r '.description // "ATLAS modular plugin"' "$profile")
 
-  echo "🔨 Building atlas-${output_name} (v5) v${VERSION}..."
+  echo "🔨 Building atlas-${output_name} (modular) v${VERSION}..."
 
   rm -rf "$output"
-  mkdir -p "$output"/{.claude-plugin,skills,agents,hooks}
+  mkdir -p "$output"/{.claude-plugin,skills,agents,hooks,commands}
+
+  # v5.1+: Copy capability discovery manifest (declarative metadata for scanner)
+  # Source: manifests/atlas-{name}.yaml → dist/atlas-{output_name}/_addon-manifest.yaml
+  if [ -f "manifests/atlas-${name}.yaml" ]; then
+    cp "manifests/atlas-${name}.yaml" "$output/_addon-manifest.yaml"
+  fi
 
   # Skills: read directly from profile YAML
   local skills
@@ -585,8 +594,9 @@ build_v5_plugin() {
   fi
 
   # Runtime scripts: core plugin gets scripts/, addons don't
+  # v5.1+: atlas-discover-addons.sh (capability scanner) + atlas-resolve-version.sh (statusline)
   if [ "$output_name" = "core" ]; then
-    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh)
+    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh)
     mkdir -p "$output/scripts"
     for script in "${runtime_scripts[@]}"; do
       [ -f "scripts/$script" ] && cp "scripts/$script" "$output/scripts/" && chmod +x "$output/scripts/$script"
@@ -610,6 +620,18 @@ build_v5_plugin() {
     cp scripts/atlas-assist-master.md "$output/skills/atlas-assist/SKILL.md"
   fi
 
+  # v5.1+: Copy commands owned by this plugin (commands/_metadata.yaml owner field)
+  # Reads owner from metadata; only copies commands matching this plugin's name.
+  if [ -f "commands/_metadata.yaml" ]; then
+    local owned_cmds
+    owned_cmds=$(yq -r ".commands | to_entries[] | select(.value.owner == \"${output_name}\") | .key" commands/_metadata.yaml 2>/dev/null || true)
+    for cmd in $owned_cmds; do
+      if [ -f "commands/${cmd}.md" ]; then
+        cp "commands/${cmd}.md" "$output/commands/"
+      fi
+    done
+  fi
+
   # plugin.json
   local build_ts
   build_ts=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
@@ -624,7 +646,7 @@ build_v5_plugin() {
 }
 EOF
 
-  # marketplace.json — single marketplace for v5
+  # marketplace.json — single marketplace for modular plugins
   cat > "$output/.claude-plugin/marketplace.json" <<EOF
 {
   "name": "atlas-marketplace",
@@ -645,7 +667,7 @@ EOF
   skill_count=$(find "$output/skills" -maxdepth 2 -name "SKILL.md" | wc -l)
   agent_count=$(find "$output/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
 
-  echo "✅ Built atlas-${output_name} (v5) v${VERSION} → ${output}/"
+  echo "✅ Built atlas-${output_name} (modular) v${VERSION} → ${output}/"
   echo "   ${skill_count} skills | ${agent_count} agents"
 }
 
@@ -679,20 +701,21 @@ elif [ "$TIERS" = "domain" ]; then
     exit 1
   fi
   build_domain "$DOMAIN_NAME"
-elif [ "$TIERS" = "v5" ]; then
+elif [ "$TIERS" = "modular" ] || [ "$TIERS" = "v5" ]; then
+  # 'modular' = canonical name (v5+ architecture). 'v5' kept as alias for backward-compat.
   for p in "${V5_PLUGINS[@]}"; do
-    build_v5_plugin "$p"
+    build_modular_plugin "$p"
     echo ""
   done
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  All v5 plugins built successfully!"
+  echo "  All modular plugins built successfully!"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-elif [ "$TIERS" = "v5-core" ]; then
-  build_v5_plugin "core"
-elif [ "$TIERS" = "v5-dev" ]; then
-  build_v5_plugin "dev-addon"
-elif [ "$TIERS" = "v5-admin" ]; then
-  build_v5_plugin "admin-addon"
+elif [ "$TIERS" = "modular-core" ] || [ "$TIERS" = "v5-core" ]; then
+  build_modular_plugin "core"
+elif [ "$TIERS" = "modular-dev" ] || [ "$TIERS" = "v5-dev" ]; then
+  build_modular_plugin "dev-addon"
+elif [ "$TIERS" = "modular-admin" ] || [ "$TIERS" = "v5-admin" ]; then
+  build_modular_plugin "admin-addon"
 else
   build_tier "$TIERS"
 fi
