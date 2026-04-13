@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.4.0 (2026-04-13)
+
+### ✨ Features
+- feat(cli,skill): sp-agent-vis phase 3 — layer 4 atlas agents cli
+
+
+
 ## v5.3.0 (2026-04-13)
 
 ### ✨ Features
