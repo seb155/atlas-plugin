@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.5.1 (2026-04-13)
+
+### 🐛 Bug Fixes
+- fix(statusline): resolve version from capabilities.json + filesystem scan
+
+### 🔧 Other Changes
+- test(agent-vis),build: sp-agent-vis phase 5 polish + build integration
+
+
+
 ## v5.5.0 (2026-04-13)
 
 ### ✨ Features
