@@ -313,9 +313,43 @@ if [ -n "$_cc_ver" ] && [ "$_cc_ver" != "$KNOWN_CC_VERSION" ]; then
   CC_VERSION_NOTICE="⚡ CC v${_cc_ver} detected (plugin audited for v${KNOWN_CC_VERSION}). Consider /atlas platform-update"
 fi
 
-# ─── Auto-deploy statusline (CShip + bash fallback) ───────────────────
+# ─── Auto-deploy statusline + CLI (CShip + bash fallback + atlas shell) ─
+# ─── FIX 2026-04-13: ALL copies use HIGHEST atlas-core cache version ────
+# Rationale: CC's PLUGIN_ROOT reflects installed_plugins.json pin which
+# can be stale. When multiple cache versions coexist (e.g., 5.1.0 + 5.6.0),
+# we want deployed user files to reflect the LATEST logic — not whatever
+# CC's registry currently points at. Triple-fallback resolution:
+#   1. capabilities.json .addons[] | select(.name=="atlas-core") | .path
+#      (SSoT, SessionStart-refreshed, always points to active atlas-core)
+#   2. find highest semver cache dir via filesystem scan + sort -V
+#      (zero-dep fallback if capabilities.json absent/corrupted)
+#   3. PLUGIN_ROOT (legacy behavior, last resort)
+# This matches the pattern used by atlas-resolve-version.sh Strategy 1+2.
+
+_atlas_core_base=""
+_caps_file="$HOME/.atlas/runtime/capabilities.json"
+if [ -f "$_caps_file" ] && command -v jq &>/dev/null; then
+  _ac_path=$(jq -r '.addons[]? | select(.name=="atlas-core") | .path' "$_caps_file" 2>/dev/null)
+  [ -n "$_ac_path" ] && [ -d "${_ac_path%/}" ] && _atlas_core_base="${_ac_path%/}"
+fi
+if [ -z "$_atlas_core_base" ]; then
+  _cache_root="$HOME/.claude/plugins/cache/atlas-marketplace/atlas-core"
+  if [ -d "$_cache_root" ]; then
+    _latest_ver=$(find "$_cache_root" -maxdepth 1 -mindepth 1 -type d \
+      -regex '.*/[0-9]+\.[0-9]+\.[0-9]+$' 2>/dev/null \
+      | awk -F/ '{print $NF}' | sort -V | tail -1)
+    [ -n "$_latest_ver" ] && [ -d "${_cache_root}/${_latest_ver}" ] && \
+      _atlas_core_base="${_cache_root}/${_latest_ver}"
+  fi
+fi
+[ -z "$_atlas_core_base" ] && _atlas_core_base="${PLUGIN_ROOT}"
+
+_atlas_core_scripts="${_atlas_core_base}/scripts"
+_atlas_core_version=$(cat "${_atlas_core_base}/VERSION" 2>/dev/null | tr -d '[:space:]' \
+  || cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
+
 # 1. Deploy CShip config if outdated or missing
-_plugin_cship_toml="${PLUGIN_ROOT}/scripts/cship.toml"
+_plugin_cship_toml="${_atlas_core_scripts}/cship.toml"
 _user_cship_toml="${HOME}/.config/cship.toml"
 if [ -f "$_plugin_cship_toml" ]; then
   if [ ! -f "$_user_cship_toml" ] || ! diff -q "$_plugin_cship_toml" "$_user_cship_toml" &>/dev/null; then
@@ -330,7 +364,7 @@ if ! command -v cship &>/dev/null && command -v cargo &>/dev/null; then
 fi
 
 # 3. Deploy bash fallback statusline if outdated
-_plugin_statusline="${PLUGIN_ROOT}/scripts/statusline-command.sh"
+_plugin_statusline="${_atlas_core_scripts}/statusline-command.sh"
 _user_statusline="${HOME}/.claude/statusline-command.sh"
 if [ -f "$_plugin_statusline" ]; then
   if [ ! -f "$_user_statusline" ] || ! diff -q "$_plugin_statusline" "$_user_statusline" &>/dev/null; then
@@ -340,39 +374,10 @@ if [ -f "$_plugin_statusline" ]; then
 fi
 
 # 4. Deploy custom statusline modules (Starship/CShip custom.* resolvers)
-# ─── FIX 2026-04-13: copy from HIGHEST cache version, not PLUGIN_ROOT ───
-# CC's PLUGIN_ROOT reflects installed_plugins.json pin (can be stale).
-# When multiple cache versions exist (e.g., 5.1.0 + 5.6.0 coexist), we
-# want ~/.local/share/atlas-statusline/ to have the LATEST logic — not
-# whatever CC's registry points at. Triple-fallback resolution:
-#   1. capabilities.json .addons[].path for atlas-core (SSoT)
-#   2. find highest semver cache dir via filesystem scan
-#   3. PLUGIN_ROOT (legacy behavior, safe default)
 _sl_target="${HOME}/.local/share/atlas-statusline"
 mkdir -p "$_sl_target" 2>/dev/null
-
-_sl_src_base=""
-_caps_file="$HOME/.atlas/runtime/capabilities.json"
-if [ -f "$_caps_file" ] && command -v jq &>/dev/null; then
-  _atlas_core_path=$(jq -r '.addons[]? | select(.name=="atlas-core") | .path' "$_caps_file" 2>/dev/null)
-  if [ -n "$_atlas_core_path" ] && [ -d "${_atlas_core_path%/}/scripts" ]; then
-    _sl_src_base="${_atlas_core_path%/}/scripts"
-  fi
-fi
-if [ -z "$_sl_src_base" ]; then
-  _cache_root="$HOME/.claude/plugins/cache/atlas-marketplace/atlas-core"
-  if [ -d "$_cache_root" ]; then
-    _latest_ver=$(find "$_cache_root" -maxdepth 1 -mindepth 1 -type d \
-      -regex '.*/[0-9]+\.[0-9]+\.[0-9]+$' 2>/dev/null \
-      | awk -F/ '{print $NF}' | sort -V | tail -1)
-    [ -n "$_latest_ver" ] && [ -d "${_cache_root}/${_latest_ver}/scripts" ] && \
-      _sl_src_base="${_cache_root}/${_latest_ver}/scripts"
-  fi
-fi
-[ -z "$_sl_src_base" ] && _sl_src_base="${PLUGIN_ROOT}/scripts"
-
 for _mod in atlas-resolve-version.sh atlas-alert-module.sh atlas-context-size-module.sh; do
-  _src="${_sl_src_base}/${_mod}"
+  _src="${_atlas_core_scripts}/${_mod}"
   _dst="${_sl_target}/${_mod}"
   if [ -f "$_src" ]; then
     if [ ! -f "$_dst" ] || ! diff -q "$_src" "$_dst" &>/dev/null; then
@@ -387,7 +392,7 @@ _cli_target="${HOME}/.atlas/shell"
 _scripts_target="${HOME}/.atlas/scripts"
 mkdir -p "$_cli_target" "$_scripts_target" 2>/dev/null
 for _pair in "atlas-cli.sh:${_cli_target}/atlas.sh" "setup-wizard.sh:${_cli_target}/setup-wizard.sh" "starship-atlas-fragment.toml:${_cli_target}/starship-atlas-fragment.toml" "cship.toml:${_cli_target}/cship.toml" "load-secrets.sh:${_scripts_target}/load-secrets.sh" "fix-cc-settings.sh:${_scripts_target}/fix-cc-settings.sh"; do
-  _src="${PLUGIN_ROOT}/scripts/${_pair%%:*}"
+  _src="${_atlas_core_scripts}/${_pair%%:*}"
   _dst="${_pair#*:}"
   if [ -f "$_src" ]; then
     if [ ! -f "$_dst" ] || ! diff -q "$_src" "$_dst" &>/dev/null; then
@@ -397,10 +402,10 @@ for _pair in "atlas-cli.sh:${_cli_target}/atlas.sh" "setup-wizard.sh:${_cli_targ
   fi
 done
 # Inject real plugin version into deployed atlas.sh (fix version drift)
+# Uses LATEST atlas-core version, not PLUGIN_ROOT (which may be CC-pinned stale)
 _deployed_cli="${_cli_target}/atlas.sh"
 if [ -f "$_deployed_cli" ]; then
-  _real_version=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "?")
-  sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"${_real_version}\"/" "$_deployed_cli"
+  sed -i "s/^ATLAS_VERSION=.*/ATLAS_VERSION=\"${_atlas_core_version}\"/" "$_deployed_cli"
 fi
 # Ensure .zshrc sources atlas.sh (idempotent)
 if ! grep -q 'atlas/shell/atlas.sh' "${HOME}/.zshrc" 2>/dev/null; then
