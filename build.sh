@@ -255,9 +255,15 @@ build_tier() {
   # Copy CShip config (statusline)
   [ -f "scripts/cship.toml" ] && cp "scripts/cship.toml" "$output/scripts/"
 
-  # Generate tier-specific atlas-assist SKILL.md
-  mkdir -p "$output/skills/atlas-assist"
-  ./scripts/generate-master-skill.sh "$tier" "$output/skills/atlas-assist/SKILL.md"
+  # v5.1+: atlas-assist is UNIFIED (single master in atlas-core).
+  # Source of truth: scripts/atlas-assist-master.md (hand-crafted, adaptive).
+  # The master reads ~/.atlas/runtime/capabilities.json at runtime to adapt
+  # persona/pipeline based on installed addons. dev/admin addons NO LONGER
+  # ship their own atlas-assist (avoids namespace conflicts + duplication).
+  if [ "$tier" = "core" ]; then
+    mkdir -p "$output/skills/atlas-assist"
+    cp scripts/atlas-assist-master.md "$output/skills/atlas-assist/SKILL.md"
+  fi
 
   # Generate tier-specific plugin.json (with buildTimestamp for CC cache invalidation)
   local tier_upper build_ts
@@ -588,13 +594,13 @@ build_v5_plugin() {
   cp VERSION "$output/VERSION"
   [ -f "settings.json" ] && cp settings.json "$output/settings.json"
 
-  # Generate atlas-assist for this v5 plugin
+  # v5.1+: atlas-assist is UNIFIED in atlas-core (see scripts/atlas-assist-master.md).
+  # Only the core plugin ships the master skill; addons rely on it via discovery.
   local tier_label
   tier_label=$(yq -r '.tier // "core"' "$profile")
-  mkdir -p "$output/skills/atlas-assist"
-  if [ -f "scripts/generate-master-skill.sh" ]; then
-    ./scripts/generate-master-skill.sh "$tier_label" "$output/skills/atlas-assist/SKILL.md" 2>/dev/null || \
-    echo "⚠️  atlas-assist generation skipped (generate-master-skill.sh needs tier=${tier_label})"
+  if [ "$tier_label" = "core" ]; then
+    mkdir -p "$output/skills/atlas-assist"
+    cp scripts/atlas-assist-master.md "$output/skills/atlas-assist/SKILL.md"
   fi
 
   # plugin.json
