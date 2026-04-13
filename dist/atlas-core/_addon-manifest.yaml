@@ -1,0 +1,16 @@
+# ATLAS Addon Manifest — Static metadata for capability discovery.
+# Version + skills/agents counts are computed at runtime by atlas-discover-addons.sh
+# (reads VERSION file + counts skills/*/SKILL.md and agents/*/AGENT.md in this dir).
+schema_version: "1.0"
+
+name: atlas-core
+tier: core
+tier_priority: 1   # 1=core (base), 2=dev, 3=admin (highest wins for persona)
+
+persona_contribution: "helpful assistant"
+pipeline_phases:
+  - DISCOVER
+  - ASSIST
+
+banner_label: "Core"
+description: "Shared base — session, memory, context, personal, experiential"
