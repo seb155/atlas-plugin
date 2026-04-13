@@ -267,6 +267,17 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" subagent-output-capture",
+            "async": true,
+            "timeout": 5
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
