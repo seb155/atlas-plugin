@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.6.0 (2026-04-13)
+
+### ✨ Features
+- feat(statusline): add update indicator "↗ X.Y.Z" when marketplace ahead
+
+
+
 ## v5.5.1 (2026-04-13)
 
 ### 🐛 Bug Fixes
