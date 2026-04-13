@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.3.0 (2026-04-13)
+
+### ✨ Features
+- feat(statusline): sp-agent-vis phase 2 — layer 2 agents indicator
+
+
+
 ## v5.2.0 (2026-04-13)
 
 ### ✨ Features
