@@ -340,10 +340,39 @@ if [ -f "$_plugin_statusline" ]; then
 fi
 
 # 4. Deploy custom statusline modules (Starship/CShip custom.* resolvers)
+# ─── FIX 2026-04-13: copy from HIGHEST cache version, not PLUGIN_ROOT ───
+# CC's PLUGIN_ROOT reflects installed_plugins.json pin (can be stale).
+# When multiple cache versions exist (e.g., 5.1.0 + 5.6.0 coexist), we
+# want ~/.local/share/atlas-statusline/ to have the LATEST logic — not
+# whatever CC's registry points at. Triple-fallback resolution:
+#   1. capabilities.json .addons[].path for atlas-core (SSoT)
+#   2. find highest semver cache dir via filesystem scan
+#   3. PLUGIN_ROOT (legacy behavior, safe default)
 _sl_target="${HOME}/.local/share/atlas-statusline"
 mkdir -p "$_sl_target" 2>/dev/null
+
+_sl_src_base=""
+_caps_file="$HOME/.atlas/runtime/capabilities.json"
+if [ -f "$_caps_file" ] && command -v jq &>/dev/null; then
+  _atlas_core_path=$(jq -r '.addons[]? | select(.name=="atlas-core") | .path' "$_caps_file" 2>/dev/null)
+  if [ -n "$_atlas_core_path" ] && [ -d "${_atlas_core_path%/}/scripts" ]; then
+    _sl_src_base="${_atlas_core_path%/}/scripts"
+  fi
+fi
+if [ -z "$_sl_src_base" ]; then
+  _cache_root="$HOME/.claude/plugins/cache/atlas-marketplace/atlas-core"
+  if [ -d "$_cache_root" ]; then
+    _latest_ver=$(find "$_cache_root" -maxdepth 1 -mindepth 1 -type d \
+      -regex '.*/[0-9]+\.[0-9]+\.[0-9]+$' 2>/dev/null \
+      | awk -F/ '{print $NF}' | sort -V | tail -1)
+    [ -n "$_latest_ver" ] && [ -d "${_cache_root}/${_latest_ver}/scripts" ] && \
+      _sl_src_base="${_cache_root}/${_latest_ver}/scripts"
+  fi
+fi
+[ -z "$_sl_src_base" ] && _sl_src_base="${PLUGIN_ROOT}/scripts"
+
 for _mod in atlas-resolve-version.sh atlas-alert-module.sh atlas-context-size-module.sh; do
-  _src="${PLUGIN_ROOT}/scripts/${_mod}"
+  _src="${_sl_src_base}/${_mod}"
   _dst="${_sl_target}/${_mod}"
   if [ -f "$_src" ]; then
     if [ ! -f "$_dst" ] || ! diff -q "$_src" "$_dst" &>/dev/null; then
