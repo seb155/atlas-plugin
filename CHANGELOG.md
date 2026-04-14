@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.15.0 (2026-04-14)
+
+### ✨ Features
+- feat(ci): expand atlas ci CLI — rerun/watch/secrets/agents + decode null fix (#13)
+
+
+
 ## v5.14.0 (2026-04-14)
 
 ### ✨ Features
