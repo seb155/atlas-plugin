@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by user shells (zsh/.zshrc). See ~/.zshrc integration guide.
 # ═══════════════════════════════════════════════════════════════
 # ATLAS — Unified Claude Code Launcher & Management CLI
 # © 2026 AXOIQ Inc. | Proprietary Software

@@ -41,7 +41,14 @@ def _read_marketplace_version() -> str:
     return plugins[0].get("version", "")
 
 
-SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+# Semver 2.0 regex — accepts X.Y.Z and X.Y.Z-PRERELEASE[+BUILD].
+# Reference: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+SEMVER_RE = re.compile(
+    r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)"
+    r"(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+    r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+    r"(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+)
 
 
 class TestVersionFile:

@@ -34,14 +34,28 @@ _atlas_list() {
 
 # atlas resume [project]
 _atlas_resume() {
-  local project="$1"
-  if [ -n "$project" ]; then
-    local path=$(_atlas_resolve_project "$project")
-    [ -z "$path" ] && { echo "Project '$project' not found."; return 1; }
-    builtin cd "$path" && claude -c --chrome
-  else
+  # v5.7.0+ — Dual-mode resume (Phase 4):
+  #   1. atlas resume               → claude -c (last session)
+  #   2. atlas resume <project>     → cd to project + claude -c (legacy)
+  #   3. atlas resume <session-name> → claude --resume <name> (v2.0.64+)
+  # Disambiguation: project lookup first, fallback to --resume by name.
+  local arg="$1"
+  if [[ -z "$arg" ]]; then
     claude -c --chrome
+    return
   fi
+
+  # Priority 1: resolve as project path (legacy behavior)
+  local path
+  path=$(_atlas_resolve_project "$arg" 2>/dev/null || echo "")
+  if [[ -n "$path" ]]; then
+    builtin cd "$path" && claude -c --chrome
+    return
+  fi
+
+  # Priority 2: pass through as --resume session name (v2.0.64+)
+  echo "Resuming session by name: $arg (via claude --resume)"
+  claude --resume "$arg"
 }
 
 # atlas status
@@ -1060,6 +1074,56 @@ _atlas_feature() {
 
   git checkout -b "$branch" 2>&1 | head -3
   printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} Branch created. Now: atlas \"${name}\" to launch Claude Code\n"
+}
+
+# v5.7.0+ — Semantic worktree naming (Phase 3 of sleepy-tumbling-hennessy)
+#
+# Usage: atlas feat|fix|hotfix|chore|refactor <description>
+# Creates: <prefix>-<description> worktree + session with same name
+# Enforces: regex ^(feat|fix|hotfix|chore|refactor)-[a-z0-9-]{3,50}$
+#           (rejects date-only names like "0414")
+_atlas_semantic_worktree() {
+  local prefix="$1"
+  shift
+  local desc="$*"
+
+  if [[ -z "$desc" ]]; then
+    echo "Usage: atlas $prefix <description>"
+    echo "  Example: atlas $prefix cc-alignment → worktree ${prefix}-cc-alignment"
+    echo "  Rules: kebab-case, 3-50 chars, [a-z0-9-] only"
+    return 1
+  fi
+
+  # Slugify: lowercase, kebab-case
+  local slug
+  slug=$(echo "$desc" | /usr/bin/tr '[:upper:] _' '[:lower:]--' | /usr/bin/sed 's/[^a-z0-9-]//g; s/--*/-/g; s/^-//; s/-$//')
+
+  # Validate: no date-only, proper length
+  if ! echo "$slug" | grep -qE '^[a-z0-9-]{3,50}$'; then
+    echo "❌ Invalid name: '$slug'"
+    echo "   Must match: [a-z0-9-]{3,50}"
+    return 1
+  fi
+
+  # Reject date-only patterns (like "0414", "2026-04-14", etc.)
+  if echo "$slug" | grep -qE '^[0-9-]+$'; then
+    echo "❌ Date-only names rejected: '$slug'"
+    echo "   Use a semantic description (e.g., '$prefix bug-fix' not '$prefix $slug')"
+    return 1
+  fi
+
+  local branch="${prefix}-${slug}"
+
+  # Launch claude with worktree + session name
+  printf "🌳 Launching worktree: %s (session: %s)\n" "$branch" "$branch"
+  local claude_bin
+  claude_bin=$(command -v claude 2>/dev/null || echo "/usr/local/bin/claude")
+  if [[ ! -x "$claude_bin" ]]; then
+    echo "❌ claude binary not found"
+    return 1
+  fi
+
+  "$claude_bin" -w "$branch" -n "$branch"
 }
 
 # atlas promote <worktree-name>

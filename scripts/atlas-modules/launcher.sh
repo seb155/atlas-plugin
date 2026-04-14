@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: Interactive Menu, Tmux Split, Main Entry Point
 # Sourced by atlas-cli.sh — do not execute directly
 
@@ -233,6 +235,12 @@ atlas() {
     worktrees|wt) _atlas_worktrees; return ;;
     cleanup) shift; _atlas_cleanup "$@"; return ;;
     feature|-f) shift; _atlas_feature "$@"; return ;;
+    # v5.7.0+ Phase 3 — Semantic worktree subcommands (naming enforced)
+    feat)     shift; _atlas_semantic_worktree feat "$@"; return ;;
+    fix)      shift; _atlas_semantic_worktree fix "$@"; return ;;
+    hotfix)   shift; _atlas_semantic_worktree hotfix "$@"; return ;;
+    chore)    shift; _atlas_semantic_worktree chore "$@"; return ;;
+    refactor) shift; _atlas_semantic_worktree refactor "$@"; return ;;
     promote) shift; _atlas_promote "$@"; return ;;
     review) shift; _atlas_review "$@"; return ;;
     blast) shift; _atlas_blast "$@"; return ;;
@@ -352,7 +360,8 @@ print(handoffs[-1] if handoffs else '')
   if [ -f "${_plugin_src}/VERSION" ]; then
     local _src_time _cache_time
     _src_time=$(stat -c %Y "${_plugin_src}/VERSION" 2>/dev/null || echo 0)
-    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION(N) 2>/dev/null | /usr/bin/head -1 || echo 0)
+    # Find the first VERSION file in any atlas-admin version dir (cross-shell safe).
+    _cache_time=$(find "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/" -mindepth 2 -maxdepth 2 -name VERSION -type f 2>/dev/null | /usr/bin/head -1 | xargs -I{} stat -c %Y {} 2>/dev/null || echo 0)
     if [ "${_src_time:-0}" -gt "${_cache_time:-0}" ]; then
       echo "🔄 Plugin source newer than cache, rebuilding..."
       (cd "${_plugin_src}" && make dev-admin 2>/dev/null) && echo "   ✅ Plugin rebuilt" || echo "   ⚠️  Plugin rebuild failed (non-blocking)"
@@ -383,7 +392,7 @@ print(handoffs[-1] if handoffs else '')
     else
       # Fallback: project-MMDD (still meaningful, never random)
       local _wt_project
-      _wt_project="${path:t}"
+      _wt_project="$(basename "$path")"
       cmd+=(-w "${_wt_project}-$(/usr/bin/date '+%m%d')")
     fi
   fi
@@ -453,7 +462,9 @@ print(handoffs[-1] if handoffs else '')
   else
     # builtin cd bypasses zoxide wrapper; direnv export loads .envrc silently
     builtin cd "$path" \
-      && eval "$(DIRENV_LOG_FORMAT= direnv export zsh 2>/dev/null)" \
+      && { # shellcheck disable=SC2046
+           # direnv output is trusted (it's OUR config), so eval is intentional here.
+           eval "$(DIRENV_LOG_FORMAT= direnv export zsh 2>/dev/null)"; } \
       && export PATH="$_full_path" \
       && "${cmd[@]}"
   fi

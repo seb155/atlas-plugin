@@ -153,10 +153,11 @@ def test_cship_toml_registers_atlas_agents():
     assert "[custom.atlas_agents]" in toml, "cship.toml missing [custom.atlas_agents] definition"
 
 
-def test_cship_atlas_toml_registers_atlas_agents():
-    """cship-atlas.toml variant must also register $custom.atlas_agents."""
-    toml = (SCRIPTS_DIR / "cship-atlas.toml").read_text()
-    assert "$custom.atlas_agents" in toml
+# test_cship_atlas_toml_registers_atlas_agents — REMOVED in v5.7.0-alpha.1.
+# Phase 1 of sleepy-tumbling-hennessy.md merged scripts/cship-atlas.toml
+# into scripts/cship.toml (single SSoT for ATLAS statusline). The test
+# above (test_cship_toml_registers_atlas_agents) covers the consolidated
+# file. No variant exists anymore — dropping the obsolete test.
 
 
 # ============================================================

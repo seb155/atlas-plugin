@@ -1,14 +1,22 @@
-# CShip + ATLAS Plugin — Layout v5 (SOTA CC 2.1.85 / Opus 4.6 1M)
-# Row 1: 🏛️ version 👑tier  🟣 model (CTX)  📁 dir  🌿 git  🌳 worktree  📋 session
-# Row 2: context bar  📈 lines  ⏱ rate limits
-# Row 3: ⚠️ alert (conditional: context >75%)
+# CShip + ATLAS Plugin — Layout v6 (CC 2.1.107 alignment, v5.7.0)
+# Phase 1 of sleepy-tumbling-hennessy.md big-bang plan.
+#
+# Row 1: 🏛️ version 👑tier  🟣 model (ctx)  📁 dir  🌿 git  🌳 worktree  📋 session  🤖 agents
+# Row 2: context_bar  📊 effort  💰 cost_usd  📈 lines  ⏱ rate_limits  ⚠️ 200K+ (cond)
+# Row 3: alert (conditional: context >75%)
+#
+# Refresh: every 10s for live rate_limits + cost updates.
+# Status line JSON input (CC v2.1.107):
+#   model.id / context_window.{size,used_percentage} / cost.total_cost_usd /
+#   effort / rate_limits / workspace.{git_worktree,added_dirs} / exceeds_200k_tokens
 
 [cship]
 lines = [
   "🏛️ ATLAS $custom.atlas_version 👑$custom.atlas_tier  $cship.model ($custom.atlas_context_size)  $directory  $git_branch $git_status  $cship.worktree  $cship.session  $custom.atlas_agents",
-  "$cship.context_bar  📈 $cship.cost.total_lines_added $cship.cost.total_lines_removed  $cship.usage_limits",
+  "$cship.context_bar  $custom.atlas_effort  $custom.atlas_cost_usd  📈 $cship.cost.total_lines_added $cship.cost.total_lines_removed  $cship.usage_limits  $custom.atlas_200k_badge",
   "$custom.atlas_alert"
 ]
+refresh_interval = 10
 
 [cship.model]
 symbol = "🟣 "
@@ -42,6 +50,7 @@ style = "bold blue"
 style = "dim"
 
 # ─── Custom Modules (resolved via shell scripts) ─────────────
+
 [custom.atlas_context_size]
 command = "~/.local/share/atlas-statusline/atlas-context-size-module.sh"
 style = "bold cyan"
@@ -54,13 +63,25 @@ style = "bold cyan"
 command = "jq -r '.tier // \"?\"' ${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json 2>/dev/null || echo '?'"
 style = "bold yellow"
 
+[custom.atlas_agents]
+command = "~/.local/share/atlas-statusline/atlas-agents-module.sh"
+style = "bold yellow"
+
+[custom.atlas_effort]
+# v5.7.0 — Effort level badge (CC v2.1.84+)
+command = "~/.local/share/atlas-statusline/atlas-effort-module.sh"
+style = "bold magenta"
+
+[custom.atlas_cost_usd]
+# v5.7.0 — Session cost USD (CC v2.1.x cost.total_cost_usd)
+command = "~/.local/share/atlas-statusline/atlas-cost-usd-module.sh"
+style = "dim green"
+
+[custom.atlas_200k_badge]
+# v5.7.0 — Warning when exceeds_200k_tokens=true (CC v2.1.87+)
+command = "~/.local/share/atlas-statusline/atlas-200k-badge-module.sh"
+style = "bold yellow"
+
 [custom.atlas_alert]
 command = "~/.local/share/atlas-statusline/atlas-alert-module.sh"
 style = "bold red"
-
-[custom.atlas_agents]
-# SP-AGENT-VIS Layer 2 — Subagent visibility indicator
-# Format: "🤖 2▶ 1✓" (running / completed last 30min / failed)
-# Empty output = module hidden (no agents tracked yet)
-command = "~/.local/share/atlas-statusline/atlas-agents-module.sh"
-style = "bold yellow"

@@ -6,7 +6,7 @@
 # NOTE: Use $$ for shell variables (WP eats single $)
 
 when:
-  branch: [main, "feature/*", "hotfix/*"]
+  branch: [main, "feature/*", "feat/*", "hotfix/*", "fix/*"]
   event: [push, pull_request]
 
 steps:
@@ -19,6 +19,25 @@ steps:
     commands:
       - pip install pytest pyyaml -q
       - python3 -m pytest tests/ -m "not build and not integration and not broken" -x -q --tb=short
+
+  # ═══════════════════════════════════════════════════════════════
+  # L1 SHELLCHECK — shell script lint, soft-fail until Phase 9
+  # ═══════════════════════════════════════════════════════════════
+
+  l1-shellcheck:
+    image: koalaman/shellcheck-alpine:stable
+    commands:
+      - |
+        shellcheck -x -S warning \
+          scripts/atlas-modules/*.sh \
+          scripts/atlas-cli.sh \
+          scripts/setup-wizard.sh \
+          scripts/atlas-bootstrap.sh \
+          scripts/atlas-e2e-validate.sh \
+          hooks/lib/*.sh \
+          hooks/run-hook.sh \
+          || echo "shellcheck warnings found (non-blocking until Phase 9 hygiene)"
+    failure: ignore  # Soft-fail: Phase 6G bootstrap, hard-fail after Phase 9 cleanup
 
   # ═══════════════════════════════════════════════════════════════
   # BUILD v5 — core + addons (replaces old tier build)

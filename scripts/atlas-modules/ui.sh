@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: Session Names, Project Discovery, History, Branding
 # Sourced by atlas-cli.sh — do not execute directly
 
@@ -27,7 +29,7 @@ _atlas_discover_projects() {
     for d in "$scan_dir"/*/; do
       [ -d "$d/.git" ] || [ -d "$d/.claude" ] || continue
       local name="${d%/}"
-      name="${name:t}"
+      name="$(basename "$name")"
       results+=("$name:${d%/}")
     done
   done

@@ -7,7 +7,8 @@ when:
 
 steps:
   secret-scan:
-    image: zricethezav/gitleaks:latest
+    image: zricethezav/gitleaks:8.21
     commands:
-      - gitleaks detect --source . --no-git --verbose || echo "⚠️ gitleaks found potential secrets (review required)"
-    failure: ignore
+      # Hard-fail since v5.7.0-alpha.1 (Phase 6F).
+      # If a false positive appears, add to .gitleaks.toml allowlist — do NOT revert to failure:ignore.
+      - gitleaks detect --source . --no-git --verbose

@@ -85,6 +85,11 @@ hooks:
 - suggest-episode
 - config-change
 - instructions-loaded
+# v5.7.0+ Phase 6F-bis: Wire pre-v5.7.0 tech-debt hooks (was KNOWN_UNDECLARED_BASELINE)
+- tdd-guard               # PreToolUse[Write|Edit] — block edits without failing test
+- claudemd-lint           # PostToolUse[Write|Edit] on CLAUDE.md — validate frontmatter + W3H
+- detect-stale-git        # Stop — warn if working tree has stale refs / uncommitted
+- feature-drift-detector  # Stop — flag scope creep outside feature branch
 agents:
 - plan-architect
 - plan-reviewer

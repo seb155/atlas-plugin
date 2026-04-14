@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: Subcommands (list, resume, status, dashboard, help, hooks, doctor)
 # Sourced by atlas-cli.sh — do not execute directly
 
@@ -34,14 +36,28 @@ _atlas_list() {
 
 # atlas resume [project]
 _atlas_resume() {
-  local project="$1"
-  if [ -n "$project" ]; then
-    local path=$(_atlas_resolve_project "$project")
-    [ -z "$path" ] && { echo "Project '$project' not found."; return 1; }
-    builtin cd "$path" && claude -c --chrome
-  else
+  # v5.7.0+ — Dual-mode resume (Phase 4):
+  #   1. atlas resume               → claude -c (last session)
+  #   2. atlas resume <project>     → cd to project + claude -c (legacy)
+  #   3. atlas resume <session-name> → claude --resume <name> (v2.0.64+)
+  # Disambiguation: project lookup first, fallback to --resume by name.
+  local arg="$1"
+  if [[ -z "$arg" ]]; then
     claude -c --chrome
+    return
   fi
+
+  # Priority 1: resolve as project path (legacy behavior)
+  local path
+  path=$(_atlas_resolve_project "$arg" 2>/dev/null || echo "")
+  if [[ -n "$path" ]]; then
+    builtin cd "$path" && claude -c --chrome
+    return
+  fi
+
+  # Priority 2: pass through as --resume session name (v2.0.64+)
+  echo "Resuming session by name: $arg (via claude --resume)"
+  claude --resume "$arg"
 }
 
 # atlas status
@@ -51,8 +67,10 @@ _atlas_status() {
 
   # Git branch
   local branch=$(git branch --show-current 2>/dev/null || echo "N/A")
-  local repo="${$(git rev-parse --show-toplevel 2>/dev/null):t}"
-  [ -z "$repo" ] && repo="N/A"
+  local _top
+  _top=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+  local repo="$(basename "$_top")"
+  [ -z "$_top" ] && repo="N/A"
   printf "  📂 %-14s ${ATLAS_CYAN}%s${ATLAS_RESET} (branch: ${ATLAS_CYAN}%s${ATLAS_RESET})\n" "Repo" "$repo" "$branch"
 
   # Worktree count
@@ -81,7 +99,7 @@ _atlas_status() {
 
   # CI status (Woodpecker CI)
   if [ -n "${WP_TOKEN:-}" ]; then
-    local wp_url="${WP_URL:-http://192.168.10.76:8000}"
+    local wp_url="${WP_URL:-https://ci.axoiq.com}"
     local ci_status
     ci_status=$(curl -sf --max-time 3 "${wp_url}/api/repos/1/pipelines?per_page=1" \
       -H "Authorization: Bearer ${WP_TOKEN}" 2>/dev/null | python3 -c "
@@ -234,7 +252,7 @@ _atlas_complexity() {
   local desc="$*"
   [ -z "$desc" ] && { echo "Usage: atlas complexity \"task description\""; return 1; }
   local script="${ATLAS_SHELL_DIR}/../scripts/task-complexity.sh"
-  [ -f "$script" ] || script="${${ATLAS_SHELL_DIR:h}:h}/scripts/task-complexity.sh"
+  [ -f "$script" ] || script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/task-complexity.sh"
   [ -f "$script" ] || { echo "task-complexity.sh not found"; return 1; }
   local result=$(bash "$script" "$desc")
   local level=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" 2>/dev/null)
@@ -256,7 +274,7 @@ _atlas_ci() {
   printf "  ${ATLAS_BOLD}CI Pipeline Status (Woodpecker)${ATLAS_RESET}\n\n"
 
   local token="${WP_TOKEN:-}"
-  local wp_url="${WP_URL:-http://192.168.10.76:8000}"
+  local wp_url="${WP_URL:-https://ci.axoiq.com}"
 
   if [ -z "$token" ]; then
     [ -f "$HOME/.env" ] && source "$HOME/.env" 2>/dev/null
@@ -316,13 +334,13 @@ _atlas_worktrees() {
   for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
     local wt_dir="$repo_dir/worktrees"
     [ -d "$wt_dir" ] || continue
-    local repo_root="${repo_dir:h}"
+    local repo_root="$(dirname "$repo_dir")"
     [ -d "$repo_root/.git" ] || continue
-    local repo_name="${repo_root:t}"
+    local repo_name="$(basename "$repo_root")"
 
-    for wt in "$wt_dir"/*(N/); do
+    while IFS= read -r wt; do
       [ -d "$wt" ] || continue
-      local name="${wt:t}"
+      local name="$(basename "$wt")"
       found=$((found + 1))
 
       # Get branch
@@ -346,14 +364,14 @@ _atlas_worktrees() {
       [ "$age_days" -ge 14 ] && age_str="${ATLAS_RED}${age_days}d${ATLAS_RESET}"
 
       printf "  %-20s %-24s %-8s %-8s %-6s\n" "${repo_name}/${name}" "$branch" "$dirty_str" "$ahead_str" "$age_str"
-    done
+    done < <(find "$wt_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
 
     # Also check .worktrees/ (manual)
     local manual_dir="$repo_root/.worktrees"
     if [ -d "$manual_dir" ]; then
-      for wt in "$manual_dir"/*(N/); do
+      while IFS= read -r wt; do
         [ -d "$wt" ] || continue
-        local name="${wt:t}"
+        local name="$(basename "$wt")"
         found=$((found + 1))
         local branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
         local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
@@ -367,7 +385,7 @@ _atlas_worktrees() {
         local age_str="${age_days}d"
         [ "$age_days" -ge 7 ] && age_str="${ATLAS_YELLOW}${age_days}d${ATLAS_RESET}"
         printf "  %-20s %-24s %-8s %-8s %-6s\n" "${repo_name}/${name}*" "$branch" "$dirty_str" "$ahead_str" "$age_str"
-      done
+      done < <(find "$manual_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
     fi
   done
 
@@ -403,16 +421,16 @@ _atlas_cleanup() {
   local skipped=0
 
   for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
-    local repo_root="${repo_dir:h}"
+    local repo_root="$(dirname "$repo_dir")"
     [ -d "$repo_root/.git" ] || continue
-    local repo_name="${repo_root:t}"
+    local repo_name="$(basename "$repo_root")"
 
     # Scan both .claude/worktrees/ (CC-auto) and .worktrees/ (manual)
     for wt_parent in "$repo_dir/worktrees" "$repo_root/.worktrees"; do
       [ -d "$wt_parent" ] || continue
-      for wt in "$wt_parent"/*(N/); do
+      while IFS= read -r wt; do
         [ -d "$wt" ] || continue
-        local name="${wt:t}"
+        local name="$(basename "$wt")"
 
         # Skip if dirty
         local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
@@ -447,7 +465,7 @@ _atlas_cleanup() {
             printf "  ${ATLAS_RED}✗ failed${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_DIM}(try: git worktree prune)${ATLAS_RESET}\n"
           fi
         fi
-      done
+      done < <(find "$wt_parent" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
     done
   done
 
@@ -713,13 +731,13 @@ _atlas_hooks() {
 
   # 1. Plugin hooks
   local found=0
-  for tier_dir in "$cache"/atlas-*/(N); do
+  while IFS= read -r tier_dir; do
     [ -d "$tier_dir" ] || continue
-    for ver_dir in "$tier_dir"*/(N); do
+    while IFS= read -r ver_dir; do
       [ -d "$ver_dir" ] || continue
       local hj="$ver_dir/hooks/hooks.json"
       [ -f "$hj" ] || continue
-      local tier="${tier_dir:t}"
+      local tier="$(basename "$tier_dir")"
       local events=$(python3 -c "import json; d=json.load(open('$hj')); print(len(d.get('hooks',{})))" 2>/dev/null)
       local handlers=$(python3 -c "
 import json
@@ -730,8 +748,8 @@ print(t)
       printf "  ✅ %-20s %s events, %s handlers\n" "$tier" "$events" "$handlers"
       found=1
       break
-    done
-  done
+    done < <(find "$tier_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+  done < <(find "$cache" -mindepth 1 -maxdepth 1 -type d -name "atlas-*" 2>/dev/null)
   [ $found -eq 0 ] && printf "  ❌ No plugin hooks.json found\n"
 
   # 2. settings.json hooks (should be empty)
@@ -763,19 +781,19 @@ print(t)
   # 4. Stale local hooks
   echo ""
   local stale=0
-  for script in "$HOME/.claude/hooks/"*.sh(N); do
+  while IFS= read -r script; do
     [ -f "$script" ] || continue
-    local name="${${script:t}%.sh}"
-    for tier_dir in "$cache"/atlas-*/(N); do
-      for ver_dir in "$tier_dir"*/(N); do
+    local name="$(basename "$script" .sh)"
+    while IFS= read -r tier_dir; do
+      while IFS= read -r ver_dir; do
         if [ -f "$ver_dir/hooks/$name" ] 2>/dev/null; then
           printf "  ⚠️  Stale: %s.sh (exists in plugin as %s)\n" "$name" "$name"
           stale=$((stale + 1))
           break 2
         fi
-      done
-    done
-  done
+      done < <(find "$tier_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+    done < <(find "$cache" -mindepth 1 -maxdepth 1 -type d -name "atlas-*" 2>/dev/null)
+  done < <(find "$HOME/.claude/hooks" -mindepth 1 -maxdepth 1 -type f -name "*.sh" 2>/dev/null)
   [ $stale -eq 0 ] && printf "  ✅ No stale local hooks\n"
 
   echo ""
@@ -795,7 +813,8 @@ _atlas_doctor() {
 
   _check() {
     checks=$((checks + 1))
-    if eval "$2" &>/dev/null; then
+    # bash -c isolates the check command — safer than eval (no side effects).
+    if bash -c "$2" >/dev/null 2>&1; then
       passed=$((passed + 1))
       printf "    ${ATLAS_CYAN}✓${ATLAS_RESET} %-30s %s\n" "$1" "$3"
     else
@@ -953,7 +972,7 @@ _atlas_preflight() {
 
   _check() {
     local name="$1" check_cmd="$2" fix_hint="$3"
-    if eval "$check_cmd" &>/dev/null; then
+    if bash -c "$check_cmd" >/dev/null 2>&1; then
       printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} %s\n" "$name"
     else
       printf "  ${ATLAS_RED}✗${ATLAS_RESET} %s ${ATLAS_DIM}— %s${ATLAS_RESET}\n" "$name" "$fix_hint"
@@ -963,7 +982,7 @@ _atlas_preflight() {
 
   _warn() {
     local name="$1" check_cmd="$2" hint="$3"
-    if eval "$check_cmd" &>/dev/null; then
+    if bash -c "$check_cmd" >/dev/null 2>&1; then
       printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} %s\n" "$name"
     else
       printf "  ${ATLAS_YELLOW}⚠${ATLAS_RESET} %s ${ATLAS_DIM}— %s${ATLAS_RESET}\n" "$name" "$hint"
@@ -1060,6 +1079,56 @@ _atlas_feature() {
 
   git checkout -b "$branch" 2>&1 | head -3
   printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} Branch created. Now: atlas \"${name}\" to launch Claude Code\n"
+}
+
+# v5.7.0+ — Semantic worktree naming (Phase 3 of sleepy-tumbling-hennessy)
+#
+# Usage: atlas feat|fix|hotfix|chore|refactor <description>
+# Creates: <prefix>-<description> worktree + session with same name
+# Enforces: regex ^(feat|fix|hotfix|chore|refactor)-[a-z0-9-]{3,50}$
+#           (rejects date-only names like "0414")
+_atlas_semantic_worktree() {
+  local prefix="$1"
+  shift
+  local desc="$*"
+
+  if [[ -z "$desc" ]]; then
+    echo "Usage: atlas $prefix <description>"
+    echo "  Example: atlas $prefix cc-alignment → worktree ${prefix}-cc-alignment"
+    echo "  Rules: kebab-case, 3-50 chars, [a-z0-9-] only"
+    return 1
+  fi
+
+  # Slugify: lowercase, kebab-case
+  local slug
+  slug=$(echo "$desc" | /usr/bin/tr '[:upper:] _' '[:lower:]--' | /usr/bin/sed 's/[^a-z0-9-]//g; s/--*/-/g; s/^-//; s/-$//')
+
+  # Validate: no date-only, proper length
+  if ! echo "$slug" | grep -qE '^[a-z0-9-]{3,50}$'; then
+    echo "❌ Invalid name: '$slug'"
+    echo "   Must match: [a-z0-9-]{3,50}"
+    return 1
+  fi
+
+  # Reject date-only patterns (like "0414", "2026-04-14", etc.)
+  if echo "$slug" | grep -qE '^[0-9-]+$'; then
+    echo "❌ Date-only names rejected: '$slug'"
+    echo "   Use a semantic description (e.g., '$prefix bug-fix' not '$prefix $slug')"
+    return 1
+  fi
+
+  local branch="${prefix}-${slug}"
+
+  # Launch claude with worktree + session name
+  printf "🌳 Launching worktree: %s (session: %s)\n" "$branch" "$branch"
+  local claude_bin
+  claude_bin=$(command -v claude 2>/dev/null || echo "/usr/local/bin/claude")
+  if [[ ! -x "$claude_bin" ]]; then
+    echo "❌ claude binary not found"
+    return 1
+  fi
+
+  "$claude_bin" -w "$branch" -n "$branch"
 }
 
 # atlas promote <worktree-name>

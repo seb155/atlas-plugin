@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# ATLAS Hook: FileChanged handler (CC v2.1.83+)
+#
+# Fires when a file is modified (via Edit/Write tool).
+# OPTIONAL reactive test runner — DISABLED BY DEFAULT.
+#
+# Enable per session: export ATLAS_FILE_CHANGED_ENABLED=1
+# Or in .atlas/settings.yaml:
+#   hooks:
+#     file_changed:
+#       enabled: true
+#       patterns: ["*.py", "*.ts"]
+#       action: run_tests | notify_only
+
+set -euo pipefail
+
+# FLAG CHECK — default disabled to avoid noise on every edit
+if [[ "${ATLAS_FILE_CHANGED_ENABLED:-0}" != "1" ]]; then
+  exit 0
+fi
+
+readonly LOG_FILE="${HOME}/.atlas/logs/file-changed.jsonl"
+readonly STDIN_JSON="$(cat 2>/dev/null || echo '{}')"
+
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+
+FILE_PATH=""
+CHANGE_TYPE=""
+if command -v jq >/dev/null 2>&1; then
+  FILE_PATH="$(echo "$STDIN_JSON" | jq -r '.file.path // .filePath // ""' 2>/dev/null || echo "")"
+  CHANGE_TYPE="$(echo "$STDIN_JSON" | jq -r '.change_type // .changeType // "modify"' 2>/dev/null || echo "modify")"
+fi
+
+{
+  printf '{"ts":"%s","event":"FileChanged","path":"%s","type":"%s"}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    "${FILE_PATH}" \
+    "${CHANGE_TYPE}"
+} >> "$LOG_FILE" 2>/dev/null || true
+
+# Future: trigger reactive tests if patterns match
+# For now, log-only mode
+
+exit 0

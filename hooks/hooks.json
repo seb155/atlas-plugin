@@ -39,6 +39,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/external-capabilities\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-threshold-injector\"",
+            "async": false,
+            "timeout": 5
           }
         ]
       },
@@ -328,6 +334,12 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-budget-guardian\"",
             "timeout": 2
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-threshold-injector\"",
+            "async": false,
+            "timeout": 5
           }
         ]
       }
@@ -453,6 +465,90 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/config-change\"",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-setup\"",
+            "async": false,
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-cleanup-native\"",
+            "async": false,
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/team-idle-notify\"",
+            "async": true,
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/task-completed-metrics\"",
+            "async": true,
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "FileChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/file-change-test-trigger\"",
+            "async": true,
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "TaskCreated": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/task-created-metrics\"",
+            "async": true,
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "ExitWorktree": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-exit-safe\"",
+            "async": false,
+            "timeout": 10
           }
         ]
       }

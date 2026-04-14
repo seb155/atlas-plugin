@@ -233,6 +233,12 @@ atlas() {
     worktrees|wt) _atlas_worktrees; return ;;
     cleanup) shift; _atlas_cleanup "$@"; return ;;
     feature|-f) shift; _atlas_feature "$@"; return ;;
+    # v5.7.0+ Phase 3 — Semantic worktree subcommands (naming enforced)
+    feat)     shift; _atlas_semantic_worktree feat "$@"; return ;;
+    fix)      shift; _atlas_semantic_worktree fix "$@"; return ;;
+    hotfix)   shift; _atlas_semantic_worktree hotfix "$@"; return ;;
+    chore)    shift; _atlas_semantic_worktree chore "$@"; return ;;
+    refactor) shift; _atlas_semantic_worktree refactor "$@"; return ;;
     promote) shift; _atlas_promote "$@"; return ;;
     review) shift; _atlas_review "$@"; return ;;
     blast) shift; _atlas_blast "$@"; return ;;

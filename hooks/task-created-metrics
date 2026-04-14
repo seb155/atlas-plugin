@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# ATLAS Hook: TaskCreated handler (CC v2.1.84+)
+#
+# Fires when TaskCreate tool is invoked.
+# Logs task creation for atlas-analytics skill consumption
+# (tracks TaskCreate usage patterns, scope, frequency).
+
+set -euo pipefail
+
+readonly LOG_FILE="${HOME}/.atlas/logs/task-created.jsonl"
+readonly STDIN_JSON="$(cat 2>/dev/null || echo '{}')"
+
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+
+TASK_ID=""
+SUBJECT=""
+if command -v jq >/dev/null 2>&1; then
+  TASK_ID="$(echo "$STDIN_JSON" | jq -r '.task.id // .taskId // ""' 2>/dev/null || echo "")"
+  SUBJECT="$(echo "$STDIN_JSON" | jq -r '.task.subject // .subject // ""' 2>/dev/null || echo "")"
+fi
+
+{
+  printf '{"ts":"%s","event":"TaskCreated","task_id":"%s","subject":"%s"}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    "${TASK_ID}" \
+    "${SUBJECT}"
+} >> "$LOG_FILE" 2>/dev/null || true
+
+exit 0

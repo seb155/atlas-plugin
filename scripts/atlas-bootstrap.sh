@@ -390,7 +390,8 @@ PASS=0; FAIL_COUNT=0; WARN_COUNT=0
 
 check() {
   local name="$1" cmd="$2"
-  if eval "$cmd" &>/dev/null; then
+  # bash -c isolates the command (no side effects on this shell) — safer than eval.
+  if bash -c "$cmd" >/dev/null 2>&1; then
     ok "$name"; ((PASS++))
   else
     fail "$name"; ((FAIL_COUNT++))
@@ -399,7 +400,7 @@ check() {
 
 check_warn() {
   local name="$1" cmd="$2"
-  if eval "$cmd" &>/dev/null; then
+  if bash -c "$cmd" >/dev/null 2>&1; then
     ok "$name"; ((PASS++))
   else
     warn "$name (optional)"; ((WARN_COUNT++))

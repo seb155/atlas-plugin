@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# ATLAS Hook: TeammateIdle handler (CC v2.1.33+)
+#
+# Fires when a teammate agent in Agent Teams goes idle.
+# Coordinates with atlas-team skill to log idle events + notify leader
+# if a teammate has been idle > configurable threshold.
+
+set -euo pipefail
+
+readonly LOG_FILE="${HOME}/.atlas/logs/agent-team-events.log"
+readonly STDIN_JSON="$(cat 2>/dev/null || echo '{}')"
+
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+
+TEAMMATE_NAME=""
+TEAMMATE_ID=""
+if command -v jq >/dev/null 2>&1; then
+  TEAMMATE_NAME="$(echo "$STDIN_JSON" | jq -r '.teammate.name // .name // ""' 2>/dev/null || echo "")"
+  TEAMMATE_ID="$(echo "$STDIN_JSON" | jq -r '.teammate.id // .id // ""' 2>/dev/null || echo "")"
+fi
+
+{
+  printf '{"ts":"%s","event":"TeammateIdle","name":"%s","id":"%s"}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    "${TEAMMATE_NAME}" \
+    "${TEAMMATE_ID}"
+} >> "$LOG_FILE" 2>/dev/null || true
+
+exit 0

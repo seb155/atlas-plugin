@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: Agent Dispatch (lightweight fire-and-forget)
 # Sourced by atlas-cli.sh — do not execute directly
 # SP-EVOLUTION P7.4 — atlas dispatch "task" [--model sonnet]
@@ -26,7 +28,7 @@ _atlas_dispatch() {
   # Auto-detect model if not specified
   if [ -z "$model" ]; then
     local complexity_script="${ATLAS_SHELL_DIR}/../scripts/task-complexity.sh"
-    [ -f "$complexity_script" ] || complexity_script="${${ATLAS_SHELL_DIR:h}:h}/scripts/task-complexity.sh"
+    [ -f "$complexity_script" ] || complexity_script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/task-complexity.sh"
     if [ -f "$complexity_script" ]; then
       local result=$(bash "$complexity_script" "$desc")
       model=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['model'])" 2>/dev/null || echo "sonnet")

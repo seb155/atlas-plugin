@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# ATLAS Hook: WorktreeRemove handler (CC v2.1.50+)
+#
+# Fires when Claude Code removes a git worktree (via ExitWorktree tool
+# with action: "remove"). Logs cleanup to audit trail.
+#
+# Event-driven replacement for hooks/cleanup-worktrees (Stop handler).
+# Still in parallel for v5.7.0 backward-compat (1 minor cycle deprecation).
+
+set -euo pipefail
+
+readonly LOG_FILE="${HOME}/.atlas/logs/worktree-events.log"
+readonly STDIN_JSON="$(cat 2>/dev/null || echo '{}')"
+
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+
+WORKTREE_PATH=""
+WORKTREE_BRANCH=""
+if command -v jq >/dev/null 2>&1; then
+  WORKTREE_PATH="$(echo "$STDIN_JSON" | jq -r '.worktree.path // .worktreePath // ""' 2>/dev/null || echo "")"
+  WORKTREE_BRANCH="$(echo "$STDIN_JSON" | jq -r '.worktree.branch // .worktreeBranch // ""' 2>/dev/null || echo "")"
+fi
+
+{
+  printf '{"ts":"%s","event":"WorktreeRemove","path":"%s","branch":"%s"}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    "${WORKTREE_PATH}" \
+    "${WORKTREE_BRANCH}"
+} >> "$LOG_FILE" 2>/dev/null || true
+
+exit 0

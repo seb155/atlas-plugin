@@ -1,7 +1,7 @@
 # ATLAS Plugin — Developer Makefile (modular architecture)
 # Usage: make [target]
 
-.PHONY: build build-modular build-v5 test install dev dev-modular lint publish clean help
+.PHONY: build build-modular build-v5 test test-shell install dev dev-modular lint shellcheck publish clean help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -28,7 +28,7 @@ dev: ## Build core + admin + install to CC cache (standard workflow)
 	CACHE_DIR="$$HOME/.claude/plugins/cache/atlas-marketplace"; \
 	echo ""; \
 	echo "📦 Installing modular plugins to CC cache..."; \
-	for plugin in atlas-core atlas-admin-addon; do \
+	for plugin in atlas-core atlas-dev-addon atlas-admin-addon; do \
 		name=$$(echo $$plugin | sed 's/-addon//'); \
 		dir="$$CACHE_DIR/$${name}/$$VERSION"; \
 		mkdir -p "$$dir"; \
@@ -81,6 +81,25 @@ test-l1: ## Run L1 structural tests only (<25s)
 lint: ## Validate plugin structure (frontmatter, refs)
 	@echo "Running structural checks..."
 	@python3 -m pytest tests/test_skill_frontmatter.py tests/test_skill_coverage.py -x -q --tb=short
+
+shellcheck: ## Lint all shell scripts (soft-fail until Phase 9)
+	@echo "Running shellcheck on shell scripts..."
+	@shellcheck -x -S warning \
+		scripts/atlas-modules/*.sh \
+		scripts/atlas-cli.sh \
+		scripts/setup-wizard.sh \
+		scripts/atlas-bootstrap.sh \
+		scripts/atlas-e2e-validate.sh \
+		hooks/lib/*.sh \
+		hooks/run-hook.sh \
+		|| echo "shellcheck found issues (non-blocking until Phase 9 hygiene)"
+
+test-shell: ## Run bats-core shell tests (Phase 6H)
+	@if [ -d tests/shell ]; then \
+		bats tests/shell/ ; \
+	else \
+		echo "tests/shell/ not yet populated (Phase 6H pending)"; \
+	fi
 
 # ── Release ──────────────────────────────────────────────────
 

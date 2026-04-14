@@ -14,7 +14,8 @@ PASS=0; FAIL=0; SKIP=0; TOTAL=0
 check() {
   TOTAL=$((TOTAL + 1))
   local desc="$1"; shift
-  if eval "$@" >/dev/null 2>&1; then
+  # bash -c "$*" isolates shell expressions from current scope (safer than eval).
+  if bash -c "$*" >/dev/null 2>&1; then
     echo "  ✅ #${TOTAL} ${desc}"
     PASS=$((PASS + 1))
   else

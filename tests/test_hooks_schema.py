@@ -39,6 +39,14 @@ KNOWN_EVENT_TYPES = {
     "InstructionsLoaded",
     "ConfigChange",
     "Setup",
+    # CC 2.1.x native events — adopted in Phase 2 of sleepy-tumbling-hennessy.md (v5.7.0-alpha.1)
+    "WorktreeCreate",   # v2.1.72 — new worktree created
+    "WorktreeRemove",   # v2.1.72 — worktree destroyed
+    "ExitWorktree",     # v2.1.72 — leaving worktree (safety flow)
+    "TeammateIdle",     # v2.1.33 — atlas-team idle notification
+    "TaskCompleted",    # v2.1.33 — task marked complete (analytics)
+    "TaskCreated",      # v2.1.84 — task created (usage stats)
+    "FileChanged",      # v2.1.83 — filesystem change detection (opt-in)
 }
 
 
