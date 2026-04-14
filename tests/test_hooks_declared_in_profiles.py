@@ -20,22 +20,10 @@ PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 HOOKS_JSON = PLUGIN_ROOT / "hooks" / "hooks.json"
 PROFILES_DIR = PLUGIN_ROOT / "profiles"
 
-# Known tech-debt baseline: hooks present in hooks.json but not declared in
-# any profile YAML (getting silently dropped by filter-hooks-json.py).
-# To be fixed in Phase 6 of v5.7.0 (code quality SOTA).
+# Baseline cleared in Phase 6F-bis of v5.7.0-alpha.1 (sleepy-tumbling-hennessy.md).
+# All pre-v5.7.0 hooks are now wired in profiles/{core,dev-addon,admin-addon}.yaml.
 # New hooks added AFTER v5.7.0 MUST be declared in a profile or this test fails.
-KNOWN_UNDECLARED_BASELINE: set[str] = {
-    "tdd-guard",
-    "task-created-log",
-    "run-hook",
-    "claudemd-lint",
-    "context-budget-guardian",
-    "session-replay-logger",
-    "session-state-writer",
-    "detect-stale-git",
-    "atlas-status-writer",
-    "feature-drift-detector",
-}
+KNOWN_UNDECLARED_BASELINE: set[str] = set()
 
 
 def _extract_hook_script_names_from_hooks_json() -> set[str]:
@@ -54,8 +42,11 @@ def _extract_hook_script_names_from_hooks_json() -> set[str]:
                 m = re.search(r'/hooks/([\w-]+)', cmd)
                 if m:
                     scripts.add(m.group(1))
-    # Filter out the wrapper itself + shell primitives
+    # Filter out the wrapper itself + shell primitives.
+    # `run-hook.sh` is the bash wrapper; regex captures it as `run-hook`
+    # (since [\w-]+ stops at the dot). Both forms must be discarded.
     scripts.discard("run-hook.sh")
+    scripts.discard("run-hook")
     return scripts
 
 

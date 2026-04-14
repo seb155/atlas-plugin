@@ -67,6 +67,12 @@ hooks:
 - file-change-test-trigger    # FileChanged (v2.1.83) — DISABLED by default (ATLAS_FILE_CHANGED_ENABLED=1 to enable)
 - task-created-metrics        # TaskCreated (v2.1.84) — TaskCreate usage stats
 - worktree-exit-safe          # ExitWorktree (v2.1.72) Phase 3 — safety net 5-option prompt
+# v5.7.0+ Phase 6F-bis: Wire pre-v5.7.0 tech-debt hooks (was KNOWN_UNDECLARED_BASELINE)
+- task-created-log            # TaskCreated — lightweight analytics log
+- session-replay-logger       # SessionEnd — append JSONL session archive
+- session-state-writer        # SessionStart/Stop — persist session state for resume
+- atlas-status-writer         # Stop/UserPromptSubmit — refresh statusline cache
+- context-budget-guardian     # PreCompact — warn if compaction happens too early
 agents:
 - context-scanner
 persona: helpful assistant
