@@ -27,6 +27,18 @@ steps:
   l1-shellcheck:
     image: koalaman/shellcheck-alpine:stable
     commands:
+      # Hard-fail on ERRORS (-S error). Warnings surface in logs but don't block.
+      # After v5.8 SC2155 cleanup (119 fixed), error count is 0 — safe to hard-fail.
+      - |
+        shellcheck -x -S error \
+          scripts/atlas-modules/*.sh \
+          scripts/atlas-cli.sh \
+          scripts/setup-wizard.sh \
+          scripts/atlas-bootstrap.sh \
+          scripts/atlas-e2e-validate.sh \
+          hooks/lib/*.sh \
+          hooks/run-hook.sh
+      # Info/warning tier — run but don't fail the pipeline
       - |
         shellcheck -x -S warning \
           scripts/atlas-modules/*.sh \
@@ -36,8 +48,7 @@ steps:
           scripts/atlas-e2e-validate.sh \
           hooks/lib/*.sh \
           hooks/run-hook.sh \
-          || echo "shellcheck warnings found (non-blocking until Phase 9 hygiene)"
-    failure: ignore  # Soft-fail: Phase 6G bootstrap, hard-fail after Phase 9 cleanup
+          || echo "::warning:: shellcheck warnings found (non-blocking)"
 
   # ═══════════════════════════════════════════════════════════════
   # BUILD v5 — core + addons (replaces old tier build)

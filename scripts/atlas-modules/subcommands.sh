@@ -23,7 +23,8 @@ _atlas_list() {
     local has_recent=false
     _atlas_recent_projects 8 | while IFS='|' read pname ago count; do
       has_recent=true
-      local ppath=$(_atlas_resolve_project "$pname")
+      local ppath
+      ppath=$(_atlas_resolve_project "$pname")
       printf "    ${ATLAS_CYAN}%-14s${ATLAS_RESET} ${ATLAS_DIM}%-10s${ATLAS_RESET} (${count}x)\n" "$pname" "$ago"
     done
     if ! $has_recent; then
@@ -66,7 +67,8 @@ _atlas_status() {
   printf "  ${ATLAS_BOLD}System Status${ATLAS_RESET}\n\n"
 
   # Git branch
-  local branch=$(git branch --show-current 2>/dev/null || echo "N/A")
+  local branch
+  branch=$(git branch --show-current 2>/dev/null || echo "N/A")
   local _top
   _top=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
   local repo="$(basename "$_top")"
@@ -75,8 +77,10 @@ _atlas_status() {
 
   # Worktree count
   local WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
-  local wt_count=$(find "$WORKSPACE" -maxdepth 5 -path "*/.claude/worktrees/*/.git" -type f 2>/dev/null | /usr/bin/wc -l)
-  local wt_manual=$(find "$WORKSPACE" -maxdepth 4 -path "*/.worktrees/*/.git" -type f 2>/dev/null | /usr/bin/wc -l)
+  local wt_count
+  wt_count=$(find "$WORKSPACE" -maxdepth 5 -path "*/.claude/worktrees/*/.git" -type f 2>/dev/null | /usr/bin/wc -l)
+  local wt_manual
+  wt_manual=$(find "$WORKSPACE" -maxdepth 4 -path "*/.worktrees/*/.git" -type f 2>/dev/null | /usr/bin/wc -l)
   printf "  🌿 %-14s %d CC + %d manual\n" "Worktrees" "$wt_count" "$wt_manual"
 
   # Tmux sessions
@@ -87,10 +91,13 @@ _atlas_status() {
   printf "  🖥️  %-14s %d active\n" "Sessions" "$tmux_count"
 
   # Memory files
-  local mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | /usr/bin/head -1)
+  local mem_dir
+  mem_dir=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | /usr/bin/head -1)
   if [ -n "$mem_dir" ] && [ -d "$mem_dir" ]; then
-    local mem_count=$(ls "$mem_dir"/*.md 2>/dev/null | /usr/bin/wc -l)
-    local mem_lines=$(/usr/bin/wc -l < "$mem_dir/MEMORY.md" 2>/dev/null || echo 0)
+    local mem_count
+    mem_count=$(ls "$mem_dir"/*.md 2>/dev/null | /usr/bin/wc -l)
+    local mem_lines
+    mem_lines=$(/usr/bin/wc -l < "$mem_dir/MEMORY.md" 2>/dev/null || echo 0)
     local mem_color="${ATLAS_GREEN}"
     [ "$mem_lines" -gt 150 ] && mem_color="${ATLAS_YELLOW}"
     [ "$mem_lines" -gt 200 ] && mem_color="${ATLAS_RED}"
@@ -122,7 +129,8 @@ except: print('⚪ N/A')
   fi
 
   # Plugin version
-  local plugin_ver=$(_atlas_plugin_version 2>/dev/null || echo "?")
+  local plugin_ver
+  plugin_ver=$(_atlas_plugin_version 2>/dev/null || echo "?")
   printf "  🔌 %-14s v%s\n" "Plugin" "$plugin_ver"
 
   printf "\n"
@@ -177,13 +185,15 @@ _find_plugin_tools() {
 
 # atlas repos — Multi-repo workspace overview
 _atlas_repos() {
-  local script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
+  local script
+  script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
   bash "$script" repos
 }
 
 # atlas cost — Session cost estimates
 _atlas_cost() {
-  local script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
+  local script
+  script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
   bash "$script" cost "$@"
 }
 
@@ -192,13 +202,15 @@ _atlas_deps() {
   local plans_dir=".blueprint/plans"
   [ -d "$plans_dir" ] || plans_dir="$(git rev-parse --show-toplevel 2>/dev/null)/.blueprint/plans"
   [ -d "$plans_dir" ] || { echo "No .blueprint/plans/ found"; return 1; }
-  local script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
+  local script
+  script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
   bash "$script" deps "$plans_dir"
 }
 
 # atlas init [template] [dir] — Project scaffolding
 _atlas_init() {
-  local script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
+  local script
+  script=$(_find_plugin_tools) || { echo "plugin-tools.sh not found"; return 1; }
   bash "$script" init "$@"
 }
 
@@ -223,13 +235,15 @@ _find_session_tools() {
 
 # atlas sessions — Show active tmux/worktree sessions
 _atlas_sessions() {
-  local script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
+  local script
+  script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
   bash "$script" sessions
 }
 
 # atlas budget — Context budget estimate
 _atlas_budget() {
-  local script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
+  local script
+  script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
   bash "$script" budget
 }
 
@@ -237,13 +251,15 @@ _atlas_budget() {
 _atlas_import_handoff() {
   local file="${1:-}"
   [ -z "$file" ] && { echo "Usage: atlas import-handoff <handoff-file.md>"; return 1; }
-  local script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
+  local script
+  script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
   bash "$script" import "$file"
 }
 
 # atlas replay — Session replay log stats
 _atlas_replay() {
-  local script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
+  local script
+  script=$(_find_session_tools) || { echo "session-tools.sh not found"; return 1; }
   bash "$script" replay "$@"
 }
 
@@ -254,10 +270,14 @@ _atlas_complexity() {
   local script="${ATLAS_SHELL_DIR}/../scripts/task-complexity.sh"
   [ -f "$script" ] || script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/task-complexity.sh"
   [ -f "$script" ] || { echo "task-complexity.sh not found"; return 1; }
-  local result=$(bash "$script" "$desc")
-  local level=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" 2>/dev/null)
-  local model=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['model'])" 2>/dev/null)
-  local score=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['score'])" 2>/dev/null)
+  local result
+  result=$(bash "$script" "$desc")
+  local level
+  level=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" 2>/dev/null)
+  local model
+  model=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['model'])" 2>/dev/null)
+  local score
+  score=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['score'])" 2>/dev/null)
   local icon="🟢"
   case "$level" in
     trivial) icon="🟢" ;;
@@ -287,8 +307,10 @@ _atlas_ci() {
     return 1
   fi
 
-  local sha=$(git rev-parse HEAD 2>/dev/null | /usr/bin/head -c 12 || echo "?")
-  local branch=$(git branch --show-current 2>/dev/null || echo "?")
+  local sha
+  sha=$(git rev-parse HEAD 2>/dev/null | /usr/bin/head -c 12 || echo "?")
+  local branch
+  branch=$(git branch --show-current 2>/dev/null || echo "?")
 
   printf "  📂 ${ATLAS_CYAN}axoiq/synapse${ATLAS_RESET} @ ${ATLAS_DIM}%s${ATLAS_RESET} (%s)\n\n" "$sha" "$branch"
 
@@ -325,7 +347,8 @@ _atlas_worktrees() {
   printf "  ${ATLAS_BOLD}Git Worktrees${ATLAS_RESET} ${ATLAS_DIM}(scanning workspace)${ATLAS_RESET}\n\n"
 
   local WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
-  local NOW_EPOCH=$(/usr/bin/date +%s)
+  local NOW_EPOCH
+  NOW_EPOCH=$(/usr/bin/date +%s)
   local found=0
 
   printf "  ${ATLAS_DIM}%-20s %-24s %-8s %-8s %-6s${ATLAS_RESET}\n" "WORKTREE" "BRANCH" "DIRTY" "AHEAD" "AGE"
@@ -344,21 +367,26 @@ _atlas_worktrees() {
       found=$((found + 1))
 
       # Get branch
-      local branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
+      local branch
+      branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
 
       # Check dirty
-      local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
+      local dirty_count
+      dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
       local dirty_str="${ATLAS_GREEN}clean${ATLAS_RESET}"
       [ "$dirty_count" -gt 0 ] && dirty_str="${ATLAS_YELLOW}${dirty_count} files${ATLAS_RESET}"
 
       # Check ahead
-      local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
+      local ahead
+      ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
       local ahead_str="${ATLAS_DIM}0${ATLAS_RESET}"
       [ "$ahead" -gt 0 ] && ahead_str="${ATLAS_CYAN}${ahead}${ATLAS_RESET}"
 
       # Age in days
-      local last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
-      local age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
+      local last_epoch
+      last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
+      local age_days
+      age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
       local age_str="${age_days}d"
       [ "$age_days" -ge 7 ] && age_str="${ATLAS_YELLOW}${age_days}d${ATLAS_RESET}"
       [ "$age_days" -ge 14 ] && age_str="${ATLAS_RED}${age_days}d${ATLAS_RESET}"
@@ -373,15 +401,20 @@ _atlas_worktrees() {
         [ -d "$wt" ] || continue
         local name="$(basename "$wt")"
         found=$((found + 1))
-        local branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
-        local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
+        local branch
+        branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
+        local dirty_count
+        dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
         local dirty_str="${ATLAS_GREEN}clean${ATLAS_RESET}"
         [ "$dirty_count" -gt 0 ] && dirty_str="${ATLAS_YELLOW}${dirty_count} files${ATLAS_RESET}"
-        local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
+        local ahead
+        ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
         local ahead_str="${ATLAS_DIM}0${ATLAS_RESET}"
         [ "$ahead" -gt 0 ] && ahead_str="${ATLAS_CYAN}${ahead}${ATLAS_RESET}"
-        local last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
-        local age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
+        local last_epoch
+        last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
+        local age_days
+        age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
         local age_str="${age_days}d"
         [ "$age_days" -ge 7 ] && age_str="${ATLAS_YELLOW}${age_days}d${ATLAS_RESET}"
         printf "  %-20s %-24s %-8s %-8s %-6s\n" "${repo_name}/${name}*" "$branch" "$dirty_str" "$ahead_str" "$age_str"
@@ -416,7 +449,8 @@ _atlas_cleanup() {
   printf "  ${ATLAS_BOLD}Worktree Cleanup${ATLAS_RESET} ${ATLAS_DIM}(stale > ${age_threshold}d, clean, no unmerged)${ATLAS_RESET}\n\n"
 
   local WORKSPACE="${ATLAS_WORKSPACE_ROOT:-$HOME/workspace_atlas}"
-  local NOW_EPOCH=$(/usr/bin/date +%s)
+  local NOW_EPOCH
+  NOW_EPOCH=$(/usr/bin/date +%s)
   local removed=0
   local skipped=0
 
@@ -433,22 +467,26 @@ _atlas_cleanup() {
         local name="$(basename "$wt")"
 
         # Skip if dirty
-        local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
+        local dirty_count
+        dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
         if [ "$dirty_count" -gt 0 ]; then
           printf "  ${ATLAS_DIM}⊘${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_YELLOW}(${dirty_count} dirty files, skipping)${ATLAS_RESET}\n"
           skipped=$((skipped + 1)); continue
         fi
 
         # Skip if ahead of dev (unmerged commits)
-        local ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
+        local ahead
+        ahead=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | /usr/bin/wc -l)
         if [ "$ahead" -gt 0 ]; then
           printf "  ${ATLAS_DIM}⊘${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_CYAN}(${ahead} unmerged commits, skipping)${ATLAS_RESET}\n"
           skipped=$((skipped + 1)); continue
         fi
 
         # Check age
-        local last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
-        local age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
+        local last_epoch
+        last_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
+        local age_days
+        age_days=$(( (NOW_EPOCH - last_epoch) / 86400 ))
         if [ "$age_days" -lt "$age_threshold" ]; then
           # Not old enough, skip silently
           continue
@@ -738,8 +776,10 @@ _atlas_hooks() {
       local hj="$ver_dir/hooks/hooks.json"
       [ -f "$hj" ] || continue
       local tier="$(basename "$tier_dir")"
-      local events=$(python3 -c "import json; d=json.load(open('$hj')); print(len(d.get('hooks',{})))" 2>/dev/null)
-      local handlers=$(python3 -c "
+      local events
+      events=$(python3 -c "import json; d=json.load(open('$hj')); print(len(d.get('hooks',{})))" 2>/dev/null)
+      local handlers
+      handlers=$(python3 -c "
 import json
 d=json.load(open('$hj'))
 t=sum(len(h) for es in d.get('hooks',{}).values() for e in es for h in [e.get('hooks',[])])
@@ -755,7 +795,8 @@ print(t)
   # 2. settings.json hooks (should be empty)
   echo ""
   if [ -f "$settings" ]; then
-    local has_hooks=$(python3 -c "import json; d=json.load(open('$settings')); print(len(d['hooks']) if 'hooks' in d else 0)" 2>/dev/null)
+    local has_hooks
+    has_hooks=$(python3 -c "import json; d=json.load(open('$settings')); print(len(d['hooks']) if 'hooks' in d else 0)" 2>/dev/null)
     if [ "$has_hooks" != "0" ]; then
       printf "  ⚠️  settings.json has %s hook type(s) — should be 0 (plugin is SSoT)\n" "$has_hooks"
       printf "     Run: ${ATLAS_CYAN}atlas setup hooks${ATLAS_RESET} to clean up\n"
@@ -770,8 +811,10 @@ print(t)
   for log in task-log.jsonl permission-log.jsonl atlas-audit.log compaction-log.txt; do
     local path="$HOME/.claude/$log"
     if [ -f "$path" ]; then
-      local lines=$(/usr/bin/wc -l < "$path" 2>/dev/null)
-      local size=$(du -sh "$path" 2>/dev/null | /usr/bin/cut -f1)
+      local lines
+      lines=$(/usr/bin/wc -l < "$path" 2>/dev/null)
+      local size
+      size=$(du -sh "$path" 2>/dev/null | /usr/bin/cut -f1)
       printf "  ✅ %-25s %s lines (%s)\n" "$log" "$lines" "$size"
     else
       printf "  ⬚  %-25s (not yet created)\n" "$log"
@@ -1029,7 +1072,8 @@ _atlas_preflight() {
   fi
 
   if [ -n "$proj_path" ] && [ -f "$proj_path/.code-intelligence/graph.db" ]; then
-    local graph_age=$(( ($(/usr/bin/date +%s) - $(/usr/bin/stat -c %Y "$proj_path/.code-intelligence/graph.db" 2>/dev/null || echo 0)) / 3600 ))
+    local graph_age
+    graph_age=$(( ($(/usr/bin/date +%s) - $(/usr/bin/stat -c %Y "$proj_path/.code-intelligence/graph.db" 2>/dev/null || echo 0)) / 3600 ))
     if [ "$graph_age" -lt 1 ]; then
       printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} Code graph fresh (${graph_age}h old)\n"
     else
@@ -1064,7 +1108,8 @@ _atlas_feature() {
   fi
 
   # Slug: lowercase, replace spaces/special with dashes
-  local slug=$(echo "$name" | /usr/bin/tr '[:upper:] ' '[:lower:]-' | /usr/bin/sed 's/[^a-z0-9-]//g; s/--*/-/g; s/^-//; s/-$//')
+  local slug
+  slug=$(echo "$name" | /usr/bin/tr '[:upper:] ' '[:lower:]-' | /usr/bin/sed 's/[^a-z0-9-]//g; s/--*/-/g; s/^-//; s/-$//')
   local branch="feature/$(/usr/bin/date +%Y-%m-%d)-${slug}"
 
   printf "  ${ATLAS_BOLD}New feature branch${ATLAS_RESET}\n"

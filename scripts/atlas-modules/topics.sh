@@ -143,7 +143,8 @@ _atlas_cleanup_topics() {
   local topics_file="$HOME/.atlas/topics.json"
   [ -f "$topics_file" ] || return 0
 
-  local ninety_days=$((90 * 86400))
+  local ninety_days
+  ninety_days=$((90 * 86400))
 
   python3 -c "
 import json, time

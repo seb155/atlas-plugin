@@ -64,7 +64,8 @@ _atlas_known_projects() {
 # ─── Usage History (recency tracking) ─────────────────────────
 _atlas_record_history() {
   local project="$1"
-  local ts=$(/usr/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
+  local ts
+  ts=$(/usr/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
   python3 -c "
 import json, os
 path = os.path.expanduser('$ATLAS_HISTORY')
@@ -118,7 +119,8 @@ ATLAS_BOLD="\033[1m"
 ATLAS_RESET="\033[0m"
 
 _atlas_header() {
-  local plugin_ver=$(_atlas_plugin_version)
+  local plugin_ver
+  plugin_ver=$(_atlas_plugin_version)
   echo ""
   if $ATLAS_HAS_GUM; then
     gum style --border rounded --border-foreground 214 --padding "0 2" --margin "0 1" \
