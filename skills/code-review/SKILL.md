@@ -31,6 +31,29 @@ git log --oneline origin/dev..HEAD # Unpushed commits
 - Read .claude/rules/ files relevant to changes
 - Identify project conventions (linting, naming, patterns)
 
+### 2.5 Semantic Impact (LSP) — if available
+
+If `ENABLE_LSP_TOOL=1` and relevant LSP installed, use LSP to scope
+the BLAST RADIUS of changes before reviewing. Cheaper than grep + more accurate:
+
+```
+# For each renamed/modified identifier, check its callers:
+LSP(operation: "findReferences", filePath: "{changed_file}", line: {identifier_line})
+
+# For unfamiliar types/signatures in the diff:
+LSP(operation: "hover", filePath: "{file}", line: {line})
+
+# For "what does this function do" before reviewing its callers:
+LSP(operation: "goToDefinition", filePath: "{file}", line: {line})
+```
+
+Use LSP output to inform reviewers on:
+- Whether refactor touches 3 files or 30
+- Type contract changes that break callers
+- Missed call sites that should've been updated
+
+LSP skipped when not installed — fall back to grep + pattern analysis.
+
 ### 3. Parallel Review (launch subagents)
 
 For comprehensive reviews, launch 3 review agents **simultaneously** — one Agent tool
