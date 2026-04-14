@@ -6,7 +6,7 @@
 # NOTE: Use $$ for shell variables (WP eats single $)
 
 when:
-  branch: [main, "feature/*", "hotfix/*"]
+  branch: [main, "feature/*", "feat/*", "hotfix/*", "fix/*"]
   event: [push, pull_request]
 
 steps:
