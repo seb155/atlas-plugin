@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.12.3 (2026-04-14)
+
+### 🐛 Bug Fixes
+- fix(agents): tmux remain-on-exit for tail pane (#10)
+
+
+
 ## v5.12.2 (2026-04-14)
 
 ### 🐛 Bug Fixes
