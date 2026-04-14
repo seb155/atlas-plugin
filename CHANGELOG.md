@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.15.1 (2026-04-14)
+
+### 🐛 Bug Fixes
+- fix(hooks): stop hook silent exit on clean worktree (pipefail + missing dev ref)
+
+
+
 ## v5.15.0 (2026-04-14)
 
 ### ✨ Features
