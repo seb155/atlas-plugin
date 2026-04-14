@@ -4,22 +4,55 @@
 
 Plan: `.blueprint/plans/sleepy-tumbling-hennessy.md` (9 phases, 54h, HITL gates)
 
-### ✨ Features — Phase 0 (Critical Bugs Hotfix)
-- fix(makefile): deploy atlas-dev-addon via `make dev` (L31 iteration loop)
-- feat(context-threshold): model-aware CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (92% for 1M context, 83% for 200K)
+### ✨ Phase 0 — Critical Bugs Hotfix
+- fix(makefile): deploy atlas-dev-addon via `make dev` (L31 iteration loop, Bug A)
+- feat(context-threshold): model-aware CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (92% for 1M, 83% for 200K, Bug B)
 - feat(hook): context-threshold-injector wires SessionStart + UserPromptSubmit
-- feat(module): scripts/atlas-modules/context-threshold.sh — pure function threshold resolver
-- fix(settings): raise default CLAUDE_AUTOCOMPACT_PCT_OVERRIDE 83 → 92 (1M-context models dominant)
+- feat(module): scripts/atlas-modules/context-threshold.sh — pure function resolver
+- fix(settings): raise default CLAUDE_AUTOCOMPACT_PCT_OVERRIDE 83 → 92
 
-### 🔄 Deferred Phases (1-9)
-- Phase 1: Statusline enrichment (4h)
-- Phase 2: Native hooks integration — 7 new events (6h)
-- Phase 3: Worktrees + safety exit flow (5h)
-- Phase 4: Sessions + native bonus (4h)
-- Phase 5: Docs + memory sync (2h)
-- Phase 6: Continuous code quality (10h)
+### ✨ Phase 1 — Statusline Enrichment (v6 Layout)
+- feat(statusline): 3 new CShip custom modules:
+  - atlas-effort-module.sh (📊 low/med/high — CC v2.1.84)
+  - atlas-cost-usd-module.sh (💰 $X.XX — CC v2.1.x cost.total_cost_usd)
+  - atlas-200k-badge-module.sh (⚠️ 200K+ — CC v2.1.87 exceeds_200k_tokens)
+- feat(cship): refresh_interval=10 for live rate_limits + cost updates
+- fix(module): atlas-context-size detects Opus/Sonnet 4.6 as 1M by default
+- fix(hook): session-start deploys 7 modules to ~/.local/share (was 3, fixed atlas-agents gap)
+- refactor: consolidate cship.toml source (remove legacy cship-atlas.toml)
+
+### ✨ Phase 2 — Native Hooks Integration (+7 events)
+- feat(hook): WorktreeCreate / WorktreeRemove (v2.1.50) — lifecycle
+- feat(hook): TeammateIdle / TaskCompleted (v2.1.33) — Agent Teams
+- feat(hook): FileChanged (v2.1.83) — opt-in via ATLAS_FILE_CHANGED_ENABLED=1
+- feat(hook): TaskCreated (v2.1.84) — usage metrics
+- test(hooks): regression test prevents v5.6.1-style silent drops
+- Event types in hooks.json: 15 → 22 (+7)
+
+### ✨ Phase 3 — Worktrees + Safety Exit Flow
+- feat(hook): worktree-exit-safe intercepts ExitWorktree (v2.1.72+)
+  5 options offered: keep | merge | ship-all | PR | discard
+  Prevents accidental data loss (CC native just offers keep|delete)
+- feat(regex): enforce-worktree-name tightened (rejects date-only, placeholders)
+  Accepts: (feat|fix|hotfix|chore|refactor|wip|sandbox)-[a-z0-9-]{3,50}
+- feat(cli): atlas feat|fix|hotfix|chore|refactor <description>
+  Launches `claude -w <prefix>-<slug> -n <prefix>-<slug>` with validation
+
+### ✨ Phase 4 — Sessions + Native Bonus
+- feat(cli): atlas resume <name> dual-mode (project path OR session name via --resume)
+- docs(skill): session-pickup prefers /resume <name> (v2.0.64)
+- docs(skill): experiment-loop delegates simple recurring to /loop + CronCreate (v2.1.89)
+- docs(skill): ultrathink documents /effort (v2.1.84) as simple knob
+
+### 📚 Phase 5 — Docs + Memory Sync
+- docs: CLAUDE.md section "CC 2.1.x Native Features Adopted"
+- docs: CHANGELOG.md comprehensive entry (this)
+- memory: 4 new feedback files documenting lessons
+
+### 🔄 Deferred Phases (6-9)
+- Phase 6: Continuous code quality SOTA (10h)
 - Phase 7: Continuous LSP integration (5h)
-- Phase 8: SOTA senior patterns (11h)
+- Phase 8: SOTA senior patterns infrastructure (11h)
 - Phase 9: Code hygiene + senior discipline (5h)
 
 

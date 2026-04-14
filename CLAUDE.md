@@ -9,6 +9,29 @@
 
 **Key insight**: ATLAS develops itself using ATLAS. The plugin-builder, skill-management, and atlas-dev-self skills are used to extend the plugin.
 
+## CC 2.1.x Native Features Adopted (v5.7.0+)
+
+| Feature | CC Version | ATLAS Integration |
+|---------|-----------|-------------------|
+| Session rename | v2.0.64 | `atlas resume <name>` dual-mode |
+| LSP tool | v2.1.74 | (Phase 7 pending) |
+| `/effort` | v2.1.84 | documented in ultrathink skill |
+| `/loop` + CronCreate | v2.1.89 | experiment-loop delegates simple cases |
+| `--worktree` (-w) | v2.1.49 | `atlas feat/fix/hotfix <desc>` wrapper |
+| Worktree hooks | v2.1.50 | worktree-setup / -cleanup-native |
+| TeammateIdle/TaskCompleted | v2.1.33 | team-idle-notify / task-completed-metrics |
+| context_window.size/used_% | v2.1.79 | CShip context_bar |
+| rate_limits | v2.1.80 | `$cship.usage_limits` |
+| exceeds_200k_tokens | v2.1.87 | atlas-200k-badge-module.sh |
+| cost.total_cost_usd | v2.1.x | atlas-cost-usd-module.sh |
+| workspace.git_worktree | v2.1.97 | `$cship.worktree` |
+| ExitWorktree safety | v2.1.72+ | worktree-exit-safe 5-option flow |
+| InstructionsLoaded / ConfigChange | v2.1.83 | already wired pre-v5.7.0 |
+| PreCompact / PostCompact | v2.1.89 | already wired pre-v5.7.0 |
+| StopFailure / SubagentStart | v2.1.43/78 | already wired pre-v5.7.0 |
+
+Plan: `.blueprint/plans/sleepy-tumbling-hennessy.md` (9 phases total, 5 complete)
+
 ## ARCHITECTURE
 
 ```
