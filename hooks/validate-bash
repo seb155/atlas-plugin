@@ -8,6 +8,7 @@
 # - Interactive modes (--pdb, -s) that hang
 # - Watch modes (infinite loop)
 # - Massive tracebacks (--tb=long/full)
+set -euo pipefail
 
 # Hook aggregation log
 _hook_log() {
@@ -19,7 +20,7 @@ _hook_log() {
 }
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' || true)
 
 # If no command, allow
 [ -z "$COMMAND" ] && exit 0

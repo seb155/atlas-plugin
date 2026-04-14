@@ -7,8 +7,8 @@
 # Output: Warning messages on stdout
 # Exit: 0 always (warnings only, never blocks)
 
-set -uo pipefail
-# Note: no -e because grep returns 1 on no match (expected behavior)
+set -euo pipefail
+# Note: grep calls are in if-conditions or guarded with || true — safe with -e
 
 # Throttle: max 1 warning per type per 60s
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

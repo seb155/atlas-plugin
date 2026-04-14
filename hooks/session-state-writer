@@ -6,7 +6,7 @@
 # State file: ~/.claude/session-state.json
 # Used by: session-start hook (auto-resume), atlas status CLI, SP-IDP dashboard
 
-set -o pipefail
+set -euo pipefail
 trap 'exit 0' ERR
 
 STATE_FILE="${HOME}/.claude/session-state.json"

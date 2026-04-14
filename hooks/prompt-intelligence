@@ -9,7 +9,7 @@
 # Input: JSON on stdin with prompt text
 # Must complete in <3s
 
-set -o pipefail
+set -euo pipefail
 trap 'exit 0' ERR
 
 # Throttle: avoid repeating the same suggestion

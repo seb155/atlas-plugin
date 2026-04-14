@@ -17,7 +17,7 @@ touch "$_ATLAS_MB_LOCK"
 trap 'rm -f "$_ATLAS_MB_LOCK"' EXIT
 # ────────────────────────────────────────────────────────────────────
 
-set -o pipefail
+set -euo pipefail
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 1. Resolve memory directory
@@ -54,13 +54,13 @@ DATE_TODAY=$(date +%Y-%m-%d)
 
 # Last episode energy
 LAST_ENERGY=4
-LAST_EPISODE=$(find "$MEMORY_DIR" -name "episode-*.md" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $2}')
+LAST_EPISODE=$(find "$MEMORY_DIR" -name "episode-*.md" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $2}' || true)
 if [ -n "$LAST_EPISODE" ] && [ -f "$LAST_EPISODE" ]; then
   LAST_ENERGY=$(grep "^energy:" "$LAST_EPISODE" 2>/dev/null | awk '{print $2}' || echo 4)
 fi
 
 # Active intuitions count
-INTUITION_COUNT=$(find "$MEMORY_DIR" -name "intuition-*.md" -exec grep -l "validated: false" {} \; 2>/dev/null | wc -l)
+INTUITION_COUNT=$(find "$MEMORY_DIR" -name "intuition-*.md" -exec grep -l "validated: false" {} \; 2>/dev/null | wc -l || echo 0)
 
 # Last dream health score
 DREAM_SCORE="?"
@@ -70,7 +70,7 @@ if [ -f "$DREAM_HISTORY" ]; then
 fi
 
 # Recent handoffs (last 3 days)
-RECENT_HANDOFFS=$(find "$MEMORY_DIR" -name "handoff-*.md" -mtime -3 2>/dev/null | wc -l)
+RECENT_HANDOFFS=$(find "$MEMORY_DIR" -name "handoff-*.md" -mtime -3 2>/dev/null | wc -l || echo 0)
 
 # Pending decisions (from decisions.jsonl — COG-3)
 DECISIONS_FILE=""
@@ -145,9 +145,9 @@ for item in bold_items[:5]:
 
 # Most recent handoff topic (strongest signal)
 LAST_HANDOFF_TOPIC=""
-LAST_HANDOFF=$(find "$MEMORY_DIR" -name "handoff-*.md" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $2}')
+LAST_HANDOFF=$(find "$MEMORY_DIR" -name "handoff-*.md" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $2}' || true)
 if [ -n "$LAST_HANDOFF" ]; then
-  LAST_HANDOFF_TOPIC=$(grep "^description:" "$LAST_HANDOFF" 2>/dev/null | head -1 | sed 's/description: //' | head -c 80)
+  LAST_HANDOFF_TOPIC=$(grep "^description:" "$LAST_HANDOFF" 2>/dev/null | head -1 | sed 's/description: //' | head -c 80 || true)
 fi
 
 # Energy-based time estimate

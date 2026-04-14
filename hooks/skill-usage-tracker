@@ -10,6 +10,7 @@
 #   - context_tokens: approximate context size at invocation time
 #
 # Exit 0 always (never block)
+set -euo pipefail
 
 INPUT=$(cat)
 SKILL_NAME=$(echo "$INPUT" | jq -r '.tool_input.skill // "unknown"')
@@ -19,12 +20,12 @@ SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
 
 # Enhanced fields
 DURATION_MS=$(echo "$INPUT" | jq -r '.duration_ms // 0')
-TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_output // ""' | head -c 200)
+TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_output // ""' | head -c 200 || true)
 MODEL="${CLAUDE_MODEL:-unknown}"
 
 # Detect success: no "error" or "Error" in first 200 chars of output
 SUCCESS="true"
-if echo "$TOOL_OUTPUT" | grep -qiE '(error|failed|exception|denied)'; then
+if echo "$TOOL_OUTPUT" | grep -qiE '(error|failed|exception|denied)' 2>/dev/null; then
   SUCCESS="false"
 fi
 
