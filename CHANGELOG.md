@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.13.0 (2026-04-14)
+
+### ✨ Features
+- feat(lsp): add typescript-language-server to dev-addon (#11)
+
+
+
 ## v5.12.3 (2026-04-14)
 
 ### 🐛 Bug Fixes
