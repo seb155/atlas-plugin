@@ -72,6 +72,9 @@ HOSTNAME_SHORT=$(echo "$EXISTING" | jq -r '.hostname // "?"' 2>/dev/null || echo
 # --- Features (always recalculate, ~2ms) ---
 FEAT_TOTAL=0; FEAT_ACTIVE=0; FEAT_DONE=0
 if [ -f ".blueprint/FEATURES.md" ]; then
+  # shellcheck disable=SC2046
+  # awk output is controlled format ("FEAT_TOTAL=N FEAT_ACTIVE=N FEAT_DONE=N").
+  # eval is intentional to import 3 integers into current shell scope.
   eval "$(awk '/^## Feature:/{t++} /IN_PROGRESS/{a++} /DONE/{d++} END{printf "FEAT_TOTAL=%d FEAT_ACTIVE=%d FEAT_DONE=%d",t,a,d}' ".blueprint/FEATURES.md" 2>/dev/null)" || true
 fi
 

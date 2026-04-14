@@ -809,7 +809,8 @@ _atlas_doctor() {
 
   _check() {
     checks=$((checks + 1))
-    if eval "$2" &>/dev/null; then
+    # bash -c isolates the check command — safer than eval (no side effects).
+    if bash -c "$2" >/dev/null 2>&1; then
       passed=$((passed + 1))
       printf "    ${ATLAS_CYAN}✓${ATLAS_RESET} %-30s %s\n" "$1" "$3"
     else
@@ -967,7 +968,7 @@ _atlas_preflight() {
 
   _check() {
     local name="$1" check_cmd="$2" fix_hint="$3"
-    if eval "$check_cmd" &>/dev/null; then
+    if bash -c "$check_cmd" >/dev/null 2>&1; then
       printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} %s\n" "$name"
     else
       printf "  ${ATLAS_RED}✗${ATLAS_RESET} %s ${ATLAS_DIM}— %s${ATLAS_RESET}\n" "$name" "$fix_hint"
@@ -977,7 +978,7 @@ _atlas_preflight() {
 
   _warn() {
     local name="$1" check_cmd="$2" hint="$3"
-    if eval "$check_cmd" &>/dev/null; then
+    if bash -c "$check_cmd" >/dev/null 2>&1; then
       printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} %s\n" "$name"
     else
       printf "  ${ATLAS_YELLOW}⚠${ATLAS_RESET} %s ${ATLAS_DIM}— %s${ATLAS_RESET}\n" "$name" "$hint"

@@ -459,7 +459,9 @@ print(handoffs[-1] if handoffs else '')
   else
     # builtin cd bypasses zoxide wrapper; direnv export loads .envrc silently
     builtin cd "$path" \
-      && eval "$(DIRENV_LOG_FORMAT= direnv export zsh 2>/dev/null)" \
+      && { # shellcheck disable=SC2046
+           # direnv output is trusted (it's OUR config), so eval is intentional here.
+           eval "$(DIRENV_LOG_FORMAT= direnv export zsh 2>/dev/null)"; } \
       && export PATH="$_full_path" \
       && "${cmd[@]}"
   fi
