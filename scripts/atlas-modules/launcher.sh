@@ -23,7 +23,8 @@ _atlas_gum_menu() {
   local -a project_names=()
 
   # Recent projects
-  local recents=$(_atlas_recent_projects 5)
+  local recents
+  recents=$(_atlas_recent_projects 5)
   if [ -n "$recents" ]; then
     while IFS='|' read pname ago count; do
       items+=("▶ ${pname}  (${ago}, ${count}x)")
@@ -32,7 +33,8 @@ _atlas_gum_menu() {
   fi
 
   # All projects not in recents
-  local all_projects=$(_atlas_known_projects)
+  local all_projects
+  all_projects=$(_atlas_known_projects)
   if [ -n "$all_projects" ]; then
     while read pname; do
       # Skip if already in recents
@@ -63,7 +65,8 @@ _atlas_gum_menu() {
   project_names+=("__help__")
 
   # Show gum choose menu
-  local choice=$(printf '%s\n' "${items[@]}" | gum choose \
+  local choice
+  choice=$(printf '%s\n' "${items[@]}" | gum choose \
     --header "Select a project or action:" \
     --cursor "→ " \
     --cursor.foreground 214 \
@@ -96,7 +99,8 @@ _atlas_gum_menu() {
 _atlas_fzf_menu() {
   printf "  ${ATLAS_BOLD}Select project:${ATLAS_RESET}\n\n"
 
-  local choice=$(_atlas_discover_projects | while IFS=: read pname ppath; do
+  local choice
+  choice=$(_atlas_discover_projects | while IFS=: read pname ppath; do
     echo "$pname"
   done | fzf --header="ATLAS — Select project" --height=15 --reverse --border)
 
@@ -314,7 +318,8 @@ atlas() {
   done
 
   # Resolve project path
-  local path=$(_atlas_resolve_project "$project")
+  local path
+  path=$(_atlas_resolve_project "$project")
   if [ -z "$path" ]; then
     echo "Project '${project}' not found. Run 'atlas list --all' to see available projects."
     return 1

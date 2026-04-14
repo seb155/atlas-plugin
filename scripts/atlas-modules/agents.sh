@@ -28,7 +28,8 @@ _ATLAS_AGENT_TAIL="${ATLAS_SHELL_DIR:-$HOME/.atlas/shell}/../scripts/atlas-agent
 _atlas_agents_fmt_duration() {
   local ms="$1"
   [ -z "$ms" ] || [ "$ms" = "null" ] && { echo "—"; return; }
-  local s=$((ms / 1000))
+  local s
+  s=$((ms / 1000))
   if [ "$s" -lt 60 ]; then
     echo "${s}s"
   elif [ "$s" -lt 3600 ]; then
@@ -56,7 +57,8 @@ _atlas_agents_list() {
     return 0
   fi
 
-  local count=$(jq -r 'length' "$_ATLAS_AGENTS_FILE" 2>/dev/null || echo 0)
+  local count
+  count=$(jq -r 'length' "$_ATLAS_AGENTS_FILE" 2>/dev/null || echo 0)
   if [ "$count" = "0" ]; then
     echo "  No agents tracked. (Registry empty)"
     return 0
@@ -84,8 +86,10 @@ _atlas_agents_list() {
   ' "$_ATLAS_AGENTS_FILE" 2>/dev/null | while IFS=$'\t' read -r id type stat dur vis started; do
     local id_short="${id:0:15}"
     local type_short="${type:0:18}"
-    local dur_fmt=$(_atlas_agents_fmt_duration "$dur")
-    local status_icon=$(_atlas_agents_fmt_status "$stat")
+    local dur_fmt
+    dur_fmt=$(_atlas_agents_fmt_duration "$dur")
+    local status_icon
+    status_icon=$(_atlas_agents_fmt_status "$stat")
     local start_short="${started:11:5}"
     printf "  %-17s  %-20s  %-11s  %-10s  %-6s  %s\n" \
       "$id_short" "$type_short" "$status_icon" "$dur_fmt" "$vis" "$start_short"
@@ -105,7 +109,8 @@ _atlas_agents_tail() {
     return 1
   fi
 
-  local output_file=$(jq -r --arg id "$agent_id" '.[$id].output_file // empty' "$_ATLAS_AGENTS_FILE")
+  local output_file
+  output_file=$(jq -r --arg id "$agent_id" '.[$id].output_file // empty' "$_ATLAS_AGENTS_FILE")
   if [ -z "$output_file" ]; then
     echo "Unknown agent_id: $agent_id"
     echo "Use: atlas agents list   (to see known IDs)"
@@ -117,7 +122,8 @@ _atlas_agents_tail() {
     return 1
   fi
 
-  local agent_type=$(jq -r --arg id "$agent_id" '.[$id].agent_type // "?"' "$_ATLAS_AGENTS_FILE")
+  local agent_type
+  agent_type=$(jq -r --arg id "$agent_id" '.[$id].agent_type // "?"' "$_ATLAS_AGENTS_FILE")
 
   # If in tmux, spawn new pane; else raw tail in current terminal
   if [ -n "$TMUX" ] && tmux display-message -p '#S' &>/dev/null; then
@@ -149,14 +155,16 @@ _atlas_agents_stop() {
     echo "Usage: atlas agents stop <agent_id>"
     return 1
   fi
-  local output_file=$(jq -r --arg id "$agent_id" '.[$id].output_file // empty' "$_ATLAS_AGENTS_FILE" 2>/dev/null)
+  local output_file
+  output_file=$(jq -r --arg id "$agent_id" '.[$id].output_file // empty' "$_ATLAS_AGENTS_FILE" 2>/dev/null)
   if [ -z "$output_file" ]; then
     echo "Unknown agent_id: $agent_id"
     return 1
   fi
   # Find writer PID via lsof (best-effort)
   if command -v lsof &>/dev/null; then
-    local pids=$(lsof -t "$output_file" 2>/dev/null | head -5)
+    local pids
+    pids=$(lsof -t "$output_file" 2>/dev/null | head -5)
     if [ -z "$pids" ]; then
       echo "No active writer on $output_file — agent may already be stopped."
       return 0
@@ -177,7 +185,8 @@ _atlas_agents_replay() {
     echo "Usage: atlas agents replay <agent_id>"
     return 1
   fi
-  local output_file=$(jq -r --arg id "$agent_id" '.[$id].output_file // empty' "$_ATLAS_AGENTS_FILE" 2>/dev/null)
+  local output_file
+  output_file=$(jq -r --arg id "$agent_id" '.[$id].output_file // empty' "$_ATLAS_AGENTS_FILE" 2>/dev/null)
   if [ -z "$output_file" ] || [ ! -e "$output_file" ]; then
     echo "No output file for $agent_id (unknown or not yet created)"
     return 1
@@ -207,12 +216,14 @@ _atlas_agents_clean() {
     return 0
   fi
   # Prune via the registry lib (pruneStale with 0 = immediate purge of all stale)
-  local before=$(jq -r 'length' "$_ATLAS_AGENTS_FILE" 2>/dev/null || echo 0)
+  local before
+  before=$(jq -r 'length' "$_ATLAS_AGENTS_FILE" 2>/dev/null || echo 0)
   # Direct purge: keep only entries with status in (running, spawning)
   jq 'with_entries(select(.value.status == "running" or .value.status == "spawning"))' \
     "$_ATLAS_AGENTS_FILE" > "${_ATLAS_AGENTS_FILE}.tmp.$$" \
     && mv "${_ATLAS_AGENTS_FILE}.tmp.$$" "$_ATLAS_AGENTS_FILE"
-  local after=$(jq -r 'length' "$_ATLAS_AGENTS_FILE" 2>/dev/null || echo 0)
+  local after
+  after=$(jq -r 'length' "$_ATLAS_AGENTS_FILE" 2>/dev/null || echo 0)
   echo "✓ Cleaned: $((before - after)) entries pruned, $after kept (running/spawning)."
 }
 
@@ -229,7 +240,8 @@ _atlas_agents_env() {
     return 0
   fi
   if [ -n "$TMUX" ] && tmux display-message -p '#S' &>/dev/null; then
-    local panes=$(tmux list-panes 2>/dev/null | wc -l | tr -d ' ')
+    local panes
+    panes=$(tmux list-panes 2>/dev/null | wc -l | tr -d ' ')
     echo "  Result: ✅ TMUX ACTIVE"
     echo "    Session: $(tmux display-message -p '#S')"
     echo "    Current pane count: $panes"

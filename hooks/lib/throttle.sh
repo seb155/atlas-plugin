@@ -24,7 +24,8 @@ throttle_check() {
     last_ts=$(cat "$lock_file" 2>/dev/null || echo 0)
     local now
     now=$(date +%s)
-    local diff=$(( now - last_ts ))
+    local diff
+    diff=$(( now - last_ts ))
     if [ "$diff" -lt "$cooldown" ]; then
       return 1  # throttled
     fi
