@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "atlas-core",
-      "version": "5.10.0",
+      "version": "5.11.0",
       "description": "ATLAS Core \u2014 shared base (25 skills). Session, memory, context, personal.",
       "source": {
         "source": "git-subdir",
@@ -21,7 +21,7 @@
     },
     {
       "name": "atlas-admin",
-      "version": "5.10.0",
+      "version": "5.11.0",
       "description": "ATLAS Admin \u2014 superuser addon (63 skills). Dev + infra + security + governance.",
       "source": {
         "source": "git-subdir",
@@ -34,7 +34,7 @@
     },
     {
       "name": "atlas-dev",
-      "version": "5.10.0",
+      "version": "5.11.0",
       "description": "ATLAS Dev \u2014 developer addon (29 skills). Planning, TDD, review, shipping.",
       "source": {
         "source": "git-subdir",

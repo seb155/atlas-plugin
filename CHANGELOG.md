@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.11.0 (2026-04-14)
+
+### ✨ Features
+- feat(hooks): auto-update plugin on SessionStart when marketplace ahead (#6)
+
+### 🔧 Other Changes
+- Merge PR #5 — SC2155 cleanup + shellcheck hard-fail
+- ci(shellcheck): hard-fail on errors (zero after SC2155 cleanup)
+- refactor(shell): batch-fix 119 SC2155 warnings (91% reduction)
+
+
+
 ## v5.10.0 (2026-04-14)
 
 ### ✨ Features
