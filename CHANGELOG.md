@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.8.0 (2026-04-14)
+
+### ✨ Features
+- feat(lsp): declare bash + yaml + pyright LSP servers (Phase 7A+7B+7C)
+
+### 🐛 Bug Fixes
+- fix(ci): gitleaks image tag v8.30.1 (Phase 6F regression)
+
+### 🔧 Other Changes
+- Merge pull request #2 — Phase 7 LSP Integration + gitleaks fix
+- docs(contributing): LSP setup prerequisites (Phase 7 follow-up)
+- docs(lsp-refs): bash-lsp + yaml-lsp reference docs (Phase 7F)
+- docs(skills): LSP integration in 3 skills (Phase 7D)
+
+
+
 ## v5.7.0 (2026-04-14)
 
 ### ✨ Features
