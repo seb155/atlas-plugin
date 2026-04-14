@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.14.0 (2026-04-14)
+
+### ✨ Features
+- feat(ci): atlas ci logs — programmatic Woodpecker 3.14 log access (#12)
+
+
+
 ## v5.13.0 (2026-04-14)
 
 ### ✨ Features
