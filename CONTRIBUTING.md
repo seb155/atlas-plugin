@@ -25,12 +25,27 @@ For shellcheck + bats-core (system packages):
 sudo apt-get install shellcheck bats
 ```
 
+For LSP servers (optional, enables semantic code intelligence in ATLAS skills):
+
+```bash
+# bash + yaml LSP (declared in atlas-core + atlas-dev-addon plugin.json)
+npm install -g bash-language-server yaml-language-server
+
+# Python LSP (pyright — declared in atlas-dev-addon)
+pip install pyright
+
+# Enable LSP tool in ~/.claude/settings.json
+#   { "env": { "ENABLE_LSP_TOOL": "1" } }
+```
+
 Verify the setup:
 
 ```bash
-shellcheck --version   # expect >= 0.8
-bats --version         # expect >= 1.5
-pytest --markers       # no "unknown mark" warnings
+shellcheck --version          # expect >= 0.8
+bats --version                # expect >= 1.5
+pytest --markers              # no "unknown mark" warnings
+bash-language-server --help   # optional (if LSP enabled)
+pyright --version             # optional (if LSP enabled)
 ```
 
 ---
