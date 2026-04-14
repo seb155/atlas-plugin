@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.12.0 (2026-04-14)
+
+### ✨ Features
+- feat(cli): version SSoT via installed_plugins.json + fix 3 zsh bugs (#9)
+
+### 🔧 Other Changes
+- chore(hooks): add set -euo pipefail to 22 hooks (Task #15) (#8)
+- docs(plans): archive ATLAS v5.7.0 engineering plans (#7)
+
+
+
 ## v5.11.0 (2026-04-14)
 
 ### ✨ Features
