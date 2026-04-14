@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.16.0 (2026-04-14)
+
+### ✨ Features
+- feat(ci): atlas ci secrets rotate-ssh — automated ssh deploy key rotation
+
+
+
 ## v5.15.1 (2026-04-14)
 
 ### 🐛 Bug Fixes
