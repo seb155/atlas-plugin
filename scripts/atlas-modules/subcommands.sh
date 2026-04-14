@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: Subcommands (list, resume, status, dashboard, help, hooks, doctor)
 # Sourced by atlas-cli.sh — do not execute directly
 
@@ -65,8 +67,10 @@ _atlas_status() {
 
   # Git branch
   local branch=$(git branch --show-current 2>/dev/null || echo "N/A")
-  local repo="${$(git rev-parse --show-toplevel 2>/dev/null):t}"
-  [ -z "$repo" ] && repo="N/A"
+  local _top
+  _top=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+  local repo="$(basename "$_top")"
+  [ -z "$_top" ] && repo="N/A"
   printf "  📂 %-14s ${ATLAS_CYAN}%s${ATLAS_RESET} (branch: ${ATLAS_CYAN}%s${ATLAS_RESET})\n" "Repo" "$repo" "$branch"
 
   # Worktree count
@@ -248,7 +252,7 @@ _atlas_complexity() {
   local desc="$*"
   [ -z "$desc" ] && { echo "Usage: atlas complexity \"task description\""; return 1; }
   local script="${ATLAS_SHELL_DIR}/../scripts/task-complexity.sh"
-  [ -f "$script" ] || script="${${ATLAS_SHELL_DIR:h}:h}/scripts/task-complexity.sh"
+  [ -f "$script" ] || script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/task-complexity.sh"
   [ -f "$script" ] || { echo "task-complexity.sh not found"; return 1; }
   local result=$(bash "$script" "$desc")
   local level=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" 2>/dev/null)
@@ -330,13 +334,13 @@ _atlas_worktrees() {
   for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
     local wt_dir="$repo_dir/worktrees"
     [ -d "$wt_dir" ] || continue
-    local repo_root="${repo_dir:h}"
+    local repo_root="$(dirname "$repo_dir")"
     [ -d "$repo_root/.git" ] || continue
-    local repo_name="${repo_root:t}"
+    local repo_name="$(basename "$repo_root")"
 
-    for wt in "$wt_dir"/*(N/); do
+    while IFS= read -r wt; do
       [ -d "$wt" ] || continue
-      local name="${wt:t}"
+      local name="$(basename "$wt")"
       found=$((found + 1))
 
       # Get branch
@@ -360,14 +364,14 @@ _atlas_worktrees() {
       [ "$age_days" -ge 14 ] && age_str="${ATLAS_RED}${age_days}d${ATLAS_RESET}"
 
       printf "  %-20s %-24s %-8s %-8s %-6s\n" "${repo_name}/${name}" "$branch" "$dirty_str" "$ahead_str" "$age_str"
-    done
+    done < <(find "$wt_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
 
     # Also check .worktrees/ (manual)
     local manual_dir="$repo_root/.worktrees"
     if [ -d "$manual_dir" ]; then
-      for wt in "$manual_dir"/*(N/); do
+      while IFS= read -r wt; do
         [ -d "$wt" ] || continue
-        local name="${wt:t}"
+        local name="$(basename "$wt")"
         found=$((found + 1))
         local branch=$(cd "$wt" && git branch --show-current 2>/dev/null || echo "?")
         local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
@@ -381,7 +385,7 @@ _atlas_worktrees() {
         local age_str="${age_days}d"
         [ "$age_days" -ge 7 ] && age_str="${ATLAS_YELLOW}${age_days}d${ATLAS_RESET}"
         printf "  %-20s %-24s %-8s %-8s %-6s\n" "${repo_name}/${name}*" "$branch" "$dirty_str" "$ahead_str" "$age_str"
-      done
+      done < <(find "$manual_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
     fi
   done
 
@@ -417,16 +421,16 @@ _atlas_cleanup() {
   local skipped=0
 
   for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
-    local repo_root="${repo_dir:h}"
+    local repo_root="$(dirname "$repo_dir")"
     [ -d "$repo_root/.git" ] || continue
-    local repo_name="${repo_root:t}"
+    local repo_name="$(basename "$repo_root")"
 
     # Scan both .claude/worktrees/ (CC-auto) and .worktrees/ (manual)
     for wt_parent in "$repo_dir/worktrees" "$repo_root/.worktrees"; do
       [ -d "$wt_parent" ] || continue
-      for wt in "$wt_parent"/*(N/); do
+      while IFS= read -r wt; do
         [ -d "$wt" ] || continue
-        local name="${wt:t}"
+        local name="$(basename "$wt")"
 
         # Skip if dirty
         local dirty_count=$(cd "$wt" && git status --porcelain 2>/dev/null | grep -v node_modules | /usr/bin/wc -l)
@@ -461,7 +465,7 @@ _atlas_cleanup() {
             printf "  ${ATLAS_RED}✗ failed${ATLAS_RESET} ${repo_name}/${name} ${ATLAS_DIM}(try: git worktree prune)${ATLAS_RESET}\n"
           fi
         fi
-      done
+      done < <(find "$wt_parent" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
     done
   done
 
@@ -727,13 +731,13 @@ _atlas_hooks() {
 
   # 1. Plugin hooks
   local found=0
-  for tier_dir in "$cache"/atlas-*/(N); do
+  while IFS= read -r tier_dir; do
     [ -d "$tier_dir" ] || continue
-    for ver_dir in "$tier_dir"*/(N); do
+    while IFS= read -r ver_dir; do
       [ -d "$ver_dir" ] || continue
       local hj="$ver_dir/hooks/hooks.json"
       [ -f "$hj" ] || continue
-      local tier="${tier_dir:t}"
+      local tier="$(basename "$tier_dir")"
       local events=$(python3 -c "import json; d=json.load(open('$hj')); print(len(d.get('hooks',{})))" 2>/dev/null)
       local handlers=$(python3 -c "
 import json
@@ -744,8 +748,8 @@ print(t)
       printf "  ✅ %-20s %s events, %s handlers\n" "$tier" "$events" "$handlers"
       found=1
       break
-    done
-  done
+    done < <(find "$tier_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+  done < <(find "$cache" -mindepth 1 -maxdepth 1 -type d -name "atlas-*" 2>/dev/null)
   [ $found -eq 0 ] && printf "  ❌ No plugin hooks.json found\n"
 
   # 2. settings.json hooks (should be empty)
@@ -777,19 +781,19 @@ print(t)
   # 4. Stale local hooks
   echo ""
   local stale=0
-  for script in "$HOME/.claude/hooks/"*.sh(N); do
+  while IFS= read -r script; do
     [ -f "$script" ] || continue
-    local name="${${script:t}%.sh}"
-    for tier_dir in "$cache"/atlas-*/(N); do
-      for ver_dir in "$tier_dir"*/(N); do
+    local name="$(basename "$script" .sh)"
+    while IFS= read -r tier_dir; do
+      while IFS= read -r ver_dir; do
         if [ -f "$ver_dir/hooks/$name" ] 2>/dev/null; then
           printf "  ⚠️  Stale: %s.sh (exists in plugin as %s)\n" "$name" "$name"
           stale=$((stale + 1))
           break 2
         fi
-      done
-    done
-  done
+      done < <(find "$tier_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+    done < <(find "$cache" -mindepth 1 -maxdepth 1 -type d -name "atlas-*" 2>/dev/null)
+  done < <(find "$HOME/.claude/hooks" -mindepth 1 -maxdepth 1 -type f -name "*.sh" 2>/dev/null)
   [ $stale -eq 0 ] && printf "  ✅ No stale local hooks\n"
 
   echo ""
