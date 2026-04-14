@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: Agent Dispatch (lightweight fire-and-forget)
 # Sourced by atlas-cli.sh — do not execute directly
 # SP-EVOLUTION P7.4 — atlas dispatch "task" [--model sonnet]
@@ -26,11 +28,13 @@ _atlas_dispatch() {
   # Auto-detect model if not specified
   if [ -z "$model" ]; then
     local complexity_script="${ATLAS_SHELL_DIR}/../scripts/task-complexity.sh"
-    [ -f "$complexity_script" ] || complexity_script="${${ATLAS_SHELL_DIR:h}:h}/scripts/task-complexity.sh"
+    [ -f "$complexity_script" ] || complexity_script="$(dirname "$(dirname "$ATLAS_SHELL_DIR")")/scripts/task-complexity.sh"
     if [ -f "$complexity_script" ]; then
-      local result=$(bash "$complexity_script" "$desc")
+      local result
+      result=$(bash "$complexity_script" "$desc")
       model=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['model'])" 2>/dev/null || echo "sonnet")
-      local level=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" 2>/dev/null || echo "moderate")
+      local level
+      level=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['level'])" 2>/dev/null || echo "moderate")
       echo "🎯 Complexity: ${level} → model: ${model}"
     else
       model="sonnet"
@@ -56,7 +60,8 @@ _atlas_dispatch() {
     "$(/usr/bin/date -Iseconds)" "$desc" "$model" >> "$log_file" 2>/dev/null
 
   # Find claude binary
-  local claude_bin=$(command -v claude 2>/dev/null || echo "/usr/local/bin/claude")
+  local claude_bin
+  claude_bin=$(command -v claude 2>/dev/null || echo "/usr/local/bin/claude")
   if [ ! -x "$claude_bin" ]; then
     echo "❌ claude binary not found"
     return 1
@@ -89,11 +94,15 @@ _atlas_dispatch() {
     esac
 
     echo "   Running (${escalated_model})..."
-    local start_ts=$(/usr/bin/date +%s)
-    local output=$($claude_bin --print --model "$model_id" "$desc" 2>&1)
+    local start_ts
+    start_ts=$(/usr/bin/date +%s)
+    local output
+    output=$($claude_bin --print --model "$model_id" "$desc" 2>&1)
     local exit_code=$?
-    local end_ts=$(/usr/bin/date +%s)
-    local duration=$((end_ts - start_ts))
+    local end_ts
+    end_ts=$(/usr/bin/date +%s)
+    local duration
+    duration=$((end_ts - start_ts))
 
     if [ "$exit_code" -eq 0 ] && [ -n "$output" ] && ! echo "$output" | grep -qi "error\|failed\|exception" | /usr/bin/head -1 >/dev/null 2>&1; then
       success=true

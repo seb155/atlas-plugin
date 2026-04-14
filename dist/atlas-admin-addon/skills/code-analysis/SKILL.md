@@ -22,6 +22,31 @@ model: opus
 
 ---
 
+## LSP-first workflow (if available)
+
+When `ENABLE_LSP_TOOL=1` and the relevant language server is installed,
+ALWAYS try LSP first before running Vulture/Ruff/Madge. LSP gives
+semantic references at ~50ms vs minutes of static analysis:
+
+```
+# Check if a function is called anywhere (dead-code candidate):
+LSP(operation: "findReferences", filePath: "app/services/foo.py", line: 42)
+# 0 refs → strong candidate for dead code.
+# 1 ref in same file → likely dead external, check intra-file use.
+
+# Get workspace symbols (every defined identifier in the project):
+LSP(operation: "workspaceSymbol", query: "handle_")
+# Lists all `handle_*` functions — useful for coverage + consistency audit.
+
+# Understand data flow (what does X call?):
+LSP(operation: "documentSymbol", filePath: "app/services/foo.py")
+# Returns the function/class tree. Combine with findReferences for dependency graph.
+```
+
+LSP skipped if binary not installed — fall back to the subcommands below.
+
+---
+
 ## `/atlas analyze dead-code`
 
 ### Backend (Python)

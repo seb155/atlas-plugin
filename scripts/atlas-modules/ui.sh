@@ -28,9 +28,9 @@ _atlas_discover_projects() {
     [ -d "$scan_dir" ] || continue
     for d in "$scan_dir"/*/; do
       [ -d "$d/.git" ] || [ -d "$d/.claude" ] || continue
-      local name="${d%/}"
-      name="$(basename "$name")"
-      results+=("$name:${d%/}")
+      local dir_no_slash="${d%/}"
+      local name="${dir_no_slash##*/}"
+      results+=("$name:$dir_no_slash")
     done
   done
 
@@ -135,12 +135,12 @@ _atlas_header() {
 }
 
 _atlas_plugin_version() {
-  local cache_dir="${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin"
-  if [ -d "$cache_dir" ]; then
-    # Get latest version dir
-    ls -v "$cache_dir" 2>/dev/null | tail -1 | xargs -I{} cat "$cache_dir/{}/VERSION" 2>/dev/null | tr -d '[:space:]'
+  # Delegate to version-api.sh SSoT chain (installed → capabilities → marketplace).
+  # Returns "unknown" only when all sources fail — never the misleading "?.?.?".
+  if declare -f _atlas_version_display >/dev/null 2>&1; then
+    _atlas_version_display
   else
-    echo "?.?.?"
+    echo "unknown"
   fi
 }
 

@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# TDD Guard Hook — PreToolUse (Edit|Write)
+# Soft warning when implementation files are touched without a corresponding test file.
+#
+# Why: dream-proposals.jsonl proposal #1 (score 8.3) — only 3 tdd invocations in 30 days
+# despite 47 implementation tasks. This hook nudges toward TDD discipline without blocking.
+#
+# Input: JSON on stdin with file_path
+# Output: Warning messages on stdout
+# Exit: 0 always (soft warning, never blocks)
+
+set -uo pipefail
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true
+
+INPUT=$(cat)
+FILE_PATH=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('file_path', d.get('input', {}).get('file_path', '')))" 2>/dev/null || echo "")
+
+# Skip if no file path
+[[ -z "$FILE_PATH" ]] && exit 0
+
+# Skip non-implementation files
+case "$FILE_PATH" in
+  *.md|*.json|*.yaml|*.yml|*.toml|*.lock|*.txt|*.rst) exit 0 ;;
+  *test*|*spec*|*__tests__*|*tests/*|*.test.*|*.spec.*) exit 0 ;;
+  *.config.*|*config.json|*.env|*.gitignore|*.dockerignore) exit 0 ;;
+  */node_modules/*|*/.venv/*|*/dist/*|*/build/*|*/.next/*) exit 0 ;;
+  */migrations/*|*/seeds/*|*/fixtures/*) exit 0 ;;
+esac
+
+# Detect language by extension
+LANG=""
+case "$FILE_PATH" in
+  *.ts|*.tsx) LANG="typescript" ;;
+  *.js|*.jsx) LANG="javascript" ;;
+  *.py) LANG="python" ;;
+  *.go) LANG="go" ;;
+  *.rs) LANG="rust" ;;
+  *) exit 0 ;;  # Skip unknown languages
+esac
+
+# Throttle: max 1 warning per file per 600s (10 min) to avoid noise
+THROTTLE_KEY="tdd-guard-$(echo "$FILE_PATH" | sha256sum | cut -c1-16)"
+if type throttle_check &>/dev/null; then
+  throttle_check "$THROTTLE_KEY" 600 || exit 0
+fi
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+[[ -z "$PROJECT_ROOT" ]] && exit 0
+
+# Compute test file candidates per language convention
+BASE_NAME=$(basename "$FILE_PATH")
+NAME_NO_EXT="${BASE_NAME%.*}"
+EXT="${BASE_NAME##*.}"
+DIR_NAME=$(dirname "$FILE_PATH")
+
+# Build list of candidate test paths
+TEST_CANDIDATES=()
+case "$LANG" in
+  typescript|javascript)
+    # Common patterns: foo.ts → foo.test.ts, foo.spec.ts, __tests__/foo.test.ts, tests/foo.test.ts
+    TEST_CANDIDATES+=(
+      "${DIR_NAME}/${NAME_NO_EXT}.test.${EXT}"
+      "${DIR_NAME}/${NAME_NO_EXT}.spec.${EXT}"
+      "${DIR_NAME}/__tests__/${NAME_NO_EXT}.test.${EXT}"
+      "${DIR_NAME}/__tests__/${NAME_NO_EXT}.spec.${EXT}"
+      "${PROJECT_ROOT}/tests/${NAME_NO_EXT}.test.${EXT}"
+      "${PROJECT_ROOT}/frontend/src/__tests__/${NAME_NO_EXT}.test.${EXT}"
+    )
+    ;;
+  python)
+    # Common: foo.py → test_foo.py, tests/test_foo.py, tests/unit/test_foo.py
+    TEST_CANDIDATES+=(
+      "${DIR_NAME}/test_${NAME_NO_EXT}.py"
+      "${DIR_NAME}/${NAME_NO_EXT}_test.py"
+      "${PROJECT_ROOT}/tests/test_${NAME_NO_EXT}.py"
+      "${PROJECT_ROOT}/tests/unit/test_${NAME_NO_EXT}.py"
+      "${PROJECT_ROOT}/tests/integration/test_${NAME_NO_EXT}.py"
+      "${PROJECT_ROOT}/backend/tests/test_${NAME_NO_EXT}.py"
+    )
+    ;;
+  go)
+    TEST_CANDIDATES+=("${DIR_NAME}/${NAME_NO_EXT}_test.go")
+    ;;
+  rust)
+    TEST_CANDIDATES+=(
+      "${DIR_NAME}/tests/${NAME_NO_EXT}_test.rs"
+      "${PROJECT_ROOT}/tests/${NAME_NO_EXT}_test.rs"
+    )
+    ;;
+esac
+
+# Check if any test file exists
+TEST_FOUND=""
+for candidate in "${TEST_CANDIDATES[@]}"; do
+  if [[ -f "$candidate" ]]; then
+    TEST_FOUND="$candidate"
+    break
+  fi
+done
+
+# Warn if no test file found
+if [[ -z "$TEST_FOUND" ]]; then
+  cat <<EOF
+🏛️ ATLAS │ 🧪⚠️ TDD GUARD │ No test file found for: ${FILE_PATH##*/}
+   └─ Considered: ${TEST_CANDIDATES[0]##*/} (and ${#TEST_CANDIDATES[@]}-1 other patterns)
+   └─ Suggestion: Write a failing test FIRST, then implement (TDD)
+   └─ Skill: superpowers:test-driven-development OR atlas-dev-addon:tdd
+   └─ Override: hook is soft (won't block). Touch test file once to silence for 10min.
+EOF
+fi
+
+exit 0

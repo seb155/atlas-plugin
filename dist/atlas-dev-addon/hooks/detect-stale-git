@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# detect-stale-git — Detect stale git state and suggest cleanup
+# Event: SessionStart (async)
+# Output: Warning banner if stale worktrees, branches, stashes, or divergence detected
+
+set -euo pipefail
+
+# Only run in git repos
+git rev-parse --is-inside-work-tree &>/dev/null || exit 0
+
+# Count stale items
+STALE_WT=$(git worktree list 2>/dev/null | grep -c '\.claude/worktrees/' || echo 0)
+MERGED_BR=$(git branch --merged dev 2>/dev/null | grep -vE 'dev|main|\*|feat/' | wc -l || echo 0)
+STASH_CT=$(git stash list 2>/dev/null | wc -l || echo 0)
+AHEAD=$(git rev-list --count dev --not origin/main 2>/dev/null || echo 0)
+
+TOTAL=$((STALE_WT + MERGED_BR + STASH_CT))
+
+if [ "$TOTAL" -gt 0 ] || [ "$AHEAD" -gt 5 ]; then
+  PARTS=""
+  [ "$STALE_WT" -gt 0 ] && PARTS="${PARTS}${STALE_WT} worktrees, "
+  [ "$MERGED_BR" -gt 0 ] && PARTS="${PARTS}${MERGED_BR} merged branches, "
+  [ "$STASH_CT" -gt 0 ] && PARTS="${PARTS}${STASH_CT} stashes, "
+  [ "$AHEAD" -gt 5 ] && PARTS="${PARTS}dev ${AHEAD} ahead of main, "
+  PARTS="${PARTS%, }"  # trim trailing comma
+
+  echo "⚠️ Git hygiene: ${PARTS}"
+  echo "   → /atlas ship-all  or  /atlas auto \"cleanup\""
+fi

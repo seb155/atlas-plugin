@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: A/B Testing for Cognitive Hooks
 # Sourced by atlas-cli.sh — do not execute directly
 # Subcommands: atlas ab start|stop|status

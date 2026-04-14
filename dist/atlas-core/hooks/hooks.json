@@ -100,6 +100,33 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "TaskCreate|TaskUpdate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/task-created-log\"",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-state-writer\"",
+            "async": true,
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-replay-logger\"",
+            "async": true,
+            "timeout": 3
+          }
+        ]
+      },
+      {
         "matcher": "Agent",
         "hooks": [
           {
@@ -118,6 +145,12 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/timestamp-injector\"",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/atlas-status-writer\"",
+            "async": true,
+            "timeout": 5
           },
           {
             "type": "command",
@@ -142,6 +175,11 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/cognitive-state\"",
             "async": true,
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-budget-guardian\"",
+            "timeout": 2
           },
           {
             "type": "command",

@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # ATLAS Hook Library: Portable Python 3 resolver
 # Works on Linux, macOS, Windows (Git Bash), WSL2
 #
@@ -8,6 +9,10 @@
 # Provides:
 #   $ATLAS_PYTHON  — path to python3 binary (or "false" if none found)
 #   _atlas_py()    — shortcut: _atlas_py -c "import json; ..."
+#
+# NOTE: No `set -euo pipefail` here — this is a sourced library.
+# Setting strict mode at file level would affect the caller's shell.
+# Callers should set their own strict mode.
 
 if [ -n "${ATLAS_PYTHON:-}" ]; then
   # Already resolved (e.g. by parent hook)

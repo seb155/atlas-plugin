@@ -21,6 +21,26 @@ Before SSH + docker logs, query Loki for structured errors (ref: `refs/observabi
 3. If trace_id visible → trace correlation query to follow the request across services
 4. Prometheus `up` query to check if any scrape target is down
 
+### 1.5 LSP — Semantic context (if available)
+
+If `ENABLE_LSP_TOOL=1` and bash/python/yaml LSP installed, use LSP
+BEFORE hypothesizing — it gives semantic (not grep-level) context
+at ~50ms vs 45s:
+
+```
+LSP(operation: "goToDefinition", filePath: "{error_file}", line: {error_line})
+# Jumps to the definition — reveals if error is call-site or definition-site.
+
+LSP(operation: "findReferences", filePath: "{file}", line: {line})
+# Lists all call sites — helps scope the blast radius.
+
+LSP(operation: "hover", filePath: "{file}", line: {line})
+# Shows type/signature — catches type-level mismatches.
+```
+
+Skip LSP for domain errors (business logic, config) — it helps most
+with type errors, import errors, undefined references.
+
 ### 2. HYPOTHESIZE — What could cause this?
 - List 2-3 possible causes ranked by likelihood
 - For each: what evidence would confirm/deny it?

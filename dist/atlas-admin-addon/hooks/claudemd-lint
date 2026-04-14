@@ -1,0 +1,25 @@
+#!/bin/bash
+# Hook: PostToolUse(Write|Edit) — Warn if CLAUDE.md exceeds 120 lines
+# Context budget preservation: large CLAUDE.md files waste context on every prompt.
+# Exit 0 always (advisory, never blocks)
+
+INPUT=$(cat 2>/dev/null || echo '{}')
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // empty' 2>/dev/null)
+
+[ -z "$FILE" ] && exit 0
+
+# Only check CLAUDE.md files
+case "$(basename "$FILE")" in
+  CLAUDE.md) ;;
+  *) exit 0 ;;
+esac
+
+# Check line count
+[ -f "$FILE" ] || exit 0
+LINES=$(wc -l < "$FILE" 2>/dev/null || echo 0)
+
+if [ "$LINES" -gt 120 ]; then
+  echo "⚠️ CLAUDE.md is ${LINES} lines (target: ≤100, warn: >120). Large CLAUDE.md wastes context budget on every prompt. Consider moving details to .blueprint/ docs."
+fi
+
+exit 0

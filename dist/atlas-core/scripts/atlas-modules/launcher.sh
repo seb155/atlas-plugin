@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: Interactive Menu, Tmux Split, Main Entry Point
 # Sourced by atlas-cli.sh — do not execute directly
 
@@ -21,7 +23,8 @@ _atlas_gum_menu() {
   local -a project_names=()
 
   # Recent projects
-  local recents=$(_atlas_recent_projects 5)
+  local recents
+  recents=$(_atlas_recent_projects 5)
   if [ -n "$recents" ]; then
     while IFS='|' read pname ago count; do
       items+=("▶ ${pname}  (${ago}, ${count}x)")
@@ -30,7 +33,8 @@ _atlas_gum_menu() {
   fi
 
   # All projects not in recents
-  local all_projects=$(_atlas_known_projects)
+  local all_projects
+  all_projects=$(_atlas_known_projects)
   if [ -n "$all_projects" ]; then
     while read pname; do
       # Skip if already in recents
@@ -61,7 +65,8 @@ _atlas_gum_menu() {
   project_names+=("__help__")
 
   # Show gum choose menu
-  local choice=$(printf '%s\n' "${items[@]}" | gum choose \
+  local choice
+  choice=$(printf '%s\n' "${items[@]}" | gum choose \
     --header "Select a project or action:" \
     --cursor "→ " \
     --cursor.foreground 214 \
@@ -94,7 +99,8 @@ _atlas_gum_menu() {
 _atlas_fzf_menu() {
   printf "  ${ATLAS_BOLD}Select project:${ATLAS_RESET}\n\n"
 
-  local choice=$(_atlas_discover_projects | while IFS=: read pname ppath; do
+  local choice
+  choice=$(_atlas_discover_projects | while IFS=: read pname ppath; do
     echo "$pname"
   done | fzf --header="ATLAS — Select project" --height=15 --reverse --border)
 
@@ -245,6 +251,8 @@ atlas() {
     --check) shift; _atlas_preflight "$@"; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
+    version) _atlas_version; return ;;
+    upgrade) shift; _atlas_upgrade "$@"; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
   esac
 
@@ -312,7 +320,8 @@ atlas() {
   done
 
   # Resolve project path
-  local path=$(_atlas_resolve_project "$project")
+  local path
+  path=$(_atlas_resolve_project "$project")
   if [ -z "$path" ]; then
     echo "Project '${project}' not found. Run 'atlas list --all' to see available projects."
     return 1
@@ -358,7 +367,8 @@ print(handoffs[-1] if handoffs else '')
   if [ -f "${_plugin_src}/VERSION" ]; then
     local _src_time _cache_time
     _src_time=$(stat -c %Y "${_plugin_src}/VERSION" 2>/dev/null || echo 0)
-    _cache_time=$(stat -c %Y "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/"*/VERSION(N) 2>/dev/null | /usr/bin/head -1 || echo 0)
+    # Find the first VERSION file in any atlas-admin version dir (cross-shell safe).
+    _cache_time=$(find "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/" -mindepth 2 -maxdepth 2 -name VERSION -type f 2>/dev/null | /usr/bin/head -1 | xargs -I{} stat -c %Y {} 2>/dev/null || echo 0)
     if [ "${_src_time:-0}" -gt "${_cache_time:-0}" ]; then
       echo "🔄 Plugin source newer than cache, rebuilding..."
       (cd "${_plugin_src}" && make dev-admin 2>/dev/null) && echo "   ✅ Plugin rebuilt" || echo "   ⚠️  Plugin rebuild failed (non-blocking)"
@@ -389,7 +399,7 @@ print(handoffs[-1] if handoffs else '')
     else
       # Fallback: project-MMDD (still meaningful, never random)
       local _wt_project
-      _wt_project="${path:t}"
+      _wt_project="$(basename "$path")"
       cmd+=(-w "${_wt_project}-$(/usr/bin/date '+%m%d')")
     fi
   fi
@@ -459,7 +469,9 @@ print(handoffs[-1] if handoffs else '')
   else
     # builtin cd bypasses zoxide wrapper; direnv export loads .envrc silently
     builtin cd "$path" \
-      && eval "$(DIRENV_LOG_FORMAT= direnv export zsh 2>/dev/null)" \
+      && { # shellcheck disable=SC2046
+           # direnv output is trusted (it's OUR config), so eval is intentional here.
+           eval "$(DIRENV_LOG_FORMAT= direnv export zsh 2>/dev/null)"; } \
       && export PATH="$_full_path" \
       && "${cmd[@]}"
   fi

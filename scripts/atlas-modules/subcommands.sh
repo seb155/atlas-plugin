@@ -12,24 +12,36 @@ _atlas_list() {
 
   if [[ "$1" == "--all" ]]; then
     printf "  ${ATLAS_BOLD}All projects${ATLAS_RESET} ${ATLAS_DIM}(scanning ${ATLAS_WORKSPACE_ROOT})${ATLAS_RESET}\n\n"
-    _atlas_discover_projects | while IFS=: read pname ppath; do
-      local desc=""
-      [ -f "$ppath/.claude/CLAUDE.md" ] && desc=$(/usr/bin/head -1 "$ppath/.claude/CLAUDE.md" 2>/dev/null | /usr/bin/sed 's/^#\s*//')
-      [ -z "$desc" ] && [ -f "$ppath/CLAUDE.md" ] && desc=$(/usr/bin/head -1 "$ppath/CLAUDE.md" 2>/dev/null | /usr/bin/sed 's/^#\s*//')
+    # Collect into array first to avoid zsh-pipe subshell quirks with `local` declarations
+    local entries=()
+    while IFS= read -r line; do entries+=("$line"); done < <(_atlas_discover_projects)
+    local entry pname ppath desc
+    for entry in "${entries[@]}"; do
+      pname="${entry%%:*}"
+      ppath="${entry#*:}"
+      desc=""
+      if [ -f "$ppath/.claude/CLAUDE.md" ]; then
+        desc=$(/usr/bin/head -1 "$ppath/.claude/CLAUDE.md" 2>/dev/null | /usr/bin/sed 's/^#\s*//')
+      elif [ -f "$ppath/CLAUDE.md" ]; then
+        desc=$(/usr/bin/head -1 "$ppath/CLAUDE.md" 2>/dev/null | /usr/bin/sed 's/^#\s*//')
+      fi
       printf "    ${ATLAS_CYAN}%-14s${ATLAS_RESET} %-44s ${ATLAS_DIM}%s${ATLAS_RESET}\n" "$pname" "$ppath" "$desc"
     done
   else
     printf "  ${ATLAS_BOLD}Recent projects${ATLAS_RESET}\n\n"
-    local has_recent=false
-    _atlas_recent_projects 8 | while IFS='|' read pname ago count; do
-      has_recent=true
-      local ppath
-      ppath=$(_atlas_resolve_project "$pname")
-      printf "    ${ATLAS_CYAN}%-14s${ATLAS_RESET} ${ATLAS_DIM}%-10s${ATLAS_RESET} (${count}x)\n" "$pname" "$ago"
-    done
-    if ! $has_recent; then
+    local recents=()
+    while IFS= read -r line; do [ -n "$line" ] && recents+=("$line"); done < <(_atlas_recent_projects 8)
+    if [ "${#recents[@]}" -eq 0 ]; then
       printf "    ${ATLAS_DIM}No history yet. Run 'atlas list --all' to discover projects.${ATLAS_RESET}\n"
     fi
+    local rec pname ago count
+    for rec in "${recents[@]}"; do
+      pname="${rec%%|*}"
+      local rest="${rec#*|}"
+      ago="${rest%%|*}"
+      count="${rest##*|}"
+      printf "    ${ATLAS_CYAN}%-14s${ATLAS_RESET} ${ATLAS_DIM}%-10s${ATLAS_RESET} (${count}x)\n" "$pname" "$ago"
+    done
   fi
 
   _atlas_footer
@@ -1252,3 +1264,111 @@ _atlas_blast() {
   python3 -m toolkit.code_intelligence impact "$@"
 }
 
+
+# ─── atlas version / atlas upgrade (v5.12+ SSoT diagnostics) ─────────
+# Both subcommands read from version-api.sh — never scan cache folders directly.
+
+# atlas version — show SSoT chain for all three addons
+_atlas_version() {
+  _atlas_header
+  printf "  ${ATLAS_BOLD}Version SSoT${ATLAS_RESET}\n\n"
+
+  # Header row
+  printf "  ${ATLAS_DIM}%-14s %-16s %-16s %-16s${ATLAS_RESET}\n" \
+    "addon" "installed" "marketplace" "source-repo"
+
+  local addon inst mp src
+  src=$(_atlas_version_source)
+  for addon in atlas-core atlas-admin atlas-dev; do
+    inst=$(_atlas_version_installed "$addon")
+    mp=$(_atlas_version_marketplace "$addon")
+    printf "  ${ATLAS_CYAN}%-14s${ATLAS_RESET} %-16s %-16s %-16s\n" \
+      "$addon" "${inst:-—}" "${mp:-—}" "${src:-—}"
+  done
+
+  # NOTE: `status` is read-only in zsh ($?), so use `upgrade_state`.
+  local upgrade_state
+  upgrade_state=$(_atlas_upgrade_status)
+  printf "\n  ${ATLAS_BOLD}Upgrade status${ATLAS_RESET}: "
+  case "$upgrade_state" in
+    up-to-date)      printf "✅ up-to-date\n" ;;
+    pending:*)       printf "🔔 pending → %s (run: atlas upgrade)\n" "${upgrade_state#pending:}" ;;
+    not-installed)   printf "⚠️  not installed\n" ;;
+    *)               printf "❓ unknown\n" ;;
+  esac
+  _atlas_footer
+}
+
+# atlas upgrade [--status | --check | --force]
+# Explicit upgrade subcommand. Replaces silent SessionStart skips.
+_atlas_upgrade() {
+  local flag="${1:-}"
+  case "$flag" in
+    --status|-s)
+      _atlas_version
+      return 0
+      ;;
+    --check|-c)
+      local upgrade_state
+      upgrade_state=$(_atlas_upgrade_status)
+      echo "$upgrade_state"
+      [ "$upgrade_state" = "up-to-date" ] && return 0 || return 1
+      ;;
+  esac
+
+  _atlas_header
+  printf "  ${ATLAS_BOLD}ATLAS upgrade${ATLAS_RESET}\n\n"
+
+  # NOTE: `status` is read-only in zsh ($?), so use `upgrade_state`.
+  local upgrade_state inst mp
+  upgrade_state=$(_atlas_upgrade_status)
+  inst=$(_atlas_version_installed atlas-core)
+  mp=$(_atlas_version_marketplace atlas-core)
+
+  if [ "$upgrade_state" = "up-to-date" ]; then
+    printf "  ✅ Already up-to-date (v%s)\n" "$inst"
+    _atlas_footer
+    return 0
+  fi
+
+  if [ "$upgrade_state" = "unknown" ] || [ "$upgrade_state" = "not-installed" ]; then
+    printf "  ⚠️  Cannot determine upgrade state (status=%s)\n" "$upgrade_state"
+    printf "  Check: %s\n" "$ATLAS_INSTALLED_JSON"
+    _atlas_footer
+    return 1
+  fi
+
+  # status is pending:<ver>
+  printf "  📦 Upgrade available: v%s → v%s\n\n" "$inst" "${upgrade_state#pending:}"
+
+  # Delegate to auto-update lib if available
+  local au_lib="${ATLAS_SOURCE_REPO}/hooks/lib/auto-update.sh"
+  if [ ! -r "$au_lib" ]; then
+    printf "  ❌ auto-update library missing: %s\n" "$au_lib"
+    _atlas_footer
+    return 1
+  fi
+
+  # shellcheck source=/dev/null
+  source "$au_lib"
+  if ! declare -f atlas_auto_update_plugins >/dev/null 2>&1; then
+    printf "  ❌ atlas_auto_update_plugins function not found in auto-update.sh\n"
+    _atlas_footer
+    return 1
+  fi
+
+  if [ "$flag" = "--force" ] || [ "$flag" = "-f" ]; then
+    export ATLAS_UPGRADE_FORCE=1
+  fi
+
+  printf "  Running auto-update (this calls: git pull → make dev → cp dist → patch registry)...\n\n"
+  atlas_auto_update_plugins
+  local rc=$?
+  echo ""
+  if [ $rc -eq 0 ]; then
+    printf "  ${ATLAS_DIM}If status still shows pending, check the log:\n"
+    printf "  tail -20 %s/.atlas/logs/auto-update.log${ATLAS_RESET}\n" "$HOME"
+  fi
+  _atlas_footer
+  return $rc
+}

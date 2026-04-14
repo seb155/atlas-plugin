@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
 # ATLAS Hook Library: A/B Testing Guard for Cognitive Hooks
 # Returns 0 (continue) if hooks should run, 1 (skip) if control day
 # Sets AB_GROUP=treatment|control for downstream logging
@@ -9,6 +10,10 @@
 # Usage:
 #   source "$(dirname "$0")/lib/ab-guard.sh"
 #   ab_should_run || { echo '{"result":"skip","reason":"ab-control-day"}'; exit 0; }
+#
+# NOTE: No `set -euo pipefail` here — this is a sourced library.
+# Setting strict mode at file level would affect the caller's shell.
+# Callers should set their own strict mode.
 
 AB_CONFIG="${HOME}/.atlas/cognitive-ab-config.json"
 AB_GROUP_FILE="${HOME}/.claude/ab-current-group"

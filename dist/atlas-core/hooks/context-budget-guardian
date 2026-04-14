@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# context-budget-guardian — Warn when context approaches limits
+# Event: UserPromptSubmit (sync, fast)
+#
+# NOTE (2026-04-04): Opus 4.6 + Sonnet 4.6 have 1M context natively.
+# CC autocompact handles context management automatically.
+# This hook only warns at VERY high usage as a safety net.
+set -euo pipefail
+
+# Hook aggregation log
+_hook_log() {
+  local result="${1:-pass}"
+  local elapsed="${2:-0}"
+  printf '{"ts":"%s","event":"%s","handler":"%s","result":"%s","ms":%s}\n' \
+    "$(date -Iseconds)" "${HOOK_EVENT:-UserPromptSubmit}" "$(basename "$0")" "$result" "$elapsed" \
+    >> "${HOME}/.claude/hook-log.jsonl" 2>/dev/null
+}
+
+# If autocompact is configured, CC manages context automatically — skip warnings
+if grep -q 'CLAUDE_AUTOCOMPACT_PCT_OVERRIDE' "${HOME}/.claude/settings.json" 2>/dev/null; then
+  _hook_log skip
+  exit 0
+fi
+
+# Check if a context warning was shown recently (15 min cooldown)
+CONTEXT_MARKER="$HOME/.claude/.context-warning-shown"
+if [ -f "$CONTEXT_MARKER" ]; then
+  MARKER_AGE=$(( $(date +%s) - $(stat -c %Y "$CONTEXT_MARKER" 2>/dev/null || echo 0) ))
+  if [ "$MARKER_AGE" -lt 900 ]; then
+    _hook_log skip
+    exit 0
+  fi
+fi
+
+# Use hook-log.jsonl as a rough proxy for context usage
+# Count tool call entries from today (all sessions combined)
+HOOK_LOG="$HOME/.claude/hook-log.jsonl"
+if [ ! -f "$HOOK_LOG" ]; then
+  _hook_log pass
+  exit 0
+fi
+
+TODAY=$(date +%Y-%m-%d)
+TODAY_CALLS=$(grep -c "$TODAY" "$HOOK_LOG" 2>/dev/null || echo 0)
+
+# Thresholds calibrated for 1M context (Opus/Sonnet 4.6)
+# ~3K tokens/call avg × 800 calls ≈ 2.4M tokens across sessions (well past 1M)
+# These are very conservative — autocompact should handle it before this fires
+if [ "$TODAY_CALLS" -gt 1000 ]; then
+  echo "🔴 Very high tool call volume today ($TODAY_CALLS calls). Consider: /a-handoff for a fresh session."
+  touch "$CONTEXT_MARKER"
+  _hook_log warn
+elif [ "$TODAY_CALLS" -gt 800 ]; then
+  echo "⚠️ High tool call volume today ($TODAY_CALLS calls). Autocompact will manage context."
+  touch "$CONTEXT_MARKER"
+  _hook_log warn
+else
+  _hook_log pass
+fi

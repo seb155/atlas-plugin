@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by scripts/atlas-cli.sh (no set -euo pipefail at file level).
 # ATLAS CLI Module: Session Names, Project Discovery, History, Branding
 # Sourced by atlas-cli.sh — do not execute directly
 
@@ -26,9 +28,9 @@ _atlas_discover_projects() {
     [ -d "$scan_dir" ] || continue
     for d in "$scan_dir"/*/; do
       [ -d "$d/.git" ] || [ -d "$d/.claude" ] || continue
-      local name="${d%/}"
-      name="${name:t}"
-      results+=("$name:${d%/}")
+      local dir_no_slash="${d%/}"
+      local name="${dir_no_slash##*/}"
+      results+=("$name:$dir_no_slash")
     done
   done
 
@@ -62,7 +64,8 @@ _atlas_known_projects() {
 # ─── Usage History (recency tracking) ─────────────────────────
 _atlas_record_history() {
   local project="$1"
-  local ts=$(/usr/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
+  local ts
+  ts=$(/usr/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
   python3 -c "
 import json, os
 path = os.path.expanduser('$ATLAS_HISTORY')
@@ -116,7 +119,8 @@ ATLAS_BOLD="\033[1m"
 ATLAS_RESET="\033[0m"
 
 _atlas_header() {
-  local plugin_ver=$(_atlas_plugin_version)
+  local plugin_ver
+  plugin_ver=$(_atlas_plugin_version)
   echo ""
   if $ATLAS_HAS_GUM; then
     gum style --border rounded --border-foreground 214 --padding "0 2" --margin "0 1" \
@@ -131,12 +135,12 @@ _atlas_header() {
 }
 
 _atlas_plugin_version() {
-  local cache_dir="${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin"
-  if [ -d "$cache_dir" ]; then
-    # Get latest version dir
-    ls -v "$cache_dir" 2>/dev/null | tail -1 | xargs -I{} cat "$cache_dir/{}/VERSION" 2>/dev/null | tr -d '[:space:]'
+  # Delegate to version-api.sh SSoT chain (installed → capabilities → marketplace).
+  # Returns "unknown" only when all sources fail — never the misleading "?.?.?".
+  if declare -f _atlas_version_display >/dev/null 2>&1; then
+    _atlas_version_display
   else
-    echo "?.?.?"
+    echo "unknown"
   fi
 }
 

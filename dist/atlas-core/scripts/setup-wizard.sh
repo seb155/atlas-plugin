@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by user shells (zsh/.zshrc). See ~/.zshrc integration guide.
 # ═══════════════════════════════════════════════════════════════
 # ATLAS Setup Wizard — Sectioned Configuration Manager
 # © 2026 AXOIQ Inc. | Proprietary Software
@@ -81,15 +83,17 @@ _setup_identity() {
   # Auto-detect from Forgejo
   source "${HOME}/.env" 2>/dev/null || true
   if [ -n "${FORGEJO_TOKEN:-}" ]; then
-    local forgejo_api="${ATLAS_FORGEJO_API:-http://192.168.10.75:3000/api/v1}"
-    local data=$(curl -sf --connect-timeout 3 "${forgejo_api}/user" \
+    local forgejo_api="${ATLAS_FORGEJO_API:-https://forgejo.axoiq.com/api/v1}"
+    local data
+    data=$(curl -sf --connect-timeout 3 "${forgejo_api}/user" \
       -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null || echo "")
 
     if [ -n "$data" ]; then
       forgejo_login=$(echo "$data" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('login',''))" 2>/dev/null)
       name=$(echo "$data" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('full_name',''))" 2>/dev/null)
       email=$(echo "$data" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('email',''))" 2>/dev/null)
-      local is_admin=$(echo "$data" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('is_admin',False))" 2>/dev/null)
+      local is_admin
+      is_admin=$(echo "$data" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('is_admin',False))" 2>/dev/null)
 
       _setup_success "Forgejo: ${name} (${forgejo_login})${is_admin:+ [admin]}"
     fi
@@ -105,13 +109,15 @@ _setup_identity() {
     [ -z "$ws" ] && ws="$HOME/workspace_atlas"
   fi
   if [ -d "${ws}/vaults" ]; then
-    for vdir in "${ws}/vaults"/*/(N) ; do
+    while IFS= read -r vdir; do
+      # Restore trailing slash for the original logic
+      vdir="${vdir}/"
       if [ -f "${vdir}kernel/manifest.json" ]; then
         vault_path="${vdir%/}"
         _setup_success "Vault: $(basename "$vdir") at ${vdir}"
         break
       fi
-    done
+    done < <(find "${ws}/vaults" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
   else
     _setup_info "No vaults directory at ${ws}/vaults — skipping vault auto-detect"
   fi
@@ -137,38 +143,46 @@ _setup_identity() {
 _setup_model() {
   _setup_section_header 2 9 "AI Model & Reasoning" "🧠"
 
-  local current_effort=$(_setup_read_config "launcher.effort" "max")
-  local current_compact=$(_setup_read_config "" "85")  # from env
+  local current_effort
+  current_effort=$(_setup_read_config "launcher.effort" "max")
+  local current_compact
+  current_compact=$(_setup_read_config "" "85")  # from env
 
   # 1. Default model
   _setup_info "Claude Code uses your subscription model by default."
   _setup_info "Override only if you want a specific model per-project."
-  local model=$(printf 'opus (Claude Opus 4.6 — most capable)\nsonnet (Claude Sonnet 4.6 — fast + capable)\nhaiku (Claude Haiku 4.5 — fastest)\ndefault (use subscription default)' | \
+  local model
+  model=$(printf 'opus (Claude Opus 4.6 — most capable)\nsonnet (Claude Sonnet 4.6 — fast + capable)\nhaiku (Claude Haiku 4.5 — fastest)\ndefault (use subscription default)' | \
     gum choose --header "Default AI model:")
   model="${model%% *}"  # extract first word
 
   # 2. Effort level
-  local effort=$(printf 'max — Ultrathink (deepest reasoning, slowest)\nhigh — Deep analysis (recommended)\nmedium — Balanced speed/quality\nlow — Quick responses' | \
+  local effort
+  effort=$(printf 'max — Ultrathink (deepest reasoning, slowest)\nhigh — Deep analysis (recommended)\nmedium — Balanced speed/quality\nlow — Quick responses' | \
     gum choose --header "Default effort level:" --selected "max")
   effort="${effort%% *}"
 
   # 3. Thinking tokens budget
-  local thinking=$(printf '250000 — Maximum (current, best for architecture)\n128000 — High (good for implementation)\n64000 — Standard (good for simple tasks)\n32000 — Minimal (fastest)' | \
+  local thinking
+  thinking=$(printf '250000 — Maximum (current, best for architecture)\n128000 — High (good for implementation)\n64000 — Standard (good for simple tasks)\n32000 — Minimal (fastest)' | \
     gum choose --header "Max thinking tokens:")
   thinking="${thinking%% *}"
 
   # 4. Output tokens
-  local output=$(printf '128000 — Extended (current, best for code generation)\n64000 — Standard\n32000 — Compact\n16000 — Minimal' | \
+  local output
+  output=$(printf '128000 — Extended (current, best for code generation)\n64000 — Standard\n32000 — Compact\n16000 — Minimal' | \
     gum choose --header "Max output tokens:")
   output="${output%% *}"
 
   # 5. Auto-compaction threshold
-  local compact=$(printf '92 — Late (more context, risk of degradation)\n85 — Balanced (current, recommended)\n75 — Early (preserves quality, more compactions)\n60 — Aggressive (many compactions)' | \
+  local compact
+  compact=$(printf '92 — Late (more context, risk of degradation)\n85 — Balanced (current, recommended)\n75 — Early (preserves quality, more compactions)\n60 — Aggressive (many compactions)' | \
     gum choose --header "Auto-compaction threshold (% context used):")
   compact="${compact%% *}"
 
   # 6. Auto-updates
-  local updates=$(printf 'latest — Always newest features\nstable — Proven releases only\ndisabled — Manual updates only' | \
+  local updates
+  updates=$(printf 'latest — Always newest features\nstable — Proven releases only\ndisabled — Manual updates only' | \
     gum choose --header "Auto-update channel:")
   updates="${updates%% *}"
 
@@ -203,7 +217,8 @@ _setup_permissions() {
   _setup_info "Permission presets control what Claude Code can do automatically."
   echo ""
 
-  local preset=$(printf 'power-user — All tools auto-approved, deny destructive only (current)\ntrusted-dev — Bash + Read + Edit auto-approved, MCP prompts\nrestricted — Only Read auto-approved, everything else prompts\ncustom — Configure manually' | \
+  local preset
+  preset=$(printf 'power-user — All tools auto-approved, deny destructive only (current)\ntrusted-dev — Bash + Read + Edit auto-approved, MCP prompts\nrestricted — Only Read auto-approved, everything else prompts\ncustom — Configure manually' | \
     gum choose --header "Permission preset:")
   preset="${preset%% *}"
 
@@ -228,17 +243,20 @@ _setup_permissions() {
 
   # Auto mode configuration
   echo ""
-  local use_auto=$(gum confirm "Enable Auto Mode? (Sonnet classifier auto-approves safe actions)" && echo true || echo false)
+  local use_auto
+  use_auto=$(gum confirm "Enable Auto Mode? (Sonnet classifier auto-approves safe actions)" && echo true || echo false)
 
   if [ "$use_auto" = "true" ]; then
     _setup_info "Auto mode uses a Sonnet classifier to approve/block actions."
     _setup_info "Configure trusted repos and services for lighter checks."
 
-    local trusted_repos=$(gum input --header "Trusted repos (glob, comma-separated):" \
+    local trusted_repos
+    trusted_repos=$(gum input --header "Trusted repos (glob, comma-separated):" \
       --placeholder "~/workspace_atlas/**" \
       --value "~/workspace_atlas/**" --width 60)
 
-    local trusted_services=$(gum input --header "Trusted services (comma-separated):" \
+    local trusted_services
+    trusted_services=$(gum input --header "Trusted services (comma-separated):" \
       --placeholder "localhost, 192.168.10.*, *.axoiq.com" \
       --value "localhost, 192.168.10.*, *.axoiq.com, *.home.axoiq.com" --width 60)
   fi
@@ -272,7 +290,7 @@ with open(path, 'w') as f: json.dump(s, f, indent=2)
 
   # Enforce safety policy (mandatory deny rules regardless of preset)
   _setup_info "Enforcing safety policy..."
-  local policy_file="${ATLAS_PLUGIN_ROOT:-${0:A:h}}/presets/safety-policy.json"
+  local policy_file="${ATLAS_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}/presets/safety-policy.json"
   if [ -f "$policy_file" ]; then
     python3 -c "
 import json, os
@@ -324,7 +342,8 @@ _setup_shell() {
 
   local available_plugins="git\ndocker\nkubectl\nfzf\nzsh-autosuggestions\nzsh-syntax-highlighting\nzsh-history-substring-search\nalias-finder\ncommon-aliases\ncolored-man-pages\ncopypath\ncopyfile\njsontools\nurltools"
 
-  local selected_plugins=$(printf "$available_plugins" | \
+  local selected_plugins
+  selected_plugins=$(printf "$available_plugins" | \
     gum choose --header "Select plugins (space to toggle):" \
     --no-limit \
     --selected "git,docker,kubectl,fzf,zsh-autosuggestions,zsh-syntax-highlighting")
@@ -333,9 +352,12 @@ _setup_shell() {
   echo ""
   gum style --foreground 111 --bold "  Smart Tools"
 
-  local use_zoxide=$(command -v zoxide &>/dev/null && echo "installed" || echo "not installed")
-  local use_direnv=$(command -v direnv &>/dev/null && echo "installed" || echo "not installed")
-  local use_fzf=$(command -v fzf &>/dev/null && echo "installed" || echo "not installed")
+  local use_zoxide
+  use_zoxide=$(command -v zoxide &>/dev/null && echo "installed" || echo "not installed")
+  local use_direnv
+  use_direnv=$(command -v direnv &>/dev/null && echo "installed" || echo "not installed")
+  local use_fzf
+  use_fzf=$(command -v fzf &>/dev/null && echo "installed" || echo "not installed")
 
   _setup_info "zoxide (smart cd): ${use_zoxide}"
   _setup_info "direnv (auto .envrc): ${use_direnv}"
@@ -369,9 +391,11 @@ _setup_shell() {
 
   # Apply zsh plugins (update .zshrc plugins line)
   if [ -n "$selected_plugins" ]; then
-    local plugins_str=$(echo "$selected_plugins" | tr '\n' ' ' | sed 's/ $//')
+    local plugins_str
+    plugins_str=$(echo "$selected_plugins" | tr '\n' ' ' | sed 's/ $//')
     # Only update if changed
-    local current=$(grep -oP 'plugins=\(\K[^)]+' ~/.zshrc 2>/dev/null | tr -d '\n' | sed 's/  */ /g')
+    local current
+    current=$(grep -oP 'plugins=\(\K[^)]+' ~/.zshrc 2>/dev/null | tr -d '\n' | sed 's/  */ /g')
     if [ "$plugins_str" != "$current" ]; then
       _setup_info "Updating .zshrc plugins: ${plugins_str}"
       python3 -c "
@@ -400,9 +424,12 @@ _setup_secrets() {
   _setup_section_header 5 9 "Secrets & Tokens" "🔑"
 
   # Detect available providers
-  local has_bw=$(command -v bw &>/dev/null && echo true || echo false)
-  local has_keyring=$(command -v secret-tool &>/dev/null && echo true || echo false)
-  local has_env=$([ -f "${HOME}/.env" ] && echo true || echo false)
+  local has_bw
+  has_bw=$(command -v bw &>/dev/null && echo true || echo false)
+  local has_keyring
+  has_keyring=$(command -v secret-tool &>/dev/null && echo true || echo false)
+  local has_env
+  has_env=$([ -f "${HOME}/.env" ] && echo true || echo false)
 
   $has_bw && _setup_success "Bitwarden CLI detected" || _setup_info "Bitwarden CLI not found"
   $has_keyring && _setup_success "GNOME Keyring detected" || _setup_info "GNOME Keyring not found"
@@ -414,7 +441,8 @@ _setup_secrets() {
   $has_bw && options="vaultwarden — Bitwarden/Vaultwarden (most secure)\n${options}"
   options="${options}\nnone — No automatic secret loading"
 
-  local provider=$(printf "$options" | gum choose --header "Secrets provider:")
+  local provider
+  provider=$(printf "$options" | gum choose --header "Secrets provider:")
   provider="${provider%% *}"
 
   # Validate
@@ -439,17 +467,20 @@ _setup_projects() {
   _setup_section_header 6 9 "Projects & Defaults" "📁"
 
   # Workspace root
-  local ws=$(_setup_read_config "launcher.workspace_root" "$HOME/workspace_atlas")
+  local ws
+  ws=$(_setup_read_config "launcher.workspace_root" "$HOME/workspace_atlas")
   ws="${ws/#\~/$HOME}"
   ws=$(gum input --header "Workspace root:" --value "$ws" --width 60)
 
   # Scan projects
-  local project_count=$(ls -d "${ws}"/*/.git "${ws}"/projects/*/.git "${ws}"/projects/atlas/*/.git 2>/dev/null | wc -l)
+  local project_count
+  project_count=$(ls -d "${ws}"/*/.git "${ws}"/projects/*/.git "${ws}"/projects/atlas/*/.git 2>/dev/null | wc -l)
   _setup_info "Found ${project_count} projects in ${ws}"
 
   # Default project
   local projects=($(_atlas_known_projects))
-  local default=$(_setup_read_config "launcher.default_project" "synapse")
+  local default
+  default=$(_setup_read_config "launcher.default_project" "synapse")
   if [ ${#projects[@]} -gt 0 ]; then
     default=$(printf '%s\n' "${projects[@]}" | gum choose --header "Default project:" --selected "$default")
   fi
@@ -457,9 +488,12 @@ _setup_projects() {
   # Launch defaults
   echo ""
   gum style --foreground 111 --bold "  Launch Defaults"
-  local use_worktree=$(gum confirm "Worktree by default? (git isolation)" --default=yes && echo true || echo false)
-  local use_split=$(gum confirm "Tmux split by default? (Agent Teams)" --default=yes && echo true || echo false)
-  local use_chrome=$(gum confirm "Chrome MCP by default? (browser tools)" --default=yes && echo true || echo false)
+  local use_worktree
+  use_worktree=$(gum confirm "Worktree by default? (git isolation)" --default=yes && echo true || echo false)
+  local use_split
+  use_split=$(gum confirm "Tmux split by default? (Agent Teams)" --default=yes && echo true || echo false)
+  local use_chrome
+  use_chrome=$(gum confirm "Chrome MCP by default? (browser tools)" --default=yes && echo true || echo false)
 
   # Save
   _setup_write_config "launcher.workspace_root" "$ws"
@@ -477,8 +511,10 @@ _setup_projects() {
 _setup_statusline() {
   _setup_section_header 7 9 "Status Line & Prompt" "📊"
 
-  local has_starship=$(command -v starship &>/dev/null && echo true || echo false)
-  local has_cship=$(command -v cship &>/dev/null && echo true || echo false)
+  local has_starship
+  has_starship=$(command -v starship &>/dev/null && echo true || echo false)
+  local has_cship
+  has_cship=$(command -v cship &>/dev/null && echo true || echo false)
 
   $has_starship && _setup_success "Starship prompt: installed" || _setup_info "Starship not installed"
   $has_cship && _setup_success "CShip status line: installed" || _setup_info "CShip not installed"
@@ -486,7 +522,8 @@ _setup_statusline() {
   # CC Status Line
   echo ""
   gum style --foreground 111 --bold "  Claude Code Status Line"
-  local sl_type=$(printf 'cship — ATLAS branded status bar (recommended)\nstarship — Uses starship command\nscript — Custom bash script\nnone — Disable status line' | \
+  local sl_type
+  sl_type=$(printf 'cship — ATLAS branded status bar (recommended)\nstarship — Uses starship command\nscript — Custom bash script\nnone — Disable status line' | \
     gum choose --header "Status line renderer:")
   sl_type="${sl_type%% *}"
 
@@ -534,22 +571,26 @@ _setup_performance() {
   echo ""
 
   # Node.js memory
-  local node_mem=$(printf '8192 — 8GB (current, recommended for Opus)\n4096 — 4GB (lighter)\n16384 — 16GB (for very large codebases)' | \
+  local node_mem
+  node_mem=$(printf '8192 — 8GB (current, recommended for Opus)\n4096 — 4GB (lighter)\n16384 — 16GB (for very large codebases)' | \
     gum choose --header "Node.js memory (MB):")
   node_mem="${node_mem%% *}"
 
   # Bash timeout
-  local bash_timeout=$(printf '600000 — 10 min (current, recommended)\n300000 — 5 min (faster feedback)\n900000 — 15 min (complex builds)\n1800000 — 30 min (max)' | \
+  local bash_timeout
+  bash_timeout=$(printf '600000 — 10 min (current, recommended)\n300000 — 5 min (faster feedback)\n900000 — 15 min (complex builds)\n1800000 — 30 min (max)' | \
     gum choose --header "Default bash timeout (ms):")
   bash_timeout="${bash_timeout%% *}"
 
   # MCP timeout
-  local mcp_timeout=$(printf '60000 — 1 min (current)\n30000 — 30 sec (faster)\n120000 — 2 min (slow servers)' | \
+  local mcp_timeout
+  mcp_timeout=$(printf '60000 — 1 min (current)\n30000 — 30 sec (faster)\n120000 — 2 min (slow servers)' | \
     gum choose --header "MCP server timeout (ms):")
   mcp_timeout="${mcp_timeout%% *}"
 
   # Bash output limit
-  local output_limit=$(printf '30000 — 30K lines (current)\n15000 — 15K lines (saves context)\n50000 — 50K lines (verbose builds)' | \
+  local output_limit
+  output_limit=$(printf '30000 — 30K lines (current)\n15000 — 15K lines (saves context)\n50000 — 50K lines (verbose builds)' | \
     gum choose --header "Max bash output length:")
   output_limit="${output_limit%% *}"
 
@@ -580,21 +621,26 @@ _setup_plugins() {
   _setup_info "Scanning installed plugins..."
 
   if [ -d "$plugin_dir" ]; then
-    for marketplace_dir in "$plugin_dir"/*/(N); do
-      for plugin_dir_inner in "$marketplace_dir"/*/(N); do
-        local pname=$(basename "$plugin_dir_inner")
-        local pver=$(ls -v "$plugin_dir_inner" 2>/dev/null | tail -1)
+    while IFS= read -r marketplace_dir; do
+      while IFS= read -r plugin_dir_inner; do
+        local pname
+        pname=$(basename "$plugin_dir_inner")
+        local pver
+        pver=$(ls -v "$plugin_dir_inner" 2>/dev/null | tail -1)
         [ -n "$pver" ] && _setup_success "${pname} v${pver}"
-      done
-    done
+      done < <(find "$marketplace_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+    done < <(find "$plugin_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
   fi
 
   # ATLAS plugin check
   echo ""
-  local atlas_ver=$(_atlas_plugin_version)
+  local atlas_ver
+  atlas_ver=$(_atlas_plugin_version)
   if [ "$atlas_ver" != "?.?.?" ]; then
-    local skill_count=$(find "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/${atlas_ver}/skills" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
-    local agent_count=$(find "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/${atlas_ver}/agents" -name "AGENT.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
+    local skill_count
+    skill_count=$(find "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/${atlas_ver}/skills" -name "SKILL.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
+    local agent_count
+    agent_count=$(find "${HOME}/.claude/plugins/cache/atlas-admin-marketplace/atlas-admin/${atlas_ver}/agents" -name "AGENT.md" -maxdepth 2 2>/dev/null | wc -l | tr -d ' ')
     _setup_success "ATLAS plugin v${atlas_ver}: ${skill_count} skills, ${agent_count} agents"
   else
     _setup_warn "ATLAS plugin not found"
@@ -629,11 +675,12 @@ _setup_plugins_domain() {
   # Show current domain plugin status
   local marketplace_dir="${HOME}/.claude/plugins/cache/atlas-marketplace"
   if [ -d "$marketplace_dir" ]; then
-    local installed_count=$(find "$marketplace_dir" -maxdepth 1 -type d -name "atlas-*" 2>/dev/null | wc -l | tr -d ' ')
+    local installed_count
+    installed_count=$(find "$marketplace_dir" -maxdepth 1 -type d -name "atlas-*" 2>/dev/null | wc -l | tr -d ' ')
     _setup_info "Currently installed: ${installed_count}/6 domain plugins"
-    for d in "$marketplace_dir"/atlas-*/(N); do
+    while IFS= read -r d; do
       [ -d "$d" ] && _setup_success "  $(basename "$d")"
-    done
+    done < <(find "$marketplace_dir" -mindepth 1 -maxdepth 1 -type d -name "atlas-*" 2>/dev/null)
   else
     _setup_info "No domain plugins installed yet"
   fi
@@ -651,7 +698,8 @@ _setup_plugins_domain() {
   local DOMAINS=""
 
   if command -v gum &>/dev/null; then
-    local choice=$(gum choose --header "Select a preset:" \
+    local choice
+    choice=$(gum choose --header "Select a preset:" \
       "1) Developer (core + dev) — recommended for most devs" \
       "2) Full Stack (core + dev + frontend + infra)" \
       "3) Admin (all 6 plugins) — for Seb / lead engineer" \
@@ -902,10 +950,12 @@ _setup_hooks() {
   # Check 1: settings.json should NOT contain hooks block
   _setup_info "Checking settings.json hooks isolation..."
   if [ -f "$settings" ]; then
-    local has_hooks=$(python3 -c "import json; d=json.load(open('$settings')); print('yes' if 'hooks' in d else 'no')" 2>/dev/null)
+    local has_hooks
+    has_hooks=$(python3 -c "import json; d=json.load(open('$settings')); print('yes' if 'hooks' in d else 'no')" 2>/dev/null)
     if [ "$has_hooks" = "yes" ]; then
       gum style --foreground 196 "  ✗ settings.json contains hooks block — should be in plugin hooks.json only"
-      local hook_count=$(python3 -c "import json; d=json.load(open('$settings')); print(len(d.get('hooks',{})))" 2>/dev/null)
+      local hook_count
+      hook_count=$(python3 -c "import json; d=json.load(open('$settings')); print(len(d.get('hooks',{})))" 2>/dev/null)
       gum style --foreground 214 "    Found $hook_count event types in settings.json (these duplicate plugin hooks)"
       issues=$((issues + 1))
 
@@ -935,15 +985,18 @@ print('Removed hooks block')
   _setup_info "Checking plugin hooks.json..."
   local plugin_cache="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
   local found_hooks=0
-  for tier_dir in "$plugin_cache"/atlas-*/(N); do
+  while IFS= read -r tier_dir; do
     [ -d "$tier_dir" ] || continue
     # Find the version directory
-    for ver_dir in "$tier_dir"*/(N); do
+    while IFS= read -r ver_dir; do
       [ -d "$ver_dir" ] || continue
       if [ -f "$ver_dir/hooks/hooks.json" ]; then
-        local tier_name=$(basename "$tier_dir")
-        local event_count=$(python3 -c "import json; d=json.load(open('$ver_dir/hooks/hooks.json')); print(len(d.get('hooks',{})))" 2>/dev/null)
-        local hook_count=$(python3 -c "
+        local tier_name
+        tier_name=$(basename "$tier_dir")
+        local event_count
+        event_count=$(python3 -c "import json; d=json.load(open('$ver_dir/hooks/hooks.json')); print(len(d.get('hooks',{})))" 2>/dev/null)
+        local hook_count
+        hook_count=$(python3 -c "
 import json
 d=json.load(open('$ver_dir/hooks/hooks.json'))
 total=sum(len(h) for entries in d.get('hooks',{}).values() for e in entries for h in [e.get('hooks',[])])
@@ -953,8 +1006,8 @@ print(total)
         found_hooks=1
       fi
       break
-    done
-  done
+    done < <(find "$tier_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+  done < <(find "$plugin_cache" -mindepth 1 -maxdepth 1 -type d -name "atlas-*" 2>/dev/null)
   if [ $found_hooks -eq 0 ]; then
     gum style --foreground 196 "  ✗ No plugin hooks.json found in cache"
     issues=$((issues + 1))
@@ -963,16 +1016,18 @@ print(total)
   # Check 3: Stale local hook scripts
   _setup_info "Checking for stale local hooks..."
   local stale=0
-  for script in "$HOME/.claude/hooks/"*.sh(N); do
+  while IFS= read -r script; do
     [ -f "$script" ] || continue
-    local name=$(basename "$script" .sh)
-    # Check if this hook exists in the plugin (use glob array to avoid zsh crash)
-    local _hook_matches=("$plugin_cache/atlas-admin/"*/hooks/"$name"(N))
-    if [ ${#_hook_matches[@]} -gt 0 ] && [ -f "${_hook_matches[1]}" ]; then
+    local name
+    name=$(basename "$script" .sh)
+    # Check if this hook exists in the plugin (use find for cross-shell safety)
+    local first_match
+    first_match=$(find "$plugin_cache/atlas-admin/" -mindepth 2 -maxdepth 2 -name "$name" -type f 2>/dev/null | head -1)
+    if [ -n "$first_match" ] && [ -f "$first_match" ]; then
       gum style --foreground 214 "  ⚠ Stale: $name.sh (exists in plugin as $name)"
       stale=$((stale + 1))
     fi
-  done
+  done < <(find "$HOME/.claude/hooks" -mindepth 1 -maxdepth 1 -type f -name "*.sh" 2>/dev/null)
   if [ $stale -gt 0 ]; then
     gum style --foreground 214 "  $stale stale local hook(s) found (duplicated by plugin)"
     issues=$((issues + stale))
@@ -985,7 +1040,8 @@ print(total)
   if [ $issues -eq 0 ]; then
     gum style --foreground 46 --bold "  ✓ Hooks health: CLEAN ($fixed fixed)"
   else
-    local remaining=$((issues - fixed))
+    local remaining
+    remaining=$((issues - fixed))
     gum style --foreground 214 --bold "  ⚠ Hooks health: $remaining issue(s) remaining"
   fi
 }
@@ -1021,7 +1077,8 @@ _atlas_setup() {
 
   # Interactive section picker
   echo ""
-  local choice=$(printf '🚀 Quick Setup (Identity + Model + Projects)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🤖 CLAUDE CODE\n  👤 1. Identity — Forgejo/vault auto-detect\n  🧠 2. AI Model — model, effort, thinking budget\n  🔒 3. Permissions — presets, auto mode\n  🔑 5. Secrets — Vaultwarden, keyring, tokens\n🐚 TERMINAL\n  🐚 4. Shell — zsh plugins, tools, completion\n📁 PROJECTS\n  📁 6. Projects — workspace, defaults, worktree\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚙️  ADVANCED\n  📊 7. Status Line — Starship, CShip\n  ⚡ 8. Performance — memory, timeouts\n  🧩 9. Plugins — CC plugins, MCP\n  🔄 10. Sync — User config sync (zshrc, starship, cship)\n  🪝 11. Hooks — Health check, conflict detection\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🌟 Full Setup (all sections)' | \
+  local choice
+  choice=$(printf '🚀 Quick Setup (Identity + Model + Projects)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🤖 CLAUDE CODE\n  👤 1. Identity — Forgejo/vault auto-detect\n  🧠 2. AI Model — model, effort, thinking budget\n  🔒 3. Permissions — presets, auto mode\n  🔑 5. Secrets — Vaultwarden, keyring, tokens\n🐚 TERMINAL\n  🐚 4. Shell — zsh plugins, tools, completion\n📁 PROJECTS\n  📁 6. Projects — workspace, defaults, worktree\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n⚙️  ADVANCED\n  📊 7. Status Line — Starship, CShip\n  ⚡ 8. Performance — memory, timeouts\n  🧩 9. Plugins — CC plugins, MCP\n  🔄 10. Sync — User config sync (zshrc, starship, cship)\n  🪝 11. Hooks — Health check, conflict detection\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🌟 Full Setup (all sections)' | \
     gum choose --header "ATLAS Setup — Select what to configure:" \
     --cursor "→ " --cursor.foreground 214 --height 22)
 

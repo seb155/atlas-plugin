@@ -1,0 +1,35 @@
+#!/bin/bash
+# Hook: PostToolUse(*) — Session Replay Logger for Dream v6
+# Appends one JSON line per tool call to ~/.claude/session-replay.jsonl
+# Data source for Dream v6 Phase 2.9 (Replay Analysis)
+# SP-EVOLUTION P8.1 — Workflow Pattern Analyzer
+#
+# @event PostToolUse
+# @performance target <30ms (async, non-blocking)
+# Exit 0 always — never block tool execution
+
+INPUT=$(cat)
+LOG_FILE="$HOME/.claude/session-replay.jsonl"
+
+# Use jq for proper JSON construction (handles escaping)
+echo "$INPUT" | jq -c --arg ts "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" '{
+  ts: $ts,
+  tool: .tool_name,
+  sid: (.session_id // ""),
+  input: (
+    .tool_input |
+    if .command then {t: "cmd", v: (.command | tostring | .[:100])}
+    elif .file_path then {t: "file", v: .file_path}
+    elif .pattern then {t: "pattern", v: .pattern}
+    elif .query then {t: "query", v: (.query | tostring | .[:100])}
+    elif .skill then {t: "skill", v: .skill}
+    elif .prompt then {t: "prompt", v: (.prompt | tostring | .[:80])}
+    elif .taskId then {t: "task", v: .taskId}
+    elif .subject then {t: "task-new", v: (.subject | tostring | .[:80])}
+    elif .url then {t: "url", v: .url}
+    else {t: "other", v: (keys[0:3] | join(","))}
+    end
+  )
+}' >> "$LOG_FILE" 2>/dev/null
+
+exit 0

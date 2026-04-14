@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by user shells (zsh/.zshrc). See ~/.zshrc integration guide.
 # ═══════════════════════════════════════════════════════════════
 # ATLAS — Unified Claude Code Launcher & Management CLI
 # © 2026 AXOIQ Inc. | Proprietary Software
@@ -11,7 +13,7 @@
 #
 # Modularized: main logic lives in atlas-modules/*.sh
 
-ATLAS_VERSION="5.7.0-alpha.1"
+ATLAS_VERSION="5.11.0"
 ATLAS_CONFIG="${HOME}/.atlas/config.json"
 ATLAS_HISTORY="${HOME}/.atlas/history.json"
 ATLAS_SHELL_DIR="${HOME}/.atlas/shell"
@@ -20,8 +22,9 @@ ATLAS_SHELL_DIR="${HOME}/.atlas/shell"
 _ATLAS_MOD_DIR="${ATLAS_SHELL_DIR}/modules"
 
 if [ -d "$_ATLAS_MOD_DIR" ]; then
-  # Module load order: platform → ui → topics → subcommands → launcher → completions
-  for _mod in platform ui topics subcommands dispatch agents ab-testing launcher completions; do
+  # Module load order: platform → version-api → ui → topics → subcommands → launcher → completions
+  # version-api loads before ui because ui._atlas_header delegates version lookup to it.
+  for _mod in platform version-api ui topics subcommands dispatch agents ab-testing launcher completions; do
     [ -f "$_ATLAS_MOD_DIR/${_mod}.sh" ] && source "$_ATLAS_MOD_DIR/${_mod}.sh"
   done
   unset _mod

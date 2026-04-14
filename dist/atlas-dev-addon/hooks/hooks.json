@@ -1,6 +1,35 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/feature-drift-detector\"",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/detect-stale-git\"",
+            "async": true,
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/tdd-guard\"",
+            "timeout": 5
+          }
+        ]
+      },
       {
         "matcher": "EnterWorktree",
         "hooks": [
@@ -56,6 +85,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-lint\"",
             "async": true,
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/claudemd-lint\"",
+            "async": true,
+            "timeout": 3
           }
         ]
       },

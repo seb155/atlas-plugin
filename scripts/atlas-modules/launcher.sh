@@ -251,6 +251,8 @@ atlas() {
     --check) shift; _atlas_preflight "$@"; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
+    version) _atlas_version; return ;;
+    upgrade) shift; _atlas_upgrade "$@"; return ;;
     --version|-v) echo "ATLAS CLI v${ATLAS_VERSION} | Plugin v$(_atlas_plugin_version) | CC v${ATLAS_CC_VERSION}"; return ;;
   esac
 

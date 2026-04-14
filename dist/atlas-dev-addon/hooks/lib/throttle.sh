@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
 # ATLAS Plugin — Hook Throttle Helper
 # Prevents spamming the same warning type within a cooldown period.
 # Usage: source this file, then call `throttle_check "warning-key" 60` (60s cooldown)
 # Returns 0 if OK to show warning, 1 if throttled (skip it)
+#
+# NOTE: No `set -euo pipefail` here — this is a sourced library.
+# Setting strict mode at file level would affect the caller's shell.
+# Callers should set their own strict mode.
 
 THROTTLE_DIR="/tmp/atlas-hook-throttle"
 mkdir -p "$THROTTLE_DIR" 2>/dev/null || true
@@ -19,7 +24,8 @@ throttle_check() {
     last_ts=$(cat "$lock_file" 2>/dev/null || echo 0)
     local now
     now=$(date +%s)
-    local diff=$(( now - last_ts ))
+    local diff
+    diff=$(( now - last_ts ))
     if [ "$diff" -lt "$cooldown" ]; then
       return 1  # throttled
     fi
