@@ -205,3 +205,28 @@ DEPLOY_SSH_HOST=docker01 ./scripts/deploy.sh prod        # deploy prod
 DEPLOY_SSH_HOST=docker01 ./scripts/deploy.sh all         # all envs
 DEPLOY_SSH_HOST=docker01 ./scripts/deploy.sh status      # health checks
 ```
+
+---
+
+## SOTA Patterns & Anti-Patterns — READ BEFORE WRITING OR REVIEWING A DEPLOY SCRIPT
+
+Before you write or approve any new deploy pipeline, read **`references/sota-deploy-patterns.md`**.
+
+It documents five compounding defects that silently break production deploys (all were observed in a single 2026-04-14 Synapse incident):
+
+1. `| tail -N` on deploy commands — masks failure, reports green
+2. `--build` on target host instead of build-push-pull pattern
+3. Local image tags (no registry, no digest, no rollback history)
+4. SSH user not in docker group (silent permission-denied)
+5. Health gate on `localhost` instead of external URL
+
+**TL;DR rules** (all enforced via code review of `.woodpecker/*.yml` / `.github/workflows/deploy-*`):
+
+- `set -Eeuo pipefail` at the top of every shell step.
+- Build + push in CI; target host only does `docker compose pull && up -d --no-build`.
+- Reference images by `${REPO}:${TAG}@${DIGEST}` — digest injected into `.env` by CI.
+- Health gate: external URL (`https://yourdomain.com/api/v1/health`) **or** Gatus/Uptime-Kuma status feed — never `curl localhost:…`.
+- No `| tail`, no unconditional `echo "deployed"`, no silent `|| echo "ok"` fallbacks.
+- Five-question audit before merging any deploy-script change (see reference §"The Five-Question Deploy Audit").
+
+When the user asks "why did my deploy report green but prod is stale?" — jump straight to the reference file and walk through the five defects.
