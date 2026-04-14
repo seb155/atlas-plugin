@@ -46,9 +46,20 @@ exclude = ["dist*", ".claude*", "node_modules*"]
 namespaces = false
 
 [tool.pytest.ini_options]
-# Mirrors tests/pytest.ini — authoritative source is still pytest.ini for now.
-# Phase 6F will register all marks there. After Phase 9 hygiene, may consolidate here.
+# SSoT for pytest config since Phase 6F (v5.7.0-alpha.1).
+# Previously duplicated in /pytest.ini and /tests/pytest.ini — both deleted.
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
-addopts = "-x -q --tb=short"
+addopts = "-q --strict-markers --tb=short"
+markers = [
+    "slow: marks tests as slow (deselect with -m 'not slow')",
+    "hook: tests that execute hook scripts via subprocess",
+    "e2e: end-to-end plugin tests (require built dist/ artifacts)",
+    "integration: L3 integration tests (skipped in L1, run in L3)",
+    "skill: skill-specific dependency / frontmatter / content tests",
+    "strict: strict-mode validation (cross-refs, template vars, quality gates)",
+    "broken: known-broken tests — excluded from CI, tracked for fix",
+    "build: L2 build artifact validation (require dist/ after build-v5)",
+    "smoke: minimal essential tests for quick sanity check",
+]
