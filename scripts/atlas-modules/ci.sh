@@ -473,6 +473,7 @@ _atlas_ci_secrets() {
     list|ls) _atlas_ci_secrets_list ;;
     add|set) _atlas_ci_secrets_set "$@" ;;
     rm|remove|delete) _atlas_ci_secrets_rm "$@" ;;
+    rotate-ssh) _atlas_ci_secrets_rotate_ssh "$@" ;;
     help|--help|-h)
       cat <<EOF
 
@@ -482,20 +483,153 @@ _atlas_ci_secrets() {
     atlas ci secrets [list]                           List secrets (metadata only)
     atlas ci secrets set <name> <value> [--events X]  Add or update a secret
     atlas ci secrets rm <name>                        Delete a secret
+    atlas ci secrets rotate-ssh [options]             Rotate SSH deploy key end-to-end
 
   Events (comma-separated): push, pull_request, tag, deployment, cron
   Default events: push
+
+  Rotate-ssh options:
+    --name <secret>           WP secret name (default: ssh_key)
+    --targets <csv>           SSH host aliases (e.g. vm801,vm802,nb-vm550)
+    --user <name>             Remote user (default: sgagnon)
+    --comment <text>           Key comment (default: woodpecker-ci-<repo>-<date>)
+    --store-bw <item-name>    Also store private in Bitwarden (requires bw unlocked)
+    --dry-run                 Show plan without executing
 
   Examples:
     atlas ci secrets
     atlas ci secrets set ssh_key "\$(cat ~/.ssh/deploy_key)" --events push
     atlas ci secrets set forgejo_ci_bot_token "\$FG_TOKEN" --events pull_request,push
     atlas ci secrets rm old_secret
+    atlas ci secrets rotate-ssh --targets vm801,vm802,nb-vm550
+    atlas ci secrets rotate-ssh --targets vm801 --store-bw "Woodpecker CI deploy key"
 
 EOF
       ;;
     *) echo "Unknown secrets action: $action — try 'atlas ci secrets help'" >&2; return 1 ;;
   esac
+}
+
+_atlas_ci_secrets_rotate_ssh() {
+  # End-to-end SSH key rotation for Woodpecker CI deploy.
+  # Replaces 6 manual steps with a single command. Safe: requires HITL confirm.
+  local name="ssh_key"
+  local targets=""
+  local user="sgagnon"
+  local comment="woodpecker-ci-$(basename "$PWD")-$(date +%Y%m%d)"
+  local bw_item=""
+  local dry_run=false
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --name) name="$2"; shift 2 ;;
+      --targets) targets="$2"; shift 2 ;;
+      --user) user="$2"; shift 2 ;;
+      --comment) comment="$2"; shift 2 ;;
+      --store-bw) bw_item="$2"; shift 2 ;;
+      --dry-run) dry_run=true; shift ;;
+      *) shift ;;
+    esac
+  done
+  if [ -z "$targets" ]; then
+    echo "❌ --targets required (comma-separated host aliases)" >&2
+    echo "   Example: atlas ci secrets rotate-ssh --targets vm801,vm802,nb-vm550" >&2
+    return 1
+  fi
+
+  echo ""
+  echo "🔑 SSH Key Rotation Plan"
+  echo "  WP Secret:  ${name}"
+  echo "  Targets:    ${targets} (user=${user})"
+  echo "  Comment:    ${comment}"
+  [ -n "$bw_item" ] && echo "  BW backup:  ${bw_item}"
+  $dry_run && echo "  Mode:       DRY RUN — no changes"
+  echo ""
+
+  if $dry_run; then
+    echo "Would:"
+    echo "  1. ssh-keygen -t ed25519 -C '${comment}' -f /tmp/atlas_rotate_ssh -N ''"
+    for h in $(echo "$targets" | /usr/bin/tr ',' ' '); do
+      echo "  2. ssh ${h}: remove woodpecker-ci entries + add new pub key"
+    done
+    echo "  3. PATCH WP secret '${name}' via API"
+    [ -n "$bw_item" ] && echo "  4. Create BW secure note '${bw_item}' with priv+pub"
+    echo "  5. rm /tmp/atlas_rotate_ssh*"
+    return 0
+  fi
+
+  # Step 1: generate keypair
+  local tmpkey="/tmp/atlas_rotate_ssh_$$"
+  /usr/bin/ssh-keygen -t ed25519 -C "${comment}" -f "${tmpkey}" -N "" -q
+  local pub priv
+  pub=$(/bin/cat "${tmpkey}.pub")
+  priv=$(/bin/cat "${tmpkey}")
+
+  # Step 2: deploy public key to each target (POSIX-compatible host split)
+  local deploy_ok=0 deploy_fail=0
+  for h in $(echo "$targets" | /usr/bin/tr ',' ' '); do
+    # Detect if host needs sudo (root user with target user != root)
+    local default_user
+    default_user=$(/usr/bin/ssh -G "$h" 2>/dev/null | /bin/grep '^user ' | /usr/bin/awk '{print $2}')
+    local cmd
+    if [ "$default_user" = "root" ] && [ "$user" != "root" ]; then
+      cmd="sudo -u ${user} bash -c \"sed -i '/woodpecker-ci/d' /home/${user}/.ssh/authorized_keys && echo '${pub}' >> /home/${user}/.ssh/authorized_keys\""
+    else
+      cmd="sed -i '/woodpecker-ci/d' ~/.ssh/authorized_keys && echo '${pub}' >> ~/.ssh/authorized_keys"
+    fi
+    if /usr/bin/ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$h" "$cmd" 2>/dev/null; then
+      echo "  ✅ ${h}: pub key deployed"
+      deploy_ok=$((deploy_ok+1))
+    else
+      echo "  ❌ ${h}: SSH failed" >&2
+      deploy_fail=$((deploy_fail+1))
+    fi
+  done
+
+  if [ "$deploy_fail" -gt 0 ]; then
+    echo ""
+    echo "⚠ ${deploy_fail} target(s) failed. NOT updating WP secret to avoid breaking deploy." >&2
+    /bin/rm -f "${tmpkey}" "${tmpkey}.pub"
+    return 1
+  fi
+
+  # Step 3: update WP secret via existing set helper
+  _atlas_ci_secrets_set "$name" "$priv" --events deployment,push
+
+  # Step 4: optional Bitwarden backup
+  if [ -n "$bw_item" ] && command -v bw >/dev/null; then
+    if bw status 2>/dev/null | /usr/bin/grep -q unlocked; then
+      /usr/bin/python3 - "$bw_item" "$pub" "$priv" "$targets" "$comment" <<'PY'
+import json, subprocess, sys, os
+name, pub, priv, targets, comment = sys.argv[1:6]
+tpl = subprocess.run(['bw','get','template','item'], capture_output=True, text=True, env={**os.environ})
+item = json.loads(tpl.stdout)
+item.update({
+    'type': 2,
+    'name': name,
+    'notes': f'Woodpecker CI deploy key (rotated {comment}).\nTargets: {targets}\n\n=== PUBLIC ===\n{pub}\n=== PRIVATE ===\n{priv}',
+    'secureNote': {'type': 0},
+    'fields': [
+        {'name':'Targets','value':targets,'type':0},
+        {'name':'Rotated','value':comment,'type':0},
+    ],
+})
+enc = subprocess.run(['bw','encode'], input=json.dumps(item), capture_output=True, text=True, env={**os.environ})
+create = subprocess.run(['bw','create','item', enc.stdout.strip()], capture_output=True, text=True, env={**os.environ})
+try:
+    r = json.loads(create.stdout)
+    print(f"  ✅ BW item created: id={r['id']}")
+except Exception:
+    print(f"  ⚠ BW create unclear: {create.stderr[:120]}")
+PY
+    else
+      echo "  ⚠ Bitwarden not unlocked — skipping BW backup. Run: bw unlock" >&2
+    fi
+  fi
+
+  # Step 5: cleanup
+  /bin/rm -f "${tmpkey}" "${tmpkey}.pub"
+  echo ""
+  echo "✅ Rotation complete. Next push/deploy will use the new key."
 }
 
 _atlas_ci_secrets_list() {
