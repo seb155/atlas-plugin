@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# ATLAS Hook: TaskCompleted handler (CC v2.1.33+)
+#
+# Fires when a teammate/task completes in Agent Teams.
+# Logs completion metrics (duration, tokens, status) for
+# atlas-analytics skill consumption.
+
+set -euo pipefail
+
+readonly LOG_FILE="${HOME}/.atlas/logs/task-completed.jsonl"
+readonly STDIN_JSON="$(cat 2>/dev/null || echo '{}')"
+
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+
+TASK_ID=""
+DURATION_MS=""
+STATUS=""
+if command -v jq >/dev/null 2>&1; then
+  TASK_ID="$(echo "$STDIN_JSON" | jq -r '.task.id // .taskId // ""' 2>/dev/null || echo "")"
+  DURATION_MS="$(echo "$STDIN_JSON" | jq -r '.task.duration_ms // .durationMs // 0' 2>/dev/null || echo "0")"
+  STATUS="$(echo "$STDIN_JSON" | jq -r '.task.status // .status // ""' 2>/dev/null || echo "")"
+fi
+
+{
+  printf '{"ts":"%s","event":"TaskCompleted","task_id":"%s","duration_ms":%s,"status":"%s"}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    "${TASK_ID}" \
+    "${DURATION_MS:-0}" \
+    "${STATUS}"
+} >> "$LOG_FILE" 2>/dev/null || true
+
+exit 0

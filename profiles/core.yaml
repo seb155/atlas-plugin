@@ -59,6 +59,13 @@ hooks:
 - subagent-track-stop         # SubagentStop (SP-AGENT-VIS Layer 3 cleanup)
 # v5.7.0+: Model-aware context threshold (replaces hardcoded CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=83)
 - context-threshold-injector  # SessionStart + UserPromptSubmit — dynamic 92/83 per model
+# v5.7.0+: CC 2.1.x native event adoption (Phase 2 of sleepy-tumbling-hennessy)
+- worktree-setup              # WorktreeCreate — log + validate new worktree
+- worktree-cleanup-native     # WorktreeRemove — event-driven cleanup (replaces cleanup-worktrees Stop hook, deprecated)
+- team-idle-notify            # TeammateIdle (v2.1.33) — atlas-team coordination
+- task-completed-metrics      # TaskCompleted (v2.1.33) — analytics metrics
+- file-change-test-trigger    # FileChanged (v2.1.83) — DISABLED by default (ATLAS_FILE_CHANGED_ENABLED=1 to enable)
+- task-created-metrics        # TaskCreated (v2.1.84) — TaskCreate usage stats
 agents:
 - context-scanner
 persona: helpful assistant
