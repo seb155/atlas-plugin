@@ -34,29 +34,21 @@ export NODE_OPTIONS="${NODE_OPTIONS:---no-deprecation}"  # suppress bw punycode 
 # Portable Python 3 resolver (works on Linux, macOS, Windows Git Bash)
 . "$(dirname "$0")/lib/python.sh"
 
-# ─── Version Check: notify if newer version available ─────────────────
-# Lightweight check (~200ms). Uses Forgejo API to compare versions.
-# Actual update done via CC native: /plugin → Discover → toggle update.
-# Set ATLAS_NO_VERSION_CHECK=1 to skip.
+# ─── Auto-Update Plugin (v5.11+) ─────────────────────────────────────
+# Detects when marketplace has newer version than installed, and applies
+# the update automatically (git pull source → make dev → patch registry).
+# Runs synchronously; skipped if source repo not available or not clean.
+# Disable via: ATLAS_NO_AUTO_UPDATE=1
+# Override source path: ATLAS_SOURCE_REPO=/path/to/atlas-dev-plugin
+#
+# Source token file first so auto-update can use FORGEJO_TOKEN if needed
+[ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
+
 _auto_update_msg=""
-if [ "${ATLAS_NO_VERSION_CHECK:-}" != "1" ]; then
-  _INSTALLED_VERSION=$(cat "${PLUGIN_ROOT}/VERSION" 2>/dev/null | tr -d '[:space:]' || echo "0.0.0")
-  _FORGEJO_API="${ATLAS_FORGEJO_API:-}"
-
-  # Source token early for API call
-  [ -f "${HOME}/.env" ] && source "${HOME}/.env" 2>/dev/null || true
-
-  if [ -n "${FORGEJO_TOKEN:-}" ] && [ -n "$_FORGEJO_API" ]; then
-    _LATEST_TAG=$(curl -sf --connect-timeout 2 --max-time 2 \
-      "${_FORGEJO_API}/repos/axoiq/atlas-plugin/releases?limit=1" \
-      -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null \
-      | $ATLAS_PYTHON -c "import sys,json; print(json.load(sys.stdin)[0]['tag_name'])" 2>/dev/null || echo "")
-    _LATEST_VERSION="${_LATEST_TAG#v}"
-
-    if [ -n "$_LATEST_VERSION" ] && [ "$_LATEST_VERSION" != "$_INSTALLED_VERSION" ] && [ "$_LATEST_VERSION" != "0.0.0" ]; then
-      _auto_update_msg="🆙 ATLAS v${_LATEST_VERSION} available (installed: v${_INSTALLED_VERSION}) — run /plugin to update"
-    fi
-  fi
+if [ "${ATLAS_NO_AUTO_UPDATE:-}" != "1" ] && [ -r "$(dirname "$0")/lib/auto-update.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$(dirname "$0")/lib/auto-update.sh"
+  _auto_update_msg=$(atlas_auto_update_plugins 2>/dev/null || echo "")
 fi
 
 # Source user env (tokens, API keys) if available
