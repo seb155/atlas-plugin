@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.10.0 (2026-04-14)
+
+### ✨ Features
+- feat(skills): Code hygiene micro-discipline infrastructure (Phase 9A)
+
+### 🔧 Other Changes
+- Merge pull request #4 — Phase 9A Code Hygiene Micro-Discipline
+
+
+
 ## v5.9.0 (2026-04-14)
 
 ### ✨ Features
