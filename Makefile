@@ -28,7 +28,7 @@ dev: ## Build core + admin + install to CC cache (standard workflow)
 	CACHE_DIR="$$HOME/.claude/plugins/cache/atlas-marketplace"; \
 	echo ""; \
 	echo "📦 Installing modular plugins to CC cache..."; \
-	for plugin in atlas-core atlas-admin-addon; do \
+	for plugin in atlas-core atlas-dev-addon atlas-admin-addon; do \
 		name=$$(echo $$plugin | sed 's/-addon//'); \
 		dir="$$CACHE_DIR/$${name}/$$VERSION"; \
 		mkdir -p "$$dir"; \
