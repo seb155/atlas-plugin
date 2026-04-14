@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.9.0 (2026-04-14)
+
+### ✨ Features
+- feat(skills): SOTA senior patterns infrastructure (Phase 8A+8B2)
+
+### 🔧 Other Changes
+- Merge pull request #3 — Phase 8A+8B2 SOTA Senior Patterns
+
+
+
 ## v5.8.0 (2026-04-14)
 
 ### ✨ Features
