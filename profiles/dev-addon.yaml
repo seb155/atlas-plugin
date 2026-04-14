@@ -49,6 +49,10 @@ skills:
   - sota-code-patterns
   - senior-review-checklist
 
+  # v5.7.0+ Phase 9A — Code hygiene micro-discipline
+  - code-hygiene-rules
+  - senior-discipline-checklist
+
 refs:
   - composition-patterns
   - react-best-practices
@@ -57,6 +61,9 @@ refs:
   # v5.7.0+ Phase 8A — SOTA reference catalogs
   - code-smells-catalog
   - sota-architecture-patterns
+  # v5.7.0+ Phase 9A — Hygiene references
+  - naming-conventions
+  - folder-structure-patterns
 
 hooks:
   # Post-edit quality gates
