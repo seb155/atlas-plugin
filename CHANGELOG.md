@@ -1,5 +1,38 @@
 # Changelog
 
+## v5.7.0 (2026-04-14)
+
+### ✨ Features
+- feat(sessions): adopt CC 2.1.x native session features (Phase 4)
+- feat(worktree): safety exit flow + semantic naming (Phase 3)
+- feat(hooks): 6 new CC 2.1.x native events + regression test (Phase 2)
+- feat(statusline): v6 layout + 3 new modules (Phase 1)
+- feat(context-threshold): model-aware CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (Bug B)
+
+### 🐛 Bug Fixes
+- fix(tests): resolve 3 regressions from previous session phases
+- fix(profiles): wire 10 pre-v5.7.0 baseline hooks (Phase 6F-bis)
+- fix(makefile): deploy atlas-dev via make dev (Bug A)
+
+### 🔧 Other Changes
+- Merge pull request #1 — Phase 6 Code Quality SOTA (14 commits, CI green)
+- test(shell): bats-core tests for 5 critical hooks (Phase 6H)
+- ci(shellcheck): add L1 shellcheck step + Makefile targets (Phase 6G)
+- refactor(shell): harden scripts/ root + convert zsh→bash (Phase 6A-3)
+- refactor(shell): harden atlas-modules + convert zsh→bash (Phase 6A-2)
+- refactor(shell): harden hooks/lib + run-hook (Phase 6A-1)
+- ci(woodpecker): accept feat/* + fix/* branch patterns (Phase 6F+)
+- refactor(shell): remove eval → bash -c, justify trusted eval (Phase 6B)
+- refactor(config): IPs hardcodées → hostnames axoiq.com (Phase 6C)
+- security(ci): gitleaks hard-fail + pin image to 8.21 (Phase 6F)
+- refactor(pytest): consolidate config to pyproject.toml (Phase 6F)
+- docs(contributing): senior dev onboarding guide (Phase 6E)
+- chore(deps): add pyproject.toml with pytest + pyyaml (Phase 6D)
+- docs(phase-5): CLAUDE.md + CHANGELOG + memory sync
+- chore(release): bump to v5.7.0-alpha.1
+
+
+
 ## v5.7.0-alpha.1 (2026-04-14) — CC 2.1.107 Alignment Big-Bang (in progress)
 
 Plan: `.blueprint/plans/sleepy-tumbling-hennessy.md` (9 phases, 54h, HITL gates)
