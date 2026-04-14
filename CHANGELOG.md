@@ -1,5 +1,28 @@
 # Changelog
 
+## v5.7.0-alpha.1 (2026-04-14) — CC 2.1.107 Alignment Big-Bang (in progress)
+
+Plan: `.blueprint/plans/sleepy-tumbling-hennessy.md` (9 phases, 54h, HITL gates)
+
+### ✨ Features — Phase 0 (Critical Bugs Hotfix)
+- fix(makefile): deploy atlas-dev-addon via `make dev` (L31 iteration loop)
+- feat(context-threshold): model-aware CLAUDE_AUTOCOMPACT_PCT_OVERRIDE (92% for 1M context, 83% for 200K)
+- feat(hook): context-threshold-injector wires SessionStart + UserPromptSubmit
+- feat(module): scripts/atlas-modules/context-threshold.sh — pure function threshold resolver
+- fix(settings): raise default CLAUDE_AUTOCOMPACT_PCT_OVERRIDE 83 → 92 (1M-context models dominant)
+
+### 🔄 Deferred Phases (1-9)
+- Phase 1: Statusline enrichment (4h)
+- Phase 2: Native hooks integration — 7 new events (6h)
+- Phase 3: Worktrees + safety exit flow (5h)
+- Phase 4: Sessions + native bonus (4h)
+- Phase 5: Docs + memory sync (2h)
+- Phase 6: Continuous code quality (10h)
+- Phase 7: Continuous LSP integration (5h)
+- Phase 8: SOTA senior patterns (11h)
+- Phase 9: Code hygiene + senior discipline (5h)
+
+
 ## v5.6.2 (2026-04-13)
 
 ### 🐛 Bug Fixes
