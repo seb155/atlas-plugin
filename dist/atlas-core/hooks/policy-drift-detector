@@ -2,6 +2,7 @@
 # Hook: SessionStart(startup) — Detect missing safety deny rules
 # Warns (via stdout) if required deny rules are absent from settings.json
 # Exit 0 always (informational, never block session)
+set -euo pipefail
 
 SETTINGS="$HOME/.claude/settings.json"
 [ -f "$SETTINGS" ] || exit 0
@@ -34,7 +35,7 @@ if [ $MISSING -gt 0 ]; then
 fi
 
 # Check if settings.json has a hooks block (should be in plugin hooks.json)
-HAS_HOOKS=$(python3 -c "import json; d=json.load(open('$SETTINGS')); print('yes' if 'hooks' in d else 'no')" 2>/dev/null)
+HAS_HOOKS=$(python3 -c "import json; d=json.load(open('$SETTINGS')); print('yes' if 'hooks' in d else 'no')" 2>/dev/null || echo "no")
 if [ "$HAS_HOOKS" = "yes" ]; then
   echo "⚠️ HOOKS DRIFT: settings.json contains hooks block — should be in plugin hooks.json only. Run: atlas setup hooks"
 fi

@@ -8,8 +8,8 @@
 #   Docker:   30s cache (docker ps)
 #   CI:       60s cache (Forgejo API, 2s timeout)
 #   Tier:     read from existing state (set at SessionStart)
-set -o pipefail
-# NOTE: No -e / -u — this hook is async & informational.
+set -euo pipefail
+# NOTE: This hook is async & informational. All errors exit 0 via trap.
 # A crash here only produces an ugly "hook error" line. Resilience > strictness.
 trap 'exit 0' ERR
 

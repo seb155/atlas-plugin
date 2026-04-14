@@ -4,6 +4,7 @@
 # stdout -> injected as additional context for the summarizer
 # Migrated from ~/.claude/hooks/pre-compact.sh
 # Exit 0 = OK (never block compaction)
+set -euo pipefail
 
 INPUT=$(cat)
 TRIGGER=$(echo "$INPUT" | jq -r '.trigger // "unknown"')
@@ -15,8 +16,8 @@ echo "[$TIMESTAMP] Compaction ($TRIGGER)" >> "$LOG_FILE"
 
 # --- Dynamic context: git state ---
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-MODIFIED=$(git diff --name-only 2>/dev/null | head -20)
-STAGED=$(git diff --cached --name-only 2>/dev/null | head -20)
+MODIFIED=$(git diff --name-only 2>/dev/null | head -20 || true)
+STAGED=$(git diff --cached --name-only 2>/dev/null | head -20 || true)
 
 echo "=== CONTEXT TO PRESERVE DURING COMPACTION ==="
 echo ""

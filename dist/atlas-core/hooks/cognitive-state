@@ -20,7 +20,7 @@
 #   ~/.claude/atlas-tone-state.json     (for downstream hooks)
 # Must complete in <3s (target <100ms)
 
-set -o pipefail
+set -euo pipefail
 trap 'exit 0' ERR
 
 _START_MS=$(date +%s%N 2>/dev/null | head -c13 || echo "0")

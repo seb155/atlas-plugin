@@ -265,7 +265,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-cleanup-native\"",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-exit-safe\"",
             "async": false,
             "timeout": 10
           }
@@ -316,18 +316,6 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/task-created-metrics\"",
             "async": true,
             "timeout": 3
-          }
-        ]
-      }
-    ],
-    "ExitWorktree": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-exit-safe\"",
-            "async": false,
-            "timeout": 10
           }
         ]
       }

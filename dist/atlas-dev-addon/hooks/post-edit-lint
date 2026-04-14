@@ -4,9 +4,10 @@
 # Walks UP directory tree to find biome.json
 # Migrated from ~/.claude/hooks/post-edit-lint.sh
 # Exit 0 = OK, no blocking
+set -euo pipefail
 
 INPUT=$(cat)
-FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // empty')
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // empty' || true)
 
 # Skip if no file or not a TS file
 [ -z "$FILE" ] && exit 0
@@ -32,7 +33,7 @@ find_biome_config() {
 if command -v bunx &>/dev/null; then
   BIOME_DIR=$(find_biome_config "$(dirname "$FILE")")
   if [ -n "$BIOME_DIR" ]; then
-    cd "$BIOME_DIR" && bunx biome check --apply "$FILE" 2>/dev/null
+    cd "$BIOME_DIR" && bunx biome check --apply "$FILE" 2>/dev/null || true
   fi
 fi
 

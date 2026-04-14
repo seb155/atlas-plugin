@@ -3,6 +3,7 @@
 # Only cleans .claude/worktrees/ (CC-managed), NOT .worktrees/ (manual/project)
 # Safe: skips worktrees with uncommitted changes or unique commits
 # Enhanced: age warnings + auto-merge-back proposals
+set -euo pipefail
 
 # Hook aggregation log
 _hook_log() {
@@ -21,7 +22,7 @@ MERGE_CANDIDATES=""
 AGE_WARN_DAYS=7
 NOW_EPOCH=$(date +%s)
 
-for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null); do
+for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/null || true); do
   wt_dir="$repo_dir/worktrees"
   [ -d "$wt_dir" ] || continue
 
@@ -33,7 +34,7 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
     name=$(basename "$wt")
 
     # Check age (days since last commit in worktree)
-    last_commit_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH")
+    last_commit_epoch=$(cd "$wt" && git log -1 --format=%ct HEAD 2>/dev/null || echo "$NOW_EPOCH") || last_commit_epoch="$NOW_EPOCH"
     age_days=$(( (NOW_EPOCH - last_commit_epoch) / 86400 ))
 
     # Skip if dirty (uncommitted changes) — exclude known ephemeral files
@@ -68,14 +69,14 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
 
     # Safe to remove (clean + no unique commits)
     cd "$repo_root" || continue
-    git worktree remove "$wt" --force 2>/dev/null
+    git worktree remove "$wt" --force 2>/dev/null || true
     # Try both naming conventions for branch cleanup
-    git branch -D "$name" 2>/dev/null
-    git branch -D "worktree-$name" 2>/dev/null
+    git branch -D "$name" 2>/dev/null || true
+    git branch -D "worktree-$name" 2>/dev/null || true
     CLEANED=$((CLEANED + 1))
   done
 
-  cd "$repo_root" && git worktree prune 2>/dev/null
+  cd "$repo_root" && git worktree prune 2>/dev/null || true
 done
 
 # Summary output

@@ -2,6 +2,7 @@
 # Hook: PostToolUse(TaskCreate) — Log task creation for analytics
 # Appends one JSON line per task to ~/.claude/task-log.jsonl
 # Exit 0 always (never block)
+set -euo pipefail
 
 INPUT=$(cat)
 TASK_ID=$(echo "$INPUT" | jq -r '.tool_result.task_id // .tool_input.subject // "unknown"')

@@ -2,6 +2,7 @@
 # Hook: PermissionRequest — Log permission events for rule improvement
 # Captures tool name and context for analytics
 # Exit 0 always (never interfere with permission flow)
+set -euo pipefail
 
 INPUT=$(cat)
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // "unknown"')

@@ -14,6 +14,9 @@ fi
 touch "$_ATLAS_SS_LOCK"
 trap 'rm -f "$_ATLAS_SS_LOCK"' EXIT
 # ─────────────────────────────────────────────────────────────────────────
+# NOTE: -e omitted (auth/fallback chains rely on controlled failure)
+# NOTE: -u omitted (ATLAS_PYTHON resolved dynamically from lib/python.sh)
+set -o pipefail
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 SKILL_FILE="${PLUGIN_ROOT}/skills/atlas-assist/SKILL.md"

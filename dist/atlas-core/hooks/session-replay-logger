@@ -7,6 +7,7 @@
 # @event PostToolUse
 # @performance target <30ms (async, non-blocking)
 # Exit 0 always — never block tool execution
+set -euo pipefail
 
 INPUT=$(cat)
 LOG_FILE="$HOME/.claude/session-replay.jsonl"

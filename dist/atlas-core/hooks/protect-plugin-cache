@@ -2,9 +2,10 @@
 # Hook: PreToolUse(Write|Edit) — Block writes to plugin cache directory
 # Enforces plugin-cache read-only rule via guaranteed hook execution.
 # Exit 0 = allow, Exit 2 = block
+set -euo pipefail
 
 INPUT=$(cat)
-FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // empty')
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // empty' || true)
 
 [ -z "$FILE" ] && exit 0
 

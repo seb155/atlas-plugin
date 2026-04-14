@@ -9,7 +9,7 @@
 # Output: Warning messages on stdout
 # Exit: 0 always (soft warning, never blocks)
 
-set -uo pipefail
+set -euo pipefail
 
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HOOK_DIR/lib/throttle.sh" 2>/dev/null || true

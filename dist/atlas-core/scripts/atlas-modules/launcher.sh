@@ -397,10 +397,12 @@ print(handoffs[-1] if handoffs else '')
       # Topic provided: atlas synapse pitch-demo → use topic as worktree name
       cmd+=(-w "$topic")
     else
-      # Fallback: project-MMDD (still meaningful, never random)
-      local _wt_project
-      _wt_project="$(basename "$path")"
-      cmd+=(-w "${_wt_project}-$(/usr/bin/date '+%m%d')")
+      # Fallback: {abbrev}-MMDD (semantic, short, never random)
+      # Multi-segment (atlas-dev-plugin) → initials (adp)
+      # Mono-word (synapse) → first 5 chars (synap)
+      local _wt_project="${path%/}"
+      _wt_project="${_wt_project##*/}"
+      cmd+=(-w "$(_atlas_abbrev_project "$_wt_project")-$(/usr/bin/date '+%m%d')")
     fi
   fi
 

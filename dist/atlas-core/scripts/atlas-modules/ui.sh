@@ -18,6 +18,26 @@ _cc_session_name() {
   echo "$name"
 }
 
+# ─── Project Name Abbreviation ────────────────────────────────
+# Multi-segment (a-b-c) → initials (abc)
+# Mono-word (synapse) → first 5 chars (synap)
+# Used for worktree auto-naming when no topic/wt_name provided.
+_atlas_abbrev_project() {
+  local name="$1"
+  if [[ "$name" == *-* ]]; then
+    local result="" seg rest="$name"
+    while [[ "$rest" == *-* ]]; do
+      seg="${rest%%-*}"
+      [ -n "$seg" ] && result+="${seg:0:1}"
+      rest="${rest#*-}"
+    done
+    [ -n "$rest" ] && result+="${rest:0:1}"
+    echo "$result"
+  else
+    echo "${name:0:5}"
+  fi
+}
+
 # ─── Project Discovery ────────────────────────────────────────
 _atlas_discover_projects() {
   local root="$ATLAS_WORKSPACE_ROOT"

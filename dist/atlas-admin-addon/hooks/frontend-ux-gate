@@ -4,6 +4,7 @@
 # PostToolUse hook for Write|Edit on frontend files.
 # Checks if the file is a UI component/page and the brainstorming skill
 # hasn't been invoked in this session.
+set -euo pipefail
 
 # Throttle: max 1 reminder per session (5 min cooldown)
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

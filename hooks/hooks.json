@@ -541,7 +541,7 @@
         ]
       }
     ],
-    "ExitWorktree": [
+    "WorktreeRemove": [
       {
         "hooks": [
           {
