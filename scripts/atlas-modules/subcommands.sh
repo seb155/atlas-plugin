@@ -1062,6 +1062,56 @@ _atlas_feature() {
   printf "  ${ATLAS_GREEN}✓${ATLAS_RESET} Branch created. Now: atlas \"${name}\" to launch Claude Code\n"
 }
 
+# v5.7.0+ — Semantic worktree naming (Phase 3 of sleepy-tumbling-hennessy)
+#
+# Usage: atlas feat|fix|hotfix|chore|refactor <description>
+# Creates: <prefix>-<description> worktree + session with same name
+# Enforces: regex ^(feat|fix|hotfix|chore|refactor)-[a-z0-9-]{3,50}$
+#           (rejects date-only names like "0414")
+_atlas_semantic_worktree() {
+  local prefix="$1"
+  shift
+  local desc="$*"
+
+  if [[ -z "$desc" ]]; then
+    echo "Usage: atlas $prefix <description>"
+    echo "  Example: atlas $prefix cc-alignment → worktree ${prefix}-cc-alignment"
+    echo "  Rules: kebab-case, 3-50 chars, [a-z0-9-] only"
+    return 1
+  fi
+
+  # Slugify: lowercase, kebab-case
+  local slug
+  slug=$(echo "$desc" | /usr/bin/tr '[:upper:] _' '[:lower:]--' | /usr/bin/sed 's/[^a-z0-9-]//g; s/--*/-/g; s/^-//; s/-$//')
+
+  # Validate: no date-only, proper length
+  if ! echo "$slug" | grep -qE '^[a-z0-9-]{3,50}$'; then
+    echo "❌ Invalid name: '$slug'"
+    echo "   Must match: [a-z0-9-]{3,50}"
+    return 1
+  fi
+
+  # Reject date-only patterns (like "0414", "2026-04-14", etc.)
+  if echo "$slug" | grep -qE '^[0-9-]+$'; then
+    echo "❌ Date-only names rejected: '$slug'"
+    echo "   Use a semantic description (e.g., '$prefix bug-fix' not '$prefix $slug')"
+    return 1
+  fi
+
+  local branch="${prefix}-${slug}"
+
+  # Launch claude with worktree + session name
+  printf "🌳 Launching worktree: %s (session: %s)\n" "$branch" "$branch"
+  local claude_bin
+  claude_bin=$(command -v claude 2>/dev/null || echo "/usr/local/bin/claude")
+  if [[ ! -x "$claude_bin" ]]; then
+    echo "❌ claude binary not found"
+    return 1
+  fi
+
+  "$claude_bin" -w "$branch" -n "$branch"
+}
+
 # atlas promote <worktree-name>
 # Convert worktree-X (experimental, no CI) → feature/YYYY-MM-DD-X (CI-ready)
 _atlas_promote() {

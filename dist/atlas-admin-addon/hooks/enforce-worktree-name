@@ -1,32 +1,69 @@
-#!/bin/bash
-# Hook: PreToolUse(EnterWorktree) — Enforce descriptive worktree names
-# Rejects empty names and random-looking names (less than 3 chars or gibberish).
-# Exit 0 = allow, Exit 2 = block with message
+#!/usr/bin/env bash
+# Hook: PreToolUse(EnterWorktree) — Enforce semantic worktree names
+#
+# v5.7.0+ (Phase 3 of sleepy-tumbling-hennessy):
+#   Tightened from "any kebab-case ≥3 chars" to "semantic prefix + description".
+#   Rejects date-only names ("0414"), placeholders, and short names.
+#
+# Accepted regex: ^(feat|fix|hotfix|chore|refactor|wip|sandbox)-[a-z0-9-]{3,50}$
+#   Where:
+#     - wip/sandbox = permitted for exploratory work
+#     - feat/fix/hotfix/chore/refactor = conventional commit prefixes
+#     - Description 3-50 chars, kebab-case only
+#
+# Exit 0 = allow, Exit 2 = block with helpful message
+
+set -euo pipefail
+
+readonly ACCEPTED_REGEX='^(feat|fix|hotfix|chore|refactor|wip|sandbox)-[a-z0-9-]{3,50}$'
+readonly DATE_REGEX='^[0-9-]+$'
 
 INPUT=$(cat)
-NAME=$(echo "$INPUT" | jq -r '.tool_input.name // empty')
+NAME=$(echo "$INPUT" | jq -r '.tool_input.name // empty' 2>/dev/null || echo "")
 
-# If no name provided → block and suggest
-if [ -z "$NAME" ]; then
+# Empty name: block and educate
+if [[ -z "$NAME" ]]; then
   cat <<'EOF' >&2
-⚠️ Worktree name required. Use a descriptive kebab-case name:
-  EnterWorktree(name: "ci-runner-fix")
-  EnterWorktree(name: "store-consolidation")
-  EnterWorktree(name: "sp18-teg-phase1")
-NEVER use random or empty names — they make cleanup impossible.
+⚠️  Worktree name required. Use semantic prefix + description:
+    EnterWorktree(name: "feat-ci-runner-fix")
+    EnterWorktree(name: "fix-store-consolidation")
+    EnterWorktree(name: "hotfix-context-threshold")
+    EnterWorktree(name: "chore-update-deps")
+  Valid prefixes: feat | fix | hotfix | chore | refactor | wip | sandbox
 EOF
   exit 2
 fi
 
-# Reject names shorter than 3 characters
-if [ ${#NAME} -lt 3 ]; then
-  echo "⚠️ Worktree name '$NAME' too short. Use at least 3 characters (e.g., 'ci-fix', 'sp18-teg')." >&2
+# Date-only names ("0414", "2026-04-14", etc.): REJECT
+if [[ "$NAME" =~ $DATE_REGEX ]]; then
+  cat <<EOF >&2
+⚠️  Date-only name rejected: '$NAME'
+   Dates are not semantic. Use descriptive prefix + task, e.g.:
+     feat-cc-alignment  (not $NAME)
+     fix-auth-bug       (not $NAME)
+EOF
   exit 2
 fi
 
-# Reject the default CC placeholder name
-if [ "$NAME" = "-" ] || [ "$NAME" = "--" ] || [ "$NAME" = "tree" ]; then
-  echo "⚠️ '$NAME' is a generic placeholder. Use a descriptive name (e.g., 'audit-sprint', 'deploy-fix')." >&2
+# Generic placeholders
+case "$NAME" in
+  -|--|tree|test|tmp|temp|x|xxx)
+    echo "⚠️  '$NAME' is a placeholder. Use a descriptive prefix + task." >&2
+    exit 2
+    ;;
+esac
+
+# Semantic prefix check
+if ! [[ "$NAME" =~ $ACCEPTED_REGEX ]]; then
+  cat <<EOF >&2
+⚠️  Invalid worktree name: '$NAME'
+   Must match: feat|fix|hotfix|chore|refactor|wip|sandbox followed by kebab-case (3-50 chars).
+   Examples:
+     ✓ feat-cc-alignment
+     ✓ fix-context-threshold
+     ✓ hotfix-v5-6-3
+     ✗ $NAME
+EOF
   exit 2
 fi
 

@@ -540,6 +540,18 @@
           }
         ]
       }
+    ],
+    "ExitWorktree": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-exit-safe\"",
+            "async": false,
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

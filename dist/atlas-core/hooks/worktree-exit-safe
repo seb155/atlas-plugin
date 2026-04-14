@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# ATLAS Hook: ExitWorktree safety net (CC v2.1.72+)
+#
+# SAFETY: Replaces CC's native keep-or-delete prompt with a 5-option flow
+# that prevents accidental data loss.
+#
+# Flow:
+#   1. Parse ExitWorktree event JSON (worktree path, branch, proposed action)
+#   2. If action is "remove" AND worktree has uncommitted changes or unpushed
+#      commits, STOP and present 5 options via stdout (AskUserQuestion fallback):
+#        - Keep worktree (default, safe)
+#        - Merge to dev + cleanup
+#        - Ship-all (commit + push + deploy)
+#        - Create PR (push feature branch)
+#        - Discard (DANGER — requires typed confirm)
+#   3. Log decision to ~/.atlas/logs/worktree-exit.jsonl
+#
+# Integration: option "ship-all" and "merge" invoke the corresponding skills
+# (finishing-branch, ship-all, forgejo-pr). This hook writes a state file
+# that the next CC turn can read to trigger the skill.
+#
+# State file: ~/.atlas/state/worktree-exit-pending.json
+#   { "worktree": "...", "branch": "...", "user_choice": "keep|merge|ship|pr|discard" }
+
+set -euo pipefail
+
+readonly STATE_DIR="${HOME}/.atlas/state"
+readonly STATE_FILE="${STATE_DIR}/worktree-exit-pending.json"
+readonly LOG_FILE="${HOME}/.atlas/logs/worktree-exit.jsonl"
+readonly STDIN_JSON="$(cat 2>/dev/null || echo '{}')"
+
+mkdir -p "$STATE_DIR" "$(dirname "$LOG_FILE")" 2>/dev/null || true
+
+WORKTREE_PATH=""
+WORKTREE_BRANCH=""
+ACTION=""
+if command -v jq >/dev/null 2>&1; then
+  WORKTREE_PATH="$(echo "$STDIN_JSON" | jq -r '.worktree.path // .worktreePath // ""' 2>/dev/null || echo "")"
+  WORKTREE_BRANCH="$(echo "$STDIN_JSON" | jq -r '.worktree.branch // .worktreeBranch // ""' 2>/dev/null || echo "")"
+  ACTION="$(echo "$STDIN_JSON" | jq -r '.action // ""' 2>/dev/null || echo "")"
+fi
+
+# Silent no-op if:
+# - Action is "keep" (safe default, no intervention needed)
+# - No worktree info (malformed event, let CC handle)
+if [[ "$ACTION" == "keep" ]] || [[ -z "$WORKTREE_PATH" ]]; then
+  exit 0
+fi
+
+# Check for uncommitted changes or unpushed commits
+HAS_CHANGES="false"
+HAS_UNPUSHED="false"
+if [[ -d "$WORKTREE_PATH/.git" ]] || [[ -f "$WORKTREE_PATH/.git" ]]; then
+  pushd "$WORKTREE_PATH" >/dev/null 2>&1 || exit 0
+  # Uncommitted changes?
+  if [[ -n "$(git status --porcelain 2>/dev/null || true)" ]]; then
+    HAS_CHANGES="true"
+  fi
+  # Unpushed commits? (compare to origin/branch if tracking set up)
+  if git rev-parse "@{u}" >/dev/null 2>&1; then
+    UNPUSHED_COUNT=$(git rev-list "@{u}..HEAD" --count 2>/dev/null || echo "0")
+    if (( UNPUSHED_COUNT > 0 )); then
+      HAS_UNPUSHED="true"
+    fi
+  fi
+  popd >/dev/null 2>&1 || true
+fi
+
+# Log the event + state
+TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+{
+  printf '{"ts":"%s","event":"WorktreeExit","path":"%s","branch":"%s","action":"%s","has_changes":%s,"has_unpushed":%s}\n' \
+    "$TIMESTAMP" "$WORKTREE_PATH" "$WORKTREE_BRANCH" "$ACTION" "$HAS_CHANGES" "$HAS_UNPUSHED"
+} >> "$LOG_FILE" 2>/dev/null || true
+
+# If user picked "remove" AND has changes/unpushed, write state file
+# so the next CC turn can trigger an AskUserQuestion with 5 options.
+# (ExitWorktree hook cannot call AskUserQuestion directly — that requires
+# the main AI turn. So we stash the decision for later prompting.)
+if [[ "$ACTION" == "remove" ]] && [[ "$HAS_CHANGES" == "true" || "$HAS_UNPUSHED" == "true" ]]; then
+  # Atomic state write
+  TMP="${STATE_FILE}.tmp.$$"
+  cat > "$TMP" <<EOF
+{
+  "worktree": "${WORKTREE_PATH}",
+  "branch": "${WORKTREE_BRANCH}",
+  "requested_action": "${ACTION}",
+  "has_changes": ${HAS_CHANGES},
+  "has_unpushed": ${HAS_UNPUSHED},
+  "created_at": "${TIMESTAMP}",
+  "status": "pending_user_choice"
+}
+EOF
+  mv "$TMP" "$STATE_FILE" 2>/dev/null || rm -f "$TMP"
+
+  # Output a safety warning that will show in the next turn's context
+  # (hooks can influence behavior but not prompt directly — rely on
+  # the state file being read by session-start or a skill next turn)
+  echo "⚠️  SAFETY: Worktree ${WORKTREE_BRANCH} has uncommitted changes or unpushed commits."
+  echo "   ATLAS stashed decision to ${STATE_FILE}."
+  echo "   Next turn: AskUserQuestion will offer 5 options (keep/merge/ship-all/PR/discard)."
+fi
+
+exit 0

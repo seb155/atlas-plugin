@@ -66,6 +66,7 @@ hooks:
 - task-completed-metrics      # TaskCompleted (v2.1.33) — analytics metrics
 - file-change-test-trigger    # FileChanged (v2.1.83) — DISABLED by default (ATLAS_FILE_CHANGED_ENABLED=1 to enable)
 - task-created-metrics        # TaskCreated (v2.1.84) — TaskCreate usage stats
+- worktree-exit-safe          # ExitWorktree (v2.1.72) Phase 3 — safety net 5-option prompt
 agents:
 - context-scanner
 persona: helpful assistant
