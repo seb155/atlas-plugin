@@ -95,7 +95,7 @@ _atlas_status() {
 
   # CI status (Woodpecker CI)
   if [ -n "${WP_TOKEN:-}" ]; then
-    local wp_url="${WP_URL:-http://192.168.10.76:8000}"
+    local wp_url="${WP_URL:-https://ci.axoiq.com}"
     local ci_status
     ci_status=$(curl -sf --max-time 3 "${wp_url}/api/repos/1/pipelines?per_page=1" \
       -H "Authorization: Bearer ${WP_TOKEN}" 2>/dev/null | python3 -c "
@@ -270,7 +270,7 @@ _atlas_ci() {
   printf "  ${ATLAS_BOLD}CI Pipeline Status (Woodpecker)${ATLAS_RESET}\n\n"
 
   local token="${WP_TOKEN:-}"
-  local wp_url="${WP_URL:-http://192.168.10.76:8000}"
+  local wp_url="${WP_URL:-https://ci.axoiq.com}"
 
   if [ -z "$token" ]; then
     [ -f "$HOME/.env" ] && source "$HOME/.env" 2>/dev/null

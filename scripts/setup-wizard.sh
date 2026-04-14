@@ -81,7 +81,7 @@ _setup_identity() {
   # Auto-detect from Forgejo
   source "${HOME}/.env" 2>/dev/null || true
   if [ -n "${FORGEJO_TOKEN:-}" ]; then
-    local forgejo_api="${ATLAS_FORGEJO_API:-http://192.168.10.75:3000/api/v1}"
+    local forgejo_api="${ATLAS_FORGEJO_API:-https://forgejo.axoiq.com/api/v1}"
     local data=$(curl -sf --connect-timeout 3 "${forgejo_api}/user" \
       -H "Authorization: token ${FORGEJO_TOKEN}" 2>/dev/null || echo "")
 
