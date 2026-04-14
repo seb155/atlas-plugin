@@ -126,9 +126,25 @@ class TestRegressionGate:
         print(f"Tier coverage: L1={l1_count}, L2+L3+broken={len(all_test_files)-l1_count}, total={len(all_test_files)}")
 
     def test_version_file_exists(self):
-        """VERSION file must exist and contain a semver string."""
+        """VERSION file must exist and contain a semver string.
+
+        Accepts both X.Y.Z (release) and X.Y.Z-PRERELEASE (alpha/beta/rc).
+        Semver 2.0: https://semver.org/#spec-item-9
+        """
+        import re
+
         vf = PLUGIN_ROOT / "VERSION"
         assert vf.exists(), "REGRESSION: VERSION file removed"
         version = vf.read_text().strip()
-        parts = version.split(".")
-        assert len(parts) == 3, f"VERSION '{version}' is not semver (expected X.Y.Z)"
+        # Semver 2.0 regex (core + optional prerelease/build):
+        # MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]
+        semver_re = re.compile(
+            r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+            r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+            r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+            r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+        )
+        assert semver_re.match(version), (
+            f"VERSION '{version}' is not valid semver 2.0 "
+            f"(expected X.Y.Z or X.Y.Z-PRERELEASE)"
+        )
