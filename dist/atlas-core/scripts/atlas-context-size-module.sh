@@ -1,29 +1,51 @@
 #!/usr/bin/env bash
-# ATLAS Starship Custom Module — Context window size (1M indicator)
-# Shows "1M" for Max plan Opus, "200K" for standard.
-# CShip exports CSHIP_CONTEXT_SIZE and CSHIP_MODEL_ID.
+# ATLAS CShip Custom Module — Context window size indicator
+# Shows "1M" or "200K" based on model capability.
+#
+# Detection priority (first match wins):
+#   1. CSHIP_CONTEXT_SIZE env var > 500000 → "1M"
+#   2. Model ID contains [1m] suffix → "1M"
+#   3. Model is Opus 4.6 or Sonnet 4.6 → "1M" (default for these models)
+#   4. Model is Opus (pre-4.6) with Max subscription → "1M"
+#   5. Fallback → "200K"
+#
+# Updated v5.7.0: Opus/Sonnet 4.6 default to 1M (per CC v2.1.51+).
+# CShip env vars: CSHIP_CONTEXT_SIZE, CSHIP_MODEL_ID
+
 set -euo pipefail
 
-SIZE="${CSHIP_CONTEXT_SIZE:-200000}"
-MODEL="${CSHIP_MODEL_ID:-unknown}"
+readonly SIZE="${CSHIP_CONTEXT_SIZE:-200000}"
+readonly MODEL="${CSHIP_MODEL_ID:-unknown}"
 
-# Determine real context budget based on model + plan
-# Opus 4.6 on Max plan = 1M tokens
-# Sonnet 4.6 = 200K tokens
-# Haiku 4.5 = 200K tokens
-if [ "$SIZE" -gt 200000 ] 2>/dev/null; then
+# Priority 1: explicit size from JSON input (most reliable)
+if [[ "$SIZE" =~ ^[0-9]+$ ]] && (( SIZE > 500000 )); then
   echo "1M"
-elif echo "$MODEL" | grep -qi 'opus.*\[1m\]'; then
-  echo "1M"
-elif echo "$MODEL" | grep -qi 'opus'; then
-  # Check subscription type from credentials
-  CREDS="${HOME}/.claude/.credentials.json"
-  if [ -f "$CREDS" ]; then
-    SUB=$(python3 -c "import json; print(json.load(open('$CREDS')).get('claudeAiOauth',{}).get('subscriptionType',''))" 2>/dev/null)
-    [ "$SUB" = "max" ] && echo "1M" && exit 0
-  fi
-  echo "200K"
-else
-  # Sonnet/Haiku = 200K
-  echo "200K"
+  exit 0
 fi
+
+# Priority 2: explicit [1m] suffix in model ID
+if echo "$MODEL" | grep -qi '\[1m\]'; then
+  echo "1M"
+  exit 0
+fi
+
+# Priority 3: Opus 4.6 and Sonnet 4.6 default to 1M context per CC v2.1.51+
+if echo "$MODEL" | grep -qiE 'opus-4-6|sonnet-4-6'; then
+  echo "1M"
+  exit 0
+fi
+
+# Priority 4: legacy Opus with Max subscription
+if echo "$MODEL" | grep -qi 'opus'; then
+  readonly CREDS="${HOME}/.claude/.credentials.json"
+  if [[ -r "$CREDS" ]]; then
+    SUB=$(python3 -c "import json,sys; print(json.load(open('$CREDS')).get('claudeAiOauth',{}).get('subscriptionType',''))" 2>/dev/null || echo "")
+    if [[ "$SUB" == "max" ]]; then
+      echo "1M"
+      exit 0
+    fi
+  fi
+fi
+
+# Priority 5: fallback (Haiku or unknown)
+echo "200K"

@@ -8,13 +8,41 @@ effort: low
 
 Interactive setup for the ATLAS-enhanced Claude Code status line using CShip (Rust) + Starship passthrough.
 
-## Layout
+## Layout (v6 — v5.7.0+)
 
 ```
-Row 1: 🏛️ ATLAS 4.28  👑admin  🟣 opus  📁 Documents/Claude  🌿 dev !+
-Row 2: 📊 ███████░░░░░ 42%  📈 +42/-8  ⏱ R12%
+Row 1: 🏛️ ATLAS 5.7.0 👑admin  🟣 opus (1M)  📁 dir  🌿 git  🌳 wt  📋 session  🤖 2▶
+Row 2: ████░░░░░ 21%  📊 high  💰 $0.24  📈 +42/-8  ⏱ 5h:2% | 7d:0%  ⚠️ 200K+ (cond)
 Row 3: ⚠️ alerts (conditional — CI fail, context >75%, Docker down)
 ```
+
+### Fields (v5.7.0 adoption — CC 2.1.x natives)
+
+| Field | CShip var | JSON source | Added |
+|-------|-----------|-------------|-------|
+| Version | `$custom.atlas_version` | (script) | — |
+| Tier | `$custom.atlas_tier` | session-state | — |
+| Model | `$cship.model` | `model.id` | — |
+| Context size | `$custom.atlas_context_size` | `context_window.size` | — |
+| Directory | `$directory` | `workspace.current_dir` | — |
+| Git branch | `$git_branch` + `$git_status` | filesystem | — |
+| Worktree | `$cship.worktree` | `workspace.git_worktree` (v2.1.97) | — |
+| Session | `$cship.session` | `session_name` | — |
+| Agents | `$custom.atlas_agents` | agent tracking | v5.5 |
+| Context bar | `$cship.context_bar` | `context_window.used_percentage` | — |
+| **Effort** | `$custom.atlas_effort` | `effort` (v2.1.84) | **v5.7.0** |
+| **Cost USD** | `$custom.atlas_cost_usd` | `cost.total_cost_usd` | **v5.7.0** |
+| Lines diff | `$cship.cost.total_lines_{added,removed}` | cost fields | — |
+| Rate limits | `$cship.usage_limits` | `rate_limits` (v2.1.80) | — |
+| **200K badge** | `$custom.atlas_200k_badge` | `exceeds_200k_tokens` (v2.1.87) | **v5.7.0** |
+| Alerts | `$custom.atlas_alert` | (script) | — |
+
+### Auto-refresh
+
+v5.7.0 sets `refresh_interval = 10` in `[cship]` section → rate limits and cost
+update live every 10 seconds without requiring a keystroke.
+
+
 
 ## Setup Steps
 
