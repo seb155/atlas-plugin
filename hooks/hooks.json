@@ -481,18 +481,6 @@
         ]
       }
     ],
-    "WorktreeRemove": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-cleanup-native\"",
-            "async": false,
-            "timeout": 10
-          }
-        ]
-      }
-    ],
     "TeammateIdle": [
       {
         "hooks": [
@@ -547,6 +535,12 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-exit-safe\"",
+            "async": false,
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/worktree-cleanup-native\"",
             "async": false,
             "timeout": 10
           }
