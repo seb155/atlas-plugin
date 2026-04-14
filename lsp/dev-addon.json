@@ -1,0 +1,31 @@
+{
+  "lspServers": {
+    "bash-language-server": {
+      "command": "bash-language-server",
+      "args": ["start"],
+      "extensionToLanguage": {
+        ".sh": "shellscript",
+        ".bash": "shellscript"
+      },
+      "transport": "stdio"
+    },
+    "pyright": {
+      "command": "pyright-langserver",
+      "args": ["--stdio"],
+      "extensionToLanguage": {
+        ".py": "python",
+        ".pyi": "python"
+      },
+      "transport": "stdio",
+      "settings": {
+        "python": {
+          "analysis": {
+            "typeCheckingMode": "basic",
+            "autoSearchPaths": true,
+            "useLibraryCodeForTypes": true
+          }
+        }
+      }
+    }
+  }
+}
