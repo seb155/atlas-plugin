@@ -419,3 +419,24 @@ def test_agents_sh_covers_all_subcommands():
     mod = (SCRIPTS_DIR / "atlas-modules" / "agents.sh").read_text()
     for sub in ["list", "tail", "stop", "replay", "stats", "clean", "env"]:
         assert sub in mod, f"Subcommand '{sub}' not found in agents.sh"
+
+
+def test_agents_sh_sets_remain_on_exit():
+    """agents.sh must set remain-on-exit on spawned tail panes so output stays visible."""
+    mod = (SCRIPTS_DIR / "atlas-modules" / "agents.sh").read_text()
+    assert "-P -F '#{pane_id}'" in mod, "agents.sh must capture pane_id via split-window -P -F"
+    assert "remain-on-exit on" in mod, "agents.sh must set remain-on-exit on"
+    assert mod.count("remain-on-exit on") >= 2, (
+        "Both split-window call sites (primary + fallback) must set remain-on-exit on"
+    )
+
+
+def test_subagent_output_capture_sets_remain_on_exit():
+    """subagent-output-capture.ts (Layer 3 auto-spawn) must set remain-on-exit on the new pane."""
+    hook = (HOOKS_TS_DIR / "subagent-output-capture.ts").read_text()
+    assert "remain-on-exit on" in hook, (
+        "subagent-output-capture.ts must call tmux set-option remain-on-exit on"
+    )
+    assert "set-option -p -t" in hook, (
+        "Must use per-pane set-option targeting the captured pane_id"
+    )

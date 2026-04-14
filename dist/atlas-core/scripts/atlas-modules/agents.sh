@@ -127,13 +127,16 @@ _atlas_agents_tail() {
 
   # If in tmux, spawn new pane; else raw tail in current terminal
   if [ -n "$TMUX" ] && tmux display-message -p '#S' &>/dev/null; then
+    local pane_id
     if [ -x "$_ATLAS_AGENT_TAIL" ]; then
-      tmux split-window -h -p 35 -d "$_ATLAS_AGENT_TAIL $agent_id"
-      echo "✓ Opened tail pane for $agent_type [$agent_id]"
+      pane_id=$(tmux split-window -h -p 35 -d -P -F '#{pane_id}' "$_ATLAS_AGENT_TAIL $agent_id")
+      tmux set-option -p -t "$pane_id" remain-on-exit on
+      echo "✓ Opened tail pane for $agent_type [$agent_id] (stays visible after completion)"
     else
       echo "⚠️ atlas-agent-tail.sh not installed yet (Phase 4). Falling back to raw tail..."
-      tmux split-window -h -p 35 -d "tail -f '$output_file'"
-      echo "✓ Raw tail pane opened for $agent_id"
+      pane_id=$(tmux split-window -h -p 35 -d -P -F '#{pane_id}' "tail -f '$output_file'")
+      tmux set-option -p -t "$pane_id" remain-on-exit on
+      echo "✓ Raw tail pane opened for $agent_id (stays visible after completion)"
     fi
   else
     echo "═══ Tailing: $agent_type [$agent_id] ═══"

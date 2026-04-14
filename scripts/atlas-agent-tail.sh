@@ -58,7 +58,7 @@ AGENT_TYPE=$(jq -r --arg id "$AGENT_ID" '.[$id].agent_type // "?"' "$AGENTS_FILE
 echo "═══════════════════════════════════════════════════════════════"
 echo "  🤖 ATLAS Agent Tail — $AGENT_TYPE [$AGENT_ID]"
 echo "  📄 $OUTPUT_FILE"
-echo "  (Ctrl+C to stop. Pane auto-closes on agent completion.)"
+echo "  (Ctrl+C to stop. Pane stays visible after completion — close with prefix-x.)"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 

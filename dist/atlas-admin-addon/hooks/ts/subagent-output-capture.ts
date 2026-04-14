@@ -202,6 +202,15 @@ async function spawnVisibility(agentId: string): Promise<void> {
 				{ encoding: "utf-8", timeout: 1500, stdio: ["ignore", "pipe", "ignore"] },
 			).trim();
 			if (paneId) {
+				// Keep pane visible after agent completes so user can review output
+				try {
+					execSync(`tmux set-option -p -t ${paneId} remain-on-exit on 2>/dev/null`, {
+						timeout: 500,
+						stdio: "ignore",
+					});
+				} catch {
+					// Non-critical — visibility still registered, pane will just auto-close
+				}
 				await updateVisibility(agentId, { tmux_pane: paneId, visibility_mode: "tmux" });
 			}
 		} catch {
