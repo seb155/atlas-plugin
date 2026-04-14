@@ -34,14 +34,28 @@ _atlas_list() {
 
 # atlas resume [project]
 _atlas_resume() {
-  local project="$1"
-  if [ -n "$project" ]; then
-    local path=$(_atlas_resolve_project "$project")
-    [ -z "$path" ] && { echo "Project '$project' not found."; return 1; }
-    builtin cd "$path" && claude -c --chrome
-  else
+  # v5.7.0+ — Dual-mode resume (Phase 4):
+  #   1. atlas resume               → claude -c (last session)
+  #   2. atlas resume <project>     → cd to project + claude -c (legacy)
+  #   3. atlas resume <session-name> → claude --resume <name> (v2.0.64+)
+  # Disambiguation: project lookup first, fallback to --resume by name.
+  local arg="$1"
+  if [[ -z "$arg" ]]; then
     claude -c --chrome
+    return
   fi
+
+  # Priority 1: resolve as project path (legacy behavior)
+  local path
+  path=$(_atlas_resolve_project "$arg" 2>/dev/null || echo "")
+  if [[ -n "$path" ]]; then
+    builtin cd "$path" && claude -c --chrome
+    return
+  fi
+
+  # Priority 2: pass through as --resume session name (v2.0.64+)
+  echo "Resuming session by name: $arg (via claude --resume)"
+  claude --resume "$arg"
 }
 
 # atlas status

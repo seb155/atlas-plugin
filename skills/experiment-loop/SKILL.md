@@ -10,6 +10,23 @@ agent: experiment-runner
 
 Karpathy autoresearch-inspired: defined target → autonomous experimentation → HITL review.
 
+## v5.7.0+ Native Delegation (Phase 4)
+
+For simple recurring tasks, prefer CC native `/loop` (v2.1.89+) or `CronCreate` tool
+over this skill's custom scheduling:
+
+```bash
+# Simple periodic task — use native
+/loop 5m check deploy status
+/loop 1h /atlas health infra
+
+# Full experiment with HITL gates + mutation tracking — use this skill
+/atlas experiment start <config>
+```
+
+Keep this skill for: multi-iteration experiments with mutation proposals, HITL gates,
+measurement tracking, result synthesis. Not for simple recurring pings.
+
 ## Invocation
 
 | Command | Action |

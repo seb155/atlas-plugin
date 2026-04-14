@@ -11,6 +11,25 @@ triggers: ["ultrathink", "think deeply", "analyze thoroughly", "deep analysis", 
 Activate maximum thinking budget (~32K tokens) with **structured decision frameworks**.
 Maps to Claude Code's native `ultrathink` keyword for highest reasoning quality.
 
+## v5.7.0+ Native `/effort` (Phase 4)
+
+For simple effort bumps, prefer CC native `/effort` (v2.1.84+):
+
+```bash
+/effort high     # bump current session effort to high
+/effort max      # bump to maximum (equivalent to ultrathink keyword per-turn)
+/effort auto     # reset to default (auto-adaptive)
+```
+
+Keep `ultrathink` skill for **structured frameworks**:
+- ADR (architectural decisions)
+- Risk analysis matrix
+- Tradeoff comparison
+- Decision chain with rationale
+- Auto-persist via `decision-log` skill
+
+`/effort` = simple knob. `ultrathink` = framework + persistence.
+
 ## Thinking Levels
 
 | Level | Keyword | Budget | Use Case |

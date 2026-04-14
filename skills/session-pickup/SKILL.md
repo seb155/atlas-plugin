@@ -8,6 +8,20 @@ effort: low
 
 Resume work from a handoff file. Loads context, reads referenced files, presents briefing with next action.
 
+## v5.7.0+ Native Path (preferred when session is named)
+
+If the previous session was named via `/rename` or launched via `atlas feat/fix/hotfix <desc>`:
+
+```bash
+# CC native (v2.0.64+)
+claude --resume <session-name>
+
+# ATLAS wrapper (auto-disambiguates project vs session)
+atlas resume <session-name>
+```
+
+Falls back to handoff-file-based recovery (below) if no session name matches.
+
 ## When to Use
 
 - User says "pickup", "resume", "continue where I left off", "what was I working on"
