@@ -1,4 +1,6 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# NOTE: Sourced by user shells (zsh/.zshrc). See ~/.zshrc integration guide.
 # ═══════════════════════════════════════════════════════════════
 # ATLAS Setup Wizard — Sectioned Configuration Manager
 # © 2026 AXOIQ Inc. | Proprietary Software
@@ -105,13 +107,15 @@ _setup_identity() {
     [ -z "$ws" ] && ws="$HOME/workspace_atlas"
   fi
   if [ -d "${ws}/vaults" ]; then
-    for vdir in "${ws}/vaults"/*/(N) ; do
+    while IFS= read -r vdir; do
+      # Restore trailing slash for the original logic
+      vdir="${vdir}/"
       if [ -f "${vdir}kernel/manifest.json" ]; then
         vault_path="${vdir%/}"
         _setup_success "Vault: $(basename "$vdir") at ${vdir}"
         break
       fi
-    done
+    done < <(find "${ws}/vaults" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
   else
     _setup_info "No vaults directory at ${ws}/vaults — skipping vault auto-detect"
   fi
@@ -272,7 +276,7 @@ with open(path, 'w') as f: json.dump(s, f, indent=2)
 
   # Enforce safety policy (mandatory deny rules regardless of preset)
   _setup_info "Enforcing safety policy..."
-  local policy_file="${ATLAS_PLUGIN_ROOT:-${0:A:h}}/presets/safety-policy.json"
+  local policy_file="${ATLAS_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}/presets/safety-policy.json"
   if [ -f "$policy_file" ]; then
     python3 -c "
 import json, os
@@ -580,13 +584,15 @@ _setup_plugins() {
   _setup_info "Scanning installed plugins..."
 
   if [ -d "$plugin_dir" ]; then
-    for marketplace_dir in "$plugin_dir"/*/(N); do
-      for plugin_dir_inner in "$marketplace_dir"/*/(N); do
-        local pname=$(basename "$plugin_dir_inner")
-        local pver=$(ls -v "$plugin_dir_inner" 2>/dev/null | tail -1)
+    while IFS= read -r marketplace_dir; do
+      while IFS= read -r plugin_dir_inner; do
+        local pname
+        pname=$(basename "$plugin_dir_inner")
+        local pver
+        pver=$(ls -v "$plugin_dir_inner" 2>/dev/null | tail -1)
         [ -n "$pver" ] && _setup_success "${pname} v${pver}"
-      done
-    done
+      done < <(find "$marketplace_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+    done < <(find "$plugin_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
   fi
 
   # ATLAS plugin check
@@ -631,9 +637,9 @@ _setup_plugins_domain() {
   if [ -d "$marketplace_dir" ]; then
     local installed_count=$(find "$marketplace_dir" -maxdepth 1 -type d -name "atlas-*" 2>/dev/null | wc -l | tr -d ' ')
     _setup_info "Currently installed: ${installed_count}/6 domain plugins"
-    for d in "$marketplace_dir"/atlas-*/(N); do
+    while IFS= read -r d; do
       [ -d "$d" ] && _setup_success "  $(basename "$d")"
-    done
+    done < <(find "$marketplace_dir" -mindepth 1 -maxdepth 1 -type d -name "atlas-*" 2>/dev/null)
   else
     _setup_info "No domain plugins installed yet"
   fi
@@ -935,15 +941,18 @@ print('Removed hooks block')
   _setup_info "Checking plugin hooks.json..."
   local plugin_cache="$HOME/.claude/plugins/cache/atlas-admin-marketplace"
   local found_hooks=0
-  for tier_dir in "$plugin_cache"/atlas-*/(N); do
+  while IFS= read -r tier_dir; do
     [ -d "$tier_dir" ] || continue
     # Find the version directory
-    for ver_dir in "$tier_dir"*/(N); do
+    while IFS= read -r ver_dir; do
       [ -d "$ver_dir" ] || continue
       if [ -f "$ver_dir/hooks/hooks.json" ]; then
-        local tier_name=$(basename "$tier_dir")
-        local event_count=$(python3 -c "import json; d=json.load(open('$ver_dir/hooks/hooks.json')); print(len(d.get('hooks',{})))" 2>/dev/null)
-        local hook_count=$(python3 -c "
+        local tier_name
+        tier_name=$(basename "$tier_dir")
+        local event_count
+        event_count=$(python3 -c "import json; d=json.load(open('$ver_dir/hooks/hooks.json')); print(len(d.get('hooks',{})))" 2>/dev/null)
+        local hook_count
+        hook_count=$(python3 -c "
 import json
 d=json.load(open('$ver_dir/hooks/hooks.json'))
 total=sum(len(h) for entries in d.get('hooks',{}).values() for e in entries for h in [e.get('hooks',[])])
@@ -953,8 +962,8 @@ print(total)
         found_hooks=1
       fi
       break
-    done
-  done
+    done < <(find "$tier_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+  done < <(find "$plugin_cache" -mindepth 1 -maxdepth 1 -type d -name "atlas-*" 2>/dev/null)
   if [ $found_hooks -eq 0 ]; then
     gum style --foreground 196 "  ✗ No plugin hooks.json found in cache"
     issues=$((issues + 1))
@@ -963,16 +972,18 @@ print(total)
   # Check 3: Stale local hook scripts
   _setup_info "Checking for stale local hooks..."
   local stale=0
-  for script in "$HOME/.claude/hooks/"*.sh(N); do
+  while IFS= read -r script; do
     [ -f "$script" ] || continue
-    local name=$(basename "$script" .sh)
-    # Check if this hook exists in the plugin (use glob array to avoid zsh crash)
-    local _hook_matches=("$plugin_cache/atlas-admin/"*/hooks/"$name"(N))
-    if [ ${#_hook_matches[@]} -gt 0 ] && [ -f "${_hook_matches[1]}" ]; then
+    local name
+    name=$(basename "$script" .sh)
+    # Check if this hook exists in the plugin (use find for cross-shell safety)
+    local first_match
+    first_match=$(find "$plugin_cache/atlas-admin/" -mindepth 2 -maxdepth 2 -name "$name" -type f 2>/dev/null | head -1)
+    if [ -n "$first_match" ] && [ -f "$first_match" ]; then
       gum style --foreground 214 "  ⚠ Stale: $name.sh (exists in plugin as $name)"
       stale=$((stale + 1))
     fi
-  done
+  done < <(find "$HOME/.claude/hooks" -mindepth 1 -maxdepth 1 -type f -name "*.sh" 2>/dev/null)
   if [ $stale -gt 0 ]; then
     gum style --foreground 214 "  $stale stale local hook(s) found (duplicated by plugin)"
     issues=$((issues + stale))
