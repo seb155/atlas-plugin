@@ -4,21 +4,58 @@
 > `https://ci.axoiq.com/swagger/doc.json` (Woodpecker 3.14.0-rc.0).
 > Served with `Authorization: Bearer $WP_TOKEN` — no SSO bypass needed.
 
-## Endpoints in active use
+## Endpoints used by atlas-plugin (v5.14.1+)
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| `GET` | `/api/version` | Server version (diagnostic) |
-| `GET` | `/api/user` | Current user — token-scope smoke test |
-| `GET` | `/api/repos/{repo_id}/pipelines?per_page=N` | List recent pipelines |
-| `GET` | `/api/repos/{repo_id}/pipelines/{number}` | Pipeline metadata + workflows + step tree |
-| `GET` | `/api/repos/{repo_id}/pipelines/{number}/config` | Rendered workflow YAML |
-| `GET` | **`/api/repos/{repo_id}/logs/{number}/{stepID}`** | **Step logs** (base64 `.data` per line) |
-| `POST` | `/api/repos/{repo_id}/pipelines/{number}` | Retrigger pipeline |
-| `GET` | `/api/repos/{repo_id}/agents` | Agent list (admin) |
-| `GET` | `/swagger/doc.json` | OpenAPI spec (authoritative reference) |
+### Meta (read)
 
-`{repo_id}` for Synapse = `1` (set via env `WP_REPO_ID` if different).
+| Method | Path | CLI command | Purpose |
+|--------|------|-------------|---------|
+| `GET` | `/api/version` | — | Server version (diagnostic) |
+| `GET` | `/api/user` | — | Current user (token-scope smoke test) |
+| `GET` | `/swagger/doc.json` | — | OpenAPI spec — authoritative reference |
+
+### Pipelines (read)
+
+| Method | Path | CLI command |
+|--------|------|-------------|
+| `GET` | `/api/repos/{repo_id}/pipelines?per_page=N` | `atlas ci list [--limit N]` |
+| `GET` | `/api/repos/{repo_id}/pipelines/{number}` | `atlas ci pipeline N`, `atlas ci watch N`, `atlas ci logs N` |
+| `GET` | `/api/repos/{repo_id}/pipelines/{number}/config` | — (rendered YAML — not wired yet) |
+| `GET` | **`/api/repos/{repo_id}/logs/{number}/{stepID}`** | `atlas ci logs N --step X` (base64 `.data` per line) |
+
+### Pipelines (actions)
+
+| Method | Path | CLI command |
+|--------|------|-------------|
+| `POST` | `/api/repos/{repo_id}/pipelines/{number}` | `atlas ci rerun N` |
+
+### Secrets (repo-level)
+
+| Method | Path | CLI command |
+|--------|------|-------------|
+| `GET` | `/api/repos/{repo_id}/secrets` | `atlas ci secrets list` |
+| `POST` | `/api/repos/{repo_id}/secrets` | `atlas ci secrets set` (create path) |
+| `PATCH` | `/api/repos/{repo_id}/secrets/{name}` | `atlas ci secrets set` (update path; fallback on 409/500) |
+| `DELETE` | `/api/repos/{repo_id}/secrets/{name}` | `atlas ci secrets rm` |
+
+**Secret request body schema** (POST/PATCH):
+
+```json
+{
+  "name": "ssh_key",
+  "value": "<secret value>",
+  "events": ["push", "deployment"],
+  "images": []
+}
+```
+
+### Agents (admin token)
+
+| Method | Path | CLI command |
+|--------|------|-------------|
+| `GET` | `/api/agents?per_page=50` | `atlas ci agents` |
+
+`{repo_id}` for Synapse = `1` (override via env `WP_REPO_ID`).
 
 ## Log response shape
 
@@ -75,6 +112,41 @@ Fix locally: `cd frontend && bun install && git add bun.lock && git commit -m "c
 ### 4. Skipped steps return no logs
 
 Steps with `state: skipped | pending | killed` have no log rows. The `/logs/` endpoint returns either `[]` or HTTP 404. The ATLAS CLI short-circuits these (see `_atlas_ci_logs_fetch`).
+
+### 5. Log entries with `data: null` (fixed v5.14.1)
+
+Some log rows are tracing/metadata markers with `data: null` instead of base64 payload:
+
+```json
+{"id":13692812,"step_id":1718,"time":0,"line":11,"data":null,"type":0}
+```
+
+Previously crashed with `'NoneType' object has no attribute 'rstrip'`. The CLI now silently skips these rows.
+
+### 6. Secrets missing at parse time → pipeline errors to `error`
+
+If a `when: event: pull_request` step references a secret that doesn't exist,
+the PR pipeline **ERRORS at parse time** (no workflows start). Push pipelines
+for the same step are fine because Woodpecker resolves the secret only for
+the matching event. Error message example:
+
+```
+secret "forgejo_ci_bot_token" not found
+```
+
+Fix:
+
+```bash
+atlas ci secrets set forgejo_ci_bot_token "$TOKEN" --events pull_request,push
+```
+
+### 7. Secret update: POST→PATCH fallback
+
+Some Woodpecker 3.x builds return `409`/`500` from `POST /secrets` when the
+name already exists instead of treating it as an update. The CLI handles this
+by first attempting `POST` (create), then falling back to `PATCH` on the
+`/secrets/{name}` endpoint for update. Net effect: a single
+`atlas ci secrets set` invocation works for both create and update cases.
 
 ## Quick curl reference
 
