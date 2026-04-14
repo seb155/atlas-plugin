@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# ATLAS Hook: Context Threshold Injector
+#
+# Makes CLAUDE_AUTOCOMPACT_PCT_OVERRIDE model-aware and exposes the
+# effective threshold to the AI via a system-reminder.
+#
+# Events:
+#   SessionStart       → parse JSON input, resolve threshold, write state
+#   UserPromptSubmit   → read state, inject system-reminder
+#
+# Root cause fix: Previously CLAUDE_AUTOCOMPACT_PCT_OVERRIDE was hardcoded
+# to 83 in plugin settings.json, which clipped 1M-context models to 830K
+# (losing 90K tokens of usable margin). This hook writes the threshold
+# into session state so downstream tooling stays consistent.
+#
+# State file: ~/.atlas/state/context-threshold.json
+#   {
+#     "model": "claude-opus-4-6[1m]",
+#     "context_size": 1048576,
+#     "threshold_pct": 92,
+#     "effective_tokens": 965592,
+#     "updated_at": "2026-04-14T10:58:51Z"
+#   }
+
+set -euo pipefail
+
+readonly STATE_DIR="${HOME}/.atlas/state"
+readonly STATE_FILE="${STATE_DIR}/context-threshold.json"
+readonly MODULE_SCRIPT="$(dirname "${BASH_SOURCE[0]}")/../scripts/atlas-modules/context-threshold.sh"
+
+# Resolve absolute path for standalone invocations
+if [[ ! -r "$MODULE_SCRIPT" ]]; then
+  PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+  MODULE_SCRIPT="${PLUGIN_ROOT}/scripts/atlas-modules/context-threshold.sh"
+fi
+
+# Silent failure path — never break session on hook error
+mkdir -p "$STATE_DIR" 2>/dev/null || true
+
+# Read stdin JSON (CC provides hook input)
+STDIN_JSON="$(cat 2>/dev/null || echo '{}')"
+
+# Detect event name from JSON input (CC v1.0.41+)
+HOOK_EVENT=""
+if command -v jq >/dev/null 2>&1 && [[ -n "$STDIN_JSON" ]]; then
+  HOOK_EVENT="$(echo "$STDIN_JSON" | jq -r '.hook_event_name // ""' 2>/dev/null || echo "")"
+fi
+
+# Handle SessionStart: resolve and persist threshold
+handle_session_start() {
+  local model_id context_size threshold_pct effective_tokens timestamp
+
+  if ! command -v jq >/dev/null 2>&1; then
+    # Without jq, we can't parse reliably — write safe fallback
+    return 0
+  fi
+
+  # Parse model info from CC JSON input (shape varies; try common paths)
+  model_id="$(echo "$STDIN_JSON" | jq -r '.model.id // .model // ""' 2>/dev/null || echo "")"
+  context_size="$(echo "$STDIN_JSON" | jq -r '.context_window.size // 0' 2>/dev/null || echo "0")"
+
+  # Resolve threshold (model-aware) via shared module
+  if [[ -x "$MODULE_SCRIPT" ]]; then
+    threshold_pct="$(bash "$MODULE_SCRIPT" "$model_id" 2>/dev/null || echo "83")"
+  else
+    threshold_pct="83"
+  fi
+
+  # Compute effective tokens (threshold_pct % of context_size)
+  if [[ "$context_size" =~ ^[0-9]+$ ]] && (( context_size > 0 )); then
+    effective_tokens=$(( context_size * threshold_pct / 100 ))
+  else
+    effective_tokens=0
+  fi
+
+  timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+  # Write state file (atomic via mv)
+  local tmp_file="${STATE_FILE}.tmp.$$"
+  cat > "$tmp_file" <<EOF
+{
+  "model": "${model_id}",
+  "context_size": ${context_size:-0},
+  "threshold_pct": ${threshold_pct},
+  "effective_tokens": ${effective_tokens},
+  "updated_at": "${timestamp}"
+}
+EOF
+  mv "$tmp_file" "$STATE_FILE" 2>/dev/null || rm -f "$tmp_file"
+}
+
+# Handle UserPromptSubmit: inject system-reminder with threshold info
+handle_user_prompt_submit() {
+  # Only inject if state file exists and readable
+  [[ -r "$STATE_FILE" ]] || return 0
+  command -v jq >/dev/null 2>&1 || return 0
+
+  local model_id context_size threshold_pct effective_tokens
+  model_id="$(jq -r '.model // ""' "$STATE_FILE" 2>/dev/null || echo "")"
+  context_size="$(jq -r '.context_size // 0' "$STATE_FILE" 2>/dev/null || echo "0")"
+  threshold_pct="$(jq -r '.threshold_pct // 83' "$STATE_FILE" 2>/dev/null || echo "83")"
+  effective_tokens="$(jq -r '.effective_tokens // 0' "$STATE_FILE" 2>/dev/null || echo "0")"
+
+  # Only inject if we have meaningful data
+  [[ -n "$model_id" && "$model_id" != "null" && "$context_size" -gt 0 ]] || return 0
+
+  # Format size + tokens in human-readable units
+  local size_human tokens_human
+  if (( context_size >= 1000000 )); then
+    size_human="$((context_size / 1024 / 1024))M"
+  else
+    size_human="$((context_size / 1000))K"
+  fi
+  if (( effective_tokens >= 1000 )); then
+    tokens_human="$((effective_tokens / 1000))K"
+  else
+    tokens_human="${effective_tokens}"
+  fi
+
+  # Inject system-reminder visible to the AI
+  echo "🧠 Context window: ${size_human} tokens total. Autocompact triggers at ${threshold_pct}% (~${tokens_human} tokens). You are on model ${model_id}."
+}
+
+# Dispatch by event
+case "$HOOK_EVENT" in
+  SessionStart|session_start)
+    handle_session_start
+    ;;
+  UserPromptSubmit|user_prompt_submit)
+    handle_user_prompt_submit
+    ;;
+  "")
+    # Legacy mode: no hook_event_name → do both (safe)
+    handle_session_start
+    ;;
+  *)
+    # Unknown event — no-op
+    :
+    ;;
+esac
+
+exit 0

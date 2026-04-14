@@ -57,6 +57,8 @@ hooks:
 - subagent-result-capture     # SubagentStop (existing functionality)
 - subagent-output-capture     # PostToolUse[matcher=Agent] (SP-AGENT-VIS Layer 1)
 - subagent-track-stop         # SubagentStop (SP-AGENT-VIS Layer 3 cleanup)
+# v5.7.0+: Model-aware context threshold (replaces hardcoded CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=83)
+- context-threshold-injector  # SessionStart + UserPromptSubmit — dynamic 92/83 per model
 agents:
 - context-scanner
 persona: helpful assistant

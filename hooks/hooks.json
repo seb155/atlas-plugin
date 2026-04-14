@@ -39,6 +39,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/external-capabilities\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-threshold-injector\"",
+            "async": false,
+            "timeout": 5
           }
         ]
       },
@@ -328,6 +334,12 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-budget-guardian\"",
             "timeout": 2
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-threshold-injector\"",
+            "async": false,
+            "timeout": 5
           }
         ]
       }

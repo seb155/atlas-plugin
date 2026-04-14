@@ -15,6 +15,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/external-capabilities\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-threshold-injector\"",
+            "async": false,
+            "timeout": 5
           }
         ]
       },
@@ -136,6 +142,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/cognitive-state\"",
             "async": true,
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-threshold-injector\"",
+            "async": false,
+            "timeout": 5
           }
         ]
       }
