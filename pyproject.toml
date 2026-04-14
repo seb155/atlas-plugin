@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlas-dev-plugin"
+description = "ATLAS AI engineering assistant — Claude Code plugin (core + dev + admin addons)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Proprietary"}
+authors = [
+    {name = "Seb Gagnon", email = "seb@axoiq.com"},
+]
+keywords = ["claude-code", "ai", "engineering", "plugin", "atlas"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "pyyaml>=6.0",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-xdist>=3.5",
+]
+
+[project.urls]
+Homepage = "https://forgejo.axoiq.com/axoiq/atlas-dev-plugin"
+Repository = "https://forgejo.axoiq.com/axoiq/atlas-dev-plugin"
+Issues = "https://forgejo.axoiq.com/axoiq/atlas-dev-plugin/issues"
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tests*"]
+exclude = ["dist*", ".claude*", "node_modules*"]
+namespaces = false
+
+[tool.pytest.ini_options]
+# Mirrors tests/pytest.ini — authoritative source is still pytest.ini for now.
+# Phase 6F will register all marks there. After Phase 9 hygiene, may consolidate here.
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-x -q --tb=short"
