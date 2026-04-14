@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.12.2 (2026-04-14)
+
+### 🐛 Bug Fixes
+- fix(lsp): wrap pyright config under server name (dev-addon)
+
+
+
 ## v5.12.0 (2026-04-14)
 
 ### ✨ Features
