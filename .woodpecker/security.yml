@@ -7,8 +7,9 @@ when:
 
 steps:
   secret-scan:
-    image: zricethezav/gitleaks:8.21
+    image: zricethezav/gitleaks:v8.30.1
     commands:
-      # Hard-fail since v5.7.0-alpha.1 (Phase 6F).
-      # If a false positive appears, add to .gitleaks.toml allowlist — do NOT revert to failure:ignore.
+      # Hard-fail since v5.7.0 (Phase 6F). Pin image to specific version — tags
+      # use "v" prefix (verified on Docker Hub). If a false positive appears,
+      # add to .gitleaks.toml allowlist — do NOT revert to failure:ignore.
       - gitleaks detect --source . --no-git --verbose
