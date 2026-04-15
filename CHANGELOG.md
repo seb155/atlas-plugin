@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.17.1 (2026-04-15)
+
+### 🐛 Bug Fixes
+- fix(plugins): remove deprecated .lsp.json files — CC schema v2 mismatch
+
+
+
 ## v5.17.0 (2026-04-15)
 
 ### ✨ Features
