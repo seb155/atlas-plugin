@@ -89,21 +89,3 @@ steps:
           "$${FORGEJO_URL}/api/v1/repos/$${REPO}/releases" \
           -d "{\"tag_name\":\"$${TAG}\",\"name\":\"v$${VERSION}\",\"body\":\"$${BODY}\",\"draft\":false,\"prerelease\":false}"
         echo "✅ Release v$${VERSION} created"
-
-  mirror-to-github:
-    image: alpine/git:latest
-    environment:
-      GH_MIRROR_TOKEN:
-        from_secret: gh_mirror_token
-    commands:
-      - |
-        if [ -z "$${GH_MIRROR_TOKEN:-}" ]; then
-          echo "⚠️ GH_MIRROR_TOKEN not set — skipping GitHub mirror"
-          exit 0
-        fi
-      - git fetch --unshallow 2>/dev/null || git fetch --all
-      - git fetch --tags
-      - |
-        git push --mirror \
-          "https://x-access-token:$${GH_MIRROR_TOKEN}@github.com/seb155/atlas-plugin.git"
-      - echo "✅ Mirrored to github.com/seb155/atlas-plugin (with tag $${CI_COMMIT_REF})"
