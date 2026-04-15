@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.21.0 (2026-04-15)
+
+### ✨ Features
+- feat(daimon): SP-DAIMON P2 calibration rules + pattern detection
+
+### 🔧 Other Changes
+- Merge pull request 'feat(daimon): SP-DAIMON P2 calibration rules + pattern detection' (#19) from feat/daimon-p2-calibration into main
+
+
+
 ## v5.20.1 (2026-04-15)
 
 ### 🐛 Bug Fixes
