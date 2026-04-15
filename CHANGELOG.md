@@ -1,5 +1,19 @@
 # Changelog
 
+## v5.20.0 (2026-04-15)
+
+### ✨ Features
+- feat(ci): consolidate forgejo actions to woodpecker (#16)
+- feat(ci): consolidate forgejo actions to woodpecker
+
+### 🐛 Bug Fixes
+- fix(ci): remove gh mirror until github repo exists
+
+### 🔧 Other Changes
+- Merge pull request 'fix(ci): remove gh mirror until github repo exists' (#17) from fix/remove-mirror-until-gh-ready into main
+
+
+
 ## v5.19.0 (2026-04-15)
 
 ### ✨ Features
