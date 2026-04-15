@@ -62,6 +62,9 @@ hooks:
 # v5.19.0+: SP-DAIMON P1 — personal profile auto-calibration
 - vault-profile-auto-load     # SessionStart — reads vault/daimon/*.md → ~/.atlas/runtime/session-calibration.json
 - daimon-context-injector     # SessionStart — emits <daimon-calibration> block to Claude system prompt
+# v5.21.0+: SP-DAIMON P2 — keyword-aware rule injection + pattern detection
+- keyword-aware-calibration   # UserPromptSubmit — matches prompt → JIT inject DAIMON rule context
+- pattern-signal-dispatcher   # PostToolUse[matcher=TaskCreate|TaskUpdate] — detect risk signals → append session-signals.jsonl
 # v5.7.0+: CC 2.1.x native event adoption (Phase 2 of sleepy-tumbling-hennessy)
 - worktree-setup              # WorktreeCreate — log + validate new worktree
 - worktree-cleanup-native     # WorktreeRemove — event-driven cleanup (replaces cleanup-worktrees Stop hook, deprecated)

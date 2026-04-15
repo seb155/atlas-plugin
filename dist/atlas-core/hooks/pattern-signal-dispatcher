@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# pattern-signal-dispatcher — SP-DAIMON P2 Task 2.5
+# Detects DAIMON risk signals via lightweight heuristics + appends to session-signals.jsonl.
+# Does NOT invoke the pattern-signal-detector Agent (hooks can't spawn Agent tool from bash).
+# The AGENT.md is a template for future manual/deep analysis (e.g., /atlas pattern, P4).
+#
+# Event: PostToolUse (matcher=TaskCreate|TaskUpdate, cheap sampling cadence)
+# Throttle: max 1 invocation per 10 minutes per user session.
+# Output: appends JSONL lines to ~/.atlas/runtime/session-signals.jsonl (one per detected signal)
+# Audit: ~/.claude/atlas-audit.log
+# Silent failure invariant — always exits 0 on any error.
+#
+# Related: .blueprint/plans/sp-daimon-calibration.md (SP-DAIMON P2 section E.5)
+# Pattern source: hooks/vault-profile-auto-load (file-state guards + Python helper)
+
+set +e  # explicit silent-failure mode (never break Claude session)
+
+# Resolve paths (tolerant of missing env)
+RUNTIME_DIR="$HOME/.atlas/runtime"
+DATA_DIR="$HOME/.atlas/data"
+SIGNALS_FILE="$RUNTIME_DIR/session-signals.jsonl"
+THROTTLE_FILE="$DATA_DIR/signal-dispatcher-throttle"
+CALIBRATION_FILE="$RUNTIME_DIR/session-calibration.json"
+AUDIT_LOG="$HOME/.claude/atlas-audit.log"
+
+# Ensure dirs (silent on failure)
+mkdir -p "$RUNTIME_DIR" "$DATA_DIR" 2>/dev/null
+
+# ─── Guard: skip if no DAIMON calibration ────────────────────────────
+[ -f "$CALIBRATION_FILE" ] || exit 0
+
+# ─── Throttle: 10 min per session ────────────────────────────────────
+NOW=$(date +%s 2>/dev/null || echo 0)
+THROTTLE_SEC=600  # 10 minutes
+
+if [ -f "$THROTTLE_FILE" ]; then
+  LAST=$(cat "$THROTTLE_FILE" 2>/dev/null || echo 0)
+  if [ -n "$LAST" ] && [ "$LAST" -gt 0 ] 2>/dev/null; then
+    DELTA=$((NOW - LAST))
+    [ "$DELTA" -lt "$THROTTLE_SEC" ] 2>/dev/null && exit 0
+  fi
+fi
+
+# Write new throttle stamp (tolerate failure)
+echo "$NOW" > "$THROTTLE_FILE" 2>/dev/null
+
+# ─── Signal detection: chronic_dissatisfaction (git log merges 7d) ───
+TS=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "unknown")
+
+# Candidate repos to check (primary: ATLAS_ROOT, fallback: synapse)
+REPOS=()
+[ -d "${ATLAS_ROOT:-/nonexistent}/.git" ] && REPOS+=("${ATLAS_ROOT}")
+[ -d "$HOME/workspace_atlas/projects/atlas/synapse/.git" ] && REPOS+=("$HOME/workspace_atlas/projects/atlas/synapse")
+[ -d "$HOME/workspace_atlas/projects/atlas-dev-plugin/.git" ] && REPOS+=("$HOME/workspace_atlas/projects/atlas-dev-plugin")
+
+# Deduplicate (simple, ok for small arrays)
+CHECKED_PATHS=""
+for repo in "${REPOS[@]}"; do
+  # Skip if already processed this physical path
+  case "$CHECKED_PATHS" in *"|$repo|"*) continue ;; esac
+  CHECKED_PATHS="$CHECKED_PATHS|$repo|"
+
+  # Count merge commits last 7d (silent on any git error)
+  MERGE_COUNT=$(cd "$repo" 2>/dev/null && git log --since="7 days ago" --merges --oneline 2>/dev/null | wc -l | tr -d ' ')
+  [ -z "$MERGE_COUNT" ] && continue
+
+  # Threshold check: 3+ merges in 7d triggers signal
+  if [ "$MERGE_COUNT" -ge 3 ] 2>/dev/null; then
+    REPO_NAME=$(basename "$repo")
+    # Emit one JSONL signal line
+    cat >> "$SIGNALS_FILE" <<EOF 2>/dev/null
+{"ts":"$TS","signal":"chronic_dissatisfaction","count":$MERGE_COUNT,"threshold":3,"severity":"medium","evidence":"$MERGE_COUNT merges in last 7d at $REPO_NAME","suggestion":"Consider /atlas weekly review to capture wins before next ship"}
+EOF
+    # Audit once per detection
+    echo "[$TS] pattern-signal-dispatcher: chronic_dissatisfaction count=$MERGE_COUNT repo=$REPO_NAME" >> "$AUDIT_LOG" 2>/dev/null
+  fi
+done
+
+exit 0
