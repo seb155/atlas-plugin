@@ -1,0 +1,43 @@
+{
+  "number": 999,
+  "branch": "feat/test",
+  "commit": "abcdef123456",
+  "status": "running",
+  "started": 1734200000,
+  "workflows": [
+    {
+      "name": "ci-test",
+      "state": "running",
+      "started": 1734200000,
+      "children": [
+        {
+          "name": "clone",
+          "pid": 1,
+          "id": 9001,
+          "state": "success",
+          "started": 1734200000,
+          "finished": 1734200005,
+          "exit_code": 0
+        },
+        {
+          "name": "backend-tests",
+          "pid": 2,
+          "id": 9002,
+          "state": "running",
+          "started": 1734200005,
+          "finished": 0,
+          "exit_code": 0
+        },
+        {
+          "name": "docs",
+          "pid": 3,
+          "id": 9003,
+          "state": "pending",
+          "started": 0,
+          "finished": 0,
+          "exit_code": 0
+        }
+      ]
+    }
+  ]
+}

@@ -110,7 +110,7 @@ teardown() {
     run _atlas_ci_cmd help
     [ "$status" -eq 0 ]
     echo "$output" | /bin/grep -q "atlas ci — Woodpecker CI helpers"
-    echo "$output" | /bin/grep -q "atlas ci logs <pipeline>"
+    echo "$output" | /bin/grep -q "atlas ci logs <N>"
 }
 
 @test "unknown subcommand returns non-zero" {

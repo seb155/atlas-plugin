@@ -20,7 +20,10 @@
 
 _ATLAS_CI_REPO_ID="${WP_REPO_ID:-1}"
 _ATLAS_CI_URL="${WP_URL:-https://ci.axoiq.com}"
-_ATLAS_CI_MODULE_VERSION="5.14.1"
+_ATLAS_CI_MODULE_VERSION="5.18.0"
+
+# Path to the watch renderer (sibling of this module)
+_ATLAS_CI_RENDER_PY="$(dirname "${BASH_SOURCE[0]}")/ci_watch_render.py"
 
 # ─── Helper: ensure WP_TOKEN is loaded ───────────────────────────
 _atlas_ci_load_token() {
@@ -401,23 +404,59 @@ _atlas_ci_rerun() {
   fi
 }
 
-# ─── atlas ci watch <N> [--interval S] — poll until terminal ─────
+# ─── atlas ci watch <N> [--live] [--interval S] [--tail N] ────────────
+# Without --live: legacy mode (one-line per state change, default 20s poll)
+# With --live: rich TUI/plain frame with timeline, log tail, progress, freeze detection (default 3s poll)
 _atlas_ci_watch() {
+  # Handle help flag BEFORE requiring pipeline arg
+  case "${1:-}" in
+    -h|--help|"")
+      if [ "${1:-}" = "" ]; then
+        echo "Usage: atlas ci watch <pipeline_number> [--live] [--interval S] [--tail N] [--freeze-threshold S]" >&2
+        return 1
+      fi
+      cat <<'EOF'
+Usage: atlas ci watch <N> [--live] [--interval S] [--tail N] [--freeze-threshold S]
+
+Modes:
+  (no flag)             Legacy: one line per state change, 20s poll (backward compat)
+  --live                Rich frame: timeline + log tail + progress + freeze detection (3s poll)
+
+Options:
+  --interval S          Override poll interval (default: 20s; 3s with --live)
+  --tail N              Last N decoded log lines per running step (default 3, --live only)
+  --freeze-threshold S  Seconds without new output to flag as frozen (default 60s, --live only)
+  -h, --help            This help
+EOF
+      return 0
+      ;;
+  esac
   _atlas_ci_load_token || return 1
-  local pipeline="${1:-}"
-  if [ -z "$pipeline" ]; then
-    echo "Usage: atlas ci watch <pipeline_number> [--interval S]" >&2
-    return 1
-  fi
+  local pipeline="$1"
   shift
-  local interval=20
+  local interval="" live=0 tail=3 freeze=60
   while [ $# -gt 0 ]; do
     case "$1" in
-      --interval) interval="${2:-20}"; shift 2 ;;
-      -h|--help) echo "Usage: atlas ci watch <N> [--interval S]"; return 0 ;;
+      --live) live=1; shift ;;
+      --interval) interval="${2:-}"; shift 2 ;;
+      --tail) tail="${2:-3}"; shift 2 ;;
+      --freeze-threshold) freeze="${2:-60}"; shift 2 ;;
+      -h|--help)
+        echo "(use 'atlas ci watch --help' without a pipeline arg)" >&2
+        return 0
+        ;;
       *) shift ;;
     esac
   done
+
+  if [ "$live" = 1 ]; then
+    [ -z "$interval" ] && interval=3
+    _atlas_ci_watch_live "$pipeline" "$interval" "$tail" "$freeze"
+    return $?
+  fi
+
+  # ─── legacy plain watch (preserved verbatim for backward compat) ─────
+  [ -z "$interval" ] && interval=20
   echo "⏳ Watching pipeline #${pipeline} (poll every ${interval}s — Ctrl+C to stop)"
   local last_state=""
   while true; do
@@ -460,6 +499,112 @@ PY
         return 0
         ;;
     esac
+    /bin/sleep "$interval"
+  done
+}
+
+# ─── atlas ci watch --live <N> — rich live monitor ────────────────────
+# Polls Woodpecker every <interval>s, fetches per-step logs for running
+# steps, tracks last_stdout_ts in a state file (for freeze detection),
+# delegates rendering to ci_watch_render.py.
+_atlas_ci_watch_live() {
+  local pipeline=$1 interval=$2 tail=$3 freeze=$4
+  local state_dir
+  state_dir=$(/bin/mktemp -d "/tmp/atlas-ci-watch-${pipeline}-XXXXXX")
+  local state_file="${state_dir}/state.json"
+  local meta_file="${state_dir}/meta.json"
+  local logs_dir="${state_dir}/logs"
+  /bin/mkdir -p "$logs_dir"
+  echo '{}' > "$state_file"
+
+  # shellcheck disable=SC2064  # state_dir must expand at trap-set time
+  trap "/bin/rm -rf -- '$state_dir'" EXIT INT TERM
+
+  local tty_flag="--plain"
+  [ -t 1 ] && tty_flag="--tty"
+
+  echo "⏳ Live watch pipeline #${pipeline} — interval ${interval}s, freeze ${freeze}s, Ctrl+C to stop"
+
+  while true; do
+    local meta
+    meta=$(/usr/bin/curl -sf --max-time 10 \
+      -H "Authorization: Bearer ${WP_TOKEN}" \
+      "${_ATLAS_CI_URL}/api/repos/${_ATLAS_CI_REPO_ID}/pipelines/${pipeline}" 2>/dev/null)
+    if [ -z "$meta" ]; then
+      /bin/sleep "$interval"
+      continue
+    fi
+    printf '%s' "$meta" > "$meta_file"
+
+    # Identify running step IDs
+    local running_ids
+    running_ids=$(/usr/bin/python3 - "$meta" <<'PY' 2>/dev/null
+import json, sys
+d = json.loads(sys.argv[1])
+ids = []
+for wf in (d.get('workflows') or []):
+    for s in (wf.get('children') or []):
+        if s.get('state') == 'running':
+            ids.append(str(s.get('id') or ''))
+print(' '.join(i for i in ids if i))
+PY
+)
+
+    # Fetch logs for each running step + refresh state file
+    local now
+    now=$(/bin/date +%s)
+    local sid
+    for sid in $running_ids; do
+      local log_resp
+      log_resp=$(/usr/bin/curl -sf --max-time 10 \
+        -H "Authorization: Bearer ${WP_TOKEN}" \
+        "${_ATLAS_CI_URL}/api/repos/${_ATLAS_CI_REPO_ID}/logs/${pipeline}/${sid}" 2>/dev/null)
+      [ -z "$log_resp" ] && continue
+      # SPA-HTML guard
+      if ! printf '%s' "$log_resp" | /usr/bin/head -c 1 | /bin/grep -q '^\['; then
+        continue
+      fi
+      printf '%s' "$log_resp" > "${logs_dir}/${sid}.json"
+      # Update state: refresh last_stdout_ts if log size changed
+      /usr/bin/python3 - "$state_file" "$sid" "$now" "${logs_dir}/${sid}.json" <<'PY' 2>/dev/null || true
+import json, os, sys
+state_path, sid, now, log_path = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
+try:
+    state = json.load(open(state_path))
+except Exception:
+    state = {}
+size = os.path.getsize(log_path) if os.path.exists(log_path) else 0
+meta = state.get('_meta', {})
+prev = meta.get(sid, {})
+if size != prev.get('size'):
+    state[sid] = now
+    meta[sid] = {'size': size}
+    state['_meta'] = meta
+    with open(state_path, 'w') as f:
+        json.dump(state, f)
+PY
+    done
+
+    # Render frame
+    /usr/bin/python3 "$_ATLAS_CI_RENDER_PY" "$meta_file" \
+      --logs-dir "$logs_dir" \
+      --state "$state_file" \
+      --tail "$tail" \
+      --freeze-threshold "$freeze" \
+      "$tty_flag"
+
+    # Check terminal pipeline state
+    local pstatus
+    pstatus=$(/usr/bin/python3 -c \
+      "import json; print(json.load(open('$meta_file')).get('status','?'))" 2>/dev/null || echo '?')
+    case "$pstatus" in
+      success|failure|error|killed)
+        echo ""
+        echo "  Terminal pipeline state: ${pstatus}"
+        return 0
+        ;;
+    esac
+
     /bin/sleep "$interval"
   done
 }
