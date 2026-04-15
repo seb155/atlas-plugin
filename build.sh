@@ -670,26 +670,12 @@ EOF
 }
 EOF
 
-  # v5.7.0+: LSP server declarations (Phase 7)
-  # Source: lsp/${name}.json → dist/atlas-${output_name}/.lsp.json (auto-discovered by CC)
-  if [ -f "lsp/${name}.json" ]; then
-    cp "lsp/${name}.json" "$output/.lsp.json"
-  fi
-
-  local skill_count agent_count lsp_count
+  local skill_count agent_count
   skill_count=$(find "$output/skills" -maxdepth 2 -name "SKILL.md" | wc -l)
   agent_count=$(find "$output/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
-  lsp_count=0
-  if [ -f "$output/.lsp.json" ]; then
-    lsp_count=$(python3 -c "import json; d=json.load(open('$output/.lsp.json')); print(len(d.get('lspServers', {})))" 2>/dev/null || echo 0)
-  fi
 
   echo "✅ Built atlas-${output_name} (modular) v${VERSION} → ${output}/"
-  if [ "$lsp_count" -gt 0 ]; then
-    echo "   ${skill_count} skills | ${agent_count} agents | ${lsp_count} LSP servers"
-  else
-    echo "   ${skill_count} skills | ${agent_count} agents"
-  fi
+  echo "   ${skill_count} skills | ${agent_count} agents"
 }
 
 # Main
