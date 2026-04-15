@@ -15,7 +15,7 @@ Manage the Woodpecker CI pipeline at `ci.axoiq.com`. Use the `forgejo-ci` subage
 - When debugging CI failures
 - Managing agent fleet capacity
 
-## Sub-commands (v5.14.1+ — comprehensive Woodpecker CLI)
+## Sub-commands (v5.18.0+ — comprehensive Woodpecker CLI)
 
 ### Pipelines — read
 
@@ -30,7 +30,8 @@ Manage the Woodpecker CI pipeline at `ci.axoiq.com`. Use the `forgejo-ci` subage
 | Command | Action |
 |---------|--------|
 | `atlas ci rerun <N>` | Retrigger pipeline N (returns new pipeline number) |
-| `atlas ci watch <N> [--interval S]` | Poll until terminal state (default 20s) |
+| `atlas ci watch <N> [--interval S]` | Legacy: one line per state change (default 20s) |
+| `atlas ci watch <N> --live [--tail N] [--freeze-threshold S]` | **Live TUI** — timeline + log tail + framework progress + freeze detection (3s poll). See `references/ci-watch-live.md`. |
 
 ### Logs
 

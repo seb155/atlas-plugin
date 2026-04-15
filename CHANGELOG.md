@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.18.0 (2026-04-15)
+
+### ✨ Features
+- feat(ci): atlas ci watch --live (#14)
+- feat(ci): atlas ci watch --live — bash extension P5
+- feat(ci): ci_watch_render.py P4 — TUI mode + ANSI colors
+- feat(ci): ci_watch_render.py P3 — freeze detector
+- feat(ci): ci_watch_render.py P2 — framework progress parsers + log loader
+- feat(ci): ci_watch_render.py P1 — skeleton + plain timeline
+
+### 🔧 Other Changes
+- docs(ci): P7 — ci-watch-live reference + SKILL.md update + bats fix
+- test(ci): bats P6 — 18 cases for atlas ci watch --live + 2 fixtures
+
+
+
 ## v5.17.1 (2026-04-15)
 
 ### 🐛 Bug Fixes
