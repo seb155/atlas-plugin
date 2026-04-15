@@ -206,8 +206,17 @@ if daimon_file and allowed(f'daimon/{os.path.basename(daimon_file)}'):
         print(f"[daimon-parse] warn: {e}", file=sys.stderr)
 
 # ─── Parse telos-profond.md if present ───────────────────────────────
-telos_file = os.path.join(daimon_dir, 'seb.telos-profond.md') if daimon_dir else None
-if telos_file and os.path.isfile(telos_file) and allowed('daimon/seb.telos-profond.md'):
+# Find any *.telos-profond.md file (not hardcoded to seb.*)
+telos_file = None
+telos_rel = None
+if os.path.isdir(daimon_dir):
+    for f in sorted(os.listdir(daimon_dir)):
+        if f.endswith('.telos-profond.md'):
+            telos_file = os.path.join(daimon_dir, f)
+            telos_rel = f'daimon/{f}'
+            break
+
+if telos_file and os.path.isfile(telos_file) and allowed(telos_rel):
     try:
         content = open(telos_file).read()
 
