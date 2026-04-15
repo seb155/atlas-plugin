@@ -1,0 +1,31 @@
+# ATLAS Plugin — GitHub Mirror Pipeline (Woodpecker)
+# Mirror Forgejo → GitHub on every main push
+# Requires WP secret: GH_MIRROR_TOKEN (set via Woodpecker UI or atlas ci secrets)
+#
+# Migrated from .forgejo/workflows/mirror-github.yaml (SP-CI consolidation 2026-04-15)
+# Complements publish.yml (tag-only mirror) for continuous sync
+
+when:
+  branch: main
+  event: push
+
+steps:
+  mirror-to-github:
+    image: alpine/git:latest
+    environment:
+      GH_MIRROR_TOKEN:
+        from_secret: gh_mirror_token
+    commands:
+      - |
+        if [ -z "$${GH_MIRROR_TOKEN:-}" ]; then
+          echo "⚠️ GH_MIRROR_TOKEN not set — skipping GitHub mirror"
+          exit 0
+        fi
+      # WP does shallow clone; need full history for mirror
+      - git fetch --unshallow 2>/dev/null || git fetch --all
+      - git fetch --tags
+      # Mirror all branches + tags to GitHub (force to keep in sync)
+      - |
+        git push --mirror \
+          "https://x-access-token:$${GH_MIRROR_TOKEN}@github.com/seb155/atlas-plugin.git"
+      - echo "✅ Mirrored to github.com/seb155/atlas-plugin"
