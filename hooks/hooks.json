@@ -210,6 +210,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-state-writer\"",
             "async": true,
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/pattern-signal-dispatcher\"",
+            "async": true,
+            "timeout": 5
           }
         ]
       },
@@ -321,6 +327,12 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" contextual-rules-injector",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" keyword-aware-calibration",
             "async": true,
             "timeout": 5
           },
