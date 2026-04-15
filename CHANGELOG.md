@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.20.1 (2026-04-15)
+
+### 🐛 Bug Fixes
+- fix(ci): remove broken publish.yml (legacy tiers gone)
+
+### 🔧 Other Changes
+- Merge pull request 'fix(ci): remove broken publish.yml' (#18) from fix/remove-broken-publish into main
+
+
+
 ## v5.20.0 (2026-04-15)
 
 ### ✨ Features
