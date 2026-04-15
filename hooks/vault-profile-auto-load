@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+# vault-profile-auto-load — Read DAIMON profile from user vault, compile calibration cache
+# Event: SessionStart (async, 10s timeout)
+# Reads:
+#   - vault_path from ~/.atlas/profile.json OR auto-detect in ATLAS_ROOT/vaults/
+#   - vault/kernel/config.json for daimon_auto_load opt-in flag
+#   - vault/sharing.json for per-file ACL
+#   - vault/daimon/*.md (DAIMON framework files)
+#   - vault/profile/user-profile.json
+# Writes: ~/.atlas/runtime/session-calibration.json (silent on error)
+# Audit:  ~/.claude/atlas-audit.log
+#
+# Related plan: .blueprint/plans/sp-daimon-calibration.md (SP-DAIMON P1 task 1.1)
+# Pattern source: hooks/external-capabilities (fingerprint cache + Python helper)
+
+set -euo pipefail
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+# shellcheck source=lib/python.sh
+. "$PLUGIN_ROOT/hooks/lib/python.sh"
+
+RUNTIME_DIR="$HOME/.atlas/runtime"
+CACHE_FILE="$RUNTIME_DIR/session-calibration.json"
+AUDIT_LOG="$HOME/.claude/atlas-audit.log"
+mkdir -p "$RUNTIME_DIR"
+
+# Guard: need python
+[ "$ATLAS_PYTHON" = "false" ] && exit 0
+
+# ─── Resolve vault path ──────────────────────────────────────────────
+VAULT_PATH=$(_atlas_py -c "
+import json, os
+path = os.path.expanduser('~/.atlas/profile.json')
+try:
+    print(json.load(open(path)).get('vault_path', ''))
+except: print('')
+" 2>/dev/null || echo "")
+
+if [ -z "$VAULT_PATH" ]; then
+  VAULT_PATH=$(find "${ATLAS_ROOT:-$HOME/workspace_atlas}/vaults" \
+    -maxdepth 1 -type d ! -name vaults 2>/dev/null | head -1 || echo "")
+fi
+
+[ -z "$VAULT_PATH" ] && exit 0
+[ -d "$VAULT_PATH" ] || exit 0
+
+# ─── Check opt-in flag ───────────────────────────────────────────────
+CONFIG_FILE="$VAULT_PATH/kernel/config.json"
+[ -f "$CONFIG_FILE" ] || exit 0
+
+OPT_IN=$(_atlas_py -c "
+import json
+try:
+    print(json.load(open('$CONFIG_FILE')).get('daimon_auto_load', False))
+except: print('False')
+" 2>/dev/null || echo "False")
+
+[ "$OPT_IN" != "True" ] && exit 0
+
+# ─── Fingerprint cache (1h TTL) ──────────────────────────────────────
+# Fingerprint: mtime sum of all relevant vault files
+FP_FILES=$(find \
+  "$VAULT_PATH/daimon" \
+  "$VAULT_PATH/profile" \
+  "$VAULT_PATH/kernel" \
+  -maxdepth 2 \( -name "*.md" -o -name "*.json" \) 2>/dev/null | sort)
+
+if [ -n "$FP_FILES" ]; then
+  # shellcheck disable=SC2086
+  FINGERPRINT=$(stat -c '%Y' $FP_FILES 2>/dev/null | md5sum 2>/dev/null | cut -d' ' -f1 || echo "none")
+else
+  FINGERPRINT="empty"
+fi
+
+# Fast path: cache hit + fresh
+if [ -f "$CACHE_FILE" ]; then
+  CACHED_FP=$(_atlas_py -c "
+import json
+try: print(json.load(open('$CACHE_FILE')).get('fingerprint', ''))
+except: print('')
+" 2>/dev/null || echo "")
+
+  if [ "$CACHED_FP" = "$FINGERPRINT" ]; then
+    CACHE_AGE=$(( $(date +%s) - $(stat -c '%Y' "$CACHE_FILE" 2>/dev/null || echo 0) ))
+    if [ "$CACHE_AGE" -lt 3600 ]; then
+      echo "[$(date -Iseconds)] vault-profile-auto-load: cache hit (age ${CACHE_AGE}s)" \
+        >> "$AUDIT_LOG" 2>/dev/null || true
+      exit 0
+    fi
+  fi
+fi
+
+# ─── Full compilation (Python for structured parsing) ────────────────
+# Export env vars for Python heredoc
+export VAULT_PATH FINGERPRINT CACHE_FILE
+
+_atlas_py - <<'PYEOF'
+import json, os, re, sys
+from datetime import datetime, timezone
+
+vault = os.environ.get('VAULT_PATH', '')
+fingerprint = os.environ.get('FINGERPRINT', 'none')
+cache_file = os.environ.get('CACHE_FILE', '')
+
+# Load sharing.json (ACL)
+sharing = {}
+try:
+    with open(os.path.join(vault, 'sharing.json')) as f:
+        sharing = json.load(f)
+except Exception:
+    pass
+
+# Trust level (env override or default "high" for same-host)
+trust_level = os.environ.get('ATLAS_TRUST_LEVEL', 'high')
+
+def allowed(rel_path, field=None):
+    """Check if file (and optional field) is auto-load eligible."""
+    entry = sharing.get(rel_path, {})
+    if not entry.get('auto_load', False):
+        return False
+    allowed_trust = entry.get('trust_levels', ['high'])
+    if trust_level not in allowed_trust:
+        return False
+    if field:
+        fields = entry.get('fields', ['*'])
+        return '*' in fields or field in fields
+    return True
+
+# Initialize calibration structure
+calibration = {
+    "schema_version": "1.0",
+    "computed_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+    "fingerprint": fingerprint,
+    "vault_path": vault,
+    "trust_level": trust_level,
+    "user": {},
+    "calibration_rules_count": 0,
+    "calibration_rules_ref": "vault/daimon/calibration-rules.md",
+    "risk_signals": {},
+    "experiential_context": {},
+    "active_memory_refs": []
+}
+
+# ─── Parse daimon/*.daimon.md ────────────────────────────────────────
+# Find first *.daimon.md file
+daimon_dir = os.path.join(vault, 'daimon')
+daimon_file = None
+if os.path.isdir(daimon_dir):
+    for f in sorted(os.listdir(daimon_dir)):
+        if f.endswith('.daimon.md'):
+            daimon_file = os.path.join(daimon_dir, f)
+            break
+
+if daimon_file and allowed(f'daimon/{os.path.basename(daimon_file)}'):
+    try:
+        content = open(daimon_file).read()
+
+        # Extract Big Five scores (pattern: | **X** (Name) | 3.33 | ...)
+        big_five = {}
+        for trait, letter in [('Openness', 'O'), ('Conscientiousness', 'C'),
+                              ('Extraversion', 'E'), ('Agreeableness', 'A'),
+                              ('Neuroticism', 'N')]:
+            m = re.search(rf'\|\s*\*\*{letter}\*\*.*?\|\s*([\d.]+)\s*\|', content)
+            if m:
+                big_five[letter] = float(m.group(1))
+        if big_five:
+            calibration['user']['big_five'] = big_five
+
+        # Key facets (Intellect, Achievement, Self-Consciousness, Vulnerability)
+        facets = {}
+        for name, key in [('Intellect', 'intellect'),
+                          ('Recherche de réussite', 'achievement_striving'),
+                          ('Self-Consciousness', 'self_consciousness'),
+                          ('Vulnérabilité', 'vulnerability')]:
+            m = re.search(rf'\|\s*\*\*{re.escape(name)}\*\*\s*\|\s*\*\*([\d.]+)\*\*', content)
+            if m:
+                facets[key] = float(m.group(1))
+        if facets:
+            calibration['user'].setdefault('big_five', {})['key_facets'] = facets
+
+        # Enneagram type (pattern: **Type principal** | **1 - Le X** (69%))
+        m = re.search(r'\*\*Type principal\*\*\s*\|\s*\*\*(\d+)[^*]*\*\*\s*\((\d+)%\)', content)
+        if m:
+            calibration['user']['enneagram'] = {
+                'type': int(m.group(1)),
+                'score_primary': int(m.group(2)) / 100.0
+            }
+        m = re.search(r'\*\*Aile\*\*\s*\|\s*\*\*(\w+)\*\*', content)
+        if m and 'enneagram' in calibration['user']:
+            calibration['user']['enneagram']['wing'] = m.group(1)
+
+        # Essence / persona_type
+        m = re.search(r'\*\*Essence:\*\*\s*"([^"]+)"', content)
+        if m:
+            calibration['user']['essence'] = m.group(1)
+
+        # Core values (top 5 from "### Core Values" table)
+        values = []
+        values_section = re.search(r'### Core Values.*?\n(.*?)(?=\n###|\n##|\Z)', content, re.DOTALL)
+        if values_section:
+            for m in re.finditer(r'\|\s*\d+\s*\|\s*\*\*([^\*]+)\*\*', values_section.group(1)):
+                values.append(m.group(1).strip())
+        if values:
+            calibration['user']['core_values'] = values[:7]
+    except Exception as e:
+        print(f"[daimon-parse] warn: {e}", file=sys.stderr)
+
+# ─── Parse telos-profond.md if present ───────────────────────────────
+telos_file = os.path.join(daimon_dir, 'seb.telos-profond.md') if daimon_dir else None
+if telos_file and os.path.isfile(telos_file) and allowed('daimon/seb.telos-profond.md'):
+    try:
+        content = open(telos_file).read()
+
+        # Extract cognitive_pattern: "HID 5-layers", "HID_5_layers", or "(5 couches|layers)"
+        m = re.search(r'HID[\s_]+(\d+)[-_\s]layers?', content, re.IGNORECASE)
+        if not m:
+            # Fallback: "PATTERN (N couches|layers" style
+            m = re.search(r'PATTERN\s*\(\s*(\d+)\s+(?:couches|layers)', content, re.IGNORECASE)
+        if m:
+            calibration['user']['cognitive_pattern'] = f"HID_{m.group(1)}_layers"
+
+        # Extract deep_telos (key quote — multi-line block quote)
+        m = re.search(r'>\s*\*\*(Bâtir[^*]+?)\*\*', content, re.DOTALL)
+        if m:
+            telos = re.sub(r'\s+', ' ', m.group(1))
+            telos = re.sub(r'>\s*', '', telos)  # strip stray blockquote markers
+            calibration['user']['deep_telos'] = telos.strip()
+
+        # Extract risk signals from "ZONES À RISQUE" table
+        risk_section = re.search(r'## ZONES À RISQUE.*?\n(.*?)(?=\n##|\Z)', content, re.DOTALL)
+        if risk_section:
+            for m in re.finditer(r'\|\s*([^\|]+?)\s*\|\s*([^\|]+?)\s*\|\s*([^\|]+?)\s*\|', risk_section.group(1)):
+                risk_name = m.group(1).strip()
+                if risk_name.startswith('-') or 'Risque' in risk_name or '---' in risk_name:
+                    continue
+                key = re.sub(r'[^a-z]+', '_', risk_name.lower()).strip('_')[:40]
+                if key and not key.startswith('risque'):
+                    calibration['risk_signals'][key] = {
+                        'indicator': m.group(2).strip(),
+                        'action': m.group(3).strip()
+                    }
+    except Exception as e:
+        print(f"[telos-parse] warn: {e}", file=sys.stderr)
+
+# ─── Derive persona_type from essence or enneagram ───────────────────
+enn = calibration['user'].get('enneagram', {})
+if enn.get('wing'):
+    calibration['user']['persona_type'] = f"{enn['wing']}_derived"
+
+# ─── Read user-profile.json (short_name + user_id) ────────────────────
+profile_file = os.path.join(vault, 'profile/user-profile.json')
+if os.path.isfile(profile_file) and allowed('profile/user-profile.json'):
+    try:
+        p = json.load(open(profile_file))
+        calibration['user']['user_id'] = p.get('userId', '')
+    except Exception:
+        pass
+
+# Name from vault folder name as fallback
+if not calibration['user'].get('user_id'):
+    calibration['user']['user_id'] = os.path.basename(vault).lower()
+
+# Derive short_name + name (best-effort)
+user_id = calibration['user']['user_id']
+if user_id == 'sebg':
+    calibration['user']['name'] = 'Sebastien Gagnon'
+    calibration['user']['short_name'] = 'Seb'
+else:
+    calibration['user']['name'] = user_id
+    calibration['user']['short_name'] = user_id
+
+# ─── Count calibration rules (if file exists) ────────────────────────
+rules_file = os.path.join(daimon_dir, 'calibration-rules.md') if daimon_dir else None
+if rules_file and os.path.isfile(rules_file):
+    try:
+        rules_content = open(rules_file).read()
+        # Count headers "### " that look like rules
+        calibration['calibration_rules_count'] = len(re.findall(r'^###\s', rules_content, re.MULTILINE))
+    except Exception:
+        pass
+
+# ─── Write cache ─────────────────────────────────────────────────────
+os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+with open(cache_file, 'w') as f:
+    json.dump(calibration, f, indent=2, ensure_ascii=False)
+
+# Secure permissions (user-only read)
+try:
+    os.chmod(cache_file, 0o600)
+except Exception:
+    pass
+
+print(f"[daimon-autoload] wrote calibration: user={calibration['user'].get('short_name','?')} "
+      f"rules={calibration['calibration_rules_count']} "
+      f"risks={len(calibration['risk_signals'])}",
+      file=sys.stderr)
+PYEOF
+
+# ─── Audit log ───────────────────────────────────────────────────────
+echo "[$(date -Iseconds)] vault-profile-auto-load: user=$(basename "$VAULT_PATH") fingerprint=$FINGERPRINT" \
+  >> "$AUDIT_LOG" 2>/dev/null || true
+
+exit 0
