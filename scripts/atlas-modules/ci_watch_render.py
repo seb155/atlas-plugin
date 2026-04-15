@@ -136,6 +136,35 @@ def detect_progress(step_name, log_lines):
     return None
 
 
+# ── Freeze detection ─────────────────────────────────────────────────
+def load_state(state_path):
+    """Load bash-managed state file: {str(step_id): last_stdout_ts_unix}."""
+    if not state_path:
+        return {}
+    p = Path(state_path)
+    if not p.exists():
+        return {}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def detect_freeze(state, step_id, threshold, now):
+    """Return warning string if step_id has been silent > threshold seconds, else None."""
+    last_ts = state.get(str(step_id))
+    if last_ts is None:
+        return None
+    try:
+        delta = now - float(last_ts)
+    except (ValueError, TypeError):
+        return None
+    if delta > threshold:
+        return f"⚠ frozen — no output for {fmt_duration(delta)} (threshold {threshold}s)"
+    return None
+
+
 def fmt_duration(sec):
     if sec is None or sec <= 0:
         return "—"
@@ -190,14 +219,17 @@ def step_duration(step, now):
     return 0
 
 
-def render_plain(parsed, logs_dir=None, tail=3, now=None):
+def render_plain(parsed, logs_dir=None, state_path=None, tail=3, freeze_threshold=60, now=None):
     """Render plain text timeline (no ANSI escapes).
 
-    logs_dir: optional dir with per-step decoded log JSON (for progress + tail under running steps).
-    tail: number of last decoded log lines to print under each running step (0 disables tail).
+    logs_dir: optional dir with per-step log JSON for progress + tail under running steps.
+    state_path: optional bash-managed state JSON for freeze detection.
+    tail: number of last decoded log lines per running step (0 disables tail).
+    freeze_threshold: seconds without stdout to flag a step as frozen.
     """
     if now is None:
         now = time.time()
+    state = load_state(state_path)
     out = []
     p = parsed["pipeline"]
     out.append(
@@ -213,14 +245,18 @@ def render_plain(parsed, logs_dir=None, tail=3, now=None):
             out.append(
                 f"    {sicon} {s['name']:<28} {s['state']:<10} {fmt_duration(s_dur)}"
             )
-            if s["state"] == "running" and logs_dir:
-                log_lines = load_step_logs(logs_dir, s["step_id"])
-                progress = detect_progress(s["name"], log_lines)
-                if progress:
-                    out.append(f"      Progress: {progress}")
-                if log_lines and tail > 0:
-                    for line in log_lines[-tail:]:
-                        out.append(f"      └─ {line[:88]}")
+            if s["state"] == "running":
+                if logs_dir:
+                    log_lines = load_step_logs(logs_dir, s["step_id"])
+                    progress = detect_progress(s["name"], log_lines)
+                    if progress:
+                        out.append(f"      Progress: {progress}")
+                    if log_lines and tail > 0:
+                        for line in log_lines[-tail:]:
+                            out.append(f"      └─ {line[:88]}")
+                freeze_warn = detect_freeze(state, s["step_id"], freeze_threshold, now)
+                if freeze_warn:
+                    out.append(f"      {freeze_warn}")
     return "\n".join(out)
 
 
@@ -248,7 +284,13 @@ def main(argv=None):
         return 2
 
     parsed = parse_meta(meta_json)
-    print(render_plain(parsed, logs_dir=args.logs_dir, tail=args.tail))
+    print(render_plain(
+        parsed,
+        logs_dir=args.logs_dir,
+        state_path=args.state,
+        tail=args.tail,
+        freeze_threshold=args.freeze_threshold,
+    ))
     return 0
 
 
