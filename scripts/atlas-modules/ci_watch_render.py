@@ -9,7 +9,9 @@ Bash drives polling + curl. This script is a one-shot frame renderer.
 """
 
 import argparse
+import base64
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -24,6 +26,114 @@ STATE_ICON = {
     "skipped": "○",
     "started": "▶",
 }
+
+
+def load_step_logs(logs_dir, step_id, max_lines=200):
+    """Decode Woodpecker log JSON for a step. Returns list of text lines."""
+    if not logs_dir:
+        return []
+    p = Path(logs_dir) / f"{step_id}.json"
+    if not p.exists():
+        return []
+    try:
+        entries = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if not isinstance(entries, list) or not entries:
+        return []
+    entries.sort(key=lambda x: x.get("line", 0))
+    out = []
+    for e in entries[-max_lines:]:
+        data = e.get("data")
+        if not data:
+            continue
+        try:
+            out.append(base64.b64decode(data).decode("utf-8", errors="replace").rstrip("\n"))
+        except Exception:
+            continue
+    return out
+
+
+# ── Framework-aware progress parsers ─────────────────────────────────
+_PYTEST_PASSED = re.compile(r"(\d+)\s+passed", re.IGNORECASE)
+_PYTEST_SKIPPED = re.compile(r"(\d+)\s+skipped", re.IGNORECASE)
+_PYTEST_FAILED = re.compile(r"(\d+)\s+failed", re.IGNORECASE)
+_PYTEST_XDIST = re.compile(r"\[\s*(\d+)%\s*\]")
+_VITEST_END = re.compile(r"Tests\s+(?:(\d+)\s+failed\s*\|\s*)?(\d+)\s+passed", re.IGNORECASE)
+_BUN_LINE = re.compile(r"^\s*(\d+)\s+(pass|skip|fail)\s*$", re.IGNORECASE)
+_PLAYWRIGHT_END = re.compile(r"(?:(\d+)\s+failed.*?)?(\d+)\s+passed\s*\(", re.IGNORECASE)
+
+
+def parse_pytest(lines):
+    for line in reversed(lines[-80:]):
+        m_pass = _PYTEST_PASSED.search(line)
+        if m_pass:
+            m_skip = _PYTEST_SKIPPED.search(line)
+            m_fail = _PYTEST_FAILED.search(line)
+            skip = m_skip.group(1) if m_skip else "0"
+            fail = m_fail.group(1) if m_fail else "0"
+            return f"pytest {m_pass.group(1)} pass, {skip} skip, {fail} fail"
+    for line in reversed(lines[-80:]):
+        m = _PYTEST_XDIST.search(line)
+        if m:
+            return f"pytest {m.group(1)}%"
+    return None
+
+
+def parse_vitest(lines):
+    for line in reversed(lines[-80:]):
+        m = _VITEST_END.search(line)
+        if m:
+            return f"vitest {m.group(2)} pass, {m.group(1) or '0'} fail"
+    return None
+
+
+def parse_bun(lines):
+    pass_n = skip_n = fail_n = None
+    for line in lines[-30:]:
+        m = _BUN_LINE.match(line)
+        if m:
+            kind = m.group(2).lower()
+            n = int(m.group(1))
+            if kind == "pass":
+                pass_n = n
+            elif kind == "skip":
+                skip_n = n
+            elif kind == "fail":
+                fail_n = n
+    if pass_n is not None or fail_n is not None:
+        return f"bun {pass_n or 0} pass, {skip_n or 0} skip, {fail_n or 0} fail"
+    return None
+
+
+def parse_playwright(lines):
+    for line in reversed(lines[-80:]):
+        m = _PLAYWRIGHT_END.search(line)
+        if m:
+            return f"playwright {m.group(2)} pass, {m.group(1) or '0'} fail"
+    return None
+
+
+_FRAMEWORK_HINTS = (
+    ("pytest", parse_pytest, ("pytest", "tests/unit", "test_", "conftest")),
+    ("vitest", parse_vitest, ("vitest", "vite test")),
+    ("bun", parse_bun, ("bun test", "bun:test")),
+    ("playwright", parse_playwright, ("playwright", "e2e/", ".spec.ts")),
+)
+
+
+def detect_progress(step_name, log_lines):
+    """Detect framework from step name + recent log content, return progress string or None."""
+    if not log_lines:
+        return None
+    name = (step_name or "").lower()
+    text = "\n".join(log_lines[-50:]).lower()
+    for _fw, parser, hints in _FRAMEWORK_HINTS:
+        if any(h in name for h in hints) or any(h in text for h in hints):
+            result = parser(log_lines)
+            if result:
+                return result
+    return None
 
 
 def fmt_duration(sec):
@@ -80,8 +190,12 @@ def step_duration(step, now):
     return 0
 
 
-def render_plain(parsed, now=None):
-    """Render plain text timeline (no ANSI escapes)."""
+def render_plain(parsed, logs_dir=None, tail=3, now=None):
+    """Render plain text timeline (no ANSI escapes).
+
+    logs_dir: optional dir with per-step decoded log JSON (for progress + tail under running steps).
+    tail: number of last decoded log lines to print under each running step (0 disables tail).
+    """
     if now is None:
         now = time.time()
     out = []
@@ -99,6 +213,14 @@ def render_plain(parsed, now=None):
             out.append(
                 f"    {sicon} {s['name']:<28} {s['state']:<10} {fmt_duration(s_dur)}"
             )
+            if s["state"] == "running" and logs_dir:
+                log_lines = load_step_logs(logs_dir, s["step_id"])
+                progress = detect_progress(s["name"], log_lines)
+                if progress:
+                    out.append(f"      Progress: {progress}")
+                if log_lines and tail > 0:
+                    for line in log_lines[-tail:]:
+                        out.append(f"      └─ {line[:88]}")
     return "\n".join(out)
 
 
@@ -126,7 +248,7 @@ def main(argv=None):
         return 2
 
     parsed = parse_meta(meta_json)
-    print(render_plain(parsed))
+    print(render_plain(parsed, logs_dir=args.logs_dir, tail=args.tail))
     return 0
 
 
