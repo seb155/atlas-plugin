@@ -1,0 +1,109 @@
+# ATLAS Plugin — Publish Pipeline (Woodpecker)
+# Fires on tag v* push: build tarballs + Forgejo packages + release + GitHub mirror
+# Requires WP secrets: forgejo_token, gh_mirror_token
+#
+# Migrated from .forgejo/workflows/publish.yaml (SP-CI consolidation 2026-04-15)
+
+when:
+  event: tag
+  ref: refs/tags/v*
+
+steps:
+  build-all:
+    image: python:3.13-slim
+    commands:
+      - apt-get update -qq && apt-get install -y -qq bash git tar curl > /dev/null 2>&1
+      - ./build.sh all
+      - ./build.sh domains
+
+  publish-packages:
+    image: alpine:latest
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
+    commands:
+      - apk add --no-cache bash curl tar
+      - |
+        VERSION=$$(cat VERSION | tr -d '[:space:]')
+        FORGEJO_URL="http://192.168.10.75:3000"
+        OWNER="axoiq"
+
+        # Publish legacy tiers (admin/dev/user)
+        for tier in admin dev user; do
+          pkg="atlas-$${tier}"
+          tarball="$${pkg}-$${VERSION}.tar.gz"
+          echo "Publishing $${pkg} v$${VERSION}..."
+          tar -czf "$${tarball}" -C dist "$${pkg}"
+          curl --fail-with-body -sS -X PUT \
+            -H "Authorization: token $${FORGEJO_TOKEN}" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary "@$${tarball}" \
+            "$${FORGEJO_URL}/api/packages/$${OWNER}/generic/$${pkg}/$${VERSION}/$${tarball}"
+        done
+
+        # Publish domain plugins (SP-ECO v4)
+        for domain in core dev frontend infra enterprise experiential; do
+          pkg="atlas-$${domain}"
+          tarball="$${pkg}-$${VERSION}.tar.gz"
+          echo "Publishing $${pkg} v$${VERSION}..."
+          tar -czf "$${tarball}" -C dist "$${pkg}"
+          curl --fail-with-body -sS -X PUT \
+            -H "Authorization: token $${FORGEJO_TOKEN}" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary "@$${tarball}" \
+            "$${FORGEJO_URL}/api/packages/$${OWNER}/generic/$${pkg}/$${VERSION}/$${tarball}"
+        done
+
+        echo "✅ 3 legacy tiers + 6 domain plugins published"
+
+  create-release:
+    image: alpine:latest
+    environment:
+      FORGEJO_TOKEN:
+        from_secret: forgejo_token
+    commands:
+      - apk add --no-cache bash curl git
+      - git fetch --tags 2>/dev/null || true
+      - |
+        VERSION=$$(cat VERSION | tr -d '[:space:]')
+        TAG="$${CI_COMMIT_REF#refs/tags/}"
+        REPO="$${CI_REPO}"
+        FORGEJO_URL="http://192.168.10.75:3000"
+
+        # Release notes from previous tag
+        PREV_TAG=$$(git tag --sort=-version:refname | grep '^v' | sed -n '2p' || echo "")
+        if [ -n "$$PREV_TAG" ]; then
+          NOTES=$$(git log --pretty=format:"- %s" "$${PREV_TAG}..HEAD" | head -20)
+        else
+          NOTES="Initial release"
+        fi
+
+        SKILLS=$$(find dist/atlas-admin/skills -name "SKILL.md" 2>/dev/null | wc -l)
+        DOMAINS=$$(ls -d dist/atlas-core dist/atlas-dev dist/atlas-frontend dist/atlas-infra dist/atlas-enterprise dist/atlas-experiential 2>/dev/null | wc -l)
+
+        BODY="## ATLAS v$${VERSION}\n\n$${SKILLS} skills (monolith) | $${DOMAINS} domain plugins\n\n### Changes\n$${NOTES}"
+
+        curl --fail-with-body -sS -X POST \
+          -H "Authorization: token $${FORGEJO_TOKEN}" \
+          -H "Content-Type: application/json" \
+          "$${FORGEJO_URL}/api/v1/repos/$${REPO}/releases" \
+          -d "{\"tag_name\":\"$${TAG}\",\"name\":\"v$${VERSION}\",\"body\":\"$${BODY}\",\"draft\":false,\"prerelease\":false}"
+        echo "✅ Release v$${VERSION} created"
+
+  mirror-to-github:
+    image: alpine/git:latest
+    environment:
+      GH_MIRROR_TOKEN:
+        from_secret: gh_mirror_token
+    commands:
+      - |
+        if [ -z "$${GH_MIRROR_TOKEN:-}" ]; then
+          echo "⚠️ GH_MIRROR_TOKEN not set — skipping GitHub mirror"
+          exit 0
+        fi
+      - git fetch --unshallow 2>/dev/null || git fetch --all
+      - git fetch --tags
+      - |
+        git push --mirror \
+          "https://x-access-token:$${GH_MIRROR_TOKEN}@github.com/seb155/atlas-plugin.git"
+      - echo "✅ Mirrored to github.com/seb155/atlas-plugin (with tag $${CI_COMMIT_REF})"
