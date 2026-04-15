@@ -27,6 +27,38 @@ STATE_ICON = {
     "started": "▶",
 }
 
+# ── ANSI escapes for TUI mode ────────────────────────────────────────
+ANSI_CLEAR = "\033[H\033[2J"
+ANSI_RESET = "\033[0m"
+_ANSI_GREEN = "\033[32m"
+_ANSI_RED = "\033[31m"
+_ANSI_YELLOW = "\033[33m"
+_ANSI_GREY = "\033[90m"
+_ANSI_BLUE = "\033[34m"
+_ANSI_BOLD = "\033[1m"
+
+STATE_COLOR = {
+    "success": _ANSI_GREEN,
+    "failure": _ANSI_RED,
+    "error":   _ANSI_RED,
+    "killed":  _ANSI_RED,
+    "running": _ANSI_YELLOW,
+    "started": _ANSI_YELLOW,
+    "pending": _ANSI_GREY,
+    "skipped": _ANSI_GREY,
+}
+
+
+def color_state(state, use_color, width=10):
+    """Pad state to width; wrap with ANSI color when use_color is True."""
+    padded = f"{state:<{width}}"
+    if not use_color:
+        return padded
+    color = STATE_COLOR.get(state, "")
+    if not color:
+        return padded
+    return f"{color}{padded}{ANSI_RESET}"
+
 
 def load_step_logs(logs_dir, step_id, max_lines=200):
     """Decode Woodpecker log JSON for a step. Returns list of text lines."""
@@ -219,13 +251,15 @@ def step_duration(step, now):
     return 0
 
 
-def render_plain(parsed, logs_dir=None, state_path=None, tail=3, freeze_threshold=60, now=None):
-    """Render plain text timeline (no ANSI escapes).
+def render_plain(parsed, logs_dir=None, state_path=None, tail=3,
+                 freeze_threshold=60, use_color=False, now=None):
+    """Render pipeline timeline as text. ANSI colors when use_color is True.
 
     logs_dir: optional dir with per-step log JSON for progress + tail under running steps.
     state_path: optional bash-managed state JSON for freeze detection.
     tail: number of last decoded log lines per running step (0 disables tail).
     freeze_threshold: seconds without stdout to flag a step as frozen.
+    use_color: emit ANSI color codes around state strings.
     """
     if now is None:
         now = time.time()
@@ -238,12 +272,14 @@ def render_plain(parsed, logs_dir=None, state_path=None, tail=3, freeze_threshol
     for wf in parsed["workflows"]:
         wicon = STATE_ICON.get(wf["state"], "?")
         wf_dur = step_duration(wf, now) if isinstance(wf, dict) else 0
-        out.append(f"  {wicon} {wf['name']:<24} {wf['state']:<10} {fmt_duration(wf_dur)}")
+        out.append(
+            f"  {wicon} {wf['name']:<24} {color_state(wf['state'], use_color)} {fmt_duration(wf_dur)}"
+        )
         for s in wf["steps"]:
             sicon = STATE_ICON.get(s["state"], "?")
             s_dur = step_duration(s, now)
             out.append(
-                f"    {sicon} {s['name']:<28} {s['state']:<10} {fmt_duration(s_dur)}"
+                f"    {sicon} {s['name']:<28} {color_state(s['state'], use_color)} {fmt_duration(s_dur)}"
             )
             if s["state"] == "running":
                 if logs_dir:
@@ -283,13 +319,28 @@ def main(argv=None):
         print(f"render error: cannot read meta: {e}", file=sys.stderr)
         return 2
 
+    # Resolve TUI vs plain mode (explicit flags > auto-detect)
+    if args.plain:
+        use_color = False
+        clear_screen = False
+    elif args.tty:
+        use_color = True
+        clear_screen = True
+    else:
+        is_tty = sys.stdout.isatty()
+        use_color = is_tty
+        clear_screen = is_tty
+
     parsed = parse_meta(meta_json)
+    if clear_screen:
+        sys.stdout.write(ANSI_CLEAR)
     print(render_plain(
         parsed,
         logs_dir=args.logs_dir,
         state_path=args.state,
         tail=args.tail,
         freeze_threshold=args.freeze_threshold,
+        use_color=use_color,
     ))
     return 0
 
