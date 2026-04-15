@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.17.0 (2026-04-15)
+
+### ✨ Features
+- feat(cli,ci): atlas plugin status + archaeology-escape + auto-release dist rebuild
+
+### 🔧 Other Changes
+- docs(test-orchestrator): add sota-testing-patterns + 5-level maturity model
+- docs(devops-deploy): add sota-deploy-patterns reference + 5-defect audit
+
+
+
 ## v5.16.0 (2026-04-14)
 
 ### ✨ Features
