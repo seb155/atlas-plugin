@@ -1,5 +1,23 @@
 # Changelog
 
+## v5.19.0 (2026-04-15)
+
+### ✨ Features
+- feat(daimon): SP-DAIMON P1 Foundation (v5.19.0) (#15)
+- feat(daimon): sp-daimon p1 foundation — vault auto-load + context injection
+
+### 🐛 Bug Fixes
+- fix(daimon): bump marketplace.json versions to 5.19.0
+- fix(daimon): bump .claude-plugin/plugin.json to 5.19.0
+- fix(daimon): move README out of hooks/ (test_hook_consistency)
+- fix(daimon): declare p1 hooks in profiles/core.yaml
+
+### 🔧 Other Changes
+- chore(release): bump version to 5.19.0
+- test(daimon): bats tests + fixtures + docs for sp-daimon p1
+
+
+
 ## v5.18.0 (2026-04-15)
 
 ### ✨ Features

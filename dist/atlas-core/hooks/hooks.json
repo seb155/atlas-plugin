@@ -21,6 +21,18 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/context-threshold-injector\"",
             "async": false,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/vault-profile-auto-load\"",
+            "async": false,
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/daimon-context-injector\"",
+            "async": false,
+            "timeout": 3
           }
         ]
       },
