@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# daimon-context-injector — Inject DAIMON calibration into Claude's system prompt
+# Event: SessionStart (sync, 3s timeout)
+# Reads: ~/.atlas/runtime/session-calibration.json (written by vault-profile-auto-load)
+# Output: Structured context block to stdout (CC uses as system prompt prefix)
+#
+# Related plan: .blueprint/plans/sp-daimon-calibration.md (SP-DAIMON P1 task 1.2)
+# Runs AFTER vault-profile-auto-load in hooks.json order.
+
+set -euo pipefail
+
+CACHE_FILE="$HOME/.atlas/runtime/session-calibration.json"
+[ -f "$CACHE_FILE" ] || exit 0
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+# shellcheck source=lib/python.sh
+. "$PLUGIN_ROOT/hooks/lib/python.sh"
+[ "$ATLAS_PYTHON" = "false" ] && exit 0
+
+export CACHE_FILE
+
+_atlas_py - <<'PYEOF'
+import json, os, sys
+
+try:
+    cache = json.load(open(os.environ['CACHE_FILE']))
+except Exception as e:
+    print(f"[daimon-inject] skip: {e}", file=sys.stderr)
+    sys.exit(0)
+
+user = cache.get('user', {})
+short = user.get('short_name', '?')
+name = user.get('name', short)
+persona = user.get('persona_type', 'n/a')
+cog = user.get('cognitive_pattern', 'n/a')
+telos = user.get('deep_telos', '')
+bf = user.get('big_five', {})
+enn = user.get('enneagram', {})
+vals = user.get('core_values', [])
+signals = cache.get('risk_signals', {})
+exp = cache.get('experiential_context', {})
+rules_count = cache.get('calibration_rules_count', 0)
+rules_ref = cache.get('calibration_rules_ref', 'vault/daimon/calibration-rules.md')
+ts = cache.get('computed_at', '')
+trust = cache.get('trust_level', 'standard')
+
+# Build Big Five summary line
+bf_line = ""
+if bf:
+    scores = [f"{k}={v}" for k, v in bf.items() if k in ('O','C','E','A','N')]
+    facets = bf.get('key_facets', {})
+    facets_str = ", ".join(f"{k.replace('_',' ')}={v}" for k, v in facets.items()) if facets else ""
+    bf_line = f"  Big Five: {' '.join(scores)}"
+    if facets_str:
+        bf_line += f"  (key facets: {facets_str})"
+
+enn_line = ""
+if enn:
+    wing = enn.get('wing', f"type{enn.get('type','?')}")
+    score = enn.get('score_primary', 0)
+    enn_line = f"  Enneagram: {wing} (primary {score:.0%})"
+
+block = f"""
+<daimon-calibration loaded="{ts}" trust="{trust}">
+User: {name} ("{short}")
+Persona: {persona}
+Cognitive pattern: {cog}"""
+
+if telos:
+    block += f'\nDeep telos: "{telos}"'
+
+if bf_line:
+    block += f"\n{bf_line}"
+if enn_line:
+    block += f"\n{enn_line}"
+
+if vals:
+    block += f"\nCore values (top 5): {', '.join(vals[:5])}"
+
+block += f"\n\nCalibration rules: {rules_count} active (see {rules_ref})"
+
+if signals:
+    block += "\nWatch signals:"
+    for k, v in signals.items():
+        indicator = v.get('indicator', '')[:80] if isinstance(v, dict) else str(v)[:80]
+        block += f"\n  - {k}: {indicator}"
+
+if exp:
+    last = exp.get('last_episode', '')
+    energy = exp.get('last_energy', '')
+    plans = exp.get('active_plans', [])
+    if last or plans:
+        block += "\n"
+        if last:
+            block += f"\nLast episode: {last}"
+            if energy:
+                block += f" (energy {energy})"
+        if plans:
+            block += f"\nActive plans: {', '.join(plans[:3])}"
+
+block += "\n</daimon-calibration>"
+
+print(block)
+PYEOF
