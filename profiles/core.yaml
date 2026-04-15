@@ -59,6 +59,9 @@ hooks:
 - subagent-track-stop         # SubagentStop (SP-AGENT-VIS Layer 3 cleanup)
 # v5.7.0+: Model-aware context threshold (replaces hardcoded CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=83)
 - context-threshold-injector  # SessionStart + UserPromptSubmit — dynamic 92/83 per model
+# v5.19.0+: SP-DAIMON P1 — personal profile auto-calibration
+- vault-profile-auto-load     # SessionStart — reads vault/daimon/*.md → ~/.atlas/runtime/session-calibration.json
+- daimon-context-injector     # SessionStart — emits <daimon-calibration> block to Claude system prompt
 # v5.7.0+: CC 2.1.x native event adoption (Phase 2 of sleepy-tumbling-hennessy)
 - worktree-setup              # WorktreeCreate — log + validate new worktree
 - worktree-cleanup-native     # WorktreeRemove — event-driven cleanup (replaces cleanup-worktrees Stop hook, deprecated)
