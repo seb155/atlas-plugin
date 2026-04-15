@@ -13,7 +13,7 @@
 #
 # Modularized: main logic lives in atlas-modules/*.sh
 
-ATLAS_VERSION="5.12.1"
+ATLAS_VERSION="5.16.0"
 ATLAS_CONFIG="${HOME}/.atlas/config.json"
 ATLAS_HISTORY="${HOME}/.atlas/history.json"
 ATLAS_SHELL_DIR="${HOME}/.atlas/shell"
@@ -24,7 +24,8 @@ _ATLAS_MOD_DIR="${ATLAS_SHELL_DIR}/modules"
 if [ -d "$_ATLAS_MOD_DIR" ]; then
   # Module load order: platform → version-api → ui → topics → subcommands → launcher → completions
   # version-api loads before ui because ui._atlas_header delegates version lookup to it.
-  for _mod in platform version-api ui topics subcommands dispatch agents ab-testing launcher completions; do
+  # ci loads AFTER subcommands (which defines _atlas_ci fallback) so _atlas_ci_cmd can call it.
+  for _mod in platform version-api ui topics subcommands ci plugin dispatch agents ab-testing launcher completions; do
     [ -f "$_ATLAS_MOD_DIR/${_mod}.sh" ] && source "$_ATLAS_MOD_DIR/${_mod}.sh"
   done
   unset _mod

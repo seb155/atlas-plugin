@@ -80,6 +80,59 @@ with type errors, import errors, undefined references.
 
 **Never loop endlessly trying fixes.** 2 attempts maximum.
 
+## 🛑 Archaeology Escape Rule (3 pivots = STOP + reframe)
+
+When debugging a workflow (CI, deploy, migration, long test), track **distinct pivots**: each new approach after the previous one failed for a new reason. This is different from the 2-attempt retry cap above — an "attempt" is same-hypothesis retry; a "pivot" is a whole approach change.
+
+**After 3 pivots on the same sub-plan → STOP**. The premise is likely wrong.
+
+### Pivot counter example
+
+Session SP-TEST-SOTA N2 (2026-04-14 NIGHT-3) made these pivots on "make CI backend-migrate pass":
+
+1. Fix 10 alembic heads → merge migration shipped
+2. Fix 10th head missed by regex → edited merge tuple
+3. Fix orphan tables (topological order) → create_all migration
+4. Fix circular FK (projects needed first) → 3-stage alembic flow
+5. Fix pip install heavy deps → raw SQL CREATE TABLE
+6. Fix missing model imports → Base.metadata.create_all full
+
+6 pivots. Net value shipped via cherry-pick: 3 commits (alembic merge + orphan migration + stubs). Everything else = wasted iteration.
+
+### Escape options at pivot #3
+
+When triggered, present via `AskUserQuestion`:
+
+1. **Honest handoff** — park sub-plan, write plan stubs for prerequisites, fresh session later
+2. **Cherry-pick value** — extract useful commits into standalone PR, close archaeology branch
+3. **Scope split** — define prerequisite sub-plans that must ship first, defer original work
+4. **Question premise** — use `ultrathink` / verify-premise-before-debug pattern (see `lesson_ultrathink_premise_check.md` + `lesson_verify_tests_locally_first.md`)
+
+### Anti-patterns (avoid)
+
+- "Just one more fix" loop
+- Force-pushing history rewrites to hide archaeology
+- Not counting pivots — losing track of how far you've strayed
+- Claiming partial progress when sub-plan goal is still blocked
+
+### Premise check (pivot #2 warning)
+
+Before the 3rd pivot, do a **premise check** — verify the foundational assumption independently:
+
+| Debug target | Foundational premise | How to verify independently |
+|--------------|----------------------|------------------------------|
+| CI tests | Tests pass locally | `docker exec ... pytest ... --tb=no \| tail -3` |
+| CI build | Build succeeds locally | `make build 2>&1 \| tail -5` |
+| Deploy | Image starts healthy locally | `docker run ... && curl localhost:PORT/health` |
+| Migration | Schema applies on fresh DB | `docker compose down -v && up -d && alembic upgrade head` |
+
+If premise check FAILS locally → the CI/deploy/etc isn't the problem; fix the premise first. If premise check PASSES → the delta between local and CI is the bug. Focus there, not on the output.
+
+See also:
+- `lesson_ultrathink_premise_check.md` — question fundamentals, not symptoms
+- `lesson_verify_tests_locally_first.md` — always verify inputs before debugging pipeline
+- `lesson_ci_archaeology_escape_rule.md` — full escape rule details
+
 ## Common Debugging Patterns
 
 ### "It works locally but fails in CI"

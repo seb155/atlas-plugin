@@ -166,3 +166,28 @@ OVERALL: PASS/FAIL
 - NEVER run `tests/` without `-x` on a large suite — test one file first
 - NEVER skip type-check (`bun run type-check`) when frontend tests pass
 - NEVER run integration tests on `ATL-dev` (no Docker)
+
+---
+
+## SOTA Test Architecture — Read When Auditing or Designing CI Gates
+
+Before:
+- writing or reviewing any `.woodpecker/*.yml` / `.github/workflows/*.yml` test step,
+- planning a test coverage sprint,
+- responding to "we have X tests but prod still breaks",
+- auditing a project's test maturity for handoff/review,
+
+**read `references/sota-testing-patterns.md`**.
+
+It documents the **5 defects of "test theatre"** (skeleton tests, smoke-only CI, `failure: ignore`, mocked-DB integration, unenforced coverage) and the **5-level test maturity model** (L0 theatre → L5 quality gates) with concrete templates and rollout playbooks.
+
+**TL;DR rules** (enforced via code review of CI configs):
+
+- Test step in CI MUST run more than `-m smoke` (broader filter, e.g. `not external and not slow`).
+- `failure: ignore` / `continue-on-error: true` BANNED on test steps. Red = blocks merge.
+- Integration tests touch a real DB (postgres-in-CI service) — not mocks.
+- Coverage enforced in CI (`--cov-fail-under=N`), not just local.
+- No skeleton tests in tree (`grep -r "auto-generated skeleton"` returns 0).
+- Templates centralized so adding a new page/hook/route auto-creates a test stub.
+
+When user asks "is our test setup good?" → run the 5-question audit from the reference and propose a L0→L1→L2 rollout sized for the team.

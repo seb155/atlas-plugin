@@ -214,14 +214,28 @@ else
   echo "📄 Created CHANGELOG.md"
 fi
 
+# ─── Rebuild dist/ so marketplace users get latest plugin content ────
+# Without this step, dist/ stays stale when VERSION bumps and marketplace
+# users (who pull via git-subdir path) receive the old plugin files.
+if [ -x "./build.sh" ]; then
+  echo "🏗️  Rebuilding dist/ for marketplace distribution..."
+  ./build.sh modular || {
+    echo "⚠️  build.sh modular failed — dist/ may be stale"
+    # Don't exit: release should proceed even if dist rebuild has issues,
+    # the developer can run `./build.sh modular` manually + amend.
+  }
+fi
+
 # ─── Git commit + tag ─────────────────────────────────────────────────
 git add "${CHANGELOG_FILE}"
 [ -n "$VERSION_FILE" ] && git add "$VERSION_FILE"
+# Stage dist/ so marketplace users always get content matching this VERSION
+[ -d "dist" ] && git add dist/
 
 # Only commit if there are staged changes
 if ! git diff --cached --quiet; then
   git commit -m "chore(release): ${NEXT_TAG}"
-  echo "📦 Committed release changes"
+  echo "📦 Committed release changes (VERSION + plugin.json + marketplace.json + CHANGELOG + dist/)"
 fi
 
 git tag -a "$NEXT_TAG" -m "Release ${NEXT_TAG}"$'\n\n'"${RELEASE_NOTES}"

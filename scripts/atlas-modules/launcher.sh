@@ -221,6 +221,7 @@ atlas() {
     topics)  _atlas_topics_list; return ;;
     update)  _atlas_update; return ;;
     ci) shift; _atlas_ci_cmd "$@"; return ;;
+    plugin) shift; _atlas_plugin "$@"; return ;;
     complexity) shift; _atlas_complexity "$@"; return ;;
     dispatch) shift; _atlas_dispatch "$@"; return ;;
     agents) shift; _atlas_agents_cmd "$@"; return ;;

@@ -38,11 +38,12 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
     age_days=$(( (NOW_EPOCH - last_commit_epoch) / 86400 ))
 
     # Skip if dirty (uncommitted changes) — exclude known ephemeral files
+    # Note: || true on each grep — empty input makes grep exit 1, which breaks pipefail
     dirty=$(cd "$wt" && git status --porcelain 2>/dev/null \
-      | grep -v '^?? \.blueprint/plans/' \
-      | grep -v '^?? \.claude/' \
-      | grep -v '^?? memory/' \
-      | grep -v '^?? node_modules/' \
+      | { grep -v '^?? \.blueprint/plans/' || true; } \
+      | { grep -v '^?? \.claude/' || true; } \
+      | { grep -v '^?? memory/' || true; } \
+      | { grep -v '^?? node_modules/' || true; } \
       | wc -l)
     if [ "$dirty" -gt 0 ]; then
       KEPT=$((KEPT + 1))
@@ -54,8 +55,9 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
     fi
 
     # Check if has unique commits not in main or dev
-    ahead_main=$(cd "$wt" && git log main..HEAD --oneline 2>/dev/null | wc -l)
-    ahead_dev=$(cd "$wt" && git log dev..HEAD --oneline 2>/dev/null | wc -l)
+    # Note: git log can fail if main/dev ref doesn't exist locally — wrap with || true
+    ahead_main=$( (cd "$wt" && git log main..HEAD --oneline 2>/dev/null || true) | wc -l)
+    ahead_dev=$( (cd "$wt" && git log dev..HEAD --oneline 2>/dev/null || true) | wc -l)
 
     if [ "$ahead_main" -gt 0 ] && [ "$ahead_dev" -gt 0 ]; then
       KEPT=$((KEPT + 1))
