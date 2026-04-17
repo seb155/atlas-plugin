@@ -81,7 +81,8 @@ Every team follows this exact lifecycle:
 - `low`: Minimal thinking, max speed. For lookups, status checks, classification.
 - `medium`: Balanced (default). For implementation, coding, test writing.
 - `high`: Deep reasoning. For reviews, security audits, quality gates.
-- `max`: No thinking constraint (Opus 4.6 only). For architecture, planning.
+- `max`: No thinking constraint (Opus 4.7 only). For architecture, planning.
+- `xhigh`: Between `high` and `max` (Opus 4.7 only, CC 2.1.111+). Tuned reasoning/speed tradeoff.
 
 Fallback: if named agent not found, use `subagent_type: "general-purpose"` with the same prompt.
 
@@ -91,15 +92,15 @@ Fallback: if named agent not found, use `subagent_type: "general-purpose"` with 
 
 | Model | Shorthand | Resolves to | Context | Max Output |
 |-------|-----------|-------------|---------|------------|
-| Opus 4.6 | `"opus"` | `claude-opus-4-6[1m]` | 1M | 128K |
+| Opus 4.7 | `"opus"` | `claude-opus-4-7[1m]` | 1M | 128K |
 | Sonnet 4.6 | `"sonnet"` | `claude-sonnet-4-6` | 1M | 64K |
 | Haiku 4.5 | `"haiku"` | `claude-haiku-4-5-20251001` | 200K | 64K |
 
 **Rules for Agent Teams:**
 - Shorthand `"opus"` and `"sonnet"` give 1M context on CC 2.1.75+ (Max). No workaround needed.
-- Omitting `model:` inherits from parent session (1M if parent is Opus/Sonnet 4.6)
+- Omitting `model:` inherits from parent session (1M if parent is Opus 4.7 or Sonnet 4.6)
 - AGENT.md frontmatter `model:` is respected by CC for agent spawning
-- `ANTHROPIC_DEFAULT_OPUS_MODEL='claude-opus-4-6[1m]'` env var in settings.json as safety net
+- `ANTHROPIC_DEFAULT_OPUS_MODEL='claude-opus-4-7[1m]'` env var in settings.json as safety net
 
 ```
 # All agents get 1M context on CC 2.1.75+ (Max):

@@ -226,7 +226,7 @@ command -v jq && echo "jq: $(jq --version)"
 command -v starship && echo "Starship: $(starship --version 2>&1 | head -1)"
 
 # Test CShip pipeline with mock data
-echo '{"model":{"id":"claude-opus-4-6","display_name":"Opus"},"context_window":{"used_percentage":42,"remaining_percentage":58,"size":1000000},"cost":{"total_lines_added":42,"total_lines_removed":8,"total_cost_usd":0.05},"usage_limits":{"5h":{"used_percentage":12}}}' | cship
+echo '{"model":{"id":"claude-opus-4-7","display_name":"Opus"},"context_window":{"used_percentage":42,"remaining_percentage":58,"size":1000000},"cost":{"total_lines_added":42,"total_lines_removed":8,"total_cost_usd":0.05},"usage_limits":{"5h":{"used_percentage":12}}}' | cship
 
 # Test CShip explain
 cship explain

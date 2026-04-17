@@ -77,7 +77,7 @@ Present findings as a scored audit:
 | Component          | Current           | SOTA              | Status |
 |--------------------|-------------------|-------------------|--------|
 | Claude Code        | (detected)        | v2.1.92           | (auto) |
-| Opus Model         | claude-opus-4-6[1m] | claude-opus-4-6[1m] | ✅ 1M NATIVE |
+| Opus Model         | claude-opus-4-7[1m] | claude-opus-4-7[1m] | ✅ 1M NATIVE |
 | Sonnet Model       | claude-sonnet-4-6 | claude-sonnet-4-6 | ✅ 1M NATIVE |
 | Haiku Model        | claude-haiku-4-5  | claude-haiku-4-5  | ✅ CURRENT |
 | Autocompact        | (detected)        | 85%               | (auto) |
@@ -96,7 +96,7 @@ Present findings as a scored audit:
   4. Plugin version behind → `make dev` in plugin source
 
 🟢 NOTE:
-  5. Opus 4.6 + Sonnet 4.6 have 1M context NATIVELY (API level, April 2026)
+  5. Opus 4.7 + Sonnet 4.6 have 1M context NATIVELY (API level, April 2026)
   6. CC 2.1.75+ resolves shorthand "opus"/"sonnet" to 1M for Max subscribers
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -118,7 +118,7 @@ cat ~/.claude/settings.json
 
 **Environment variables** (add to ~/.bashrc or project .env):
 ```bash
-export ANTHROPIC_DEFAULT_OPUS_MODEL='claude-opus-4-6[1m]'
+export ANTHROPIC_DEFAULT_OPUS_MODEL='claude-opus-4-7[1m]'
 export CLAUDE_CODE_SUBAGENT_MODEL='haiku'
 export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE='60'
 ```
@@ -171,7 +171,7 @@ Keep this section updated based on Phase 2 research findings.
 
 | Task Type | Model | Why |
 |-----------|-------|-----|
-| Architecture, planning, brainstorm | Opus 4.6 (1M) | Deep reasoning, full codebase context |
+| Architecture, planning, brainstorm | Opus 4.7 (1M) | Deep reasoning, full codebase context |
 | Implementation, refactoring, fixes | Sonnet 4.6 | 97-99% of Opus coding, lower cost |
 | Subagents (explore, review, test) | Sonnet 4.6 | Balance speed + quality |
 | Classification, simple validation | Haiku 4.5 | Cheapest capable, 90% of Sonnet |
@@ -181,8 +181,8 @@ Keep this section updated based on Phase 2 research findings.
 
 | Model | Context | Best Use |
 |-------|---------|----------|
-| Opus 4.6 [1m] | 1M tokens | Full repo analysis, long sessions, complex plans |
-| Opus 4.6 | 200K tokens | Standard sessions, single feature work |
+| Opus 4.7 [1m] | 1M tokens | Full repo analysis, long sessions, complex plans |
+| Opus 4.7 | 200K tokens | Standard sessions, single feature work |
 | Sonnet 4.6 | 200K tokens | Implementation, most dev work |
 | Haiku 4.5 | 200K tokens | Quick tasks, simple queries |
 

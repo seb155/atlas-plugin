@@ -5,7 +5,7 @@
 # based on the currently active Claude model's context window size.
 #
 # Logic:
-#   - Opus 4.6 with [1m] suffix   → 92  (of 1M tokens = 920K)
+#   - Opus 4.7 with [1m] suffix   → 92  (of 1M tokens = 920K)
 #   - Other 1M-context models      → 92
 #   - Standard 200K models         → 83
 #   - Unknown / fallback           → 83  (safe conservative default)
@@ -31,7 +31,7 @@ readonly STATE_FILE="${HOME}/.atlas/state/context-threshold.json"
 readonly CAPABILITIES_FILE="${HOME}/.atlas/runtime/capabilities.json"
 
 # Returns 92 if model has 1M context, 83 otherwise.
-# Arg $1: model ID string (e.g., "claude-opus-4-6[1m]")
+# Arg $1: model ID string (e.g., "claude-opus-4-7[1m]")
 resolve_threshold_from_model() {
   local model_id="${1:-}"
 
@@ -51,7 +51,7 @@ resolve_threshold_from_model() {
 
   # Known 1M context models (even without suffix — future-proofing)
   case "$model_id" in
-    *opus-4-6*|*sonnet-4-6*)
+    *opus-4-[67]*|*sonnet-4-6*)
       # These support 1M context by default in most deployments
       echo "$THRESHOLD_1M"
       return 0

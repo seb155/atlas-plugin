@@ -580,14 +580,14 @@ v=d.get('includeGitInstructions', True)
 print('ok' if not v else 'WARN includeGitInstructions should be false')
 "
 
-# 11. Global env: MAX_OUTPUT_TOKENS (Opus 4.6 = 128K)
+# 11. Global env: MAX_OUTPUT_TOKENS (Opus 4.7 = 128K)
 cat "$GLOBAL" | python3 -c "
 import sys,json; d=json.load(sys.stdin)
 v=d.get('env',{}).get('CLAUDE_CODE_MAX_OUTPUT_TOKENS','')
 print('ok' if v else 'MISSING CLAUDE_CODE_MAX_OUTPUT_TOKENS in global env')
 "
 
-# 12. Global env: MAX_THINKING_TOKENS (Opus 4.6 1M context)
+# 12. Global env: MAX_THINKING_TOKENS (Opus 4.7 1M context)
 cat "$GLOBAL" | python3 -c "
 import sys,json; d=json.load(sys.stdin)
 v=d.get('env',{}).get('CLAUDE_CODE_MAX_THINKING_TOKENS','')
@@ -634,7 +634,7 @@ Auto-fix suggestions:
 | Missing language | Add `"language": "francais"` to global settings |
 | Missing showClearContextOnPlanAccept | Add `"showClearContextOnPlanAccept": true` to global settings |
 | includeGitInstructions not false | Set `"includeGitInstructions": false` — ATLAS manages git via skills |
-| Missing MAX_OUTPUT_TOKENS | Add `"CLAUDE_CODE_MAX_OUTPUT_TOKENS": "128000"` to global env (Opus 4.6) |
+| Missing MAX_OUTPUT_TOKENS | Add `"CLAUDE_CODE_MAX_OUTPUT_TOKENS": "128000"` to global env (Opus 4.7) |
 | Missing MAX_THINKING_TOKENS | Add `"CLAUDE_CODE_MAX_THINKING_TOKENS": "250000"` to global env (1M context) |
 | Missing FILE_READ_MAX | Add `"CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS": "50000"` to global env |
 | Missing deny Read(~/.ssh/**) | Add `"Read(~/.ssh/**)"` and `"Read(/etc/shadow)"` to permissions.deny |

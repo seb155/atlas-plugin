@@ -328,9 +328,9 @@ When the user requests development work AND complexity = COMPLEX, this pipeline 
 
 | Task Type | Model | Why | Key Benchmark |
 |-----------|-------|-----|---------------|
-| Planning, architecture, brainstorm | **Opus 4.6** | Deep reasoning justifies premium | GPQA 91.3% vs 74.1% (+17pts) |
-| Extended thinking (ultrathink) | **Opus 4.6** | 128K max output for detailed plans | Output limit 2x Sonnet |
-| Complex debugging, cross-system | **Opus 4.6** | Multi-file reasoning | Reasoning gap matters here |
+| Planning, architecture, brainstorm | **Opus 4.7** | Deep reasoning justifies premium | GPQA 91.3% vs 74.1% (+17pts) |
+| Extended thinking (ultrathink) | **Opus 4.7** | 128K max output for detailed plans | Output limit 2x Sonnet |
+| Complex debugging, cross-system | **Opus 4.7** | Multi-file reasoning | Reasoning gap matters here |
 | Implementation, bug fixes | **Sonnet 4.6** | 97-99% coding quality, 5x cheaper | SWE-bench 79.6% vs 80.8% (1.2pts) |
 | Code review, security audit | **Sonnet 4.6** | Pattern matching sufficient | GDPval 1633 > 1606 (Sonnet leads) |
 | DB migrations | **Sonnet 4.6** | SQL is well-scoped, gap negligible | SWE-bench gap = 1.2pts |
@@ -339,7 +339,7 @@ When the user requests development work AND complexity = COMPLEX, this pipeline 
 | Lint, format, type-check | **DET** | Bash commands, zero AI tokens | Free |
 
 **Key facts (April 2026)**:
-- Both Opus 4.6 and Sonnet 4.6 support **1M token context** — context is NOT a differentiator
+- Both Opus 4.7 and Sonnet 4.6 support **1M token context** — context is NOT a differentiator
 - Opus advantage: **reasoning quality** (+17pts GPQA) and **max output** (128K vs 64K)
 - Sonnet advantage: **2.7x faster**, **5x cheaper**, leads on practical tasks (GDPval)
 - Orchestrator pattern: Opus main session (distills context) → Sonnet subagents (execute scoped tasks)

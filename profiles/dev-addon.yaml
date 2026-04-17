@@ -37,6 +37,11 @@ skills:
   - forgejo-pr
   - ci-management
 
+  # v5.22.0 Sprint 2.5 — CI quality gates
+  - test-affected
+  - smoke-gate
+  - ci-health
+
   # Meta / Tooling
   - decision-log
   - hookify
@@ -82,6 +87,8 @@ hooks:
   - claudemd-lint           # PostToolUse[Write|Edit] on CLAUDE.md — validate frontmatter + W3H
   - detect-stale-git        # Stop — warn if working tree has stale refs / uncommitted
   - feature-drift-detector  # Stop — flag scope creep outside feature branch
+  # v5.22.0 Sprint 2.5 — pre-push CI quality gate (advisory)
+  - pre-push-affected       # PreToolUse[Bash(git push)] — run test-affected, advisory
 
 agents:
   - plan-architect

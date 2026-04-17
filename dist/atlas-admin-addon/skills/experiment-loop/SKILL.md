@@ -107,5 +107,5 @@ Generate report → save to `.claude/assay/reports/{experiment}-{date}.md`.
 
 | Phase | Model |
 |-------|-------|
-| Experiment design, hypotheses, final report | Opus 4.6 |
+| Experiment design, hypotheses, final report | Opus 4.7 |
 | Iteration execution (mutations, evaluation) | Sonnet 4.6 |

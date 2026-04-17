@@ -172,8 +172,8 @@ When the user requests development work, run the pipeline declared in `capabilit
 
 | Task | Model | Effort | Why |
 |------|-------|--------|-----|
-| Architecture, plans, brainstorming | Opus 4.6 | **max** | Deep reasoning |
-| Complex/risky coding, debugging | Opus 4.6 | **high** | Edge cases, multi-file |
+| Architecture, plans, brainstorming | Opus 4.7 | **max** | Deep reasoning |
+| Complex/risky coding, debugging | Opus 4.7 | **xhigh** | Edge cases, multi-file (new xhigh tier since 4.7) |
 | Routine implementation (clear path) | Sonnet 4.6 | **high** | 98% coding quality, 5x cheaper |
 | Simple review, small fixes | Sonnet 4.6 | **medium** | Pattern matching sufficient |
 | Spec checklist, git ops | Haiku 4.5 | **low** | Cheapest capable |

@@ -286,9 +286,9 @@ ${PIPELINE}
 
 | Task | Model | Effort | Why |
 |------|-------|--------|-----|
-| Architecture, plans, brainstorming | Opus 4.6 | **max** | 91.3% GPQA — deep reasoning |
-| Complex/risky coding, debugging | Opus 4.6 | **high** | Edge cases, multi-file |
-| Next-step planning ("what now?") | Opus 4.6 | **high** | Reasoning = Opus strength |
+| Architecture, plans, brainstorming | Opus 4.7 | **max** | Deep reasoning (benchmarks as of 4.6: GPQA 91.3%) |
+| Complex/risky coding, debugging | Opus 4.7 | **xhigh** | Edge cases, multi-file (new xhigh tier since 4.7) |
+| Next-step planning ("what now?") | Opus 4.7 | **high** | Reasoning = Opus strength |
 | Routine implementation (clear path) | Sonnet 4.6 | **high** | 98% coding, 5x cheaper |
 | Simple review, small fixes | Sonnet 4.6 | **medium** | Pattern matching sufficient |
 | Spec checklist, git ops | Haiku 4.5 | **low** | Cheapest capable |

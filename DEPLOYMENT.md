@@ -375,7 +375,7 @@ unset _jq_dir
 
 ```bash
 # Should render 3-row ATLAS status line with ANSI colors
-echo '{"model":{"id":"claude-opus-4-6","display_name":"Opus"},"context_window":{"used_percentage":42}}' | cship
+echo '{"model":{"id":"claude-opus-4-7","display_name":"Opus"},"context_window":{"used_percentage":42}}' | cship
 ```
 
 Restart Claude Code for the new status line to take effect.

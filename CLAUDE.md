@@ -159,7 +159,7 @@ Auto-release CI bumps version on push to `main` using conventional commits:
 
 ## ORCHESTRATION (Opus → Sonnet)
 
-Main session = **Opus 4.6 [1m]** (orchestrator). Subagents = **Sonnet 4.6** (workers).
+Main session = **Opus 4.7 [1m]** (orchestrator). Subagents = **Sonnet 4.6** (workers).
 Both models have 1M context — the differentiator is reasoning quality, not context size.
 
 | Task | Model | Why |

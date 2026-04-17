@@ -25,7 +25,7 @@ options: ["Français (Recommended)", "English"]
 ```
 header: "Model"
 options: [
-  "Opus 4.6 (Recommended) — deep reasoning, architecture, plans",
+  "Opus 4.7 (Recommended) — deep reasoning, architecture, plans",
   "Sonnet 4.6 — fast, 98% coding quality, lower cost"
 ]
 ```

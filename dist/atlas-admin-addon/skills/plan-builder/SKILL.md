@@ -6,7 +6,7 @@ effort: high
 
 # Plan Builder
 
-**Model**: ALWAYS Opus 4.6, max thinking effort, max output tokens. Never truncate.
+**Model**: ALWAYS Opus 4.7, max thinking effort, max output tokens. Never truncate.
 **Announce:** "Building engineering plan using Atlas Dev plan-builder..."
 
 ## Workflow

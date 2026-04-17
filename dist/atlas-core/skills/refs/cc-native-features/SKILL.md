@@ -1,27 +1,31 @@
 ---
 name: cc-native-features
-description: "Claude Code v2.1.92 native features reference — effort system, session management, auto-memory, worktrees, task management, hooks, agent frontmatter, plugin settings, keyboard shortcuts, statusline. SSoT for CC capabilities that ATLAS leverages."
+description: "Claude Code v2.1.111 native features reference — effort system, session management, auto-memory, worktrees, task management, hooks, agent frontmatter, plugin settings, keyboard shortcuts, statusline. SSoT for CC capabilities that ATLAS leverages."
 ---
 
-# Claude Code Native Features Reference (v2.1.92)
+# Claude Code Native Features Reference (v2.1.111)
 
-> SSoT for CC features that ATLAS leverages. Updated: 2026-04-04.
+> SSoT for CC features that ATLAS leverages. Updated: 2026-04-16 (Opus 4.7 GA).
 > Self-improving: update this file when CC releases new features via `/atlas platform-update`.
 
-## Effort System (v2.1.72 — simplified)
+## Effort System (v2.1.72+ / xhigh v2.1.111)
 
 | Level | Symbol | Use Case | API |
 |-------|--------|----------|-----|
 | `low` | ○ | Simple tasks, routine commands | `/effort low` |
 | `medium` | ◐ | Default for Max/Team (v2.1.68) | `/effort medium` |
 | `high` | ● | Deep reasoning, complex tasks | `/effort high` |
+| `xhigh` | ●● | Between `high` and `max` (Opus 4.7 only, v2.1.111+) | `/effort xhigh` |
+| `max` | ◉ | No thinking constraint (Opus only) | `/effort max` |
 | `auto` | varies | Reset to plan default | `/effort auto` |
+
+**`/effort` interactive slider** (v2.1.111): Call with no arguments → arrow-key navigation + Enter to confirm.
 
 **Per-turn override**: `ultrathink` keyword = max effort for one turn only (v2.1.68).
 
-**Frontmatter**: `effort: low|medium|high` in AGENT.md (v2.1.78) and SKILL.md (v2.1.80).
+**Frontmatter**: `effort: low|medium|high|xhigh` in AGENT.md (v2.1.78) and SKILL.md (v2.1.80).
 
-**Rule**: Opus = high by default. Sonnet = medium. Haiku = low.
+**Rule**: Opus = high/xhigh by default. Sonnet = medium. Haiku = low. Non-Opus fallback `xhigh` → `high`.
 
 ## Session Management
 
@@ -102,7 +106,7 @@ description: "Claude Code v2.1.92 native features reference — effort system, s
 
 | Model | Window | Max Output | Notes |
 |-------|--------|------------|-------|
-| Opus 4.6 | 1M tokens | 128K | Default for Max (v2.1.75) |
+| Opus 4.7 | 1M tokens | 128K | Default for Max (v2.1.111+) |
 | Sonnet 4.6 | 1M tokens | 128K | Same window, faster |
 | Haiku 4.5 | 200K tokens | 64K | Smaller, cheapest |
 
@@ -110,7 +114,7 @@ description: "Claude Code v2.1.92 native features reference — effort system, s
 
 ## Extended Thinking
 
-- Opus 4.6: thinking enabled by default (v2.0.67)
+- Opus 4.7: thinking enabled by default (v2.0.67); new `xhigh` effort tier (v2.1.111+, between `high` and `max`)
 - `ultrathink` = max effort for one turn
 - Budget scales with `/effort` setting
 - Toggle: Alt+T (v2.0.72), or `/config`
@@ -242,6 +246,62 @@ Set to `null` to unbind. Chords: `"ctrl+k ctrl+s"` (space-separated). Reserved: 
 | `TaskCompleted` | v2.1.33 | Background task done |
 | `WorktreeCreate` | v2.1.50 | Worktree created |
 | `WorktreeRemove` | v2.1.50 | Worktree removed |
+
+## v2.1.111 (2026-04-16) — Opus 4.7 Era
+
+| Feature | Impact |
+|---------|--------|
+| **Opus 4.7 xhigh effort** | NEW effort tier between `high` and `max` — `/effort xhigh`, or `--effort xhigh`; other models fallback to `high` |
+| **Auto mode native** | No more `--enable-auto-mode` flag — auto mode is now first-class for Max subscribers on Opus 4.7 |
+| `/less-permission-prompts` | NEW skill — scans transcripts for common read-only Bash/MCP calls, proposes prioritized allowlist |
+| `/ultrareview` | NEW cloud parallel multi-agent code review — `/ultrareview` (current branch) or `/ultrareview <PR#>` (GitHub PR) |
+| `/effort` slider | Interactive mode when called without args (arrow keys + Enter) |
+| "Auto (match terminal)" theme | Auto dark/light matches terminal — select from `/theme` |
+| PowerShell tool | Progressively rolling out on Windows; opt-in via `CLAUDE_CODE_USE_POWERSHELL_TOOL` |
+| Read-only bash globs | `ls *.ts` and `cd <proj> && ...` no longer prompt for permission |
+| Named plan files | Plan files named after prompt (e.g. `fix-auth-race-snug-otter.md`) instead of random |
+| `/skills` sort by tokens | Press `t` in menu to toggle sort by estimated token count |
+| `Ctrl+U` behavior | Now clears entire input buffer (was: delete to line start); `Ctrl+Y` restores |
+| `Ctrl+L` | Forces full screen redraw + input clear |
+| `OTEL_LOG_RAW_API_BODIES` | NEW env var — emit full API request/response as OTel log events (debugging) |
+
+## v2.1.110 (2026-04-15)
+
+| Feature | Impact |
+|---------|--------|
+| `/tui` command + `tui` setting | `/tui fullscreen` switches to flicker-free rendering in same conversation |
+| **Push notification tool** | NEW — Claude sends mobile push notifs when Remote Control + "Push when Claude decides" enabled |
+| `Ctrl+O` behavior change | Now toggles normal/verbose transcript only (focus view split to new `/focus` command) |
+| `autoScrollEnabled` config | Disable conversation auto-scroll in fullscreen mode |
+| `Ctrl+G` editor with context | Option to show Claude's last response as commented context in external editor |
+| `/doctor` | Warns when MCP server defined in multiple scopes with different endpoints |
+| `--resume`/`--continue` | Resurrects unexpired scheduled tasks |
+| `/context`, `/exit`, `/reload-plugins` | Now work from Remote Control (mobile/web) |
+
+## v2.1.108 (2026-04-13)
+
+| Feature | Impact |
+|---------|--------|
+| `ENABLE_PROMPT_CACHING_1H` | NEW env var — opt into 1-hour prompt cache TTL (API key, Bedrock, Vertex, Foundry). `FORCE_PROMPT_CACHING_5M` to force 5min |
+| `/recap` + recap feature | NEW — context when returning to session, configurable via `/config`. `CLAUDE_CODE_ENABLE_AWAY_SUMMARY` for telemetry-disabled users |
+| **Skill → built-in slash commands** | Model can now discover/invoke `/init`, `/review`, `/security-review` via Skill tool |
+| `/undo` alias for `/rewind` | Mnemonic alias |
+| `/model` warning | Warns before switching mid-conversation (next response re-reads full history uncached) |
+| `/resume` picker default | Sessions from current directory shown first; `Ctrl+A` to show all projects |
+
+## v2.1.105 (2026-04-12)
+
+| Feature | Impact |
+|---------|--------|
+| `EnterWorktree path` param | Switch into existing worktree of current repo (not just create new) |
+| **PreCompact hook block** | PreCompact hooks can now block compaction via exit code 2 or `{"decision":"block"}` |
+| **Plugin `monitors` manifest** | NEW top-level key — background monitors auto-arm at session start or on skill invoke |
+| `/proactive` alias for `/loop` | Mnemonic alias |
+| Stalled stream abort | API streams abort after 5min no data, retry non-streaming instead of hanging |
+| `/doctor` status icons | Press `f` to have Claude fix reported issues |
+| Skill description cap raised | 250 → 1,536 chars; startup warning if truncated |
+| `WebFetch` `<style>/<script>` strip | CSS-heavy pages no longer exhaust content budget |
+| Stale agent worktree cleanup | Removes worktrees of squash-merged PRs (was: kept indefinitely) |
 
 ## v2.1.101 (2026-04-11)
 
