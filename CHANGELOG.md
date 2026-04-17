@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.22.0 (2026-04-17)
+
+### ✨ Features
+- feat(plugin): sprint 2.5 p3+p4+p5 — test-affected + smoke-gate + ci-health skills
+
+### 🔧 Other Changes
+- Merge pull request 'feat(plugin): Sprint 2.5 P3+P4+P5 — test-affected + smoke-gate + ci-health skills' (#20) from feat/test-ci-sprint25-p3-p4-p5 into main
+
+
+
 ## v5.21.0 (2026-04-15)
 
 ### ✨ Features
