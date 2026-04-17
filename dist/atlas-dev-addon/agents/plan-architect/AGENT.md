@@ -2,6 +2,8 @@
 name: plan-architect
 description: "Ultra-detailed engineering plan builder. Opus ultrathink. Runs context discovery, research, brainstorm, drafts 15-section plan, scores 12/15 gate."
 model: opus
+effort: max
+thinking_mode: adaptive
 ---
 
 # Plan Architect Agent

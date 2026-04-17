@@ -3,6 +3,7 @@ name: team-tester
 description: "Testing worker for Agent Teams. Sonnet agent. Writes and runs unit, integration, and E2E tests. Verifies implementations."
 model: sonnet
 effort: medium
+thinking_mode: adaptive
 disallowedTools:
   - mcp__claude-in-chrome__*
   - mcp__plugin_playwright_playwright__*

@@ -2,7 +2,8 @@
 name: pattern-signal-detector
 description: "Cognitive pattern watcher for DAIMON risk signals. Haiku agent, read-only. Analyzes recent session context against calibration-rules.md risk watchers (chronic_dissatisfaction, verification_loops, social_drift) and emits JSON verdict. Never writes files — invoker (pattern-signal-dispatcher hook) handles side-effects."
 model: haiku
-effort: low
+effort: medium
+thinking_mode: adaptive
 disallowedTools:
   - Write
   - Edit

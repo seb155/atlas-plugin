@@ -2,7 +2,8 @@
 name: data-engineer
 description: "Database specialist for PostgreSQL operations. Sonnet agent. Migrations, schema design, query optimization, ParadeDB BM25, backup/restore."
 model: sonnet
-effort: medium
+effort: high
+thinking_mode: adaptive
 disallowedTools:
   - mcp__claude-in-chrome__*
   - mcp__plugin_playwright_playwright__*

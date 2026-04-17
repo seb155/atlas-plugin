@@ -112,13 +112,15 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 
 **Rule**: With 1M context, NEVER suggest session handoff for context reasons.
 
-## Extended Thinking
+## Adaptive Thinking (formerly Extended Thinking)
 
-- Opus 4.7: thinking enabled by default (v2.0.67); new `xhigh` effort tier (v2.1.111+, between `high` and `max`)
+- **API change 2026-04**: Opus 4.7 deprecated explicit thinking-enabled mode with token budgets. Only adaptive mode is supported (`{"type": "adaptive"}` or via effort level).
+- Opus 4.7: adaptive thinking enabled by default (v2.0.67); new `xhigh` effort tier (v2.1.111+, between `high` and `max`)
 - `ultrathink` = max effort for one turn
-- Budget scales with `/effort` setting
+- Budget scales with `/effort` setting (Claude Code layer, not API)
 - Toggle: Alt+T (v2.0.72), or `/config`
-- `CLAUDE_CODE_MAX_THINKING_TOKENS` env var for custom limit
+- `CLAUDE_CODE_MAX_THINKING_TOKENS` env var for custom limit (CC client hint, not API budget)
+- Sonnet 4.6 still supports legacy extended thinking API, but ATLAS standardizes on adaptive
 
 ## Plugin Settings (v2.1.49)
 

@@ -2,6 +2,8 @@
 name: experiment-runner
 description: "Autonomous experiment iteration loop. Sonnet agent. Executes one iteration: analyze current state, mutate code/config, execute test, measure results, decide next action."
 model: sonnet
+effort: high
+thinking_mode: adaptive
 ---
 
 # Experiment Runner Agent

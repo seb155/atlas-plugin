@@ -2,6 +2,8 @@
 name: team-security
 description: "Security auditor for Agent Teams. Sonnet agent. OWASP scanning, secret detection, RBAC review, dependency audit. Read-only analysis."
 model: sonnet
+effort: high
+thinking_mode: adaptive
 disallowedTools:
   - Write
   - Edit

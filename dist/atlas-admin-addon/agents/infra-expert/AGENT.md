@@ -1,8 +1,9 @@
 ---
 name: infra-expert
-description: "Infrastructure expert for homelab and cloud ops. Sonnet agent. Proxmox, Docker, IaC, GPU passthrough, networking, capacity planning. Full SSH access with HITL gates."
-model: sonnet
-effort: medium
+description: "Infrastructure expert for homelab and cloud ops. Opus 4.7 agent. Proxmox, Docker, IaC, GPU passthrough, networking, capacity planning. Full SSH access with HITL gates."
+model: opus
+effort: xhigh
+thinking_mode: adaptive
 disallowedTools:
   - mcp__claude-in-chrome__*
   - mcp__plugin_playwright_playwright__*

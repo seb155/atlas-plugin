@@ -3,15 +3,40 @@
 # Usage: ./build.sh [admin|dev|user|worker|all]          — tier mode
 #        ./build.sh domain <name>                         — single domain
 #        ./build.sh domains                               — all 6 domains
+#
+# Flags:
+#        --skip-frontmatter    Bypass v6.0 frontmatter validation (dev iteration)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 VERSION=$(cat VERSION | tr -d '[:space:]')
-TIERS="${1:-all}"
 METADATA_FILE="skills/_metadata.yaml"
 CMD_METADATA_FILE="commands/_metadata.yaml"
+
+# ── Argument parsing (v6.0: support --skip-frontmatter flag) ───────
+# Separate positional args from flags so validation can be bypassed
+# during dev iteration without changing the tier/domain selection.
+SKIP_FRONTMATTER=0
+POSITIONAL=()
+for arg in "$@"; do
+  case "$arg" in
+    --skip-frontmatter)
+      SKIP_FRONTMATTER=1
+      ;;
+    --*)
+      echo "❌ Unknown flag: $arg"
+      exit 1
+      ;;
+    *)
+      POSITIONAL+=("$arg")
+      ;;
+  esac
+done
+# Restore positional args so downstream references ($1, $2) keep working
+set -- "${POSITIONAL[@]:-}"
+TIERS="${1:-all}"
 
 # Propagate VERSION to source JSON files (keeps them in sync)
 if command -v python3 &>/dev/null; then
@@ -30,6 +55,155 @@ for f in ['.claude-plugin/plugin.json', '.claude-plugin/marketplace.json']:
     except: pass
 " 2>/dev/null || true
 fi
+
+# ── v6.0 frontmatter validation ────────────────────────────────────
+# Per plan section F + .blueprint/schemas/skill-frontmatter-v6.md +
+# .blueprint/schemas/agent-frontmatter-v6.md.
+#
+# Validates (when field is PRESENT):
+#   - effort ∈ {low, medium, high, xhigh, max, auto}         (skill R3 + agent A4)
+#   - thinking_mode == 'adaptive'                            (skill R4 + agent A5)
+#   - superpowers_pattern[] ⊆ {iron_law, red_flags, hard_gate, none}  (skill only)
+#   - isolation ∈ {worktree, none}                           (agents only)
+#
+# Backward compat: missing fields are OK (deprecation warning deferred to v6.1).
+# Python helper is invoked once over ALL files for speed (single fork).
+#
+# Output format for violations (stderr):
+#   ❌ VIOLATION: <path>:L<line> - <field> '<value>' not in enum {<allowed>}
+_validate_frontmatter_v6() {
+  # Idempotent: reruns produce identical output, no side-effects.
+  echo "🔍 Validating v6.0 frontmatter..."
+
+  local violations
+  violations=$(python3 <<'PYEOF'
+import os
+import re
+import sys
+from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    print("ERROR: PyYAML not installed (pip install pyyaml)", file=sys.stderr)
+    sys.exit(2)
+
+# Enums from .blueprint/schemas/*-v6.md
+EFFORT_ENUM = {"low", "medium", "high", "xhigh", "max", "auto"}
+THINKING_MODE_ENUM = {"adaptive"}
+SUPERPOWERS_ENUM = {"iron_law", "red_flags", "hard_gate", "none"}
+ISOLATION_ENUM = {"worktree", "none"}
+
+FM_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
+violations = []
+
+
+def find_line(text: str, key: str) -> int:
+    """Best-effort line number of a top-level frontmatter key."""
+    for idx, line in enumerate(text.splitlines(), start=1):
+        if re.match(rf"^\s*{re.escape(key)}\s*:", line):
+            return idx
+    return 1
+
+
+def parse_fm(path: Path):
+    try:
+        text = path.read_text(encoding="utf-8")
+    except Exception as e:
+        return None, f"read error: {e}"
+    m = FM_RE.match(text)
+    if not m:
+        return None, None  # No frontmatter — skip (legacy)
+    try:
+        data = yaml.safe_load(m.group(1)) or {}
+    except yaml.YAMLError as e:
+        return None, f"YAML parse error: {e}"
+    if not isinstance(data, dict):
+        return None, "frontmatter is not a mapping"
+    return (data, text), None
+
+
+def check_enum(path: Path, text: str, field: str, value, enum_set: set, is_list: bool = False):
+    line = find_line(text, field)
+    if is_list:
+        if not isinstance(value, list):
+            violations.append(
+                f"❌ VIOLATION: {path}:L{line} - {field} must be a list, got {type(value).__name__}"
+            )
+            return
+        invalid = [v for v in value if v not in enum_set]
+        for bad in invalid:
+            violations.append(
+                f"❌ VIOLATION: {path}:L{line} - {field} '{bad}' not in enum {sorted(enum_set)}"
+            )
+    else:
+        if value not in enum_set:
+            violations.append(
+                f"❌ VIOLATION: {path}:L{line} - {field} '{value}' not in enum {sorted(enum_set)}"
+            )
+
+
+# SKILL.md validation
+for skill_md in sorted(Path("skills").rglob("SKILL.md")):
+    parsed, err = parse_fm(skill_md)
+    if err:
+        violations.append(f"❌ VIOLATION: {skill_md}:L1 - {err}")
+        continue
+    if parsed is None:
+        continue
+    fm, text = parsed
+
+    if "effort" in fm:
+        check_enum(skill_md, text, "effort", fm["effort"], EFFORT_ENUM)
+    if "thinking_mode" in fm:
+        check_enum(skill_md, text, "thinking_mode", fm["thinking_mode"], THINKING_MODE_ENUM)
+    if "superpowers_pattern" in fm:
+        check_enum(
+            skill_md, text, "superpowers_pattern", fm["superpowers_pattern"],
+            SUPERPOWERS_ENUM, is_list=True,
+        )
+
+# AGENT.md validation
+for agent_md in sorted(Path("agents").rglob("AGENT.md")):
+    parsed, err = parse_fm(agent_md)
+    if err:
+        violations.append(f"❌ VIOLATION: {agent_md}:L1 - {err}")
+        continue
+    if parsed is None:
+        continue
+    fm, text = parsed
+
+    if "effort" in fm:
+        check_enum(agent_md, text, "effort", fm["effort"], EFFORT_ENUM)
+    if "thinking_mode" in fm:
+        check_enum(agent_md, text, "thinking_mode", fm["thinking_mode"], THINKING_MODE_ENUM)
+    if "isolation" in fm:
+        check_enum(agent_md, text, "isolation", fm["isolation"], ISOLATION_ENUM)
+
+if violations:
+    print("\n".join(violations))
+    sys.exit(1)
+sys.exit(0)
+PYEOF
+)
+  local rc=$?
+
+  if [ $rc -eq 0 ]; then
+    echo "✅ v6.0 frontmatter valid (0 violations)"
+    return 0
+  fi
+
+  # Print detailed violations to stderr
+  echo "$violations" >&2
+  local count
+  count=$(echo "$violations" | grep -c '^❌ VIOLATION' || true)
+  echo "" >&2
+  echo "❌ $count frontmatter violation(s) detected" >&2
+  echo "   Schemas: .blueprint/schemas/{skill,agent}-frontmatter-v6.md" >&2
+  echo "   Bypass:  ./build.sh $TIERS --skip-frontmatter" >&2
+  return 1
+}
 
 # Resolve profile inheritance and collect all items for a field
 # Usage: resolve_field <tier> <field>
@@ -683,6 +857,21 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "  ATLAS Plugin Builder v${VERSION}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
+# v6.0 Sprint 1 Task 1.6: Validate frontmatter enums before resolving profile
+# inheritance / packaging. Runs once per invocation (idempotent).
+# Use --skip-frontmatter to bypass (backward compat / dev iteration).
+if [ "$SKIP_FRONTMATTER" -eq 1 ]; then
+  echo "⏭️  Skipping v6.0 frontmatter validation (--skip-frontmatter)"
+  echo ""
+else
+  if ! _validate_frontmatter_v6; then
+    echo ""
+    echo "❌ Build aborted: fix violations or re-run with --skip-frontmatter"
+    exit 1
+  fi
+  echo ""
+fi
 
 if [ "$TIERS" = "all" ]; then
   for t in admin dev user; do

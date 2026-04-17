@@ -34,7 +34,7 @@ description: "Claude Opus 4.7 vs Sonnet 4.6 benchmark comparison, decision frame
 TASK REQUIRES...                         → MODEL
 ─────────────────────────────────────────────────
 Architecture, multi-file design           → Opus 4.7
-Extended thinking, ultrathink             → Opus 4.7 (max)
+Adaptive thinking, ultrathink             → Opus 4.7 (max; extended API deprecated 2026-04)
 Planning (>50h effort scope)              → Opus 4.7
 Complex debugging (cross-system)          → Opus 4.7 (xhigh)
 Irreversible decisions                    → Opus 4.7

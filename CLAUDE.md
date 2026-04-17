@@ -164,7 +164,7 @@ Both models have 1M context — the differentiator is reasoning quality, not con
 
 | Task | Model | Why |
 |------|-------|-----|
-| Planning, architecture, brainstorm | Opus | GPQA +17pts, extended thinking |
+| Planning, architecture, brainstorm | Opus | GPQA +17pts, adaptive thinking (max) |
 | Implementation, tests, review, DB migration | Sonnet | SWE-bench gap 1.2pts, 5x cheaper, 2.7x faster |
 | Validation, search | Haiku | Cheapest capable |
 | Lint, format, type-check | DET (bash) | Zero AI tokens |

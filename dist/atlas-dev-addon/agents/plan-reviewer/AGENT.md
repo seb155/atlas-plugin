@@ -2,6 +2,8 @@
 name: plan-reviewer
 description: "Quality gate agent. Scores plans against 15 criteria. Identifies weak sections. Gate: 12/15."
 model: sonnet
+effort: high
+thinking_mode: adaptive
 disallowedTools:
   - Write
   - Edit
