@@ -2,7 +2,7 @@
 # context-budget-guardian — Warn when context approaches limits
 # Event: UserPromptSubmit (sync, fast)
 #
-# NOTE (2026-04-04): Opus 4.6 + Sonnet 4.6 have 1M context natively.
+# NOTE (2026-04-16): Opus 4.7 + Sonnet 4.6 have 1M context natively.
 # CC autocompact handles context management automatically.
 # This hook only warns at VERY high usage as a safety net.
 set -euo pipefail

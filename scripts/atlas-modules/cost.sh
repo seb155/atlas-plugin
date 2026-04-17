@@ -114,6 +114,7 @@ from collections import defaultdict
 
 # Pricing per million tokens (2026-04)
 PRICING = {
+    'claude-opus-4-7': {'input': 5.0, 'output': 25.0, 'cache_write': 6.25, 'cache_read': 0.50},
     'claude-opus-4-6': {'input': 15.0, 'output': 75.0, 'cache_write': 18.75, 'cache_read': 1.50},
     'claude-sonnet-4-6': {'input': 3.0, 'output': 15.0, 'cache_write': 3.75, 'cache_read': 0.30},
     'claude-haiku-4-5-20251001': {'input': 0.25, 'output': 1.25, 'cache_write': 0.3125, 'cache_read': 0.025},
@@ -125,7 +126,7 @@ def get_pricing(model):
         if key in model:
             return PRICING[key]
     if 'opus' in model:
-        return PRICING['claude-opus-4-6']
+        return PRICING['claude-opus-4-7']
     elif 'sonnet' in model:
         return PRICING['claude-sonnet-4-6']
     elif 'haiku' in model:

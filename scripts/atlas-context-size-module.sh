@@ -5,11 +5,11 @@
 # Detection priority (first match wins):
 #   1. CSHIP_CONTEXT_SIZE env var > 500000 → "1M"
 #   2. Model ID contains [1m] suffix → "1M"
-#   3. Model is Opus 4.6 or Sonnet 4.6 → "1M" (default for these models)
-#   4. Model is Opus (pre-4.6) with Max subscription → "1M"
+#   3. Model is Opus 4.7 or Sonnet 4.6 → "1M" (default for these models)
+#   4. Model is Opus (pre-4.7) with Max subscription → "1M"
 #   5. Fallback → "200K"
 #
-# Updated v5.7.0: Opus/Sonnet 4.6 default to 1M (per CC v2.1.51+).
+# Updated v5.22.0: Opus 4.7 + Sonnet 4.6 default to 1M (per CC v2.1.111+).
 # CShip env vars: CSHIP_CONTEXT_SIZE, CSHIP_MODEL_ID
 
 set -euo pipefail
@@ -29,8 +29,8 @@ if echo "$MODEL" | grep -qi '\[1m\]'; then
   exit 0
 fi
 
-# Priority 3: Opus 4.6 and Sonnet 4.6 default to 1M context per CC v2.1.51+
-if echo "$MODEL" | grep -qiE 'opus-4-6|sonnet-4-6'; then
+# Priority 3: Opus 4.7 and Sonnet 4.6 default to 1M context per CC v2.1.111+
+if echo "$MODEL" | grep -qiE 'opus-4-[67]|sonnet-4-6'; then
   echo "1M"
   exit 0
 fi

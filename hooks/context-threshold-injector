@@ -15,7 +15,7 @@
 #
 # State file: ~/.atlas/state/context-threshold.json
 #   {
-#     "model": "claude-opus-4-6[1m]",
+#     "model": "claude-opus-4-7[1m]",
 #     "context_size": 1048576,
 #     "threshold_pct": 92,
 #     "effective_tokens": 965592,

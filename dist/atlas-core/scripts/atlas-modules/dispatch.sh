@@ -44,7 +44,7 @@ _atlas_dispatch() {
   # Map model name to full model ID
   local model_id=""
   case "$model" in
-    opus)   model_id="claude-opus-4-6" ;;
+    opus)   model_id="claude-opus-4-7" ;;
     sonnet) model_id="claude-sonnet-4-6" ;;
     haiku)  model_id="claude-haiku-4-5-20251001" ;;
     *)      model_id="$model" ;;
@@ -88,7 +88,7 @@ _atlas_dispatch() {
 
     # Map model name to full ID
     case "$escalated_model" in
-      opus)   model_id="claude-opus-4-6" ;;
+      opus)   model_id="claude-opus-4-7" ;;
       sonnet) model_id="claude-sonnet-4-6" ;;
       haiku)  model_id="claude-haiku-4-5-20251001" ;;
     esac

@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.23.0 (2026-04-17)
+
+### ✨ Features
+- feat(models): migrate Opus 4.6 → 4.7 across plugin (model IDs, labels, env vars, routing)
+- feat(models): update pricing `cost.sh` to Opus 4.7 rates ($5/$25, down from $15/$75)
+- feat(effort): document new `xhigh` effort level (Opus 4.7 only, CC 2.1.111+)
+- feat(docs): integrate CC 2.1.105-111 new features (auto mode natif, /less-permission-prompts, /ultrareview, /team-onboarding, /tui, /recap, PreCompact hook, push notifications, ENABLE_PROMPT_CACHING_1H, background monitors)
+- feat(profiles): wire sprint 2.5 skills + `pre-push-affected` hook into `dev-addon.yaml` profile (skills now ship correctly with atlas-dev addon install)
+
+### 🔧 Other Changes
+- chore(regex): switch `*opus-4-6*` → `*opus-4-[67]*` in context-threshold.sh + atlas-context-size-module.sh (backward compat for legacy sessions)
+- chore(benchmarks): annotate benchmarks `as of Opus 4.6` in model-benchmarks skill (follow-up: Opus 4.7 benchmarks via WebSearch)
+
+### 📝 Notes
+- Opus 4.6 retired by Anthropic 2026-04-16; all references migrated to 4.7
+- Tokenizer change in 4.7 may produce up to +35% tokens for same text — monitor effective cost on long sessions
+- Historical evals (`ai_eval_scores.judge_model='claude-opus-4-6'`) remain readable via String column backward compat
+- Post-v5.22.0 fixup: sprint 2.5 skills (`test-affected`, `smoke-gate`, `ci-health`) shipped in v5.22.0 but were missing from `profiles/dev-addon.yaml` — now properly included in addon build
+
 ## v5.22.0 (2026-04-17)
 
 ### ✨ Features
@@ -7,8 +26,6 @@
 
 ### 🔧 Other Changes
 - Merge pull request 'feat(plugin): Sprint 2.5 P3+P4+P5 — test-affected + smoke-gate + ci-health skills' (#20) from feat/test-ci-sprint25-p3-p4-p5 into main
-
-
 
 ## v5.21.0 (2026-04-15)
 

@@ -1,0 +1,1 @@
+{"timestamp":"2026-04-17T09:35:00Z","decision":"full ship plugin despite dogfood commitment","alternatives":["defer to 2026-04-22","hotfix only","audit first"],"rationale":"User override on pitch-day 5:35 AM. Accepted calibration warnings. HITL choice.","watch_signal":"chronic_dissatisfaction_burnout ACTIVE","session":"atlas-shipall-2026-04-17"}

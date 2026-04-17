@@ -120,12 +120,13 @@ After presenting data, provide actionable insights:
 
 | Model | Input/MTok | Output/MTok | Cache Write/MTok | Cache Read/MTok |
 |-------|-----------|-------------|------------------|-----------------|
-| Opus 4.6 | $15.00 | $75.00 | $18.75 | $1.50 |
+| Opus 4.7 | $5.00 | $25.00 | $6.25 | $0.50 |
 | Sonnet 4.6 | $3.00 | $15.00 | $3.75 | $0.30 |
 | Haiku 4.5 | $0.25 | $1.25 | $0.3125 | $0.025 |
 
 **Note**: Cache read tokens dominate cost for long sessions (often 90%+ of total tokens).
-Opus cache read at $1.50/MTok is 5x more expensive than Sonnet cache read at $0.30/MTok.
+Opus 4.7 cache read at $0.50/MTok is 1.67x more expensive than Sonnet cache read at $0.30/MTok (down from 5x with 4.6).
+Opus 4.7 uses new tokenizer that may produce up to +35% tokens vs 4.6 for same text — monitor effective cost.
 
 ## Notes
 

@@ -152,7 +152,7 @@ _setup_model() {
   _setup_info "Claude Code uses your subscription model by default."
   _setup_info "Override only if you want a specific model per-project."
   local model
-  model=$(printf 'opus (Claude Opus 4.6 — most capable)\nsonnet (Claude Sonnet 4.6 — fast + capable)\nhaiku (Claude Haiku 4.5 — fastest)\ndefault (use subscription default)' | \
+  model=$(printf 'opus (Claude Opus 4.7 — most capable)\nsonnet (Claude Sonnet 4.6 — fast + capable)\nhaiku (Claude Haiku 4.5 — fastest)\ndefault (use subscription default)' | \
     gum choose --header "Default AI model:")
   model="${model%% *}"  # extract first word
 
