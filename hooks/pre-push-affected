@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: LicenseRef-AXOIQ-Proprietary
+# pre-push-affected — PreToolUse hook on Bash(git push …)
+#
+# Runs `atlas test-affected` advisory v1 (logs, never blocks).
+# Flip to blocking via ATLAS_G1_BLOCKING=true (Phase 5).
+#
+# Input:  JSON on stdin  { tool_name, input: { command } }
+# Output: JSON on stdout { result: "..." }   — empty = no warning
+
+set -euo pipefail
+
+# Read hook payload
+INPUT=$(cat)
+
+# Only fire on git push commands
+CMD=$(python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print(d.get('input', {}).get('command', '') or d.get('command', ''))
+" <<< "$INPUT" 2>/dev/null || echo "")
+
+if ! echo "$CMD" | grep -qE '^[[:space:]]*git[[:space:]]+push'; then
+  echo '{"result":""}'
+  exit 0
+fi
+
+# Opt-out escape hatch
+if [[ "${ATLAS_SKIP_G1:-0}" == "1" ]]; then
+  echo '{"result":"G1 skipped via ATLAS_SKIP_G1=1"}'
+  exit 0
+fi
+
+CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+SCRIPT="$CLAUDE_PLUGIN_ROOT/skills/test-affected/test-affected.sh"
+
+if [[ ! -x "$SCRIPT" ]]; then
+  echo '{"result":"test-affected skill not installed — run `make dev` in atlas-dev-plugin"}'
+  exit 0
+fi
+
+# Run with budget — advisory mode
+OUTPUT=$("$SCRIPT" --budget 30 2>&1 | tail -6 || true)
+
+# Strip ANSI + trim to first 500 chars for hook output
+CLEAN=$(echo "$OUTPUT" | sed -r 's/\x1B\[[0-9;]*[mK]//g' | head -c 500)
+
+# Output JSON
+python3 -c "
+import json, sys
+print(json.dumps({'result': '$CLEAN'.replace(chr(39), chr(96))}))
+" 2>/dev/null || echo '{"result":""}'
