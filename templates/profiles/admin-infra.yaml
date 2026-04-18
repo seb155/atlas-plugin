@@ -1,0 +1,36 @@
+# ATLAS Launch Profile — Admin Infrastructure
+# Activate: cwd in homelab/ OR --profile admin-infra
+
+name: admin-infra
+description: "Infrastructure admin — Proxmox, Docker, networking (Tailscale/CF), SSO, monitoring."
+extends: base
+
+# Admin tier: infrastructure-ops, security-audit, devops-deploy, deploy-hotfix
+tier: admin
+
+# Plan mode MANDATORY for infra (destructive ops possible)
+permission_mode: plan
+effort: xhigh
+
+# Infra ops typically direct, not worktree-isolated (SSH, container mgmt)
+worktree: false
+fork_session: false
+
+# Minimal MCP footprint (no browser, infra is CLI-centric)
+mcp_profile: minimal
+
+env:
+  ATLAS_INFRA_MODE: "true"
+
+# Auto-detect: infrastructure + homelab repos
+cwd_match:
+  - "/home/sgagnon/workspace_atlas/infrastructure/**"
+  - "/home/sgagnon/workspace_atlas/atlas-homelab/**"
+
+# Medium trust required for infra (sensitive ops)
+wifi_trust_required: medium
+
+# Main/prod branches: force plan mode (double-check)
+git_branch_hook:
+  "main":      { permission_mode: plan }
+  "production": { permission_mode: plan }

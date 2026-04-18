@@ -1,5 +1,66 @@
 # Changelog
 
+## v5.28.0 (2026-04-18) — ATLAS CLI SOTA Refactor
+
+### 🎯 Feature: Profile-First Architecture
+- feat(profiles): seed 5 launch profiles + 2 MCP profiles (base, dev-synapse, admin-infra, research, home / chrome-playwright, minimal)
+- feat(profiles): `_atlas_load_profile` helper with inheritance chain (max depth 3)
+- feat(launcher): `--profile <name>` flag applies launch profile
+- feat(launcher): `--override key=value` composable syntax for profile field overrides
+- feat(profiles): `atlas profile {list,show,create,validate,edit}` subcommands
+
+### 🎯 Feature: Auto-Context Detection (P3 complete)
+- feat(profiles): auto-detect profile from cwd_match glob OR `.atlas/project.json` manifest
+- feat(profiles): WiFi trust overlay (atlas-location integration) — downgrade to plan if trust < required
+- feat(profiles): git branch hook overlay — `feature/*` → `fork_session: true`
+- feat(profiles): time-based overlay — weekend/weekday-morning/afternoon/evening tokens
+- feat(launcher): `--detect-only` dry-run — resolve profile + print state, exit without launch
+
+### 🎯 Feature: MCP Wrapper
+- feat(mcp): `atlas mcp {list, add, remove, get, profile, doctor, raw}` subcommand family
+- feat(mcp): MCP profiles composition via `~/.atlas/mcp-profiles/*.yaml`
+- feat(mcp): `atlas mcp doctor` — health check with ✅/⚠️/❌ summary
+
+### 🎯 Feature: CLI Evolution
+- feat(cli): `atlas resume {--picker|--last|<project>|<session>}` — native CC session picker
+- feat(cli): `--fork-session` / `--no-fork-session` flags (also set by profile/overlay)
+- feat(cli): `--print-command` dry-run — show built claude cmd + exit
+- refactor(launcher): `-y/--yolo` now maps to `--permission-mode dontAsk` (safer, deprecation warn for v5.30.0 removal)
+
+### 🎯 Feature: NPM Distribution (sovereignty-first)
+- feat(distribution): `package.json` @axoiq/atlas-cli scope + publishConfig Forgejo registry
+- feat(distribution): `scripts/postinstall.js` idempotent bash file copy to `~/.atlas/`
+- feat(distribution): `scripts/publish.sh` extended with `npm publish` step (P6.3 Option A, respects ci-freeze)
+
+### 📚 Documentation
+- docs(install): INSTALL.md — .npmrc Forgejo config, PAT setup, troubleshooting
+- docs(migration): MIGRATION-GUIDE.md — transition from `make dev` → `npm install -g`
+- docs(claude): CLAUDE-CODE-SETUP.md — install, doctor, MCP management, permission modes
+- docs(profiles): PROFILE-SYSTEM.md — schema, inheritance, overlays, resolution order
+- docs(adr): ADR-004 Profile-First Architecture
+- docs(adr): ADR-005 Distribution Sovereignty (Forgejo NPM)
+
+### 📝 Notes
+- Plan: `synapse/.blueprint/plans/regarde-cest-quoi-atlas-snoopy-unicorn.md` (v3, 7 phases)
+- Predecessor: v5.27.0 (wise-duckling cleanup) shipped same day 09:48 EDT
+- Feature flag: `ATLAS_AUTO_DETECT_PROFILE=true` opt-in (recommended, added to ~/.zshrc)
+- Backward compat: existing flags work; profiles are additive opt-in
+- Deprecations: `-y/--yolo` logs warning, scheduled removal v5.30.0
+- Target users: AXOIQ contractors + G Mining MSEs (via npm install) + Seb/core devs (via make dev)
+
+### Live-Tested Commands (post-ship)
+```bash
+atlas profile list                  # 5 profiles tabular
+atlas profile show dev-synapse      # YAML dump
+atlas --profile dev-synapse synapse # launch with profile
+atlas --detect-only                 # auto-detect + resolved state
+atlas --override effort=max synapse # composable override
+atlas mcp list                      # MCP servers formatted
+atlas mcp doctor                    # health summary
+atlas resume --picker               # native CC cross-project picker
+atlas synapse --print-command       # cmd preview, no launch
+```
+
 ## v5.27.0 (2026-04-18)
 
 ### 🧹 Maintenance

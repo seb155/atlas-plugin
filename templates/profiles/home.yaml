@@ -1,0 +1,24 @@
+# ATLAS Launch Profile — Home / Personal
+# Activate: --profile home (or cwd in personal dirs)
+
+name: home
+description: "Personal/non-work session — journaling, notes, personal exploration."
+extends: base
+
+tier: core
+permission_mode: default
+effort: medium
+worktree: false
+fork_session: false
+mcp_profile: minimal
+
+env:
+  ATLAS_CONTEXT: "personal"
+
+cwd_match: []
+
+wifi_trust_required: none
+
+# Time-based overlay: chill on weekends (lower effort = cheaper + faster)
+time_hook:
+  "weekend": { effort: low }

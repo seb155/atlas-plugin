@@ -1,0 +1,39 @@
+# ATLAS Launch Profile — Dev Synapse
+# Activate: `atlas synapse` (auto-detect via cwd_match) OR `atlas --profile dev-synapse`
+
+name: dev-synapse
+description: "Dev mode for Synapse engineering (backend Python + frontend React + PG17)."
+extends: base
+
+# Tier: dev addon = testing, CI, frontend-design, systematic-debugging skills
+tier: dev
+
+# Plan mode for Synapse: HITL review of changes before apply (prod sensitivity)
+permission_mode: plan
+effort: high
+worktree: true
+fork_session: auto
+
+# Full browser + docs stack for Synapse UI work
+mcp_profile: chrome-playwright
+
+env:
+  NODE_OPTIONS: "--max-old-space-size=8192"
+  # Synapse-specific
+  SYNAPSE_PROJECT: "true"
+
+# Auto-detect: when cwd is inside Synapse project
+cwd_match:
+  - "/home/sgagnon/workspace_atlas/projects/atlas/synapse"
+  - "/home/sgagnon/workspace_atlas/projects/atlas/synapse/**"
+
+wifi_trust_required: low
+
+# Force fork-session on feature branches (no context contamination with main)
+git_branch_hook:
+  "feature/*": { fork_session: true }
+  "fix/*":     { fork_session: true }
+  "hotfix/*":  { fork_session: true }
+  # Main branch = always plan mode (extra caution)
+  "main": { permission_mode: plan }
+  "dev":  { permission_mode: plan }

@@ -222,6 +222,8 @@ atlas() {
     update)  _atlas_update; return ;;
     ci) shift; _atlas_ci_cmd "$@"; return ;;
     plugin) shift; _atlas_plugin "$@"; return ;;
+    profile) shift; _atlas_profile_cmd "$@"; return ;;
+    mcp) shift; _atlas_mcp_cmd "$@"; return ;;
     complexity) shift; _atlas_complexity "$@"; return ;;
     dispatch) shift; _atlas_dispatch "$@"; return ;;
     agents) shift; _atlas_agents_cmd "$@"; return ;;
@@ -268,17 +270,141 @@ atlas() {
   local chrome=$ATLAS_DEFAULT_CHROME
   local yolo=false auto_mode=false plan_mode=false bare=false
   local cont=false resume_name="" session_name="" wt_name=""
+  local fork_session=false print_cmd_only=false  # P5.4 + P5.5 (v5.28.0+)
   local -a extra_args=()
   local parsing_extra=false
+
+  # ─── P2.4 + P3.1/2/6: Launch Profile pre-parse (v5.28.0+) ─────
+  # Detect --profile <name> and apply profile defaults BEFORE main arg parse.
+  # Explicit flags (-p, -a, -e, etc.) still override profile values (parse later).
+  local lp_name="" detect_only=false no_profile=false
+  local -a _atlas_args=("$@")
+  local _i
+  for ((_i=0; _i<${#_atlas_args[@]}; _i++)); do
+    case "${_atlas_args[_i]}" in
+      --profile)      lp_name="${_atlas_args[_i+1]:-}" ;;
+      --detect-only)  detect_only=true ;;
+      --no-profile)   no_profile=true ;;
+    esac
+  done
+
+  # P3.1 + P3.2: Auto-detect profile if no explicit --profile AND auto-detect enabled
+  # Feature flag: ATLAS_AUTO_DETECT_PROFILE=true (default false for safe rollout)
+  if [ -z "$lp_name" ] && ! $no_profile; then
+    local auto_detect="${ATLAS_AUTO_DETECT_PROFILE:-false}"
+    if [ "$auto_detect" = "true" ] || $detect_only; then
+      local _detected
+      _detected=$(_atlas_detect_profile 2>/dev/null)
+      if [ -n "$_detected" ]; then
+        lp_name="$_detected"
+        echo "🎯 [atlas] Auto-detected profile: '$lp_name' (cwd: $PWD)" >&2
+      fi
+    fi
+  fi
+
+  if [ -n "$lp_name" ] && ! $no_profile; then
+    if _atlas_load_profile "$lp_name"; then
+      # P3.3 + P3.4 + P3.5: Apply environment overlays (WiFi trust, git branch, time)
+      # These modify ATLAS_LP_* based on current environment context.
+      _atlas_apply_all_overlays
+
+      # Apply profile values as new defaults (explicit flags below will override)
+      [ -n "$ATLAS_LP_WORKTREE" ] && [ "$ATLAS_LP_WORKTREE" != "null" ] && worktree="$ATLAS_LP_WORKTREE"
+      [ -n "$ATLAS_LP_EFFORT" ] && [ "$ATLAS_LP_EFFORT" != "null" ] && effort="$ATLAS_LP_EFFORT"
+      case "${ATLAS_LP_PERMISSION_MODE:-}" in
+        plan)    plan_mode=true ;;
+        auto)    auto_mode=true ;;
+        dontAsk) yolo=true ;;  # yolo now → --permission-mode dontAsk (post-P1.4)
+      esac
+      [ "${ATLAS_LP_BARE:-}" = "true" ] && bare=true
+      # P5.4: map ATLAS_LP_FORK_SESSION → local fork_session (true=force, auto/false=no)
+      [ "${ATLAS_LP_FORK_SESSION:-}" = "true" ] && fork_session=true
+      echo "📋 [atlas] Profile '$lp_name' loaded (chain: $ATLAS_LP_CHAIN)" >&2
+    else
+      echo "❌ [atlas] Profile load failed — using defaults" >&2
+      return 1
+    fi
+  fi
+
+  # ─── P2.5: --override key=value (applied after profile, before explicit flags) ───
+  # Example: atlas --profile dev-synapse --override effort=max --override worktree=false
+  for ((_i=0; _i<${#_atlas_args[@]}; _i++)); do
+    if [ "${_atlas_args[_i]}" = "--override" ]; then
+      local _kv="${_atlas_args[_i+1]:-}"
+      local _k="${_kv%%=*}" _v="${_kv#*=}"
+      if [ -z "$_kv" ] || [ "$_k" = "$_kv" ]; then
+        echo "⚠️  [atlas] Invalid --override syntax: '$_kv' (expected key=value)" >&2
+        continue
+      fi
+      case "$_k" in
+        tier)            export "ATLAS_LP_TIER=$_v" ;;
+        permission_mode|permission-mode|mode)
+          case "$_v" in
+            plan)    plan_mode=true;  auto_mode=false; yolo=false ;;
+            auto)    auto_mode=true; plan_mode=false; yolo=false ;;
+            dontAsk) yolo=true;      plan_mode=false; auto_mode=false ;;
+            default) plan_mode=false; auto_mode=false; yolo=false ;;
+            *)       echo "⚠️  [atlas] Unknown permission_mode: '$_v'" >&2 ;;
+          esac
+          export "ATLAS_LP_PERMISSION_MODE=$_v"
+          ;;
+        effort)          effort="$_v" ;;
+        worktree)        worktree="$_v" ;;
+        fork_session|fork-session) export "ATLAS_LP_FORK_SESSION=$_v" ;;
+        bare)            [ "$_v" = "true" ] && bare=true ;;
+        mcp_profile|mcp-profile) export "ATLAS_LP_MCP_PROFILE=$_v" ;;
+        *)               echo "⚠️  [atlas] Unknown override field: '$_k'" >&2 ;;
+      esac
+    fi
+  done
+
+  # ─── P3.6: --detect-only dry-run (exits after printing resolved state) ─────
+  if $detect_only; then
+    echo ""
+    if [ -n "$lp_name" ]; then
+      echo "📋 Profile Resolution (post profile + override)"
+      echo "   Name:     $lp_name"
+      echo "   Chain:    ${ATLAS_LP_CHAIN:-—}"
+      echo "   Tier:     ${ATLAS_LP_TIER:-—}"
+      echo "   Mode:     ${ATLAS_LP_PERMISSION_MODE:-—}"
+      echo "   Effort:   $effort"
+      echo "   Worktree: $worktree"
+      echo "   Fork:     ${ATLAS_LP_FORK_SESSION:-—}"
+      echo "   Bare:     $bare"
+      echo "   MCP:      ${ATLAS_LP_MCP_PROFILE:-—}"
+      echo "   WiFi Req: ${ATLAS_LP_WIFI_TRUST_REQUIRED:-—}"
+    else
+      echo "ℹ️  [atlas] No profile detected or specified"
+      echo "   Current cwd: $PWD"
+      echo "   To enable auto-detect:  export ATLAS_AUTO_DETECT_PROFILE=true"
+      echo "   To use explicit:        atlas --profile <name> --detect-only"
+      echo "   To list available:      atlas profile list"
+    fi
+    echo ""
+    return 0
+  fi
+
+  # P2.4 + P2.5: skip_next flag — consumes value arg after --profile or --override
+  local _atlas_skip_next=false
 
   for arg in "$@"; do
     if $parsing_extra; then
       extra_args+=("$arg")
       continue
     fi
+    if $_atlas_skip_next; then
+      _atlas_skip_next=false
+      continue
+    fi
 
     case "$arg" in
       --) parsing_extra=true ;;
+      --profile) _atlas_skip_next=true ;;  # Profile name is next arg (pre-parsed above)
+      --override) _atlas_skip_next=true ;;  # key=value is next arg (pre-parsed above)
+      --detect-only|--no-profile) ;;        # P3: handled in pre-parse, no-op here
+      --fork-session) fork_session=true ;;  # P5.4: force session fork
+      --no-fork-session) fork_session=false ;;  # P5.4: opt-out (overrides profile)
+      --print-command|--print-cmd) print_cmd_only=true ;;  # P5.5: dry-run
       -i|--inline) worktree=false; split=false ;;
       -y|--yolo) yolo=true ;;
       -a|--auto) auto_mode=true ;;
@@ -412,7 +538,10 @@ print(handoffs[-1] if handoffs else '')
 
   # Permission modes (mutually exclusive, last wins)
   if $yolo; then
-    cmd+=(--dangerously-skip-permissions)
+    # DEPRECATED in v5.28.0: -y/--yolo now maps to --permission-mode dontAsk (was --dangerously-skip-permissions).
+    # Scheduled removal: v5.30.0. Migrate to `atlas <proj> --mode dontAsk` (see P2 profiles + P5 override syntax).
+    echo "⚠️  [atlas] -y/--yolo deprecated → now uses --permission-mode dontAsk (safer). Will be removed in v5.30.0. Use 'atlas <proj> --mode dontAsk' or profile field 'permission_mode: dontAsk'." >&2
+    cmd+=(--permission-mode dontAsk)
   elif $auto_mode; then
     cmd+=(--enable-auto-mode --permission-mode auto)
   elif $plan_mode; then
@@ -428,6 +557,9 @@ print(handoffs[-1] if handoffs else '')
   # Continue / Resume
   $cont && cmd+=(-c)
   [ -n "$resume_name" ] && cmd+=(-r "$resume_name")
+
+  # P5.4: Fork session if requested (from profile, flag, or git branch hook)
+  $fork_session && cmd+=(--fork-session)
 
   # Session name — interactive prompt for split mode, auto for inline
   local name="${session_name:-$(_cc_session_name "$path" "$topic")}"
@@ -463,6 +595,25 @@ print(handoffs[-1] if handoffs else '')
 
   # Extra passthrough args
   [ ${#extra_args[@]} -gt 0 ] && cmd+=("${extra_args[@]}")
+
+  # ─── P5.5: --print-command dry-run (exit before launch) ────
+  if $print_cmd_only; then
+    echo ""
+    echo "📋 Built claude command (dry-run, no launch):"
+    echo ""
+    printf '  %q ' "${cmd[@]}"
+    echo ""
+    echo ""
+    echo "  Project path: $path"
+    echo "  Tmux session: ${tmux_session_name:-<none>}"
+    echo "  Split mode:   $split"
+    echo "  Bare mode:    $bare"
+    if [ -n "$ATLAS_LAUNCH_PROFILE" ]; then
+      echo "  Profile:      $ATLAS_LAUNCH_PROFILE (chain: $ATLAS_LP_CHAIN)"
+    fi
+    echo ""
+    return 0
+  fi
 
   # Launch with full PATH guaranteed
   local _full_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin:$PATH"

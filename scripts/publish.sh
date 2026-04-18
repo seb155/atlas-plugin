@@ -48,10 +48,20 @@ if $DRY_RUN; then
   echo ""
 fi
 
-# Step 1: Bump version
+# Step 1: Bump version (VERSION file + package.json if present)
 echo "1️⃣  Bump VERSION to ${NEW_VERSION}..."
 if ! $DRY_RUN; then
   echo "$NEW_VERSION" > VERSION
+  # P6.3: sync package.json version for npm publish
+  if [ -f "package.json" ] && command -v node &>/dev/null; then
+    node -e "
+      const fs = require('fs');
+      const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      pkg.version = '${NEW_VERSION}';
+      fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+      console.log('   package.json version → ${NEW_VERSION}');
+    "
+  fi
 fi
 
 # Step 2: Build modular (core + addons) + domain plugins (if any)
@@ -100,12 +110,42 @@ if ! $DRY_RUN; then
   git push origin HEAD --tags
 fi
 
+# Step 7: NPM publish to Forgejo (P6.3 Option A, respects ci-config-freeze-week1)
+# Inline publish extends publish.sh rather than creating new workflow file.
+echo "7️⃣  NPM publish to Forgejo Packages..."
+if [ -f "package.json" ]; then
+  if ! command -v npm &>/dev/null; then
+    echo "   ⏭️  npm not available — skipping npm publish"
+  else
+    # Check @axoiq scope is configured to Forgejo registry
+    REGISTRY=$(npm config get @axoiq:registry 2>/dev/null || echo "")
+    if [[ "$REGISTRY" != *"forgejo.axoiq.com"* ]]; then
+      echo "   ⚠️  @axoiq:registry not configured for Forgejo — skipping"
+      echo "      Add to ~/.npmrc:"
+      echo "        @axoiq:registry=https://forgejo.axoiq.com/api/packages/axoiq/npm/"
+      echo "        //forgejo.axoiq.com/api/packages/axoiq/npm/:_authToken=<forgejo-pat>"
+      echo "      Then re-run: npm publish (from $(pwd))"
+    else
+      if ! $DRY_RUN; then
+        npm publish && echo "   ✅ Published to $REGISTRY" || echo "   ❌ npm publish failed (non-fatal)"
+      else
+        echo "   [DRY-RUN] Would run: npm publish (to $REGISTRY)"
+      fi
+    fi
+  fi
+else
+  echo "   ⏭️  No package.json — skipping npm publish"
+fi
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if $DRY_RUN; then
   echo "  DRY RUN complete — ${CURRENT} → ${NEW_VERSION}"
 else
   echo "  ✅ Released v${NEW_VERSION}"
-  echo "  CI will build + publish to Forgejo Package Registry"
+  echo "  Git tag pushed: Forgejo + GitHub mirror"
+  if [ -f "package.json" ] && command -v npm &>/dev/null; then
+    echo "  NPM published (if registry configured): @axoiq/atlas-cli@${NEW_VERSION}"
+  fi
 fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

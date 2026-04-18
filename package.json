@@ -1,0 +1,49 @@
+{
+  "name": "@axoiq/atlas-cli",
+  "version": "5.27.0",
+  "description": "ATLAS CLI — Unified Claude Code launcher with profile-first architecture and auto-context detection",
+  "author": "AXOIQ Inc. <atlas@axoiq.com>",
+  "license": "UNLICENSED",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://forgejo.axoiq.com/axoiq/atlas-plugin.git"
+  },
+  "homepage": "https://forgejo.axoiq.com/axoiq/atlas-plugin",
+  "bugs": {
+    "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin/issues"
+  },
+  "publishConfig": {
+    "registry": "https://forgejo.axoiq.com/api/packages/axoiq/npm/",
+    "access": "restricted"
+  },
+  "files": [
+    "scripts/atlas-cli.sh",
+    "scripts/atlas-modules/",
+    "scripts/postinstall.js",
+    "scripts/preuninstall.js",
+    "templates/profiles/",
+    "templates/mcp-profiles/",
+    "VERSION",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js",
+    "preuninstall": "node scripts/preuninstall.js || true"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "atlas",
+    "claude-code",
+    "cli",
+    "ai-assistant",
+    "shell-launcher",
+    "profile-first",
+    "bash"
+  ],
+  "os": ["linux", "darwin"],
+  "cpu": ["x64", "arm64"]
+}
