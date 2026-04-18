@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# ATLAS auto-tail-agent hook (SubagentStart event)
+#
+# Plan: .blueprint/plans/regarde-ce-qui-ce-sorted-moth.md Section 1 P3
+# Part of SP-AGENT-VIS Layer 3 — auto-spawn tmux pane tailing agent output
+#
+# Behavior:
+#   1. Exit fast (0) if ATLAS_AUTO_TAIL_AGENTS != 1 (opt-in)
+#   2. Exit fast (0) if no tmux session active (graceful fallback to Layer 1+2+4)
+#   3. Exit fast (0) if already at ATLAS_MAX_TAIL_PANES limit (default 2)
+#   4. Extract agent_id from stdin JSON payload
+#   5. tmux split-window -h -p 35% 'atlas-agent-tail.sh <agent_id>'
+#
+# Fast-fail philosophy: NEVER block agent spawn. Max 500ms total.
+# Hook payload (stdin JSON) expected keys:
+#   - subagent_id / agent_id / id (tries all)
+#   - output_file (if provided, used as fallback tail target)
+
+set -euo pipefail
+
+# Layer 3 opt-in check
+if [ "${ATLAS_AUTO_TAIL_AGENTS:-0}" != "1" ]; then
+  exit 0
+fi
+
+# tmux active check (graceful fallback)
+if [ -z "${TMUX:-}" ]; then
+  exit 0
+fi
+
+# Pane limit check
+CURRENT_PANES=$(tmux list-panes 2>/dev/null | wc -l || echo 0)
+MAX_PANES="${ATLAS_MAX_TAIL_PANES:-2}"
+# We count panes in current window. If already equals/exceeds max+1 (main + N tails), skip.
+if [ "$CURRENT_PANES" -ge $((MAX_PANES + 1)) ]; then
+  exit 0
+fi
+
+# Read stdin JSON payload (non-blocking with timeout)
+PAYLOAD=$(timeout 0.5s cat 2>/dev/null || echo "{}")
+
+# Extract agent_id (try 3 keys)
+AGENT_ID=$(echo "$PAYLOAD" | python3 -c "
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    for key in ('subagent_id', 'agent_id', 'id'):
+        if d.get(key):
+            print(d[key])
+            sys.exit(0)
+except Exception:
+    pass
+" 2>/dev/null)
+
+# No agent_id = no-op (hook couldn't identify subject)
+if [ -z "$AGENT_ID" ]; then
+  exit 0
+fi
+
+# Resolve tail script path
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/atlas-marketplace/atlas-core}"
+TAIL_SCRIPT=""
+# Try several possible locations (cache vs source vs latest version)
+for candidate in \
+  "$PLUGIN_ROOT/scripts/atlas-agent-tail.sh" \
+  "$PLUGIN_ROOT/../atlas-core/5.23.0/scripts/atlas-agent-tail.sh" \
+  "$HOME/.claude/plugins/cache/atlas-marketplace/atlas-core/5.23.0/scripts/atlas-agent-tail.sh" \
+  "$HOME/workspace_atlas/projects/atlas-dev-plugin/scripts/atlas-agent-tail.sh"; do
+  if [ -x "$candidate" ]; then
+    TAIL_SCRIPT="$candidate"
+    break
+  fi
+done
+
+if [ -z "$TAIL_SCRIPT" ]; then
+  # Fallback: use `atlas agents tail --follow` if atlas CLI on PATH
+  if command -v atlas &>/dev/null; then
+    tmux split-window -h -p 35% "atlas agents tail --follow '$AGENT_ID'; read -r -p 'Press enter to close pane... '"
+  fi
+  # Silent failure otherwise (Layer 1+2+4 still work)
+  exit 0
+fi
+
+# Split pane horizontally at 35% width, run tail script, hold on exit
+tmux split-window -h -p 35% "$TAIL_SCRIPT '$AGENT_ID'; read -r -p 'Press enter to close pane... '" 2>/dev/null || true
+
+# Focus back to original pane so user's main flow isn't disrupted
+tmux select-pane -L 2>/dev/null || true
+
+exit 0
