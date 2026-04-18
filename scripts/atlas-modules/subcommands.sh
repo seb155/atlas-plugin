@@ -1372,3 +1372,193 @@ _atlas_upgrade() {
   _atlas_footer
   return $rc
 }
+
+# ─── Launch Profile Management (P2.6, v5.28.0+) ──────────────
+# atlas profile <subcmd> [args]
+# Subcommands: list, show, create, validate, edit, help
+
+_atlas_profile_cmd() {
+  local subcmd="${1:-list}"
+  shift 2>/dev/null || true
+  case "$subcmd" in
+    list|ls)           _atlas_profile_list "$@" ;;
+    show|cat)          _atlas_profile_show "$@" ;;
+    create|new)        _atlas_profile_create "$@" ;;
+    validate|check)    _atlas_profile_validate "$@" ;;
+    edit)              _atlas_profile_edit "$@" ;;
+    -h|--help|help|"") _atlas_profile_help ;;
+    *) echo "❌ Unknown profile subcommand: '$subcmd'. Run 'atlas profile help'." >&2; return 1 ;;
+  esac
+}
+
+_atlas_profile_help() {
+  cat <<'EOF'
+atlas profile <subcommand> — manage launch profiles
+
+Subcommands:
+  list                            List available profiles
+  show <name>                     Show profile YAML content
+  create <name> [--from base]     Create new profile from template
+  validate <name>                 Validate profile schema (yq-based)
+  edit <name>                     Open profile in $EDITOR
+  help                            Show this help
+
+Profiles are stored in ~/.atlas/profiles/<name>.yaml.
+Bundle Claude Code launch config (tier, permission_mode, effort, worktree, etc.).
+
+Activate via: atlas --profile <name>
+Override fields: atlas --profile <name> --override <field>=<value>
+
+Examples:
+  atlas profile list
+  atlas profile show dev-synapse
+  atlas profile create my-custom --from dev-synapse
+  atlas profile validate my-custom
+EOF
+}
+
+_atlas_profile_list() {
+  local profile_dir="$HOME/.atlas/profiles"
+  if [ ! -d "$profile_dir" ] || [ -z "$(ls -A "$profile_dir" 2>/dev/null)" ]; then
+    echo "No profiles found at $profile_dir"
+    echo "Bootstrap: cp -r ~/workspace_atlas/projects/atlas-dev-plugin/templates/profiles/* $profile_dir/"
+    return 0
+  fi
+  if ! command -v yq &>/dev/null; then
+    echo "⚠️  yq not installed — showing names only" >&2
+    ls -1 "$profile_dir"/*.yaml 2>/dev/null | xargs -n1 basename | sed 's/\.yaml$//'
+    return
+  fi
+  printf "  %-20s %-10s %-10s %s\n" "PROFILE" "TIER" "EFFORT" "DESCRIPTION"
+  printf "  %-20s %-10s %-10s %s\n" "--------------------" "----------" "----------" "----------------------------------"
+  local f name tier effort desc
+  for f in "$profile_dir"/*.yaml; do
+    [ -f "$f" ] || continue
+    name=$(basename "$f" .yaml)
+    tier=$(yq eval '.tier // "—"' "$f" 2>/dev/null)
+    effort=$(yq eval '.effort // "—"' "$f" 2>/dev/null)
+    desc=$(yq eval '.description // "—"' "$f" 2>/dev/null | head -c 60)
+    printf "  %-20s %-10s %-10s %s\n" "$name" "$tier" "$effort" "$desc"
+  done
+  echo ""
+  echo "Activate: atlas --profile <name>"
+}
+
+_atlas_profile_show() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas profile show <name>" >&2
+    return 1
+  fi
+  local file="$HOME/.atlas/profiles/${name}.yaml"
+  if [ ! -f "$file" ]; then
+    echo "❌ Profile '$name' not found at $file" >&2
+    return 1
+  fi
+  cat "$file"
+}
+
+_atlas_profile_create() {
+  local name="${1:-}"
+  local from="base"
+  shift 2>/dev/null || true
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --from) from="${2:-base}"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  if [ -z "$name" ]; then
+    echo "Usage: atlas profile create <name> [--from <template>]" >&2
+    return 1
+  fi
+  local target="$HOME/.atlas/profiles/${name}.yaml"
+  local source="$HOME/.atlas/profiles/${from}.yaml"
+  if [ -f "$target" ]; then
+    echo "❌ Profile '$name' already exists. Use 'atlas profile edit $name' or choose another name." >&2
+    return 1
+  fi
+  if [ ! -f "$source" ]; then
+    echo "❌ Template '$from' not found at $source" >&2
+    return 1
+  fi
+  mkdir -p "$HOME/.atlas/profiles"
+  cp "$source" "$target"
+  sed -i "s/^name:.*/name: ${name}/" "$target"
+  sed -i "1s/^/# Created $(date '+%Y-%m-%d') from template: ${from}\n/" "$target"
+  echo "✅ Profile '$name' created at $target"
+  echo "   Edit with: atlas profile edit $name"
+}
+
+_atlas_profile_validate() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas profile validate <name>" >&2
+    return 1
+  fi
+  local file="$HOME/.atlas/profiles/${name}.yaml"
+  if [ ! -f "$file" ]; then
+    echo "❌ Profile '$name' not found at $file" >&2
+    return 1
+  fi
+  if ! command -v yq &>/dev/null; then
+    echo "⚠️  yq not installed — cannot validate schema" >&2
+    return 2
+  fi
+  local errors=0
+  # Required fields (either directly or via extends)
+  local has_extends
+  has_extends=$(yq eval '.extends // ""' "$file" 2>/dev/null)
+  local field
+  for field in name tier permission_mode effort; do
+    local val
+    val=$(yq eval ".${field}" "$file" 2>/dev/null)
+    if [ -z "$val" ] || [ "$val" = "null" ]; then
+      if [ -z "$has_extends" ] || [ "$has_extends" = "null" ]; then
+        echo "⚠️  Missing required field: '$field' (no 'extends' fallback)"
+        errors=$((errors + 1))
+      fi
+    fi
+  done
+  # Enum validation
+  local tier_val
+  tier_val=$(yq eval '.tier // ""' "$file" 2>/dev/null)
+  case "$tier_val" in
+    ""|null|core|dev|admin|none) ;;
+    *) echo "❌ Invalid tier: '$tier_val' (expected: core|dev|admin|none)"; errors=$((errors + 1)) ;;
+  esac
+  local mode_val
+  mode_val=$(yq eval '.permission_mode // ""' "$file" 2>/dev/null)
+  case "$mode_val" in
+    ""|null|default|plan|auto|dontAsk|acceptEdits|bypassPermissions) ;;
+    *) echo "❌ Invalid permission_mode: '$mode_val'"; errors=$((errors + 1)) ;;
+  esac
+  local effort_val
+  effort_val=$(yq eval '.effort // ""' "$file" 2>/dev/null)
+  case "$effort_val" in
+    ""|null|low|medium|high|xhigh|max) ;;
+    *) echo "❌ Invalid effort: '$effort_val' (expected: low|medium|high|xhigh|max)"; errors=$((errors + 1)) ;;
+  esac
+  if [ "$errors" -eq 0 ]; then
+    echo "✅ Profile '$name' valid"
+    return 0
+  else
+    echo "❌ Profile '$name' has $errors validation error(s)"
+    return 1
+  fi
+}
+
+_atlas_profile_edit() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas profile edit <name>" >&2
+    return 1
+  fi
+  local file="$HOME/.atlas/profiles/${name}.yaml"
+  if [ ! -f "$file" ]; then
+    echo "❌ Profile '$name' not found at $file. Create with: atlas profile create $name" >&2
+    return 1
+  fi
+  local editor="${EDITOR:-vi}"
+  "$editor" "$file"
+}
