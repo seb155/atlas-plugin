@@ -663,7 +663,7 @@ EOF
       "name": "atlas-${output_name}",
       "description": "${desc}",
       "version": "${VERSION}",
-      "source": { "source": "git", "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git" },
+      "source": { "source": "git", "url": "https://plugins.axoiq.com" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }
   ]
