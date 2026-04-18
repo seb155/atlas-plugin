@@ -1,0 +1,450 @@
+# ATLAS v6.0 — Iron Laws Corpus
+# Authority: .blueprint/plans/regarde-comment-adapter-atlas-compressed-wave.md (Section E)
+# Schema: .blueprint/schemas/philosophy-engine-schema.md (Section 2)
+# Inspired by: Obra/superpowers-upstream (test-driven-development, systematic-debugging,
+#              brainstorming, verification-before-completion)
+#
+# Iron Laws are NON-NEGOTIABLE execution invariants enforced by <HARD-GATE> blocks
+# in skill bodies. Each law has:
+#   - a verbatim "statement" injected into the skill body
+#   - a sha256 signature computed on the statement (byte-exact match required at lint time)
+#   - applicable_skills[] that must reference the law via superpowers_pattern: [iron_law]
+#   - enforcement level (hard_gate | recommendation)
+#   - an override path (HITL AskUserQuestion) when the law can exceptionally be bypassed
+#
+# Updated: 2026-04-17
+# Version: 6.0.0
+
+version: 6.0.0
+updated: 2026-04-17
+
+laws:
+  # ==========================================================================
+  # LAW-TDD-001 — Test-First Development
+  # Source: superpowers:test-driven-development (Iron Law section, verbatim)
+  # Enforcement: every implementation skill MUST reference this law
+  # ==========================================================================
+  - id: LAW-TDD-001
+    name: test-first-development
+    title: "No production code without a failing test first"
+    statement: |
+      NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
+      This is not a recommendation. This is an Iron Law.
+      Write code before the test? Delete it. Start over.
+    rationale: >-
+      Tests written after implementation are documentation, not TDD.
+      The Red-Green-Refactor cycle only works when Red comes first —
+      a passing test that was never seen to fail proves nothing.
+      Watching the test fail for the expected reason is the ONLY way
+      to know the test tests the right thing.
+    applicable_skills:
+      - tdd
+      - test-affected
+      - test-orchestrator
+      - verification
+      - code-review
+      - senior-review-checklist
+      - systematic-debugging
+    applicable_agents:
+      - team-engineer
+      - team-tester
+      - code-reviewer
+      - test-runner
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      Let me write the implementation first, then add tests after to verify it works.
+      The test passes immediately — no need to watch it fail, we can see the code is correct.
+    compliant_example: |
+      Phase 1 (RED): write failing test expressing desired behavior.
+      Phase 2 (VERIFY RED): run test, confirm it fails for the RIGHT reason.
+      Phase 3 (GREEN): write minimal code to pass.
+      Phase 4 (VERIFY GREEN): run test, confirm it passes + no regressions.
+      Phase 5 (REFACTOR): clean up, stay green.
+    signature_sha256: "9a384996b361e22d43443e562acf75170c6b46e39bdc8ed6f327c804c0b234df"
+    created: 2026-04-17
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-DBG-001 — Root Cause Before Fix
+  # Source: superpowers:systematic-debugging (Iron Law section, verbatim)
+  # Enforcement: every debugging / bugfix skill MUST reference this law
+  # ==========================================================================
+  - id: LAW-DBG-001
+    name: no-fixes-without-root-cause
+    title: "No fixes without root cause investigation"
+    statement: |
+      NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
+      If you have not completed Phase 1, you cannot propose fixes.
+      Symptom fixes are failure.
+    rationale: >-
+      Random fixes waste time and create new bugs. Quick patches mask the
+      underlying issue — the first fix sets the pattern, later never comes.
+      Systematic debugging is FASTER than guess-and-check thrashing:
+      15-30 minutes to fix vs 2-3 hours of thrashing, 95% first-time fix
+      rate vs 40%. If 3+ fixes fail, question the architecture, not the code.
+    applicable_skills:
+      - systematic-debugging
+      - tdd
+      - code-review
+      - verification
+      - senior-review-checklist
+      - scope-check
+    applicable_agents:
+      - team-debugger
+      - team-engineer
+      - code-reviewer
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      The test is failing — it is probably a null check missing, let me add one.
+      Quick fix for now, I will investigate the real cause later.
+    compliant_example: |
+      Phase 1 (Investigate): read error carefully, reproduce, check recent changes.
+      Phase 2 (Pattern): find working examples, compare, identify differences.
+      Phase 3 (Hypothesize): state "I think X is root cause because Y", test minimally.
+      Phase 4 (Fix): write failing test at root cause, single fix, verify.
+    signature_sha256: "29f2861e6e5e06647bb16af9dbc490a9ca85399316b3439a60c3a1be1084f995"
+    created: 2026-04-17
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-DESIGN-001 — Design Before Code
+  # Source: superpowers:brainstorming (<HARD-GATE> block, verbatim)
+  # Enforcement: brainstorming skill body MUST contain this in <HARD-GATE>
+  # ==========================================================================
+  - id: LAW-DESIGN-001
+    name: no-code-before-design-approval
+    title: "No implementation without approved design"
+    statement: |
+      Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it.
+      This applies to EVERY project regardless of perceived simplicity.
+    rationale: >-
+      Every project goes through brainstorming. A todo list, a single-function
+      utility, a config change — all of them. "Simple" projects are where
+      unexamined assumptions cause the most wasted work. The design can be
+      short (a few sentences for truly simple projects), but you MUST present
+      it and get approval before writing any code.
+    applicable_skills:
+      - brainstorming
+      - plan-builder
+      - plan-review
+      - context-discovery
+      - interactive-flow
+      - frontend-workflow
+      - frontend-design
+    applicable_agents:
+      - plan-architect
+      - team-architect
+      - plan-reviewer
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      This feature is simple — let me just start coding and design as I go.
+      I know the pattern, no need for a brainstorm session.
+    compliant_example: |
+      Step 1: explore context (files, docs, recent commits).
+      Step 2: ask clarifying questions ONE at a time (AskUserQuestion).
+      Step 3: propose 2-3 approaches with trade-offs and recommendation.
+      Step 4: present design in sections, get user approval after each.
+      Step 5: write spec file, user reviews, THEN invoke writing-plans / plan-builder.
+    signature_sha256: "c5176efe2ab4f1b8f65567e997e0a58de2a11e344d3b69ffd8622d8b24f30582"
+    created: 2026-04-17
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-VERIFY-001 — Evidence Before Assertions
+  # Source: superpowers:verification-before-completion (Iron Law section, verbatim)
+  # Enforcement: every completion/review skill MUST reference this law
+  # ==========================================================================
+  - id: LAW-VERIFY-001
+    name: evidence-before-assertions
+    title: "No completion claim without fresh verification evidence"
+    statement: |
+      NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
+      If you have not run the verification command in this message, you cannot claim it passes.
+      Evidence before assertions, always.
+    rationale: >-
+      Claiming work is complete without verification is dishonesty, not
+      efficiency. Confidence is not evidence. "Should work now" is not
+      evidence. "The linter passed" is not evidence that the build passes.
+      Trusting agent success reports without checking the VCS diff is
+      not evidence. Run the command. Read the output. THEN claim the result.
+    applicable_skills:
+      - verification
+      - tdd
+      - code-review
+      - senior-review-checklist
+      - finishing-branch
+      - ship-all
+      - ci-feedback-loop
+      - visual-qa
+      - smoke-gate
+    applicable_agents:
+      - code-reviewer
+      - test-runner
+      - team-tester
+      - team-verifier
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      Tests should pass now — the code looks correct. Committing and pushing.
+      The agent reported success, so the task is done. Moving to next task.
+    compliant_example: |
+      1. Identify: `bun test:smoke` proves render health.
+      2. Run: exact command, full output.
+      3. Read: "34/34 pass, 0 fail, exit 0".
+      4. Verify: matches claim "all smoke tests pass".
+      5. THEN claim "smoke tests pass" WITH the evidence snippet.
+    signature_sha256: "425114900b1c22dca590185f1147842363013f481c7b0f0c20e80f3d27c07585"
+    created: 2026-04-17
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-PLAN-001 — Plan Quality Gate 12/15
+  # Source: ATLAS plan-review-workflow.md (Gate G1) + plan-builder skill
+  # Enforcement: plan-builder + plan-review skills MUST reference this law
+  # ==========================================================================
+  - id: LAW-PLAN-001
+    name: plan-gate-12-over-15
+    title: "No implementation starts without plan scoring >= 12/15"
+    statement: |
+      NO IMPLEMENTATION STARTS WITHOUT A PLAN SCORING >= 12/15 ON THE QUALITY GATE.
+      A plan below 12/15 is a liability, not a blueprint.
+      Revise weak sections and re-score before Gate G1 approval.
+    rationale: >-
+      The 15-section plan template (A-O) is ATLAS's SSoT for implementation
+      work. Plans scoring below 12/15 have at least 3 weak sections (vision,
+      inventory, architecture, schema, backend, API, frontend, UX,
+      observability, security, testing, deploy, effort, phases, decisions).
+      Starting implementation with gaps guarantees rework, missed edge cases,
+      and HITL gate violations downstream. Gate G1 (Design Approval) is
+      non-negotiable: plan score >= 12/15 AND Seb HITL sign-off.
+    applicable_skills:
+      - plan-builder
+      - plan-review
+      - brainstorming
+      - context-discovery
+      - writing-plans
+      - executing-plans
+      - programme-manager
+    applicable_agents:
+      - plan-architect
+      - plan-reviewer
+      - team-architect
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      Plan scored 10/15 but we are running late — let's start implementation and
+      fix the gaps as we go. The weak sections are "non-critical" anyway.
+    compliant_example: |
+      Pass 1 (Score): rate each of 15 criteria 0 or 1 — total = 10/15.
+      Identify weak sections (< 1 pt): section D (schema), H (observability), K (testing).
+      Pass 2 (Enrich): research 2026 best practices + Context7, rewrite weak sections.
+      Re-score: 13/15. Gate G1 approval requested via AskUserQuestion.
+    signature_sha256: "81269bd790f0315bdcd269378401b7140f1a32bd654fc9740d9b0967112c0af8"
+    created: 2026-04-17
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-SCOPE-001 — Scope Drift Prevention
+  # Source: scope-check skill (<HARD-GATE> block, verbatim)
+  # Enforcement: scope-check skill body MUST contain this in <HARD-GATE>
+  # ==========================================================================
+  - id: LAW-SCOPE-001
+    name: scope-drift-prevention
+    title: "No fixes without root cause — stop on scope drift"
+    statement: |
+      NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST. When touching files outside original task scope, STOP and verify with user before proceeding. Scope drift destroys plans. Symptom fixes are failure. If you have not completed Phase 1 (investigate why the out-of-scope file needs changing), you cannot propose fixes or expand the scope.
+    rationale: >-
+      Scope drift is silent plan destruction. Each "while I'm in this file"
+      detour expands effort, invalidates the plan's dependency graph, and
+      hides the real root cause behind an unrelated fix. The discipline is
+      not to refuse all drift — it is to STOP, name the drift, investigate
+      root cause, and get explicit HITL approval before expanding the scope.
+      Symptom fixes ship bugs faster than they prevent them.
+    applicable_skills:
+      - scope-check
+      - systematic-debugging
+      - tdd
+      - code-review
+      - senior-review-checklist
+      - executing-plans
+    applicable_agents:
+      - team-engineer
+      - code-reviewer
+      - team-debugger
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      While fixing this auth bug I noticed the logger is misconfigured — let me fix that too.
+      This unrelated helper has a typo, quick cleanup won't hurt the scope.
+    compliant_example: |
+      Step 1 (Notice): I am about to edit `logger.py` but it is outside the auth bug scope.
+      Step 2 (Investigate): is logger.py the root cause of the auth bug? Read recent commits.
+      Step 3 (Decide): if unrelated, STOP and AskUserQuestion "logger.py drift detected, proceed or defer?".
+      Step 4 (Document): if user approves expansion, log decision to decision-log, re-score plan.
+    signature_sha256: "b397a43830dfb5b41bd82d090d70e2c5f69b5db784be2ab9ef4756b0f8908807"
+    created: 2026-04-17
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-DISPATCH-001 — Subagent Independence
+  # Source: subagent-dispatch skill (<HARD-GATE> block, verbatim)
+  # Enforcement: subagent-dispatch + dispatching-parallel-agents MUST reference
+  # ==========================================================================
+  - id: LAW-DISPATCH-001
+    name: subagent-independence
+    title: "No parallel dispatch without verified task independence"
+    statement: |
+      Subagents MUST work on independent tasks. Verify no shared state before parallel dispatch — merge conflicts and race conditions are the price of skipping this check. Build the dependency graph. Confirm no two parallel tasks touch the same file, the same DB migration, or the same git operation. Agent reports are NOT evidence — check `git diff` independently before closing the loop.
+    rationale: >-
+      Parallel subagent dispatch amortizes wall-time only when tasks are
+      truly independent. Two agents writing the same migration, the same
+      config, or touching the same file produce merge conflicts at best,
+      silent corruption at worst. The dependency graph is cheap — 2
+      minutes to sketch. The alternative (disentangling two agent
+      overlapping commits) is cheap only in the sense that it burns a
+      full session. Trust-but-verify: every parallel run ends with a
+      human-driven `git diff` audit, never agent self-reports.
+    applicable_skills:
+      - subagent-dispatch
+      - dispatching-parallel-agents
+      - atlas-team
+      - executing-plans
+      - subagent-driven-development
+    applicable_agents:
+      - team-engineer
+      - plan-architect
+      - team-architect
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      Dispatching 3 agents in parallel on backend, frontend, and tests — they are "different layers" so no conflict.
+      Agent 1 reported success, Agent 2 reported success, closing the loop without checking diffs.
+    compliant_example: |
+      Step 1 (Graph): list each task's touched files + DB tables + git ops.
+      Step 2 (Overlap): diff the file sets — any intersection = serialize, not parallelize.
+      Step 3 (Dispatch): launch only verified-independent tasks in parallel.
+      Step 4 (Verify): `git diff` + `git status` per agent branch, confirm expected files only.
+    signature_sha256: "b1628c0a58ad0360dcace17d1b53944404b57a0b2e51985a811864320d885bbd"
+    created: 2026-04-17
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-COMPLIANCE-001 — Enterprise Evidence Required
+  # Source: enterprise-audit skill (<HARD-GATE> block, verbatim)
+  # Enforcement: enterprise-audit + security-audit + codebase-audit MUST reference
+  # ==========================================================================
+  - id: LAW-COMPLIANCE-001
+    name: enterprise-evidence-required
+    title: "No compliance claim without fresh verification evidence"
+    statement: |
+      Enterprise compliance claims MUST have evidence (test output, scan result, signed audit) before marking any control as compliant. Unsubstantiated claims = liability. NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE. If you have not run the verification command in this message, you cannot claim it passes. Evidence before assertions, always. An audit without evidence is a PDF of opinions — it will not survive G Mining due diligence or regulator scrutiny.
+    rationale: >-
+      Enterprise sales (G Mining, Eldorado Gold) and regulator scrutiny
+      (SOC2, ISO 27001, mining safety audits) do not accept "we think
+      we are compliant" as a control status. Every claim requires a
+      runnable verification command, a timestamped output, and an
+      auditor-traceable artifact. Unsubstantiated compliance claims
+      are legal liability — they shift blame from "missing control"
+      to "fraudulent attestation". Evidence is cheap; fraud is expensive.
+    applicable_skills:
+      - enterprise-audit
+      - security-audit
+      - codebase-audit
+      - skill-security-audit
+      - verification
+      - product-health
+    applicable_agents:
+      - team-security
+      - code-reviewer
+      - team-verifier
+      - team-auditor
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      Control 4.3 (encryption at rest) — marking compliant because the config looks right in the repo.
+      Our data export pipeline "should be" SOC2-aligned, no need to run the scanner this sprint.
+    compliant_example: |
+      Control 4.3 check: run `scripts/audit-encryption.sh`, capture output.
+      Evidence: `output-2026-04-17.json` — all volumes show AES-256 envelope encryption.
+      Mark compliant WITH the evidence reference + timestamp + auditor command.
+      If scan fails or is stale (>30 days), mark NON-COMPLIANT regardless of repo config.
+    signature_sha256: "250103c525436e7034710a07a11993334d79bdcd2d07d1addef6ad9a5924785c"
+    created: 2026-04-17
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-CONTEXT-001 — Context Discovery Precondition
+  # Source: context-discovery skill (<HARD-GATE> block, verbatim)
+  # Enforcement: context-discovery skill body MUST contain this in <HARD-GATE>
+  # ==========================================================================
+  - id: LAW-CONTEXT-001
+    name: context-discovery-precondition
+    title: "No plan creation without prior context discovery"
+    statement: |
+      Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity. Context discovery MUST run before any plan creation or major refactor.
+    rationale: >-
+      Plans written without context discovery recycle stale assumptions
+      and miss existing hooks, skills, or helpers that already solve the
+      problem. Discovery (8-phase scan — files, docs, recent commits,
+      patterns, decisions, skills, CLAUDE.md, tests) is the cheapest
+      quality gate in the pipeline: 10-20 minutes of reading that
+      prevents 5-10 hours of duplicated code or architectural re-dos.
+      No exceptions — even "simple" refactors benefit from seeing what
+      pattern the codebase already uses.
+    applicable_skills:
+      - context-discovery
+      - plan-builder
+      - brainstorming
+      - plan-review
+      - interactive-flow
+      - writing-plans
+    applicable_agents:
+      - plan-architect
+      - team-architect
+      - plan-reviewer
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      This refactor is small — skip the context scan and start planning directly.
+      I already know the codebase, discovery is redundant for this sprint.
+    compliant_example: |
+      Step 1 (Phase 1-2): scan files + recent commits for affected modules.
+      Step 2 (Phase 3-4): audit CLAUDE.md + docs for design constraints.
+      Step 3 (Phase 5-6): grep patterns + decisions.jsonl for prior choices.
+      Step 4 (Phase 7-8): list existing skills + tests covering the area.
+      Step 5 (Present): write context-discovery report, get user sign-off, THEN plan-builder.
+    signature_sha256: "5027e04f9b9cbfad308197ac3b79ada8fb0f24bb5bbe697ae4d0703aa2ec8a26"
+    created: 2026-04-17
+    version: 1.0.0
+
+# ==========================================================================
+# Registry metadata
+# ==========================================================================
+metadata:
+  total_laws: 9
+  enforcement_levels:
+    hard_gate: 9
+    recommendation: 0
+  coverage:
+    core_tier: 9
+    dev_tier: 9
+    admin_tier: 9
+  source_skills:
+    superpowers_verbatim: 4   # LAW-TDD, LAW-DBG, LAW-DESIGN, LAW-VERIFY
+    atlas_native: 5           # LAW-PLAN, LAW-SCOPE, LAW-DISPATCH, LAW-COMPLIANCE, LAW-CONTEXT
+  linter_rules:
+    - "L3: skills with superpowers_pattern: [iron_law] MUST reference name: here"
+    - "L4: <HARD-GATE> signature MUST match signature_sha256 byte-for-byte"
+    - "L10: this file MUST load via yaml.safe_load"

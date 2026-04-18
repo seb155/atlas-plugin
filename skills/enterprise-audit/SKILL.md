@@ -2,9 +2,29 @@
 name: enterprise-audit
 description: "14-dimension enterprise readiness audit for G Mining due diligence. Python checker engine (toolkit/audit/) + ATLAS skill orchestration. Covers: multi-tenancy, data integrity, deployment, security, testing, ops, code quality, docs, deps, API surface, i18n, a11y, governance, performance. Scoring A-F with HITL gates."
 effort: high
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [security-audit, codebase-audit, plan-builder]
+thinking_mode: adaptive
 ---
 
 # Enterprise Audit
+
+<HARD-GATE>
+Enterprise compliance claims MUST have evidence (test output, scan result, signed audit) before marking any control as compliant. Unsubstantiated claims = liability.
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE. If you have not run the verification command in this message, you cannot claim it passes. Evidence before assertions, always. An audit without evidence is a PDF of opinions — it will not survive G Mining due diligence or regulator scrutiny.
+</HARD-GATE>
+
+<red-flags>
+
+| Thought | Reality |
+|---------|---------|
+| "Trust me, I've audited this pattern 20 times — it's compliant" | Experience speeds recognition, not verification. The 20 previous audits had 20 different contexts. This one has its own gotcha you have not met yet. A signed attestation without fresh scan output is a liability waiting for its first breach post-mortem. |
+| "Good enough for now, we can tighten the controls later" | "Later" is the cemetery where good intentions go. Compliance frameworks are binary — a control is in place or it is not. "Partial" compliance during due diligence reads as "no" to auditors. Refactor-later = audit-finding-later at 10x the remediation cost. |
+| "Nobody will notice if this one control is un-tested" | Compliance auditors are professional noticers. The one control you skipped is the one they sample. "Nobody will notice" precedes 90% of compliance incidents — the notice arrives as a breach disclosure, a failed audit, or a pilot-killed email. |
+| "Tests should pass now, let's mark the dimension green" | "Should pass" is a wish, not evidence. Confidence is not verification. Until the command runs and the output is read, you do not know — you hope. A green dimension with no captured output is a future red finding. |
+| "The scanner reported no issues, we're clean" | Scanner reports are signal, not proof. Scanners miss configuration drift, permission chains, runtime injection, multi-tenancy leaks. Cross-check with manual review + test run + file evidence before trusting a clean scan. |
+
+</red-flags>
 
 14-dimension enterprise readiness audit. Designed for G Mining / Eldorado Gold due diligence.
 Every finding requires evidence (command output or file reference). HITL gates on scope, report, and all CRITICAL remediations.

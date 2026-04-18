@@ -2,11 +2,32 @@
 name: verification
 description: "Complete verification: L1-L6 tests + quality gates pipeline (build→types→lint→tests→security→diff) + E2E persona tests + security scan + performance benchmarks + checkpoints. Evidence before assertions."
 effort: medium
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [tdd, systematic-debugging, code-review]
+thinking_mode: adaptive
 ---
 
 # Verification
 
 **Principle**: Evidence before assertions. NEVER claim work passes without running commands and confirming output.
+
+<HARD-GATE>
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
+If you have not run the verification command in this message, you cannot claim it passes.
+Evidence before assertions, always.
+</HARD-GATE>
+
+**Iron Law**: `LAW-VERIFY-001` (evidence-before-assertions). Override requires HITL AskUserQuestion. Source: `scripts/execution-philosophy/iron-laws.yaml`.
+
+<red-flags>
+| Thought | Reality |
+|---|---|
+| "Tests should pass now, committing" | "Should pass" is a wish, not evidence. Confidence is not verification. Until the command runs and the output is read, you do not know — you hope. |
+| "Good enough, we can refactor later" | "Later" is the cemetery where good intentions go. Code merged ships to production. Every refactor-later is a mortgage with compound interest paid in incident reviews. |
+| "YAGNI — nobody will notice this edge case" | YAGNI means "don't build speculative features", not "don't handle real inputs". Edge cases happen IN PRODUCTION to REAL users, not in your head. |
+| "The agent reported success, task is done" | Agent reports are NOT evidence. Agents can claim success while leaving an empty diff, broken tests, or uncommitted files. Trust but verify — always check the VCS diff independently. |
+| "Trust me, I've done this pattern 20 times" | Experience speeds recognition, not verification. The 20 previous times had 20 different contexts. This one has its own gotcha you have not met yet. |
+</red-flags>
 
 ## Verification Levels
 

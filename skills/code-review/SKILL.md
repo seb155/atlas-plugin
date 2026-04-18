@@ -1,12 +1,30 @@
 ---
 name: code-review
-description: "Unified code review and PR review. This skill should be used when the user asks to 'review code', 'review this PR', 'code review', 'check for bugs', 'audit changes', 'review pull request', or mentions reviewing diffs, CLAUDE.md compliance, or checking code quality. Two modes: local (working tree diff) and PR (remote pull request)."
+description: "Unified code review and PR review, two-stage: spec → /ultrareview. This skill should be used when the user asks to 'review code', 'review this PR', 'code review', 'check for bugs', 'audit changes', 'review pull request', or mentions reviewing diffs, CLAUDE.md compliance, or checking code quality. Two modes: local (working tree diff) and PR (remote pull request). Stage 1 handles spec compliance; Stage 2 dispatches /ultrareview (CC 2.1.111+) for code quality."
 effort: high
 context: fork
 agent: code-reviewer
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [senior-review-checklist, verification-before-completion, systematic-debugging]
+thinking_mode: adaptive
 ---
 
 # Code Review
+
+<HARD-GATE>
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
+If you have not run the verification command in this message, you cannot claim it passes.
+Evidence before assertions, always.
+</HARD-GATE>
+
+<red-flags>
+| Thought | Reality |
+|---------|---------|
+| "Tests should pass now, committing" | "Should pass" is a wish, not evidence. Confidence is not verification. Until the command runs and the output is read, you do not know — you hope. Run the exact verification command. Read the full output. Confirm exit 0 + 0 failures. Quote the evidence in your response BEFORE claiming success. |
+| "Good enough, we can refactor later" | "Later" is the cemetery where good intentions go. Code merged ships to production. Every refactor-later is a mortgage with compound interest paid in incident reviews. If it is not refactor-ready today, it is not merge-ready today. |
+| "The agent reported success, task is done" | Agent reports are NOT evidence. Agents can claim success while leaving an empty diff, broken tests, or uncommitted files. Trust but verify — always check the VCS diff independently. Run `git diff` or `git status`. Confirm actual file changes match the agent's report. |
+| "Trust me, I've done this pattern 20 times" | Experience speeds recognition, not verification. The 20 previous times had 20 different contexts. This one has its own gotcha you have not met yet. Treat familiarity as a hypothesis, not a conclusion. Run the verification step anyway. |
+</red-flags>
 
 Unified code review combining local diff analysis and PR review into a single workflow.
 Two modes: **local** (uncommitted/unpushed changes) and **PR** (remote pull request).
@@ -206,6 +224,38 @@ Found N issues:
 - Intentional functional changes related to the PR purpose
 - Issues on unmodified lines
 - Speculative issues that depend on unknown runtime state
+
+## Two-Stage Review Flow (v6.0)
+
+Code review in ATLAS v6.0 is **two-stage mandatory** (Philosophy Engine):
+
+### Stage 1 — Spec Compliance (this skill)
+Verify the change aligns with requirements:
+- All acceptance criteria met?
+- All edge cases handled?
+- API contract respected?
+- Existing behavior preserved?
+
+If Stage 1 fails → STOP, fix, retry. Do NOT proceed to Stage 2.
+
+### Stage 2 — Code Quality (/ultrareview)
+Once Stage 1 passes, invoke Claude Code native `/ultrareview` slash command:
+
+```bash
+# From within CC session, after spec-compliance stage passed:
+/ultrareview
+```
+
+`/ultrareview` dispatches a senior reviewer (Opus max effort) who checks:
+- Architecture & design patterns
+- Performance & security
+- Maintainability & readability
+- Convention adherence
+
+Use `/ultrareview` findings alongside `senior-review-checklist` skill for structured quality audit.
+
+**Why two stages?**
+Mixing spec-compliance and code-quality in one pass leads to spec violations slipping through when reviewer focuses on style. Separating ensures both dimensions get dedicated attention.
 
 ## HITL Gates
 

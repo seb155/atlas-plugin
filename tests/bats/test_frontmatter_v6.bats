@@ -136,11 +136,11 @@ load helpers
 }
 
 @test "hard-gate-linter.sh passes on tier-1 skills with <HARD-GATE> (Sprint 2.2)" {
-  local linter="$PLUGIN_ROOT/scripts/hard-gate-linter.sh"
-  if [ ! -x "$linter" ] && [ ! -f "$linter" ]; then
-    skip "hard-gate-linter.sh not yet implemented (Sprint 2.2 deliverable)"
-  fi
-  run bash "$linter" "$PLUGIN_ROOT/skills"
-  # Exit 0 = pass, 2-5 = block (see schema §5).
+  # Was SKIP in Sprint 1.5 — Sprint 2.2 delivered the linter.
+  local linter="$PLUGIN_ROOT/scripts/execution-philosophy/hard-gate-linter.sh"
+  [ -f "$linter" ] || skip "hard-gate-linter.sh not present"
+  [ -x "$linter" ] || skip "hard-gate-linter.sh not executable"
+  run bash "$linter" all
+  # Expected: 10/10 Tier-1 skills pass; L8 fuzzy-match warnings = OK per schema.
   [ "$status" -eq 0 ]
 }

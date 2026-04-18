@@ -2,12 +2,33 @@
 name: plan-builder
 description: "Generate ultra-detailed 15+5 section engineering plans (A-O + execution strategy) with quality gate 16/20. Replaces superpowers:writing-plans. Uses context discovery report to pre-fill enterprise sections."
 effort: high
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [brainstorming, context-discovery, plan-reviewer]
+thinking_mode: adaptive
 ---
 
 # Plan Builder
 
 **Model**: ALWAYS Opus 4.7, max thinking effort, max output tokens. Never truncate.
 **Announce:** "Building engineering plan using Atlas Dev plan-builder..."
+
+<HARD-GATE>
+NO IMPLEMENTATION STARTS WITHOUT A PLAN SCORING >= 12/15 ON THE QUALITY GATE.
+A plan below 12/15 is a liability, not a blueprint.
+Revise weak sections and re-score before Gate G1 approval.
+</HARD-GATE>
+
+**Iron Law**: `LAW-PLAN-001` (plan-gate-12-over-15). Override requires HITL AskUserQuestion. Source: `scripts/execution-philosophy/iron-laws.yaml`.
+
+<red-flags>
+| Thought | Reality |
+|---|---|
+| "This feature is too simple to need a plan" | Simple projects are where unexamined assumptions cause the most wasted work. The plan can be short, but it MUST exist and be approved. "Too simple to plan" precedes 90% of scope-drift incidents. |
+| "Let me just start coding and see where it goes" | Coding without a plan = architecting in your prefrontal cortex under tool-use latency. You will burn 10x tokens exploring paths a 15-min plan would have rejected. |
+| "Plan later, let me prototype first to see if it works" | "Prototype first" = "write production code I will pretend to throw away". You will adapt the prototype, not rewrite it. Prototyping without a plan is planning-by-accretion. |
+| "I know the pattern from last sprint, same plan applies" | Patterns repeat but CONTEXT does not. Tables, personas, constraints, API shape — all different. Reusing a plan verbatim skips the discovery where the gotcha lives. |
+| "Plan scored 10/15 but deadline is tight, let's ship it" | A plan below 12/15 has 3+ weak sections. Those sections become your incident retrospectives. Gate G1 at 12/15 is calibrated on historical data — below it, rework cost > plan-enrichment cost. |
+</red-flags>
 
 ## Workflow
 

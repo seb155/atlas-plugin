@@ -2,17 +2,32 @@
 name: brainstorming
 description: "Collaborative design exploration. 1 question at a time via AskUserQuestion. 2-3 approaches with comparison tables. ASCII mockups. HITL design approval before implementation."
 effort: high
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [plan-builder, context-discovery]
+thinking_mode: adaptive
 ---
 
 # Brainstorming Ideas Into Designs
+
+<HARD-GATE>
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it.
+This applies to EVERY project regardless of perceived simplicity.
+</HARD-GATE>
+
+<red-flags>
+| Thought | Reality |
+|---------|---------|
+| "This feature is too simple to need a plan" | Simple projects are where unexamined assumptions cause the most wasted work. The plan can be short, but it MUST exist and be approved. "Too simple to plan" precedes 90% of scope-drift incidents. Write a 5-section micro-plan (goal, approach, files touched, tests, rollback). |
+| "Let me just start coding and see where it goes" | Coding without a plan = architecting in your prefrontal cortex under tool-use latency. You will burn 10x tokens exploring paths a 15-min plan would have rejected. STOP. Invoke brainstorming skill. Present 2-3 approaches via AskUserQuestion. Wait for design approval. |
+| "Plan later, let me prototype first to see if it works" | "Prototype first" = "write production code I will pretend to throw away". You will adapt the prototype, not rewrite it. Prototyping without a plan is planning-by-accretion. Timebox (30 min), named branch (spike/*), explicit "deleted after" commit. Otherwise, plan first. |
+| "I know the pattern from last sprint, same plan applies" | Patterns repeat but CONTEXT does not. Tables, personas, constraints, API shape — all different. Reusing a plan verbatim skips the discovery where the gotcha lives. Run context-discovery skill FIRST. Copy template, not content. |
+</red-flags>
 
 ## Overview
 
 Turn ideas into fully formed designs through structured collaborative dialogue.
 Explore the project first, then ask questions one at a time to refine the idea.
 Present 2-3 approaches with comparison tables. Get approval before implementing.
-
-**Hard gate:** Do NOT write any code, invoke implementation skills, or take action until design is presented and user approves.
 
 ## Process
 
