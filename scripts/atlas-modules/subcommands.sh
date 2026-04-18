@@ -51,14 +51,44 @@ _atlas_list() {
 _atlas_resume() {
   # v5.7.0+ — Dual-mode resume (Phase 4):
   #   1. atlas resume               → claude -c (last session)
-  #   2. atlas resume <project>     → cd to project + claude -c (legacy)
-  #   3. atlas resume <session-name> → claude --resume <name> (v2.0.64+)
-  # Disambiguation: project lookup first, fallback to --resume by name.
+  #   2. atlas resume --picker      → claude --resume (native CC picker, v5.28.0+ P5.1)
+  #   3. atlas resume --last        → claude -c (explicit last)
+  #   4. atlas resume <project>     → cd to project + claude -c (legacy)
+  #   5. atlas resume <session-name> → claude --resume <name> (v2.0.64+)
+  # Disambiguation: flag first, then project lookup, fallback to --resume by name.
   local arg="$1"
   if [[ -z "$arg" ]]; then
     claude -c --chrome
     return
   fi
+
+  # P5.1: Handle picker / last flags
+  case "$arg" in
+    --picker|-p)
+      # Native CC resume picker (cross-project session list)
+      echo "📋 Opening Claude Code session picker..."
+      claude --resume
+      return
+      ;;
+    --last|-l)
+      echo "⏮  Resuming last session..."
+      claude -c
+      return
+      ;;
+    -h|--help|help)
+      cat <<'EOF'
+atlas resume [--picker | --last | <project> | <session-name>]
+
+Subcommands:
+  (no arg)              → claude -c (continue last session with chrome)
+  --picker, -p          → claude --resume (native CC picker, cross-project)
+  --last, -l            → claude -c (explicit last, no chrome)
+  <project>             → cd to project + claude -c
+  <session-name>        → claude --resume <session-name>
+EOF
+      return 0
+      ;;
+  esac
 
   # Priority 1: resolve as project path (legacy behavior)
   local path

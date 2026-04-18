@@ -270,6 +270,7 @@ atlas() {
   local chrome=$ATLAS_DEFAULT_CHROME
   local yolo=false auto_mode=false plan_mode=false bare=false
   local cont=false resume_name="" session_name="" wt_name=""
+  local fork_session=false print_cmd_only=false  # P5.4 + P5.5 (v5.28.0+)
   local -a extra_args=()
   local parsing_extra=false
 
@@ -316,6 +317,8 @@ atlas() {
         dontAsk) yolo=true ;;  # yolo now → --permission-mode dontAsk (post-P1.4)
       esac
       [ "${ATLAS_LP_BARE:-}" = "true" ] && bare=true
+      # P5.4: map ATLAS_LP_FORK_SESSION → local fork_session (true=force, auto/false=no)
+      [ "${ATLAS_LP_FORK_SESSION:-}" = "true" ] && fork_session=true
       echo "📋 [atlas] Profile '$lp_name' loaded (chain: $ATLAS_LP_CHAIN)" >&2
     else
       echo "❌ [atlas] Profile load failed — using defaults" >&2
@@ -399,6 +402,9 @@ atlas() {
       --profile) _atlas_skip_next=true ;;  # Profile name is next arg (pre-parsed above)
       --override) _atlas_skip_next=true ;;  # key=value is next arg (pre-parsed above)
       --detect-only|--no-profile) ;;        # P3: handled in pre-parse, no-op here
+      --fork-session) fork_session=true ;;  # P5.4: force session fork
+      --no-fork-session) fork_session=false ;;  # P5.4: opt-out (overrides profile)
+      --print-command|--print-cmd) print_cmd_only=true ;;  # P5.5: dry-run
       -i|--inline) worktree=false; split=false ;;
       -y|--yolo) yolo=true ;;
       -a|--auto) auto_mode=true ;;
@@ -552,6 +558,9 @@ print(handoffs[-1] if handoffs else '')
   $cont && cmd+=(-c)
   [ -n "$resume_name" ] && cmd+=(-r "$resume_name")
 
+  # P5.4: Fork session if requested (from profile, flag, or git branch hook)
+  $fork_session && cmd+=(--fork-session)
+
   # Session name — interactive prompt for split mode, auto for inline
   local name="${session_name:-$(_cc_session_name "$path" "$topic")}"
   local tmux_session_name="cc-${project}${topic:+-$topic}"
@@ -586,6 +595,25 @@ print(handoffs[-1] if handoffs else '')
 
   # Extra passthrough args
   [ ${#extra_args[@]} -gt 0 ] && cmd+=("${extra_args[@]}")
+
+  # ─── P5.5: --print-command dry-run (exit before launch) ────
+  if $print_cmd_only; then
+    echo ""
+    echo "📋 Built claude command (dry-run, no launch):"
+    echo ""
+    printf '  %q ' "${cmd[@]}"
+    echo ""
+    echo ""
+    echo "  Project path: $path"
+    echo "  Tmux session: ${tmux_session_name:-<none>}"
+    echo "  Split mode:   $split"
+    echo "  Bare mode:    $bare"
+    if [ -n "$ATLAS_LAUNCH_PROFILE" ]; then
+      echo "  Profile:      $ATLAS_LAUNCH_PROFILE (chain: $ATLAS_LP_CHAIN)"
+    fi
+    echo ""
+    return 0
+  fi
 
   # Launch with full PATH guaranteed
   local _full_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin:${HOME}/.npm-global/bin:/usr/local/go/bin:${HOME}/go/bin:$PATH"
