@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.26.2 (2026-04-18)
+
+### 🐛 Bug Fixes
+- fix(hooks): SessionStart pipefail trap + move feature-drift to core
+
+### 🔧 Other Changes
+- Merge PR #24: fix(hooks): SessionStart pipefail trap + canonical plugins.axoiq.com
+- chore(dist): regenerate dist/ with 5.26.2 post-merge
+- Merge remote-tracking branch 'origin/main' into feat/fix-session-start-hooks
+- docs(readme): add External Install section for plugins.axoiq.com
+
+
+
 ## v5.26.1 (2026-04-18)
 
 ### 🐛 Bug Fixes
