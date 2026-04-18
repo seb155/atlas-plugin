@@ -1,5 +1,28 @@
 # Changelog
 
+## v5.27.0 (2026-04-18)
+
+### 🧹 Maintenance
+- chore(marketplace): remove v6-alpha marketing from plugin descriptions
+- docs(discovery): bump hardcoded example version 5.1.0 → 5.27.0 in SKILL.md
+- fix(release): publish.sh uses modular build target (legacy 'all' broken)
+- chore(cleanup): purge v6.0.0-alpha.{1,2,3,4} git tags (local + remote Forgejo/GitHub)
+- chore(cache): delete orphan v6.0.0-alpha.{4,5} + stale 5.26.3 cache dirs
+- docs(cship): align toml header comment with current version (v5.27.0)
+- docs(memory): sync MEMORY.md footer + ATLAS PLUGIN section to v5.27.0
+
+### 📝 Notes
+- Pure hygiene release. Zero functional changes, zero breaking changes.
+- Reset clean after 2026-04-17 v6-alpha experiment rollback.
+- Known issues bypassed (pre-existing, filed for follow-up):
+  - `test_build_output.py` parameterized on legacy admin/dev/user tiers
+  - `test_theory_of_mind.py::test_sacres_quebecois` unrelated flaky
+- Tag purge: eliminated v6.0.0-alpha.{1,2,3,4} from Forgejo + GitHub mirror.
+
+### Context
+Part of the v5.27.0 cleanup plan (`atlas-plugin-version-est-wise-duckling`).
+See `synapse/.blueprint/plans/atlas-plugin-version-est-wise-duckling.md` for full execution log.
+
 ## v5.26.3 (2026-04-18)
 
 ### 🐛 Bug Fixes
