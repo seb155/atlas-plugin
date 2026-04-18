@@ -54,71 +54,76 @@ make publish-patch
 
 ## External Install (Public Marketplace)
 
-The ATLAS plugin marketplace is accessible publicly via the canonical URL
-`https://plugins.axoiq.com`. Behind the scenes this is a Cloudflare Tunnel
--> Caddy reverse proxy -> Forgejo git gateway, fully public read-only.
+The ATLAS plugin marketplace is accessible via the **canonical URL**
+`https://plugins.axoiq.com` — one URL works from **both** internal LAN
+and external internet, with **zero credentials** required.
 
-### Install from any machine
+### Install from any machine (one command)
 
 ```bash
-claude plugin source add \
-  --name atlas-marketplace \
-  --source git \
-  --url https://plugins.axoiq.com
-
-# Then install any combination of the three plugins
-claude plugin install atlas-core@atlas-marketplace     # required base
-claude plugin install atlas-dev@atlas-marketplace      # optional dev tier
-claude plugin install atlas-admin@atlas-marketplace    # optional admin tier
+/plugin marketplace add https://plugins.axoiq.com
+/plugin install atlas-core@atlas-marketplace     # required base
+/plugin install atlas-dev@atlas-marketplace      # optional dev tier
+/plugin install atlas-admin@atlas-marketplace    # optional admin tier
 ```
 
-### Verify externally (from a WAN-only host)
+### Verify (before install)
 
 ```bash
-# Sanity check: DNS + HTTP 200 + marketplace.json present
+# Manifest endpoint
+curl -s https://plugins.axoiq.com/ | jq '.name, .plugins | length'
+# Expected: "atlas-marketplace", 3
+
+# Git access
 git ls-remote https://plugins.axoiq.com HEAD
-# Expected: <SHA>  HEAD
+# Expected: <SHA> HEAD
 
+# Full clone
 git clone --depth=1 https://plugins.axoiq.com /tmp/atlas-mkt \
-  && cat /tmp/atlas-mkt/.claude-plugin/marketplace.json | jq '.plugins[].name'
-# Expected: "atlas-core", "atlas-admin", "atlas-dev"
+  && jq '.plugins[].source.url' /tmp/atlas-mkt/.claude-plugin/marketplace.json
+# Expected: three times "https://plugins.axoiq.com"
 ```
 
-### Infrastructure chain
+### How it works
+
+`plugins.axoiq.com` is a public gateway in front of the private Forgejo SSoT.
+Internal devs can use either `plugins.axoiq.com` (via LAN DNS → Caddy direct)
+or `forgejo.axoiq.com/axoiq/atlas-plugin` (direct with Authentik SSO creds).
 
 ```
-VPS / external machine
-      v  git clone https://plugins.axoiq.com
-Cloudflare Edge  (DNS: CNAME to <tunnel-id>.cfargotunnel.com, proxied)
-      v
-CF Tunnel (Homelab_Prod_01)
-      v  originServerName: plugins.axoiq.com, noTLSVerify: true
-Caddy LXC 103 (192.168.5.103)
-      v  rewrite * /axoiq/atlas-plugin.git{uri}
-      v  header_up Host forgejo.axoiq.com
-      v  header_up Authorization token <FORGEJO_PAT>
-Forgejo (192.168.10.75:3000)
-      v
-Response: git packfile
+External user                       Internal dev
+      v                                  v
+Cloudflare Edge                     LAN DNS (Technitium)
+      v                                  v
+CF Tunnel (Homelab_Prod_01)        ──────┬
+      v                                  v
+      └───────► Caddy LXC 103 (192.168.5.103)
+                (plugins.axoiq.com block)
+                      v
+                dual behavior:
+                  - GET / or /marketplace.json → proxy to Forgejo API raw
+                  - git operations → rewrite + proxy to /axoiq/atlas-plugin.git
+                      v
+                header_up Host forgejo.axoiq.com
+                header_up Authorization "token {env.FORGEJO_PROXY_TOKEN}"
+                      v  (readonly scope: read:repository)
+                Forgejo LXC (192.168.10.75:3000)
+                      v
+                Response: marketplace.json OR git packfile
 ```
 
-### Publishing new versions
+**Key design notes**:
+- Readonly Forgejo PAT (scope: `read:repository`) injected by Caddy via `{env.FORGEJO_PROXY_TOKEN}` — users don't need Forgejo credentials
+- Token stored in `/etc/caddy/.env` (chmod 600 root) — not in Caddyfile literal
+- Forgejo `REQUIRE_SIGNIN_VIEW=true` preserved — proxy is the ONLY public gateway
+- GitHub mirror at `github.com/seb155/atlas-plugin` kept as backup (Forgejo push mirror, sync_on_commit)
 
-Releases are automated via `make publish-patch` / `make publish-minor`:
+### Publishing new versions (internal workflow)
 
-1. Bump `VERSION` file
-2. Run `./build.sh modular` to regenerate `dist/`
-3. Commit + tag (`v5.26.1`) + push to Forgejo (`axoiq/atlas-plugin`)
-4. Forgejo CI workflow `.forgejo/workflows/sync-to-github.yaml` syncs to GitHub mirror (if configured)
-5. Cloudflare route `plugins.axoiq.com` serves immediately (no caching layer, live git HTTP proxy)
-
-### Tech-debt / follow-ups
-
-- **Forgejo token in Caddy config**: Currently uses the owner's full-scope PAT
-  because Forgejo server has `REQUIRE_SIGNIN_VIEW=true` globally. Follow-up:
-  rotate to a dedicated read-only token scoped to `axoiq/atlas-plugin` only.
-- **Forgejo -> GitHub auto-mirror**: Workflow exists in reverse direction
-  (`.github/workflows/sync-to-forgejo.yaml`) but no automated forward mirror yet.
+1. Push changes to `forgejo.axoiq.com/axoiq/atlas-plugin` (`feature/*` → `main`)
+2. `atlas-ci` bot auto-releases (`chore(release): v5.26.x`)
+3. Forgejo push mirror syncs to GitHub (sync_on_commit, 30s latency)
+4. `plugins.axoiq.com` serves new version immediately (live proxy, no caching)
 
 ## Directory Structure
 

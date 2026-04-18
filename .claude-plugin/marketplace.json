@@ -12,9 +12,9 @@
       "description": "ATLAS Core v6 \u2014 shared base + Philosophy Engine + SOTA hooks + atlas-loop + atlas-routines.",
       "source": {
         "source": "git-subdir",
-        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
+        "url": "https://plugins.axoiq.com",
         "path": "dist/atlas-core",
-        "ref": "v6.0.0-alpha.4"
+        "ref": "main"
       },
       "author": {
         "name": "Seb Gagnon"
@@ -26,9 +26,9 @@
       "description": "ATLAS Admin v6 \u2014 superuser addon. knowledge + gms-mgmt merged + zero-paternalisme.",
       "source": {
         "source": "git-subdir",
-        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
+        "url": "https://plugins.axoiq.com",
         "path": "dist/atlas-admin-addon",
-        "ref": "v6.0.0-alpha.4"
+        "ref": "main"
       },
       "author": {
         "name": "Seb Gagnon"
@@ -40,9 +40,9 @@
       "description": "ATLAS Dev v6 \u2014 developer addon. Iron Laws + Red Flags + 10 Tier-1 migrated + bats v6.",
       "source": {
         "source": "git-subdir",
-        "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
+        "url": "https://plugins.axoiq.com",
         "path": "dist/atlas-dev-addon",
-        "ref": "v6.0.0-alpha.4"
+        "ref": "main"
       },
       "author": {
         "name": "Seb Gagnon"
