@@ -1,0 +1,79 @@
+# ATLAS Launch Profile — Schema v1
+# Path: ~/.atlas/profiles/<name>.yaml (user) or templates/profiles/ (source)
+# Parser: yq (github.com/mikefarah/yq)
+#
+# Profiles bundle Claude Code launch config. Type `atlas` → profile auto-resolves
+# from cwd / git branch / WiFi trust / time. Override any field via --override key=value.
+#
+# Note: Do not confuse with existing ATLAS_PROFILE (user preset like "axoiq" in
+# ~/.atlas/profile.json). Launch profiles are stored in ~/.atlas/profiles/ (plural).
+
+name: base
+description: "Base profile — defaults for all ATLAS sessions. Extend this via 'extends: base'."
+
+# ─── Claude Code launch flags ──────────────────────────────
+
+# Plugin tier: which ATLAS addon to load via --plugin-dir
+#   core  = 28 skills  (atlas-core only)
+#   dev   = 36 skills  (atlas-dev-addon)
+#   admin = 67 skills  (atlas-admin-addon) — full capability
+#   none  = --bare (no plugins, fastest startup)
+tier: admin
+
+# Permission mode (maps to --permission-mode)
+#   default            = prompts for risky ops (interactive)
+#   plan               = plan mode (preview before execute)
+#   auto               = auto-approve known-safe ops
+#   dontAsk            = skip all prompts (CI/automation trusted flows)
+#   acceptEdits        = auto-accept file edits only
+#   bypassPermissions  = skip ALL permission checks (AVOID — use only for tests)
+permission_mode: default
+
+# Effort level (maps to --effort)
+#   low | medium | high | xhigh | max
+effort: high
+
+# Worktree isolation (maps to --worktree)
+# true  = auto-name worktree like {project}-{MMDD}
+# false = launch directly in cwd
+worktree: true
+
+# Session fork policy (maps to --fork-session)
+#   true  = always fork (new session ID)
+#   false = never fork (reuse session)
+#   auto  = detect feature/fix/hotfix git branch → fork
+fork_session: auto
+
+# Bare mode — skip ALL hooks + plugins for speed (maps to --bare)
+bare: false
+
+# ─── MCP composition (optional) ─────────────────────────────
+# Refs ~/.atlas/mcp-profiles/<name>.yaml
+# null = no MCP profile applied (user's default MCP stack)
+mcp_profile: null
+
+# ─── Env overrides ──────────────────────────────────────────
+# Exported before claude launch
+env:
+  NODE_OPTIONS: "--max-old-space-size=8192"
+
+# ─── Auto-detection rules ──────────────────────────────────
+# cwd_match: glob patterns that activate this profile when current directory matches
+# First profile match wins. Empty = never auto-matched (explicit --profile required).
+cwd_match: []
+
+# wifi_trust_required: minimum WiFi trust level needed (from atlas-location skill)
+#   none   = any network OK
+#   low    = home/known networks
+#   medium = trusted office networks
+#   high   = VPN-only (sensitive ops)
+# If current network < required, prompt user or downgrade permission_mode to plan.
+wifi_trust_required: low
+
+# git_branch_hook: per-branch overrides applied on top of base fields
+#   Example: { "feature/*": { fork_session: true } }
+git_branch_hook: {}
+
+# time_hook: time-based overlays (optional, advanced)
+#   Example: { "weekend": { effort: low }, "weekday-morning": { effort: xhigh } }
+time_hook: {}

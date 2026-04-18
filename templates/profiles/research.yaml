@@ -1,0 +1,31 @@
+# ATLAS Launch Profile — Research / Exploration
+# Activate: --profile research (no auto-detect, explicit opt-in)
+
+name: research
+description: "Research/exploration session — read-heavy, low effort, no worktree."
+extends: base
+
+# Core only: minimal plugin footprint for fast startup
+tier: core
+
+# Default permission mode (interactive — learning mode)
+permission_mode: default
+effort: medium
+
+# No worktree (research = read, not write)
+worktree: false
+fork_session: false
+
+# Keep hooks (useful for tracking) but minimal plugins
+bare: false
+
+# Just context7 for library docs (no browser/playwright needed for pure research)
+mcp_profile: minimal
+
+env:
+  ATLAS_RESEARCH_MODE: "true"
+
+# No auto cwd_match (user opts in explicitly)
+cwd_match: []
+
+wifi_trust_required: none  # Research OK on any network

@@ -1,0 +1,8 @@
+# ATLAS MCP Profile — Minimal
+# For research, infra, or sessions that don't need browser automation
+
+name: minimal
+description: "Minimal MCP stack — Context7 only for library documentation lookups."
+
+servers:
+  - context7

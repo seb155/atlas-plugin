@@ -1,0 +1,12 @@
+# ATLAS MCP Profile — Chrome + Playwright
+# For browser automation, E2E testing, visual QA
+
+name: chrome-playwright
+description: "Browser automation stack: Chrome MCP + Playwright + Context7 for docs."
+
+# MCP servers to enable for this profile
+# Reference names should match entries in ~/.claude/settings.json mcp config
+servers:
+  - chrome-devtools
+  - playwright
+  - context7
