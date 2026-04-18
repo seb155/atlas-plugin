@@ -54,11 +54,17 @@ if ! $DRY_RUN; then
   echo "$NEW_VERSION" > VERSION
 fi
 
-# Step 2: Build all tiers + domains
-echo "2️⃣  Building all tiers + domains..."
+# Step 2: Build modular (core + addons) + domain plugins (if any)
+echo "2️⃣  Building modular tiers..."
 if ! $DRY_RUN; then
-  ./build.sh all
-  ./build.sh domains
+  ./build.sh modular
+  # Build domain plugins only if at least one domain profile exists
+  if ls profiles/domain-*.yaml >/dev/null 2>&1; then
+    echo "   Found domain profiles, building domain plugins..."
+    ./build.sh domains
+  else
+    echo "   No domain profiles — skipping domain builds"
+  fi
 fi
 
 # Step 3: Run tests
