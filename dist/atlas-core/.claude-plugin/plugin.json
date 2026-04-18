@@ -1,8 +1,8 @@
 {
   "name": "atlas-core",
-  "version": "5.23.0",
+  "version": "5.24.0",
   "description": "Shared base — session, memory, context, personal, experiential",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-17T09:47:45Z"
+  "buildTimestamp": "2026-04-18T00:24:27Z"
 }

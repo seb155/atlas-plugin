@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.24.0 (2026-04-18)
+
+### ✨ Features
+- feat(hooks): auto-tail-agent for subagent tmux visibility (sp-agent-vis layer 3)
+
+
+
 ## v5.23.0 (2026-04-17)
 
 ### ✨ Features
