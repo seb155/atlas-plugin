@@ -316,7 +316,7 @@ When user says `/atlas skills`, `/atlas help`, "what can you do", "list skills",
 📊 QUALITY          │ codebase-audit, systematic-debugging, verification, code-review, code-simplify, test-orchestrator
 📌 PROJECT          │ feature-board, programme-manager, engineering-ops, scope-check
 📦 SHIP & DEPLOY   │ finishing-branch, ci-management, devops-deploy
-📚 KNOWLEDGE        │ deep-research, document-generator, knowledge-engine, knowledge-manager, youtube-transcript
+📚 KNOWLEDGE        │ deep-research, document-generator, knowledge, youtube-transcript
 🛡️ SECURITY & OPS  │ security-audit, enterprise-audit, infrastructure-ops, product-health
 🧬 OPTIMIZE         │ experiment-loop, platform-update, code-analysis, memory-dream
 👤 PERSONAL         │ note-capture, morning-brief, knowledge-builder, user-profiler, reminder-scheduler

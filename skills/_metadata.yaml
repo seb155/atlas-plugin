@@ -589,21 +589,13 @@ skills:
     plugin: core
     description: "Capture gut feelings and emerging patterns as persistent intuition files"
 
-  knowledge-engine:
-    emoji: "🗂️"
+  knowledge:
+    emoji: "🧠"
     category: Knowledge
     owner: admin
     plugin: admin
     domains: [enterprise]
-    description: "Enterprise knowledge layer — search, ingest, discover, vectorize"
-
-  knowledge-manager:
-    emoji: "📖"
-    category: Knowledge
-    owner: admin
-    plugin: admin
-    domains: [enterprise]
-    description: "Enterprise knowledge layer — coverage, discovery, search, vault"
+    description: "Unified knowledge layer (engine + manager merged 2026-04-17) — TEG ask/ingest + UKL coverage/discover/gaps/search/rules/scope/vault"
 
   marketplace-manager:
     emoji: "🏪"
@@ -720,19 +712,12 @@ skills:
     domains: [dev, core]
     description: "Claude Code API cost tracking — real token usage from session JSONL, daily/weekly/monthly/sprint views via ccusage"
 
-  gms-cockpit:
+  gms-mgmt:
     emoji: "🏭"
     category: Project
     owner: admin
     plugin: admin
-    description: "GMS POC command center — adoption tracking, KC stats, pilier coverage, magic moments"
-
-  gms-profiler:
-    emoji: "👤"
-    category: Project
-    owner: admin
-    plugin: admin
-    description: "MSE 4-layer auto-enriching profiles — discipline, personal, enterprise, team. KC evidence + bus-factor analysis"
+    description: "GMS unified management (cockpit + profiler + onboard + insights merged 2026-04-17). 16 subcommands: status/kc-report/team/skills/insights/report/sync/profile/gaps/bus-factor/onboard. Collisions resolved via --deep/--quick flags."
 
   idle-curiosity:
     emoji: "🔍"
@@ -740,20 +725,6 @@ skills:
     owner: admin
     plugin: admin
     description: "Autonomous exploration engine — discovers under-explored topics and knowledge gaps. HITL gated."
-
-  gms-insights:
-    emoji: "🔗"
-    category: Project
-    owner: admin
-    plugin: admin
-    description: "Cross-Discipline Insight Engine — detect tacit connections between disciplines via shared KC tags. Pilier 1"
-
-  gms-onboard:
-    emoji: "🎓"
-    category: Project
-    owner: admin
-    plugin: admin
-    description: "Onboarding Auto-Playbook Generator — 4-week structured playbook for new MSE. Pilier 1 (RH)"
 
   # ===========================================
   # DOMAIN-EXCLUSIVE: infra

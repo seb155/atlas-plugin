@@ -32,19 +32,15 @@ skills:
 - auto-orchestrator
 - platform-update
 # Knowledge & Experiments
-- knowledge-engine
-- knowledge-manager
+- knowledge
 - experiment-loop
 - idle-curiosity
 - atlas-team
 - atlas-dev-self
 - atlas-analytics
 - ultrathink
-# GMS-specific (G Mining Services)
-- gms-cockpit
-- gms-profiler
-- gms-onboard
-- gms-insights
+# GMS-specific (G Mining Services) — 2026-04-17 SP-DEDUP merged 4→1
+- gms-mgmt
 refs:
 # Inherited from dev-addon: composition-patterns, react-best-practices,
 # web-design-guidelines, gmining-excel, code-smells-catalog,

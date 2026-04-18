@@ -57,13 +57,9 @@ atlas-assist:
   - tdd
   - finishing-branch
 
-# GMS
-gms-insights:
-  - gms-cockpit
-  - gms-profiler
-gms-onboard:
-  - gms-profiler
-  - gms-cockpit
+# GMS — 2026-04-17 SP-DEDUP merged 4→1 (gms-mgmt unified)
+# All inter-skill deps internal to gms-mgmt; no external chain.
+
 
 # Cognitive
 memory-dream:

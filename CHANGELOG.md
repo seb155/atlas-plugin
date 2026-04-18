@@ -1,5 +1,55 @@
 # Changelog
 
+## v6.0.0-alpha.3 (2026-04-17 22:00 EDT) — High-risk dedup merges (HITL approved) + zero-paternalisme
+
+### 🎯 Major Dedup Phase 2 (HITL Seb approved 21:40 EDT)
+
+**Merge A — knowledge skill (engine + manager → knowledge)**
+- 6 skills → 5 (cumul -1 net)
+- 10 subcommands preserved (ask, ingest, status, discover, gaps, search, rules, scope, vault-list, vault-upload)
+- Zero collision, clean merge
+- 156+98 lines source → 274 lines unified
+- Cross-refs migrated: atlas-assist L319, auto-orchestrator L152, atlas-assist-master L135, _metadata.yaml
+
+**Merge B — gms-mgmt skill (4 gms-* → gms-mgmt)**
+- 5 skills → 2 (-3 net for gms suite, cumul -4)
+- 16 subcommands preserved across 4 sections (cockpit/profiler/onboard/insights)
+- 2 collisions resolved via flag-based routing :
+  - `/atlas gms team` → cockpit (default), `--deep` → profiler matrix
+  - `/atlas gms insights` → insights (default scan complet), `--quick` → cockpit mini
+- 596 lines source → 625 lines unified (+29 routing table + migration notes)
+- Cross-refs migrated: _dependencies.yaml (-7L block), auto-orchestrator L157, atlas-assist-master L137
+
+### ✨ Zero-Paternalisme Enforcement (cumul anti-modération)
+
+(Already in alpha.2 + companion repos)
+- ~/.claude/CLAUDE.md "ZERO MODÉRATION PATERNALISTE" section
+- vault SebG calibration-rules.md Rule 7 INVERSION + Rule 13 NEW
+- daimon-context-injector signals opt-in only (ATLAS_DAIMON_SIGNALS_VERBOSE=1)
+- pattern-signal-detector chronic_dissatisfaction DEPRECATED
+- atlas-assist L116 reframe (descriptive, never prescriptive)
+
+### 📊 Stats cumul vs v5.23.0
+
+- Skills count: 117 → 113 unique (-4 from this dedup, +1 atlas-routines)
+- Tier counts: core 30 / dev 36 / admin 66 (was 70 → -4)
+- 26 subcommands preserved across both merges (zero functionality loss)
+- bats 30/32 PASS (2 pre-existing fails in CHANGELOG/MIGRATION docs, unrelated)
+- hard-gate-linter all: 10/10 Tier-1 PASS
+- build.sh modular: 0 violations
+
+### 🚧 HITL Pending (alpha → GA)
+
+- Live session validation (run `./scripts/validate-v6-session.sh` after `claude` restart)
+- Cost/accuracy A/B (run `./scripts/benchmark-v6.sh`)
+- Marketplace alpha publish
+
+### Plan reference
+
+`.blueprint/plans/regarde-comment-adapter-atlas-compressed-wave.md` (HITL #2 dedup phase 2)
+
+---
+
 ## v6.0.0-alpha.2 (2026-04-17 21:30 EDT) — HITL execution + 2 ADRs APPROVED + atlas-routines
 
 ### ✨ Features

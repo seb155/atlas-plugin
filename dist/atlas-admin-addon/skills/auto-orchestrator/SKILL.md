@@ -149,12 +149,12 @@ The orchestrator has access to the full catalog via `_metadata.yaml`:
 | Governance | 1 | enterprise-audit |
 | Implementation | 5 | atlas-team, executing-plans, git-worktrees, subagent-dispatch, tdd |
 | Infrastructure | 3 | infrastructure-change, infrastructure-ops, statusline-setup |
-| Knowledge | 7 | deep-research, document-generator, knowledge-engine/manager, visual-generator, youtube-transcript |
+| Knowledge | 6 | deep-research, document-generator, knowledge, visual-generator, youtube-transcript |
 | Meta | 19 | atlas-analytics/dev-self/doctor/onboarding, decision-log, hookify, memory-dream, platform-update, plugin-builder, scope-check, session-pickup/retrospective/spawn, skill-management, ultrathink |
 | Optimize | 2 | engineering-ops, experiment-loop |
 | Personal | 10 | episode-create, intuition-log, knowledge-builder, morning-brief/routine, note-capture, relationship-manager, reminder-scheduler, user-profiler, weekly-review |
 | Planning | 7 | brainstorming, context-discovery, execution-strategy, frontend-design/workflow, plan-builder, vision-alignment |
-| Project | 6 | feature-board, gms-cockpit/insights/onboard/profiler, programme-manager |
+| Project | 3 | feature-board, gms-mgmt, programme-manager |
 | Quality | 8 | code-analysis, code-review, code-simplify, codebase-audit, plan-review, product-health, systematic-debugging, test-orchestrator, verification |
 | Security | 2 | atlas-vault, security-audit |
 | Ship | 2 | finishing-branch, ship-all |
