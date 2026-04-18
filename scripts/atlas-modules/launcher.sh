@@ -301,7 +301,39 @@ atlas() {
     fi
   fi
 
-  # P2.4: skip_next flag — consumes value arg after --profile (pre-parsed above)
+  # ─── P2.5: --override key=value (applied after profile, before explicit flags) ───
+  # Example: atlas --profile dev-synapse --override effort=max --override worktree=false
+  for ((_i=0; _i<${#_atlas_args[@]}; _i++)); do
+    if [ "${_atlas_args[_i]}" = "--override" ]; then
+      local _kv="${_atlas_args[_i+1]:-}"
+      local _k="${_kv%%=*}" _v="${_kv#*=}"
+      if [ -z "$_kv" ] || [ "$_k" = "$_kv" ]; then
+        echo "⚠️  [atlas] Invalid --override syntax: '$_kv' (expected key=value)" >&2
+        continue
+      fi
+      case "$_k" in
+        tier)            export "ATLAS_LP_TIER=$_v" ;;
+        permission_mode|permission-mode|mode)
+          case "$_v" in
+            plan)    plan_mode=true;  auto_mode=false; yolo=false ;;
+            auto)    auto_mode=true; plan_mode=false; yolo=false ;;
+            dontAsk) yolo=true;      plan_mode=false; auto_mode=false ;;
+            default) plan_mode=false; auto_mode=false; yolo=false ;;
+            *)       echo "⚠️  [atlas] Unknown permission_mode: '$_v'" >&2 ;;
+          esac
+          export "ATLAS_LP_PERMISSION_MODE=$_v"
+          ;;
+        effort)          effort="$_v" ;;
+        worktree)        worktree="$_v" ;;
+        fork_session|fork-session) export "ATLAS_LP_FORK_SESSION=$_v" ;;
+        bare)            [ "$_v" = "true" ] && bare=true ;;
+        mcp_profile|mcp-profile) export "ATLAS_LP_MCP_PROFILE=$_v" ;;
+        *)               echo "⚠️  [atlas] Unknown override field: '$_k'" >&2 ;;
+      esac
+    fi
+  done
+
+  # P2.4 + P2.5: skip_next flag — consumes value arg after --profile or --override
   local _atlas_skip_next=false
 
   for arg in "$@"; do
@@ -317,6 +349,7 @@ atlas() {
     case "$arg" in
       --) parsing_extra=true ;;
       --profile) _atlas_skip_next=true ;;  # Profile name is next arg (pre-parsed above)
+      --override) _atlas_skip_next=true ;;  # key=value is next arg (pre-parsed above)
       -i|--inline) worktree=false; split=false ;;
       -y|--yolo) yolo=true ;;
       -a|--auto) auto_mode=true ;;
