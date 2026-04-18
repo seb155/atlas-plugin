@@ -188,3 +188,72 @@ _atlas_list_profiles() {
   done
 }
 
+# _atlas_detect_profile → prints profile name to stdout (or empty if none match)
+# Resolution order (first match wins):
+#   1. Walk cwd → parent dirs looking for .atlas/project.json with "profile" field
+#   2. Scan ~/.atlas/profiles/*.yaml for cwd_match glob matching $PWD
+#   3. Return empty + exit 1 if no match
+# Used by launcher.sh when no explicit --profile flag given AND auto-detect enabled.
+_atlas_detect_profile() {
+  local profile_dir="${HOME}/.atlas/profiles"
+  local cwd="${PWD}"
+
+  # 1. Walk cwd → parent for .atlas/project.json manifest
+  local search="$cwd"
+  while [ -n "$search" ] && [ "$search" != "/" ]; do
+    if [ -f "${search}/.atlas/project.json" ]; then
+      local manifest_profile
+      manifest_profile=$(python3 -c "
+import json, sys
+try:
+    with open('${search}/.atlas/project.json') as f:
+        data = json.load(f)
+    print(data.get('profile', ''))
+except Exception:
+    pass
+" 2>/dev/null)
+      if [ -n "$manifest_profile" ] && [ -f "${profile_dir}/${manifest_profile}.yaml" ]; then
+        echo "$manifest_profile"
+        return 0
+      fi
+    fi
+    search="$(dirname "$search")"
+  done
+
+  # 2. Scan profiles for cwd_match glob
+  [ ! -d "$profile_dir" ] && return 1
+  command -v yq &>/dev/null || return 2
+
+  # Enable globstar for ** matching (saved/restored)
+  local _globstar_saved=false
+  shopt -q globstar 2>/dev/null && _globstar_saved=true
+  shopt -s globstar 2>/dev/null
+
+  local f profile_name patterns pattern matched=""
+  for f in "$profile_dir"/*.yaml; do
+    [ -f "$f" ] || continue
+    profile_name=$(basename "$f" .yaml)
+
+    patterns=$(yq eval '.cwd_match // [] | .[]' "$f" 2>/dev/null)
+    [ -z "$patterns" ] && continue
+
+    while IFS= read -r pattern; do
+      [ -z "$pattern" ] && continue
+      # shellcheck disable=SC2053 — intentional glob match with unquoted pattern
+      if [[ "$cwd" == $pattern ]]; then
+        matched="$profile_name"
+        break 2
+      fi
+    done <<< "$patterns"
+  done
+
+  # Restore globstar state
+  $_globstar_saved || shopt -u globstar 2>/dev/null
+
+  if [ -n "$matched" ]; then
+    echo "$matched"
+    return 0
+  fi
+  return 1
+}
+

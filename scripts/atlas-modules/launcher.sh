@@ -272,19 +272,35 @@ atlas() {
   local -a extra_args=()
   local parsing_extra=false
 
-  # ─── P2.4: Launch Profile pre-parse (v5.28.0+) ──────────────
+  # ─── P2.4 + P3.1/2/6: Launch Profile pre-parse (v5.28.0+) ─────
   # Detect --profile <name> and apply profile defaults BEFORE main arg parse.
   # Explicit flags (-p, -a, -e, etc.) still override profile values (parse later).
-  local lp_name=""
+  local lp_name="" detect_only=false no_profile=false
   local -a _atlas_args=("$@")
   local _i
   for ((_i=0; _i<${#_atlas_args[@]}; _i++)); do
-    if [ "${_atlas_args[_i]}" = "--profile" ]; then
-      lp_name="${_atlas_args[_i+1]:-}"
-      break
-    fi
+    case "${_atlas_args[_i]}" in
+      --profile)      lp_name="${_atlas_args[_i+1]:-}" ;;
+      --detect-only)  detect_only=true ;;
+      --no-profile)   no_profile=true ;;
+    esac
   done
-  if [ -n "$lp_name" ]; then
+
+  # P3.1 + P3.2: Auto-detect profile if no explicit --profile AND auto-detect enabled
+  # Feature flag: ATLAS_AUTO_DETECT_PROFILE=true (default false for safe rollout)
+  if [ -z "$lp_name" ] && ! $no_profile; then
+    local auto_detect="${ATLAS_AUTO_DETECT_PROFILE:-false}"
+    if [ "$auto_detect" = "true" ] || $detect_only; then
+      local _detected
+      _detected=$(_atlas_detect_profile 2>/dev/null)
+      if [ -n "$_detected" ]; then
+        lp_name="$_detected"
+        echo "🎯 [atlas] Auto-detected profile: '$lp_name' (cwd: $PWD)" >&2
+      fi
+    fi
+  fi
+
+  if [ -n "$lp_name" ] && ! $no_profile; then
     if _atlas_load_profile "$lp_name"; then
       # Apply profile values as new defaults (explicit flags below will override)
       [ -n "$ATLAS_LP_WORKTREE" ] && [ "$ATLAS_LP_WORKTREE" != "null" ] && worktree="$ATLAS_LP_WORKTREE"
@@ -334,6 +350,32 @@ atlas() {
     fi
   done
 
+  # ─── P3.6: --detect-only dry-run (exits after printing resolved state) ─────
+  if $detect_only; then
+    echo ""
+    if [ -n "$lp_name" ]; then
+      echo "📋 Profile Resolution (post profile + override)"
+      echo "   Name:     $lp_name"
+      echo "   Chain:    ${ATLAS_LP_CHAIN:-—}"
+      echo "   Tier:     ${ATLAS_LP_TIER:-—}"
+      echo "   Mode:     ${ATLAS_LP_PERMISSION_MODE:-—}"
+      echo "   Effort:   $effort"
+      echo "   Worktree: $worktree"
+      echo "   Fork:     ${ATLAS_LP_FORK_SESSION:-—}"
+      echo "   Bare:     $bare"
+      echo "   MCP:      ${ATLAS_LP_MCP_PROFILE:-—}"
+      echo "   WiFi Req: ${ATLAS_LP_WIFI_TRUST_REQUIRED:-—}"
+    else
+      echo "ℹ️  [atlas] No profile detected or specified"
+      echo "   Current cwd: $PWD"
+      echo "   To enable auto-detect:  export ATLAS_AUTO_DETECT_PROFILE=true"
+      echo "   To use explicit:        atlas --profile <name> --detect-only"
+      echo "   To list available:      atlas profile list"
+    fi
+    echo ""
+    return 0
+  fi
+
   # P2.4 + P2.5: skip_next flag — consumes value arg after --profile or --override
   local _atlas_skip_next=false
 
@@ -351,6 +393,7 @@ atlas() {
       --) parsing_extra=true ;;
       --profile) _atlas_skip_next=true ;;  # Profile name is next arg (pre-parsed above)
       --override) _atlas_skip_next=true ;;  # key=value is next arg (pre-parsed above)
+      --detect-only|--no-profile) ;;        # P3: handled in pre-parse, no-op here
       -i|--inline) worktree=false; split=false ;;
       -y|--yolo) yolo=true ;;
       -a|--auto) auto_mode=true ;;
