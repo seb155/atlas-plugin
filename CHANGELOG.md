@@ -1,5 +1,80 @@
 # Changelog
 
+## v6.0.0-alpha.1 (2026-04-17) — Philosophy Engine + SOTA Foundation
+
+### 🎯 BREAKING CHANGES (alpha — opt-in)
+
+This release introduces the v6.0 Philosophy Engine, codifying execution discipline via Iron Laws + Red Flags + `<HARD-GATE>` patterns inspired by Superpowers (obra/superpowers). It is BACKWARDS COMPATIBLE for skills that haven't been migrated yet (defaults preserved).
+
+### ✨ Major Features
+
+**Philosophy Engine (Sprint 2)**
+- 9 Iron Laws codified in `scripts/execution-philosophy/iron-laws.yaml` (TDD, debugging, design, verification, planning, scope drift, subagent independence, enterprise compliance, context discovery)
+- 25 Red Flags corpus across 5 categories (TDD/Debugging/Planning/Review/Scope) in `red-flags-corpus.yaml`
+- `hard-gate-linter.sh` (450L, L1-L10 rules + Jaccard 80% fuzzy matching)
+- `effort-heuristic.sh` (275L, 6-bucket weighted keyword routing)
+- 10 Tier-1 skills migrated with `<HARD-GATE>` + `<red-flags>` tables (tdd, systematic-debugging, plan-builder, verification, code-review, brainstorming, context-discovery, scope-check, subagent-dispatch, enterprise-audit)
+
+**Frontmatter v6 schema (Sprint 1)**
+- New SKILL.md keys: `effort`, `thinking_mode`, `superpowers_pattern`, `see_also`
+- New AGENT.md keys: `effort`, `thinking_mode`, `isolation`, `task_budget`
+- 17 AGENT.md migrated per SOTA allocation (plan-architect=max, code-reviewer=xhigh OPUS UPGRADE, infra-expert=xhigh OPUS UPGRADE, team-engineer/devops/data=high)
+- Schemas documented in `.blueprint/schemas/` (4 files, 780L)
+- `build.sh` validates frontmatter v6 (+189L)
+
+**SOTA Hooks (Sprint 3)**
+- `hooks/inject-meta-skill` — SessionStart injects atlas-assist FULL content (23KB) + 9 Iron Laws (Superpowers pattern)
+- `hooks/pre-compact-sota-context` — PreCompact 6-section preservation reminder
+- `hooks/session-end-retro` — SessionEnd nudge toward retrospective
+- `hooks/effort-router` — PreToolUse[Task|Agent] effort suggestion via heuristic
+
+**Verbosity reduction (Sprint 4)**
+- Top 10 longest skills compressed -32% net (1783 lines saved, zero info loss)
+- memory-dream 1167→515, atlas-doctor 946→603, atlas-team 710→516, etc.
+
+**Agent SOTA enhancements (Sprint 5)**
+- `dispatch.sh` 6-level effort routing (low|medium|high|xhigh|max|auto)
+- `task-budget.sh` advisory token ceiling exposure
+- `atlas-loop` skill (autonomous CronCreate + ScheduleWakeup + Monitor wrapper)
+- Monitor pattern documented in ci-management, smoke-gate, deploy-hotfix
+
+### 🔧 Migrations Required
+
+For Opus 4.7 compatibility (mandatory):
+- ❌ `extended thinking` mode (`{type: "enabled", budget_tokens: N}`) — REJECTED by API
+- ✅ `adaptive thinking` (`thinking_mode: adaptive` in frontmatter) — ENFORCED
+- 7 references remediated in this release (no active call sites remain)
+
+### 📊 Stats
+
+- 5 atomic commits (Sprint 1 → Sprint 5)
+- 132 files changed vs v5.23.0, +5546/-6492 (NET -946 — compression victory)
+- 32 bats tests (was 17, +15 new for Philosophy Engine)
+- Test coverage Tier-1 skills: 0% → 100%
+- 117 unique skills audited (CSV in tests/inventory/)
+- 4 ADRs proposed (HITL pending: dedup execution + MCP browser pair)
+
+### 🚧 HITL Pending (alpha → GA gate)
+
+- Approve dedup mapping (117 → ~60 target requires destructive merge)
+- Choose MCP browser pair (claude-in-chrome + playwright recommended; computer-use drop)
+- Live session validation of new SessionStart injection (23KB payload size)
+- Cost/accuracy measurement vs v5.23.0 baseline (target ≥+25% accuracy, ≤+15% cost)
+
+### 📚 Documentation
+
+- New `.blueprint/schemas/` (4 docs, 780L)
+- New `.blueprint/adrs/0001-mcp-browser-consolidation.md`
+- New `.blueprint/plans/dedup-recommendations.md`
+- Updated `skills/agent-visibility/README.md` (220L user guide)
+- Updated `skills/agent-visibility/SKILL.md` (Plan Status corrected: all 5 phases shipped)
+
+### Plan reference
+
+`.blueprint/plans/regarde-comment-adapter-atlas-compressed-wave.md` (306h plan, ~3h actual via parallel dispatch — 100x avg accel)
+
+---
+
 ## v5.23.0 (2026-04-17)
 
 ### ✨ Features
