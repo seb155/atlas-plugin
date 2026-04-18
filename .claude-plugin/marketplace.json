@@ -1,6 +1,6 @@
 {
   "name": "atlas-marketplace",
-  "description": "AXOIQ — ATLAS AI engineering assistant. v6 alpha (Philosophy Engine + SOTA).",
+  "description": "AXOIQ \u2014 ATLAS AI engineering assistant. v6 alpha (Philosophy Engine + SOTA).",
   "owner": {
     "name": "Seb Gagnon",
     "email": "seb@axoiq.com"
@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "atlas-core",
-      "version": "6.0.0-alpha.4",
-      "description": "ATLAS Core v6 — shared base + Philosophy Engine + SOTA hooks + atlas-loop + atlas-routines.",
+      "version": "5.26.1",
+      "description": "ATLAS Core v6 \u2014 shared base + Philosophy Engine + SOTA hooks + atlas-loop + atlas-routines.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -22,8 +22,8 @@
     },
     {
       "name": "atlas-admin",
-      "version": "6.0.0-alpha.4",
-      "description": "ATLAS Admin v6 — superuser addon. knowledge + gms-mgmt merged + zero-paternalisme.",
+      "version": "5.26.1",
+      "description": "ATLAS Admin v6 \u2014 superuser addon. knowledge + gms-mgmt merged + zero-paternalisme.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -36,8 +36,8 @@
     },
     {
       "name": "atlas-dev",
-      "version": "6.0.0-alpha.4",
-      "description": "ATLAS Dev v6 — developer addon. Iron Laws + Red Flags + 10 Tier-1 migrated + bats v6.",
+      "version": "5.26.1",
+      "description": "ATLAS Dev v6 \u2014 developer addon. Iron Laws + Red Flags + 10 Tier-1 migrated + bats v6.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",

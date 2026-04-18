@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.26.1 (2026-04-18)
+
+### 🐛 Bug Fixes
+- fix(marketplace): UPGRADE atlas-{core,admin,dev} to v6.0.0-alpha.4 + remove duplicate alpha entries
+
+
+
 ## v5.26.0 (2026-04-18)
 
 ### ✨ Features
