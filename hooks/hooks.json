@@ -460,6 +460,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" subagent-context-injector",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/auto-tail-agent\"",
+            "async": true,
+            "timeout": 3
           }
         ]
       }

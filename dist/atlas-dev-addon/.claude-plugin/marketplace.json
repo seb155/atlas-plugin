@@ -5,7 +5,7 @@
     {
       "name": "atlas-dev-addon",
       "description": "Developer tools — planning, TDD, review, shipping",
-      "version": "6.0.0-alpha.3",
+      "version": "6.0.0-alpha.4",
       "source": { "source": "git", "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }

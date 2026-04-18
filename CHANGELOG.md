@@ -1,5 +1,37 @@
 # Changelog
 
+## v6.0.0-alpha.4 (2026-04-17 22:30 EDT) — Merge main v5.25.0 (auto-tail-agent integration)
+
+### 🔄 Sync with main
+
+Merged origin/main into feat/v6-sprint1-foundation to integrate v5.24.0 + v5.25.0 changes that were shipped in parallel during v6 development.
+
+**Integrated from main**:
+- `hooks/auto-tail-agent` (Sprint 0.5 sorted-moth implementation by Seb)
+- `profiles/core.yaml` registration of auto-tail-agent SubagentStart hook
+- v5.24.0 + v5.25.0 release commits
+
+**Preserved from v6**:
+- All Philosophy Engine deliverables (9 Iron Laws, 25 Red Flags, hard-gate-linter, effort-heuristic)
+- All 4 SOTA hooks (inject-meta-skill, pre-compact-sota-context, session-end-retro, effort-router)
+- knowledge + gms-mgmt merged skills (HITL approved)
+- atlas-loop + atlas-routines new skills
+- All Sprint 1-7 work (frontmatter v6, agent SOTA allocation, build.sh inherits, etc.)
+
+**Merge resolution**:
+- VERSION + manifests: kept v6 versions, bumped to alpha.4
+- CHANGELOG: preserved both branches chronologically (v6.0 entries on top)
+- hooks/hooks.json + profiles/core.yaml: auto-merged cleanly (no manual conflict)
+- dist/: deleted + rebuilt from scratch via `./build.sh modular`
+
+### 🚧 Marketplace visibility
+
+Plugin marketplace (Forgejo git-subdir source) reads from main HEAD. To see v6.0.0-alpha.4 in `/plugin Discover`, options:
+- Wait PR #23 merge (will move main to v6)
+- Manual install from branch (if CC supports `--branch` flag)
+
+---
+
 ## v6.0.0-alpha.3 (2026-04-17 22:00 EDT) — High-risk dedup merges (HITL approved) + zero-paternalisme
 
 ### 🎯 Major Dedup Phase 2 (HITL Seb approved 21:40 EDT)
@@ -162,6 +194,16 @@ For Opus 4.7 compatibility (mandatory):
 `.blueprint/plans/regarde-comment-adapter-atlas-compressed-wave.md` (306h plan, ~3h actual via parallel dispatch — 100x avg accel)
 
 ---
+
+## v5.25.0 (2026-04-18) — main parallel release
+
+### ✨ Features
+- feat(profiles): register auto-tail-agent hook in atlas-core
+
+## v5.24.0 (2026-04-18) — main parallel release
+
+### ✨ Features
+- feat(hooks): auto-tail-agent for subagent tmux visibility (sp-agent-vis layer 3)
 
 ## v5.23.0 (2026-04-17)
 
