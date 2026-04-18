@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.25.0 (2026-04-18)
+
+### ✨ Features
+- feat(profiles): register auto-tail-agent hook in atlas-core
+
+
+
 ## v5.24.0 (2026-04-18)
 
 ### ✨ Features
