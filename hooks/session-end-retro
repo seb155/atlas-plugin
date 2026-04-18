@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# ATLAS SessionEnd Hook — Auto Retrospective (v6.0)
+# Reminds the model to invoke session-retrospective skill before exiting
+#
+# Paired with existing hooks/session-end-memory-cleanup (memory hygiene).
+# This hook is the retrospective-pattern companion that nudges the model
+# to capture lessons, gotchas, decisions, and next steps.
+
+set -euo pipefail
+
+# Read stdin
+INPUT=$(cat 2>/dev/null || echo '{}')
+
+# Check if session had significant activity (heuristic: any TaskList updates? files modified?)
+# For now, always emit reminder
+
+REMINDER=$(cat <<'EOF'
+# ATLAS Session End — Retrospective Pattern
+
+Before closing this session, consider invoking the `session-retrospective` skill to capture:
+
+- Lessons learned (what worked, what didn't)
+- Gotchas for future sessions (anti-patterns encountered)
+- Decisions made (architectural choices, trade-offs)
+- Next steps (open tasks, follow-ups)
+
+Use the `Skill` tool: `session-retrospective` or create a handoff file in `memory/handoff-YYYY-MM-DD-<topic>.md`.
+
+This is optional (session may have been short/trivial) but recommended for any session with:
+- Multiple commits
+- New files created
+- Architectural decisions made
+- Blockers encountered
+EOF
+)
+
+python3 -c "
+import json
+print(json.dumps({
+    'hookSpecificOutput': {
+        'hookEventName': 'SessionEnd',
+        'additionalContext': '''$REMINDER'''
+    }
+}))
+"

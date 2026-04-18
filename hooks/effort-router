@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# ATLAS PreToolUse[Task|Agent|TaskCreate] Hook — Effort Router (v6.0)
+# -------------------------------------------------------------------
+# Suggests an effort level (low|medium|high|xhigh|max|auto) based on the task
+# description by delegating to scripts/execution-philosophy/effort-heuristic.sh.
+#
+# Behavior:
+#   - Advisory ONLY — never blocks the tool invocation
+#   - Fail-open: on any error (missing heuristic, bad JSON, timeout) emits
+#     {"continue": true} and exits 0
+#   - Reads hook input (JSON) from stdin, extracts tool_input.description or
+#     tool_input.prompt or tool_input.subject (first non-empty)
+#   - Calls effort-heuristic.sh with 2s timeout
+#   - Emits hookSpecificOutput.additionalContext with the suggestion
+#
+# Plan: .blueprint/plans/v6.0 section K Sprint 3 Task 3.4
+# Registered in: hooks/hooks.json (PreToolUse matcher "Task|Agent|TaskCreate")
+
+set -euo pipefail
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+HEURISTIC="$PLUGIN_ROOT/scripts/execution-philosophy/effort-heuristic.sh"
+
+# Fail-open: if heuristic missing or not executable, continue silently
+if [ ! -x "$HEURISTIC" ]; then
+  echo '{"continue":true}'
+  exit 0
+fi
+
+# Read stdin JSON (hook payload from Claude Code)
+INPUT=$(cat 2>/dev/null || echo '{}')
+
+# Extract task description from various possible tool_input shapes:
+#   - Agent tool: tool_input.description or tool_input.prompt
+#   - TaskCreate: tool_input.subject + tool_input.description
+#   - Task (legacy): tool_input.description
+DESC=$(python3 -c "
+import json, sys
+try:
+    data = json.loads(sys.stdin.read())
+    tool_input = data.get('tool_input', {}) if isinstance(data, dict) else {}
+    # Try description first (most common), then prompt, then subject
+    desc = (
+        tool_input.get('description')
+        or tool_input.get('prompt')
+        or tool_input.get('subject')
+        or ''
+    )
+    # TaskCreate may have both subject + description — concat for richer signal
+    if tool_input.get('subject') and tool_input.get('description') and desc != tool_input['subject']:
+        desc = str(tool_input['subject']) + ' ' + str(tool_input['description'])
+    # Cap at 500 chars (heuristic only keyword-matches — more is noise)
+    print(str(desc).strip()[:500])
+except Exception:
+    print('')
+" <<<"$INPUT" 2>/dev/null || echo "")
+
+# If no description found, skip silently (no signal, no suggestion)
+if [ -z "$DESC" ]; then
+  echo '{"continue":true}'
+  exit 0
+fi
+
+# Call heuristic with 2s timeout — never block; default to 'auto' on any failure
+EFFORT=$(timeout 2 bash "$HEURISTIC" "$DESC" 2>/dev/null || echo "auto")
+
+# Guard: if heuristic returned empty or unexpected, fallback to 'auto'
+case "$EFFORT" in
+  low|medium|high|xhigh|max|auto) ;;
+  *) EFFORT="auto" ;;
+esac
+
+# Emit advisory additionalContext via hookSpecificOutput schema
+# The model sees this as a hint; explicit `effort:` in AGENT.md frontmatter wins
+REMINDER="ATLAS Effort Heuristic suggests: **${EFFORT}** (based on task description keywords). Override via explicit effort: in AGENT.md frontmatter if needed."
+
+python3 -c "
+import json
+print(json.dumps({
+    'hookSpecificOutput': {
+        'hookEventName': 'PreToolUse',
+        'additionalContext': '''$REMINDER'''
+    }
+}))
+" 2>/dev/null || echo '{"continue":true}'
