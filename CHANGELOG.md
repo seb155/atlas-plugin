@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.26.0 (2026-04-18)
+
+### ✨ Features
+- feat(marketplace): add v6 alpha channel (3 atlas-*-alpha entries)
+
+
+
 ## v5.25.0 (2026-04-18)
 
 ### ✨ Features

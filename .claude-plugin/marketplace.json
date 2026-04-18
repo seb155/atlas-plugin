@@ -1,6 +1,6 @@
 {
   "name": "atlas-marketplace",
-  "description": "AXOIQ — ATLAS AI engineering assistant. Stable v5 + Alpha v6 channels.",
+  "description": "AXOIQ \u2014 ATLAS AI engineering assistant. Stable v5 + Alpha v6 channels.",
   "owner": {
     "name": "Seb Gagnon",
     "email": "seb@axoiq.com"
@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "atlas-core",
-      "version": "5.25.0",
-      "description": "ATLAS Core — shared base (25 skills). Session, memory, context, personal.",
+      "version": "5.26.0",
+      "description": "ATLAS Core \u2014 shared base (25 skills). Session, memory, context, personal.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -21,8 +21,8 @@
     },
     {
       "name": "atlas-admin",
-      "version": "5.25.0",
-      "description": "ATLAS Admin — superuser addon (63 skills). Dev + infra + security + governance.",
+      "version": "5.26.0",
+      "description": "ATLAS Admin \u2014 superuser addon (63 skills). Dev + infra + security + governance.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -34,8 +34,8 @@
     },
     {
       "name": "atlas-dev",
-      "version": "5.25.0",
-      "description": "ATLAS Dev — developer addon (29 skills). Planning, TDD, review, shipping.",
+      "version": "5.26.0",
+      "description": "ATLAS Dev \u2014 developer addon (29 skills). Planning, TDD, review, shipping.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -47,8 +47,8 @@
     },
     {
       "name": "atlas-core-alpha",
-      "version": "6.0.0-alpha.4",
-      "description": "ATLAS Core ALPHA v6 — Philosophy Engine + SOTA hooks + atlas-loop + atlas-routines. Test channel.",
+      "version": "5.26.0",
+      "description": "ATLAS Core ALPHA v6 \u2014 Philosophy Engine + SOTA hooks + atlas-loop + atlas-routines. Test channel.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -61,8 +61,8 @@
     },
     {
       "name": "atlas-admin-alpha",
-      "version": "6.0.0-alpha.4",
-      "description": "ATLAS Admin ALPHA v6 — knowledge + gms-mgmt merged + zero-paternalisme. Test channel.",
+      "version": "5.26.0",
+      "description": "ATLAS Admin ALPHA v6 \u2014 knowledge + gms-mgmt merged + zero-paternalisme. Test channel.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
@@ -75,8 +75,8 @@
     },
     {
       "name": "atlas-dev-alpha",
-      "version": "6.0.0-alpha.4",
-      "description": "ATLAS Dev ALPHA v6 — Iron Laws + Red Flags + 10 Tier-1 migrated + bats v6. Test channel.",
+      "version": "5.26.0",
+      "description": "ATLAS Dev ALPHA v6 \u2014 Iron Laws + Red Flags + 10 Tier-1 migrated + bats v6. Test channel.",
       "source": {
         "source": "git-subdir",
         "url": "https://forgejo.axoiq.com/axoiq/atlas-plugin.git",
