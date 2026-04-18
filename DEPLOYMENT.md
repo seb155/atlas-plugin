@@ -25,7 +25,7 @@
 
 | Component | Description |
 |-----------|-------------|
-| **Claude Code Plugin** | 72+ skills, 15 agents, 50+ hooks injected into every CC session |
+| **Claude Code Plugin** | 131 skills, 24 agents, 41+ hooks injected into every CC session |
 | **ATLAS CLI** | `atlas` shell command for launching CC with worktrees, tmux splits, topics |
 | **Hooks** | Session management, code quality gates, safety validators, statusline |
 | **Skills** | TDD, planning, debugging, code review, deploy, infrastructure, research |
@@ -34,7 +34,7 @@
 
 | Option | What | Best For |
 |--------|------|----------|
-| **Monolith** (`atlas-admin`) | All 72 skills + all hooks in 1 plugin | Simple setup, full experience |
+| **Monolith** (`atlas-admin-addon`) | All 131 skills + all hooks in 1 plugin | Simple setup, full experience |
 | **Modular** (`atlas-core` + pick domains) | Foundation + domain-specific skills | Lighter install, pick what you need |
 
 **Recommendation**: Start with the **monolith** (`atlas-admin`). Switch to modular later if needed.
@@ -198,8 +198,8 @@ Claude Code will clone the marketplace manifest and discover 7 available plugins
 Exit and restart Claude Code. You should see the ATLAS banner:
 
 ```
-🏛️ ATLAS │ ✅ SESSION │ v4.26.3 admin
-🏛️ ATLAS │ 🧩 72 skills | 🤖 15 agents
+🏛️ ATLAS │ ✅ SESSION │ v5.28.0 Admin
+🏛️ ATLAS │ 🧩 131 skills | 🤖 24 agents
 ```
 
 If you see this banner, the plugin is loaded and working.
@@ -414,7 +414,7 @@ Run these checks after installation to confirm everything works:
 ```bash
 claude
 # Expected: ATLAS banner appears at session start
-# 🏛️ ATLAS │ ✅ SESSION │ v4.26.3 admin
+# 🏛️ ATLAS │ ✅ SESSION │ v5.28.0 Admin
 ```
 
 ### 6.2 Skill Check

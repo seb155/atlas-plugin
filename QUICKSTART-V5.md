@@ -2,7 +2,7 @@
 
 > **For users** (not developers). 5-minute read. If you developed v4 of the plugin, see "What changed v4→v5" below.
 
-ATLAS v5 is your **AI engineering co-pilot** inside Claude Code. Install once, get auto-routing across 25–88 skills depending on your role.
+ATLAS v5 is your **AI engineering co-pilot** inside Claude Code. Install once, get auto-routing across 28–131 skills depending on your role.
 
 ---
 
@@ -11,8 +11,8 @@ ATLAS v5 is your **AI engineering co-pilot** inside Claude Code. Install once, g
 ### 1. Auto (zero action) — **Recommended**
 Just open Claude Code. ATLAS auto-loads via the SessionStart hook and shows a banner:
 ```
-🏛️ ATLAS │ ✅ SESSION │ v5.1.0 Admin
-   88 skills │ 16 agents │ Gate 12/15
+🏛️ ATLAS │ ✅ SESSION │ v5.28.0 Admin
+   131 skills │ 24 agents │ Gate 12/15
    Auto-routing active — just tell me what you need.
 ```
 Then write naturally — ATLAS routes to the right skill.
@@ -37,10 +37,10 @@ ATLAS v5 is **3 plugins**. Pick what matches your role:
 
 | Role | Install | Total | Use cases |
 |------|---------|-------|-----------|
-| **End User** | `atlas-core` | 25 skills, 1 agent | Memory, research, personal productivity |
-| **Developer** | `atlas-core` + `atlas-dev` | 54 skills, 8 agents | Above + planning, TDD, code review, shipping |
-| **Admin / Solo founder** | `atlas-core` + `atlas-admin` | 88 skills, 16 agents | All Dev + infra, security, governance, GMS |
-| **Maximalist** | All three | 88 skills, 16 agents | Same as admin (admin ⊃ dev superset) |
+| **End User** | `atlas-core` | 28 skills, 1 agent | Memory, research, personal productivity |
+| **Developer** | `atlas-core` + `atlas-dev-addon` | 64 skills, 8 agents | Above + planning, TDD, code review, shipping |
+| **Admin** | `atlas-core` + `atlas-admin-addon` | 95 skills, 17 agents | Above + infra, security, governance, GMS |
+| **Maximalist** | All three addons | 131 skills, 24 agents | Full capability stack |
 
 Install via `/plugin`:
 ```
