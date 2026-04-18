@@ -25,10 +25,10 @@ Master `atlas-assist` adapts its behavior (persona, pipeline, active skills) bas
 
 ```json
 {
-  "version": "5.1.0",
+  "version": "5.27.0",
   "tier": "admin",          // highest installed tier (core/dev/admin)
   "addons": [               // all detected ATLAS addons
-    {"name": "atlas-core",  "tier": "core",  "version": "5.1.0", "skills": 25, "agents": 1},
+    {"name": "atlas-core",  "tier": "core",  "version": "5.27.0", "skills": 25, "agents": 1},
     {"name": "atlas-admin-addon", "tier": "admin", ...}
   ],
   "skills_total": 88,
@@ -49,16 +49,16 @@ When invoked:
    🔍 ATLAS Capability Discovery
    ─────────────────────────────
    Tier:     admin (priority 3)
-   Version:  5.1.0
+   Version:  5.27.0
    Persona:  infrastructure architect
    Pipeline: DISCOVER → PLAN → STRATEGY → ...
 
    Installed Addons:
    | Name | Tier | Version | Skills | Agents |
    |------|------|---------|--------|--------|
-   | atlas-core | core | 5.1.0 | 25 | 1 |
-   | atlas-dev-addon | dev | 5.1.0 | 29 | 7 |
-   | atlas-admin-addon | admin | 5.1.0 | 63 | 16 |
+   | atlas-core | core | 5.27.0 | 25 | 1 |
+   | atlas-dev-addon | dev | 5.27.0 | 29 | 7 |
+   | atlas-admin-addon | admin | 5.27.0 | 63 | 16 |
 
    Total: 117 skills · 24 agents
    ```
