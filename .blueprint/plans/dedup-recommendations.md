@@ -179,12 +179,36 @@ skills:
 2. Snapshot baseline: `./build.sh all && ls -1 dist/atlas-admin/skills/ | sort > /tmp/baseline-admin-skills.txt`
 3. Commit baseline snapshot for differential verification.
 
-### Phase 1 — Inheritance fix (30 min, LOW risk)
+### Phase 1 — Inheritance fix (30 min, LOW risk) — **BLOCKED 2026-04-17**
 1. Edit `profiles/admin-addon.yaml`: add `inherits: dev-addon`, remove 33 duplicated entries.
 2. Run `./build.sh admin`.
 3. Diff: `ls -1 dist/atlas-admin/skills/ | sort > /tmp/after-admin-skills.txt && diff /tmp/baseline-admin-skills.txt /tmp/after-admin-skills.txt` — MUST be empty.
 4. Run full test suite: `cd tests && pytest test_profiles.py test_skill_dependencies.py test_skill_coverage.py -x -q --tb=short`.
 5. Verify `scripts/atlas-discover-addons.sh` still reports correct capabilities.
+
+**STATUS — BLOCKED**: `./build.sh modular` (v5+ default architecture invoked
+by `make dev`) calls `build_modular_plugin` (build.sh L695), which reads
+skills directly from profile YAML via `yq -r '.skills // [] | .[]'` (L729) and
+DOES NOT call `resolve_field` — so `inherits:` is ignored in modular mode.
+Adding `inherits: dev-addon` + trimming admin profile to 34 admin-unique skills
+DROPS 33 dev-shared skills from `dist/atlas-admin-addon/skills/` (verified
+2026-04-17: 67 → 34 SKILL.md regressed). The legacy `./build.sh all` tier mode
+(L876-879) still uses `build_tier` which DOES walk inheritance correctly via
+`resolve_field` (L210-236), but modular is the production build path used by
+`make dev`/`make publish`.
+
+**Workaround proposed → Sprint 7 task `build-modular-inherits`** (~2-3h):
+Refactor `build_modular_plugin` to call `resolve_field "$name" "skills"` (and
+the same for `agents`/`refs`) instead of the direct `yq` read on L729/L741/L751.
+Hook delta logic (L756-774) is already correct — it reads only OWN hooks,
+matching SP-HOOK-DEDUP intent. Acceptance: after refactor, applying the
+inheritance YAML diff above produces the same `dist/atlas-admin-addon/skills/`
+listing (67 entries) as baseline.
+
+**Action this sprint**: NO change to `profiles/admin-addon.yaml` — the
+duplicated 33-skill listing is the only working source of truth for the
+modular admin build right now. Phase 2 (trim verbose skills) and Phase 3
+(merge-siblings, HITL gated) are unaffected and remain executable.
 
 ### Phase 2 — Trim verbose skills (4-6h, MEDIUM risk)
 For each of 15 trim candidates:

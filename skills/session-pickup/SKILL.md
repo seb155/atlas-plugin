@@ -166,3 +166,18 @@ When user selects a next action, **stay in that context**. No re-presenting the 
 - Never go back to the handoff/pickup menu after this point
 - Stay in the selected feature/plan context for the rest of the session
 - If user wants to switch -> they say "switch to X" or run `/pickup` again
+
+## Complementary to Claude Code Session Recap (v6.0+)
+
+CC ships an automatic Session Recap (one-line summary) on every resume. **session-pickup is complementary**, not a replacement:
+
+- **CC Recap** = auto, "what happened last" summary
+- **session-pickup** = opt-in via `/pickup`, full context reload from explicit handoff file
+
+Use `session-pickup` after CC's Recap when you need:
+- Full context reload (handoff parsing)
+- Vault profile auto-load
+- Multi-project state (Blueprint plans, etc.)
+- Plan mode gate enforcement
+
+See ADR-0003 for design rationale.

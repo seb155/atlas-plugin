@@ -1,5 +1,42 @@
 # Changelog
 
+## v6.0.0-alpha.2 (2026-04-17 21:30 EDT) — HITL execution + 2 ADRs APPROVED + atlas-routines
+
+### ✨ Features
+
+- `skills/atlas-routines/SKILL.md` (141L) — NEW skill wrapping Anthropic Routines API (cloud automation, 2026-04-14). Complementary to atlas-loop (in-session CronCreate). Subcommands: create/delete/list/run. atlas-core: 29→30 skills.
+- `skills/session-pickup/SKILL.md` +14L — added "Complementary to CC Session Recap" section per ADR-0003.
+
+### ✅ HITL Decisions Resolved
+
+- **ADR-0001 MCP browser consolidation: APPROVED** (audit confirmed 0 refs to computer-use, zero migration needed).
+- **ADR-0002 Routines vs CronCreate: APPROVED** (BOTH adopted as complementary; atlas-routines shipped this release).
+- **ADR-0003 Session Recap vs session-pickup: APPLIED** (note added to session-pickup SKILL.md, both kept distinct).
+
+### 📊 Audit + Documentation
+
+- `memory/AUDIT-2026-04-17-other-files.md` (130L synapse-side) — 370 .md files audited, 171 "Other" classified, 5 categorization recommendations + 10 deprecation candidates. **Zero deletion**.
+- `dedup-recommendations.md` +25L — Phase 1 YAML inheritance dedup BLOCKED (build_modular_plugin doesn't support `inherits:` keyword). Sprint 7 task `build-modular-inherits` proposed (~2-3h) to unblock.
+
+### 📊 Stats
+
+- 4 atomic commits cumul on top of v6.0.0-alpha.1 (this release adds 1 commit ~15 files)
+- bats 32/32 PASS, hard-gate-linter all 10/10 PASS, build.sh modular 0 violations
+
+### 🚧 HITL Pending (alpha → GA)
+
+- Approve dedup mapping (117 → ~60 destructive merge HITL)
+- Sprint 7: refactor build_modular_plugin pour `inherits:` keyword (unblocks dedup phase 1)
+- Live session validation (23KB SessionStart payload size — requires session restart)
+- Cost/accuracy A/B vs v5.23.0 baseline
+- Marketplace alpha publish
+
+### 🔗 Forgejo
+
+- PR #23: https://forgejo.axoiq.com/axoiq/atlas-plugin/pulls/23
+
+---
+
 ## v6.0.0-alpha.1 (2026-04-17) — Philosophy Engine + SOTA Foundation
 
 ### 🎯 BREAKING CHANGES (alpha — opt-in)
@@ -52,12 +89,13 @@ For Opus 4.7 compatibility (mandatory):
 - 32 bats tests (was 17, +15 new for Philosophy Engine)
 - Test coverage Tier-1 skills: 0% → 100%
 - 117 unique skills audited (CSV in tests/inventory/)
-- 4 ADRs proposed (HITL pending: dedup execution + MCP browser pair)
+- 4 ADRs proposed (HITL pending: dedup execution; MCP browser pair APPROVED 2026-04-17)
 
 ### 🚧 HITL Pending (alpha → GA gate)
 
 - Approve dedup mapping (117 → ~60 target requires destructive merge)
-- Choose MCP browser pair (claude-in-chrome + playwright recommended; computer-use drop)
+- ~~Choose MCP browser pair (claude-in-chrome + playwright recommended; computer-use drop)~~
+- ✓ MCP browser consolidation (ADR-0001) APPROVED — computer-use deprecated, zero refs to migrate
 - Live session validation of new SessionStart injection (23KB payload size)
 - Cost/accuracy measurement vs v5.23.0 baseline (target ≥+25% accuracy, ≤+15% cost)
 

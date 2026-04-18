@@ -1,7 +1,8 @@
 # ADR 0001 — MCP Browser Consolidation (v6.0)
 
-**Status**: PROPOSED (awaiting Seb HITL approval)
+**Status**: APPROVED (zero migration required)
 **Date**: 2026-04-17
+**Approved**: 2026-04-17 (Sprint 4.6 audit confirmed 0 references to computer-use in skills/agents/hooks/scripts; ADR is now de-facto enforced. No code change needed.)
 **Context**: ATLAS v6.0 Sprint 4 dedup initiative (plan Section K)
 **Deciders**: Seb Gagnon, Claude Opus 4.7 (plan-architect)
 **Supersedes**: none
@@ -68,6 +69,10 @@ ATLAS v5.x currently exposes **3 overlapping browser/computer automation tools**
 
 ### Alternative rejected: `claude-in-chrome + computer-use`
 - Drops playwright — 11 skills broken, loses CI headless coverage, breaks verification gates. High-risk.
+
+## Implementation
+
+**Sprint 4.6 audit (2026-04-17)** confirmed `0` references to `mcp__computer-use`, `mcp_computer_use`, or `computer-use-pro` across `skills/`, `agents/`, `hooks/`, `scripts/`. The grep audit (`exit 1` = zero matches) proves the recommendation is already de-facto enforced. **No code change needed.** ADR is now APPROVED and the verification commands below act as guardrails for future PRs.
 
 ## Consequences
 

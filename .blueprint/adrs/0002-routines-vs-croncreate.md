@@ -1,6 +1,6 @@
 # ADR 0002 — Claude Code Routines vs ATLAS CronCreate
 
-**Status**: PROPOSED (HITL Seb)
+**Status**: APPROVED (impl shipped)
 **Date**: 2026-04-17
 **Context**: ATLAS v6.0 Sprint 6 — autonomous loop strategy alignment with new Anthropic Routines feature
 **Deciders**: Seb Gagnon, Claude Opus 4.7 (plan-architect)
@@ -68,7 +68,7 @@ Need scheduling?
 |-----------------|--------------|--------------------------------------------------------------|
 | `atlas-loop`    | CronCreate   | Shipped v6.0.0-alpha.1 (Sprint 5)                            |
 | `reminder-scheduler` | CronCreate | Shipped (tier core, used by `/atlas remind`)            |
-| `atlas-routines`| Routines API | Proposed for v6.x (Sprint 7+, pending API stability check)   |
+| `atlas-routines`| Routines API | Shipped v6.0.0-alpha.2                                       |
 
 ## HITL Questions for Seb
 
