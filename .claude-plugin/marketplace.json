@@ -1,6 +1,6 @@
 {
   "name": "atlas-marketplace",
-  "description": "AXOIQ \u2014 ATLAS AI engineering assistant. v6 alpha (Philosophy Engine + SOTA).",
+  "description": "AXOIQ \u2014 ATLAS AI engineering assistant (core + dev + admin addons).",
   "owner": {
     "name": "Seb Gagnon",
     "email": "seb@axoiq.com"
@@ -9,7 +9,7 @@
     {
       "name": "atlas-core",
       "version": "5.26.3",
-      "description": "ATLAS Core v6 \u2014 shared base + Philosophy Engine + SOTA hooks + atlas-loop + atlas-routines.",
+      "description": "ATLAS Core \u2014 shared base + Philosophy Engine + SOTA hooks + atlas-loop + atlas-routines.",
       "source": {
         "source": "git-subdir",
         "url": "https://plugins.axoiq.com",
@@ -23,7 +23,7 @@
     {
       "name": "atlas-admin",
       "version": "5.26.3",
-      "description": "ATLAS Admin v6 \u2014 superuser addon. knowledge + gms-mgmt merged + zero-paternalisme.",
+      "description": "ATLAS Admin \u2014 superuser addon. knowledge + gms-mgmt merged + zero-paternalisme.",
       "source": {
         "source": "git-subdir",
         "url": "https://plugins.axoiq.com",
@@ -37,7 +37,7 @@
     {
       "name": "atlas-dev",
       "version": "5.26.3",
-      "description": "ATLAS Dev v6 \u2014 developer addon. Iron Laws + Red Flags + 10 Tier-1 migrated + bats v6.",
+      "description": "ATLAS Dev \u2014 developer addon. Iron Laws + Red Flags + 10 Tier-1 migrated + bats v6.",
       "source": {
         "source": "git-subdir",
         "url": "https://plugins.axoiq.com",
