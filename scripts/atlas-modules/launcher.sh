@@ -302,6 +302,10 @@ atlas() {
 
   if [ -n "$lp_name" ] && ! $no_profile; then
     if _atlas_load_profile "$lp_name"; then
+      # P3.3 + P3.4 + P3.5: Apply environment overlays (WiFi trust, git branch, time)
+      # These modify ATLAS_LP_* based on current environment context.
+      _atlas_apply_all_overlays
+
       # Apply profile values as new defaults (explicit flags below will override)
       [ -n "$ATLAS_LP_WORKTREE" ] && [ "$ATLAS_LP_WORKTREE" != "null" ] && worktree="$ATLAS_LP_WORKTREE"
       [ -n "$ATLAS_LP_EFFORT" ] && [ "$ATLAS_LP_EFFORT" != "null" ] && effort="$ATLAS_LP_EFFORT"

@@ -188,6 +188,181 @@ _atlas_list_profiles() {
   done
 }
 
+# ─── Profile Overlays (P3.3 + P3.4 + P3.5, v5.28.0+) ─────────
+# Apply contextual overlays AFTER _atlas_load_profile sets base fields.
+# Overlays modify ATLAS_LP_* env vars based on environment (WiFi, git, time).
+# All overlays no-op on missing deps (defensive).
+
+# _atlas_apply_wifi_overlay (P3.3)
+# Downgrade permission_mode to 'plan' if current WiFi trust < profile's wifi_trust_required.
+# Reads: ATLAS_LP_WIFI_TRUST_REQUIRED (set by load_profile)
+# Looks up: nmcli BSSID in ~/.atlas/wifi-locations.json locations[].trust
+# Rank: public=0 < low=1 < known=2 < medium=2 < trusted=3 < high=3
+_atlas_apply_wifi_overlay() {
+  local required="${ATLAS_LP_WIFI_TRUST_REQUIRED:-}"
+  [ -z "$required" ] || [ "$required" = "none" ] || [ "$required" = "null" ] && return 0
+
+  local wifi_file="${HOME}/.atlas/wifi-locations.json"
+  [ ! -f "$wifi_file" ] && return 0
+  command -v python3 &>/dev/null || return 0
+
+  # Get current BSSID via nmcli (unescape \: → :)
+  local bssid=""
+  if command -v nmcli &>/dev/null; then
+    bssid=$(nmcli -t -f ACTIVE,BSSID dev wifi 2>/dev/null | grep '^yes:' | cut -d: -f2- | sed 's/\\:/:/g' | tr '[:lower:]' '[:upper:]')
+  fi
+  [ -z "$bssid" ] && return 0  # No WiFi — skip overlay
+
+  # Look up trust level for current BSSID
+  local trust
+  trust=$(python3 -c "
+import json, sys
+try:
+    with open('$wifi_file') as f:
+        data = json.load(f)
+    bssid = '$bssid'.upper()
+    for loc in data.get('locations', []):
+        if bssid in [b.upper() for b in loc.get('bssids', [])]:
+            print(loc.get('trust', 'none'))
+            sys.exit(0)
+    print('none')
+except Exception:
+    print('none')
+" 2>/dev/null)
+
+  # Rank both levels (bash associative array)
+  declare -A _atlas_trust_rank=(
+    [none]=0 [public]=0 [unknown]=0
+    [low]=1
+    [medium]=2 [known]=2
+    [high]=3 [trusted]=3
+  )
+  local current_rank=${_atlas_trust_rank[$trust]:-0}
+  local required_rank=${_atlas_trust_rank[$required]:-0}
+
+  if [ "$current_rank" -lt "$required_rank" ]; then
+    echo "⚠️  [atlas] WiFi trust '$trust' (rank $current_rank) < required '$required' (rank $required_rank) — downgrading permission_mode=plan" >&2
+    export ATLAS_LP_PERMISSION_MODE="plan"
+  fi
+  return 0
+}
+
+# _atlas_apply_git_branch_overlay (P3.4)
+# Apply per-branch overrides from profile's git_branch_hook map.
+# Walks profile inheritance chain to find all applicable hooks.
+_atlas_apply_git_branch_overlay() {
+  local profile="${ATLAS_LAUNCH_PROFILE:-}"
+  [ -z "$profile" ] && return 0
+  command -v yq &>/dev/null || return 0
+
+  # Get current git branch (skip if not in repo)
+  local branch=""
+  if git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
+    branch=$(git branch --show-current 2>/dev/null)
+  fi
+  [ -z "$branch" ] && return 0
+
+  local profile_dir="${HOME}/.atlas/profiles"
+  local chain_str="${ATLAS_LP_CHAIN:-$profile}"
+  # shellcheck disable=SC2206
+  local -a chain=($chain_str)
+
+  local _globstar_saved=false
+  shopt -q globstar 2>/dev/null && _globstar_saved=true
+  shopt -s globstar 2>/dev/null
+
+  local p
+  for p in "${chain[@]}"; do
+    local yaml_file="${profile_dir}/${p}.yaml"
+    [ -f "$yaml_file" ] || continue
+
+    local keys
+    keys=$(yq eval '.git_branch_hook // {} | keys | .[]' "$yaml_file" 2>/dev/null)
+    [ -z "$keys" ] && continue
+
+    local pattern
+    while IFS= read -r pattern; do
+      [ -z "$pattern" ] && continue
+      # shellcheck disable=SC2053
+      if [[ "$branch" == $pattern ]]; then
+        local field
+        for field in fork_session permission_mode effort worktree; do
+          local val
+          val=$(yq eval ".git_branch_hook.\"${pattern}\".${field} // \"\"" "$yaml_file" 2>/dev/null)
+          if [ -n "$val" ] && [ "$val" != "null" ]; then
+            local upper="ATLAS_LP_$(echo "$field" | tr '[:lower:]-' '[:upper:]_')"
+            export "$upper=$val"
+            echo "🔀 [atlas] Git hook '$pattern' (from $p): $field=$val" >&2
+          fi
+        done
+      fi
+    done <<< "$keys"
+  done
+
+  $_globstar_saved || shopt -u globstar 2>/dev/null
+  return 0
+}
+
+# _atlas_apply_time_overlay (P3.5)
+# Apply time-based overrides from profile's time_hook map.
+# Supported tokens: weekend, weekday, weekday-morning, weekday-afternoon, weekday-evening
+_atlas_apply_time_overlay() {
+  local profile="${ATLAS_LAUNCH_PROFILE:-}"
+  [ -z "$profile" ] && return 0
+  command -v yq &>/dev/null || return 0
+
+  local dow hour
+  dow=$(date '+%u')    # 1=Monday, 7=Sunday
+  hour=$(date '+%H')
+
+  # Build list of applicable time tokens
+  local -a tokens=()
+  if [ "$dow" -ge 6 ]; then
+    tokens+=("weekend")
+  else
+    tokens+=("weekday")
+    if [ "$hour" -lt 12 ]; then
+      tokens+=("weekday-morning")
+    elif [ "$hour" -lt 18 ]; then
+      tokens+=("weekday-afternoon")
+    else
+      tokens+=("weekday-evening")
+    fi
+  fi
+
+  local profile_dir="${HOME}/.atlas/profiles"
+  local chain_str="${ATLAS_LP_CHAIN:-$profile}"
+  # shellcheck disable=SC2206
+  local -a chain=($chain_str)
+
+  local p t
+  for p in "${chain[@]}"; do
+    local yaml_file="${profile_dir}/${p}.yaml"
+    [ -f "$yaml_file" ] || continue
+    for t in "${tokens[@]}"; do
+      local field
+      for field in effort permission_mode; do
+        local val
+        val=$(yq eval ".time_hook.\"${t}\".${field} // \"\"" "$yaml_file" 2>/dev/null)
+        if [ -n "$val" ] && [ "$val" != "null" ]; then
+          local upper="ATLAS_LP_$(echo "$field" | tr '[:lower:]-' '[:upper:]_')"
+          export "$upper=$val"
+          echo "🕐 [atlas] Time hook '$t' (from $p): $field=$val" >&2
+        fi
+      done
+    done
+  done
+  return 0
+}
+
+# _atlas_apply_all_overlays → convenience: WiFi + git branch + time (P3 complete)
+_atlas_apply_all_overlays() {
+  _atlas_apply_wifi_overlay
+  _atlas_apply_git_branch_overlay
+  _atlas_apply_time_overlay
+  return 0
+}
+
 # _atlas_detect_profile → prints profile name to stdout (or empty if none match)
 # Resolution order (first match wins):
 #   1. Walk cwd → parent dirs looking for .atlas/project.json with "profile" field
