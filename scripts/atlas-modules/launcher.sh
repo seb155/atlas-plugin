@@ -412,7 +412,10 @@ print(handoffs[-1] if handoffs else '')
 
   # Permission modes (mutually exclusive, last wins)
   if $yolo; then
-    cmd+=(--dangerously-skip-permissions)
+    # DEPRECATED in v5.28.0: -y/--yolo now maps to --permission-mode dontAsk (was --dangerously-skip-permissions).
+    # Scheduled removal: v5.30.0. Migrate to `atlas <proj> --mode dontAsk` (see P2 profiles + P5 override syntax).
+    echo "⚠️  [atlas] -y/--yolo deprecated → now uses --permission-mode dontAsk (safer). Will be removed in v5.30.0. Use 'atlas <proj> --mode dontAsk' or profile field 'permission_mode: dontAsk'." >&2
+    cmd+=(--permission-mode dontAsk)
   elif $auto_mode; then
     cmd+=(--enable-auto-mode --permission-mode auto)
   elif $plan_mode; then
