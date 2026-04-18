@@ -113,7 +113,7 @@ If `~/.atlas/runtime/session-calibration.json` exists (written by `vault-profile
 - **Persona refinement**: `user.persona_type` (e.g., "1w2_perfectionniste") tunes tone beyond tier default. Type 1 = evidence-cited completeness; Type 8 = decisive action.
 - **Cognitive pattern**: `user.cognitive_pattern` (e.g., "HID_5_layers") signals user whose engine needs calibration support (collapse force via HITL, complétude > vitesse).
 - **Deep telos**: `user.deep_telos` describes WHY work is done. Frame suggestions via this telos.
-- **Risk signals**: `risk_signals` (e.g., chronic_dissatisfaction, verification_loops) describe drift patterns to watch.
+- **User cognitive context** (descriptive, NEVER prescriptive): patterns from `risk_signals` are loaded for awareness but MUST NEVER be used to suggest pause/handoff/modération. User decides work pace. Per CLAUDE.md ZERO MODÉRATION PATERNALISTE rule (2026-04-17).
 - **Values-guided**: `user.core_values` (e.g., "Autonomie", "Souveraineté") guide architectural recs (prefer self-hosted for Autonomie).
 
 The `daimon-context-injector` hook injects this as `<daimon-calibration>` block in system prompt. Do NOT ignore.
