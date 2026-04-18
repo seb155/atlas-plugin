@@ -271,14 +271,52 @@ atlas() {
   local -a extra_args=()
   local parsing_extra=false
 
+  # ─── P2.4: Launch Profile pre-parse (v5.28.0+) ──────────────
+  # Detect --profile <name> and apply profile defaults BEFORE main arg parse.
+  # Explicit flags (-p, -a, -e, etc.) still override profile values (parse later).
+  local lp_name=""
+  local -a _atlas_args=("$@")
+  local _i
+  for ((_i=0; _i<${#_atlas_args[@]}; _i++)); do
+    if [ "${_atlas_args[_i]}" = "--profile" ]; then
+      lp_name="${_atlas_args[_i+1]:-}"
+      break
+    fi
+  done
+  if [ -n "$lp_name" ]; then
+    if _atlas_load_profile "$lp_name"; then
+      # Apply profile values as new defaults (explicit flags below will override)
+      [ -n "$ATLAS_LP_WORKTREE" ] && [ "$ATLAS_LP_WORKTREE" != "null" ] && worktree="$ATLAS_LP_WORKTREE"
+      [ -n "$ATLAS_LP_EFFORT" ] && [ "$ATLAS_LP_EFFORT" != "null" ] && effort="$ATLAS_LP_EFFORT"
+      case "${ATLAS_LP_PERMISSION_MODE:-}" in
+        plan)    plan_mode=true ;;
+        auto)    auto_mode=true ;;
+        dontAsk) yolo=true ;;  # yolo now → --permission-mode dontAsk (post-P1.4)
+      esac
+      [ "${ATLAS_LP_BARE:-}" = "true" ] && bare=true
+      echo "📋 [atlas] Profile '$lp_name' loaded (chain: $ATLAS_LP_CHAIN)" >&2
+    else
+      echo "❌ [atlas] Profile load failed — using defaults" >&2
+      return 1
+    fi
+  fi
+
+  # P2.4: skip_next flag — consumes value arg after --profile (pre-parsed above)
+  local _atlas_skip_next=false
+
   for arg in "$@"; do
     if $parsing_extra; then
       extra_args+=("$arg")
       continue
     fi
+    if $_atlas_skip_next; then
+      _atlas_skip_next=false
+      continue
+    fi
 
     case "$arg" in
       --) parsing_extra=true ;;
+      --profile) _atlas_skip_next=true ;;  # Profile name is next arg (pre-parsed above)
       -i|--inline) worktree=false; split=false ;;
       -y|--yolo) yolo=true ;;
       -a|--auto) auto_mode=true ;;
