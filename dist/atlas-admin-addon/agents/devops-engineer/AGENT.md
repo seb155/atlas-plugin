@@ -4,6 +4,8 @@ description: "CI/CD and deployment specialist. Sonnet agent. Woodpecker CI, Forg
 model: sonnet
 effort: high
 thinking_mode: adaptive
+isolation: worktree
+task_budget: 150000
 disallowedTools:
   - mcp__claude-in-chrome__*
   - mcp__plugin_playwright_playwright__*

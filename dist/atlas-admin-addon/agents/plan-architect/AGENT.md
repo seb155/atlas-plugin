@@ -4,6 +4,8 @@ description: "Ultra-detailed engineering plan builder. Opus ultrathink. Runs con
 model: opus
 effort: max
 thinking_mode: adaptive
+isolation: worktree
+task_budget: 250000
 ---
 
 # Plan Architect Agent

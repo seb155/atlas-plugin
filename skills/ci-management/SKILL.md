@@ -174,6 +174,24 @@ ssh root@192.168.10.76 'sqlite3 /var/lib/docker/volumes/woodpecker_woodpecker-da
 | `BACKEND_IMAGE must be set by CI` compose error | compose.prod.yml requires BACKEND_IMAGE but CI deploy script doesn't set it | Manual: set in `.env` on prod; Long-term: add build+digest step to CI |
 | API returns `Content-Type: text/html` on `/api/*` | Wrong path — SPA fallback, not SSO block | Check `https://ci.axoiq.com/swagger/doc.json` for canonical path |
 
+## Monitor Pattern (v6.0 SOTA)
+
+For watching CI pipelines without polling, use CC native Monitor tool:
+
+```bash
+# Watch Woodpecker pipeline events for current branch
+Monitor({
+  description: "errors in Woodpecker dev pipeline",
+  command: "tail -f /var/log/woodpecker/dev.log | grep --line-buffered -E 'ERROR|FAILED|elapsed_steps='",
+  persistent: false,
+  timeout_ms: 600000  # 10 min cap
+})
+```
+
+Returns notifications on every match. Stop with TaskStop. Coverage rule: grep MUST match BOTH success ("elapsed_steps=") AND failure ("Traceback|Error|FAILED") signatures — silence is not success.
+
+**Why over polling**: reactive (no wasted polls), graceful (one event per change), cache-friendly (no repeated CronCreate cycles).
+
 ## Delegation
 
 - Detailed log analysis: invoke `forgejo-ci` subagent (or just `atlas ci logs`)

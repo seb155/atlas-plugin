@@ -4,6 +4,7 @@ description: "Security auditor for Agent Teams. Sonnet agent. OWASP scanning, se
 model: sonnet
 effort: high
 thinking_mode: adaptive
+task_budget: 100000
 disallowedTools:
   - Write
   - Edit

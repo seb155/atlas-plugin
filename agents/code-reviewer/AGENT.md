@@ -4,6 +4,8 @@ description: "Code review a pull request or working tree diff. Opus 4.7 agent. C
 model: opus
 effort: xhigh
 thinking_mode: adaptive
+isolation: worktree
+task_budget: 200000
 disallowedTools:
   - Write
   - Edit

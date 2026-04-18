@@ -4,6 +4,8 @@ description: "Autonomous experiment iteration loop. Sonnet agent. Executes one i
 model: sonnet
 effort: high
 thinking_mode: adaptive
+isolation: worktree
+task_budget: 150000
 ---
 
 # Experiment Runner Agent

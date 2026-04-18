@@ -149,6 +149,21 @@ $SSH_CMD "$SSH_HOST" "curl -s $HEALTH_URL | python3 -c 'import sys,json; d=json.
 | Health timeout | Show container logs: `docker logs --tail 20 {container}` |
 | File not found locally | Error with correct relative path suggestion |
 
+## Monitor Pattern (v6.0 SOTA)
+
+Watch container health post-hotfix deploy:
+
+```bash
+Monitor({
+  description: "container health check post-hotfix",
+  command: "docker logs -f synapse-backend 2>&1 | grep --line-buffered -E 'started|listening|ERROR|crash'",
+  persistent: false,
+  timeout_ms: 60000  # 1 min restart window
+})
+```
+
+Stop on first "started" + "listening" pair (success), or any ERROR/crash signature.
+
 ## Related
 
 - `devops-deploy` — Full deployment (CI + compose up)

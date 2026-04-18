@@ -4,6 +4,7 @@ description: "Quality gate agent. Scores plans against 15 criteria. Identifies w
 model: sonnet
 effort: high
 thinking_mode: adaptive
+task_budget: 100000
 disallowedTools:
   - Write
   - Edit

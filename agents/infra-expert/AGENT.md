@@ -4,6 +4,8 @@ description: "Infrastructure expert for homelab and cloud ops. Opus 4.7 agent. P
 model: opus
 effort: xhigh
 thinking_mode: adaptive
+isolation: worktree
+task_budget: 200000
 disallowedTools:
   - mcp__claude-in-chrome__*
   - mcp__plugin_playwright_playwright__*

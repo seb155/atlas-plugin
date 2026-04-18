@@ -55,7 +55,7 @@ PY
 import re, sys, yaml
 flags = yaml.safe_load(open("$CORPUS"))["flags"]
 pattern = re.compile(
-    r"^(STOP|Write|Run|Verify|Commit|Convert|List|Identify|Spend|Treat|Check|Ask|Delete|Fix|If)"
+    r"^(STOP|Write|Run|Verify|Commit|Convert|List|Identify|Spend|Treat|Check|Ask|Delete|Fix|If|Add|Block|Timebox|Move|Replace|Rename|Document|Refactor|Track|Pause|Test)"
 )
 for flag in flags:
     action = flag.get("counter_action", "").strip()
