@@ -92,10 +92,99 @@ if [ -n "${CODER_AGENT_TOKEN:-}" ] || [ -n "${CODER:-}" ]; then
 fi
 export ATLAS_IN_CODER
 
-# ─── Profile Loading ─────────────────────────────────────────
+# ─── User Preset Loading (ATLAS_PROFILE — e.g. "axoiq") ─────
+# Note: distinct from Launch Profiles (~/.atlas/profiles/*.yaml, loaded below).
 ATLAS_PROFILE="unknown"
 if [ -f "$HOME/.atlas/profile.json" ]; then
   ATLAS_PROFILE=$(python3 -c "import json; print(json.load(open('$HOME/.atlas/profile.json'))['profile'])" 2>/dev/null || echo "unknown")
 fi
 export ATLAS_PROFILE
+
+# ─── Launch Profile Loading (v5.28.0+) ──────────────────────
+# ATLAS_LAUNCH_PROFILE = active launch profile (YAML in ~/.atlas/profiles/)
+# Distinct from ATLAS_PROFILE (user preset like "axoiq").
+#
+# Schema: templates/profiles/base.yaml (comments document all fields).
+# Parser: yq v4+ (github.com/mikefarah/yq)
+# Inheritance: profiles can `extends: base`, max depth 3 (base → parent → leaf).
+#
+# After load, these env vars are set (empty if field missing):
+#   ATLAS_LP_TIER, ATLAS_LP_PERMISSION_MODE, ATLAS_LP_EFFORT,
+#   ATLAS_LP_WORKTREE, ATLAS_LP_FORK_SESSION, ATLAS_LP_BARE,
+#   ATLAS_LP_MCP_PROFILE, ATLAS_LP_WIFI_TRUST_REQUIRED
+
+# _atlas_load_profile <name> → sets ATLAS_LP_* env vars
+# Returns: 0=ok, 1=profile not found, 2=yq unavailable
+_atlas_load_profile() {
+  local profile="$1"
+  local profile_dir="${HOME}/.atlas/profiles"
+  local profile_file="${profile_dir}/${profile}.yaml"
+
+  if ! command -v yq &>/dev/null; then
+    echo "⚠️  [atlas] yq not installed — launch profiles require yq (github.com/mikefarah/yq v4+)" >&2
+    return 2
+  fi
+
+  if [ ! -f "$profile_file" ]; then
+    echo "❌ [atlas] Launch profile '$profile' not found at $profile_file" >&2
+    return 1
+  fi
+
+  # Build inheritance chain (max depth 3): [base, parent, leaf]
+  local -a chain=("$profile")
+  local current="$profile"
+  local depth=0
+  while [ "$depth" -lt 3 ]; do
+    local extends_val
+    extends_val=$(yq eval '.extends // ""' "${profile_dir}/${current}.yaml" 2>/dev/null)
+    [ -z "$extends_val" ] || [ "$extends_val" = "null" ] && break
+    [ ! -f "${profile_dir}/${extends_val}.yaml" ] && {
+      echo "⚠️  [atlas] Profile '$current' extends '$extends_val' but file not found. Skipping chain." >&2
+      break
+    }
+    chain=("$extends_val" "${chain[@]}")  # Prepend base (walk up)
+    current="$extends_val"
+    depth=$((depth + 1))
+  done
+
+  export ATLAS_LAUNCH_PROFILE="$profile"
+  export ATLAS_LP_CHAIN="${chain[*]}"
+
+  # Load fields in chain order (base → leaf), later overrides earlier
+  local fields=(tier permission_mode effort worktree fork_session bare mcp_profile wifi_trust_required)
+  for field in "${fields[@]}"; do
+    for p in "${chain[@]}"; do
+      local val
+      val=$(yq eval ".${field}" "${profile_dir}/${p}.yaml" 2>/dev/null)
+      if [ -n "$val" ] && [ "$val" != "null" ]; then
+        local var="ATLAS_LP_$(echo "$field" | tr '[:lower:]-' '[:upper:]_')"
+        export "$var=$val"
+      fi
+    done
+  done
+
+  return 0
+}
+
+# _atlas_reset_launch_profile → clears all ATLAS_LP_* env vars
+# Useful between launches in the same shell session.
+_atlas_reset_launch_profile() {
+  local v
+  for v in ATLAS_LAUNCH_PROFILE ATLAS_LP_CHAIN \
+           ATLAS_LP_TIER ATLAS_LP_PERMISSION_MODE ATLAS_LP_EFFORT \
+           ATLAS_LP_WORKTREE ATLAS_LP_FORK_SESSION ATLAS_LP_BARE \
+           ATLAS_LP_MCP_PROFILE ATLAS_LP_WIFI_TRUST_REQUIRED; do
+    unset "$v"
+  done
+}
+
+# _atlas_list_profiles → prints available launch profile names (one per line)
+_atlas_list_profiles() {
+  local profile_dir="${HOME}/.atlas/profiles"
+  [ ! -d "$profile_dir" ] && return 1
+  local f
+  for f in "$profile_dir"/*.yaml; do
+    [ -f "$f" ] && basename "$f" .yaml
+  done
+}
 
