@@ -80,6 +80,8 @@ hooks:
 - session-state-writer        # SessionStart/Stop — persist session state for resume
 - atlas-status-writer         # Stop/UserPromptSubmit — refresh statusline cache
 - context-budget-guardian     # PreCompact — warn if compaction happens too early
+# v6.0+ (2026-04-18): moved from dev-addon+admin-addon to core (was duplicated) — SessionStart scope creep detector
+- feature-drift-detector      # SessionStart — flag feat() commits vs FEATURES.md PLANNED/BACKLOG
 agents:
 - context-scanner
 persona: helpful assistant

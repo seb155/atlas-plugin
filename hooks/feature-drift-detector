@@ -31,14 +31,14 @@ if [ -z "$FEAT_COMMITS" ]; then
 fi
 
 # Extract scopes from feat() commits
-SCOPES=$(echo "$FEAT_COMMITS" | grep -oP 'feat\(\K[^)]+' | sort -u)
+SCOPES=$(echo "$FEAT_COMMITS" | grep -oP 'feat\(\K[^)]+' | sort -u || true)
 
 # Check each scope against FEATURES.md
 STALE=""
 for scope in $SCOPES; do
   # Look for the scope in FEATURES.md lines with PLANNED|BACKLOG|0%
   if grep -qi "$scope" "$FEATURES_FILE" 2>/dev/null; then
-    STATUS=$(grep -i "$scope" "$FEATURES_FILE" | grep -ioP 'PLANNED|BACKLOG|0%' | head -1)
+    STATUS=$(grep -i "$scope" "$FEATURES_FILE" | grep -ioP 'PLANNED|BACKLOG|0%' | head -1 || true)
     if [ -n "$STATUS" ]; then
       STALE="${STALE}\n  ⚠️ feat($scope) has commits but FEATURES.md shows: $STATUS"
     fi

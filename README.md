@@ -52,6 +52,74 @@ make test
 make publish-patch
 ```
 
+## External Install (Public Marketplace)
+
+The ATLAS plugin marketplace is accessible publicly via the canonical URL
+`https://plugins.axoiq.com`. Behind the scenes this is a Cloudflare Tunnel
+-> Caddy reverse proxy -> Forgejo git gateway, fully public read-only.
+
+### Install from any machine
+
+```bash
+claude plugin source add \
+  --name atlas-marketplace \
+  --source git \
+  --url https://plugins.axoiq.com
+
+# Then install any combination of the three plugins
+claude plugin install atlas-core@atlas-marketplace     # required base
+claude plugin install atlas-dev@atlas-marketplace      # optional dev tier
+claude plugin install atlas-admin@atlas-marketplace    # optional admin tier
+```
+
+### Verify externally (from a WAN-only host)
+
+```bash
+# Sanity check: DNS + HTTP 200 + marketplace.json present
+git ls-remote https://plugins.axoiq.com HEAD
+# Expected: <SHA>  HEAD
+
+git clone --depth=1 https://plugins.axoiq.com /tmp/atlas-mkt \
+  && cat /tmp/atlas-mkt/.claude-plugin/marketplace.json | jq '.plugins[].name'
+# Expected: "atlas-core", "atlas-admin", "atlas-dev"
+```
+
+### Infrastructure chain
+
+```
+VPS / external machine
+      v  git clone https://plugins.axoiq.com
+Cloudflare Edge  (DNS: CNAME to <tunnel-id>.cfargotunnel.com, proxied)
+      v
+CF Tunnel (Homelab_Prod_01)
+      v  originServerName: plugins.axoiq.com, noTLSVerify: true
+Caddy LXC 103 (192.168.5.103)
+      v  rewrite * /axoiq/atlas-plugin.git{uri}
+      v  header_up Host forgejo.axoiq.com
+      v  header_up Authorization token <FORGEJO_PAT>
+Forgejo (192.168.10.75:3000)
+      v
+Response: git packfile
+```
+
+### Publishing new versions
+
+Releases are automated via `make publish-patch` / `make publish-minor`:
+
+1. Bump `VERSION` file
+2. Run `./build.sh modular` to regenerate `dist/`
+3. Commit + tag (`v5.26.1`) + push to Forgejo (`axoiq/atlas-plugin`)
+4. Forgejo CI workflow `.forgejo/workflows/sync-to-github.yaml` syncs to GitHub mirror (if configured)
+5. Cloudflare route `plugins.axoiq.com` serves immediately (no caching layer, live git HTTP proxy)
+
+### Tech-debt / follow-ups
+
+- **Forgejo token in Caddy config**: Currently uses the owner's full-scope PAT
+  because Forgejo server has `REQUIRE_SIGNIN_VIEW=true` globally. Follow-up:
+  rotate to a dedicated read-only token scoped to `axoiq/atlas-plugin` only.
+- **Forgejo -> GitHub auto-mirror**: Workflow exists in reverse direction
+  (`.github/workflows/sync-to-forgejo.yaml`) but no automated forward mirror yet.
+
 ## Directory Structure
 
 ```
