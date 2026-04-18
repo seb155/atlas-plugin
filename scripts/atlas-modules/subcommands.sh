@@ -1562,3 +1562,172 @@ _atlas_profile_edit() {
   local editor="${EDITOR:-vi}"
   "$editor" "$file"
 }
+
+# ─── MCP Server Management (P4, v5.28.0+) ────────────────────
+# atlas mcp <subcmd> [args] — wraps claude mcp with ATLAS MCP profile support
+
+_atlas_mcp_cmd() {
+  local subcmd="${1:-list}"
+  shift 2>/dev/null || true
+  case "$subcmd" in
+    list|ls)           _atlas_mcp_list "$@" ;;
+    add)               _atlas_mcp_add "$@" ;;
+    remove|rm|delete)  _atlas_mcp_remove "$@" ;;
+    get|show)          _atlas_mcp_get "$@" ;;
+    profile)           _atlas_mcp_profile_cmd "$@" ;;
+    doctor|check|health) _atlas_mcp_doctor "$@" ;;
+    raw)               claude mcp "$@" ;;  # Direct passthrough to `claude mcp`
+    -h|--help|help|"") _atlas_mcp_help ;;
+    *) echo "❌ Unknown mcp subcommand: '$subcmd'. Run 'atlas mcp help'." >&2; return 1 ;;
+  esac
+}
+
+_atlas_mcp_help() {
+  cat <<'EOF'
+atlas mcp <subcommand> — manage Claude Code MCP servers
+
+Subcommands:
+  list                         List configured MCP servers (claude mcp list + health)
+  add <name> <cmdOrUrl>        Add new MCP server (passthrough claude mcp add)
+  remove <name>                Remove MCP server (passthrough)
+  get <name>                   Get MCP server details (passthrough)
+  profile <name>               Show MCP profile content from ~/.atlas/mcp-profiles/
+  profile list                 List available MCP profiles
+  doctor                       Health check all MCP servers with summary
+  raw <args>                   Direct passthrough to `claude mcp <args>`
+  help                         Show this help
+
+MCP profiles bundle multiple servers (e.g. chrome-playwright = chrome + playwright + context7).
+Referenced in launch profiles via mcp_profile field.
+
+Examples:
+  atlas mcp list
+  atlas mcp add context7 https://mcp.context7.com/mcp
+  atlas mcp profile chrome-playwright
+  atlas mcp doctor
+EOF
+}
+
+_atlas_mcp_list() {
+  if ! command -v claude &>/dev/null; then
+    echo "❌ claude CLI not found in PATH" >&2
+    return 1
+  fi
+  printf "  📡 ${ATLAS_BOLD}Configured MCP Servers${ATLAS_RESET}\n\n"
+  claude mcp list 2>&1 | sed 's/^/  /'
+  echo
+  echo "  Add: atlas mcp add <name> <url-or-cmd>"
+  echo "  Health: atlas mcp doctor"
+}
+
+_atlas_mcp_add() {
+  if [ $# -lt 2 ]; then
+    echo "Usage: atlas mcp add <name> <command-or-url> [args...]" >&2
+    echo "Examples:" >&2
+    echo "  atlas mcp add context7 https://mcp.context7.com/mcp" >&2
+    echo "  atlas mcp add my-server -- npx my-mcp-server" >&2
+    return 1
+  fi
+  claude mcp add "$@"
+}
+
+_atlas_mcp_remove() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas mcp remove <name>" >&2
+    return 1
+  fi
+  claude mcp remove "$name"
+}
+
+_atlas_mcp_get() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas mcp get <name>" >&2
+    return 1
+  fi
+  claude mcp get "$name"
+}
+
+_atlas_mcp_profile_cmd() {
+  local sub="${1:-}"
+  shift 2>/dev/null || true
+  case "$sub" in
+    list|"") _atlas_mcp_profile_list ;;
+    *)       _atlas_mcp_profile_show "$sub" ;;
+  esac
+}
+
+_atlas_mcp_profile_list() {
+  local dir="$HOME/.atlas/mcp-profiles"
+  if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
+    echo "No MCP profiles at $dir"
+    echo "Bootstrap: cp -r ~/workspace_atlas/projects/atlas-dev-plugin/templates/mcp-profiles/* $dir/"
+    return 0
+  fi
+  if ! command -v yq &>/dev/null; then
+    ls "$dir"/*.yaml 2>/dev/null | xargs -n1 basename -s .yaml
+    return
+  fi
+  printf "  %-24s %-8s %s\n" "MCP PROFILE" "SERVERS" "DESCRIPTION"
+  printf "  %-24s %-8s %s\n" "------------------------" "--------" "-----------------------------------"
+  local f name count desc
+  for f in "$dir"/*.yaml; do
+    [ -f "$f" ] || continue
+    name=$(basename "$f" .yaml)
+    count=$(yq eval '.servers // [] | length' "$f" 2>/dev/null)
+    desc=$(yq eval '.description // "—"' "$f" 2>/dev/null | head -c 60)
+    printf "  %-24s %-8s %s\n" "$name" "$count" "$desc"
+  done
+}
+
+_atlas_mcp_profile_show() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    _atlas_mcp_profile_list
+    return
+  fi
+  local file="$HOME/.atlas/mcp-profiles/${name}.yaml"
+  if [ ! -f "$file" ]; then
+    echo "❌ MCP profile '$name' not found at $file" >&2
+    echo "Available:" >&2
+    _atlas_mcp_profile_list >&2
+    return 1
+  fi
+  printf "  📡 ${ATLAS_BOLD}MCP Profile: %s${ATLAS_RESET}\n\n" "$name"
+  sed 's/^/  /' "$file"
+  echo
+  if command -v yq &>/dev/null; then
+    echo "  Servers:"
+    yq eval '.servers[]' "$file" 2>/dev/null | sed 's/^/    - /'
+  fi
+}
+
+_atlas_mcp_doctor() {
+  if ! command -v claude &>/dev/null; then
+    echo "❌ claude CLI not found in PATH" >&2
+    return 1
+  fi
+  printf "  🩺 ${ATLAS_BOLD}MCP Server Health Check${ATLAS_RESET}\n\n"
+  local output
+  output=$(claude mcp list 2>&1)
+  if [ -z "$output" ]; then
+    echo "  ℹ️  No MCP servers configured"
+    echo
+    echo "  Add one: atlas mcp add <name> <url-or-cmd>"
+    return 0
+  fi
+  echo "$output" | sed 's/^/  /'
+  echo
+  # Count health states by parsing claude mcp list output
+  local connected=0 needs_auth=0 failed=0
+  while IFS= read -r line; do
+    case "$line" in
+      *"✓"*|*"Connected"*)       connected=$((connected + 1)) ;;
+      *"!"*|*"Needs auth"*)      needs_auth=$((needs_auth + 1)) ;;
+      *"✗"*|*"Failed"*|*"Error"*) failed=$((failed + 1)) ;;
+    esac
+  done <<< "$output"
+  printf "  Summary: ${ATLAS_GREEN}✅ %d connected${ATLAS_RESET} | ${ATLAS_YELLOW}⚠️  %d needs auth${ATLAS_RESET} | ${ATLAS_RED}❌ %d failed${ATLAS_RESET}\n" \
+    "$connected" "$needs_auth" "$failed"
+}
