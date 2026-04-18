@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.26.3 (2026-04-18)
+
+### 🐛 Bug Fixes
+- fix(marketplace): canonical public URL via plugins.axoiq.com
+
+### 🔧 Other Changes
+- Merge pull request 'fix(marketplace): canonical plugins.axoiq.com URL (internal+external from Forgejo)' (#25) from fix/marketplace-sources-plugins-axoiq into main
+
+
+
 ## v5.26.2 (2026-04-18)
 
 ### 🐛 Bug Fixes
