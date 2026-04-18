@@ -1,0 +1,118 @@
+skill_name,appears_in_tiers,canonical_recommendation,merge_strategy,risk_level,rationale
+agent-readiness,admin,admin,keep-as-is,none,"Single-tier (admin), 158L — already canonical. No action."
+agent-visibility,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=158. Untouchable.
+api-healthcheck,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+atlas-analytics,admin,admin,keep-as-is,none,"Single-tier (admin), 110L — already canonical. No action."
+atlas-assist,shared,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=463. Untouchable.
+atlas-dev-self,admin,admin,keep-as-is,none,"Single-tier (admin), 155L — already canonical. No action."
+atlas-doctor,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=946. Untouchable.
+atlas-location,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=102. Untouchable.
+atlas-onboarding,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=103. Untouchable.
+atlas-team,admin,admin,trim-only,medium,Single-tier (admin). Trim candidate (710→350L): 5 blueprints with duplicated scaffolding — extract shared template
+atlas-vault,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=144. Untouchable.
+atlas-workspace-setup,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=248. Untouchable.
+auto-orchestrator,admin,admin,keep-as-is,none,"Single-tier (admin), 185L — already canonical. No action."
+brainstorming,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+browser-automation,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+ci-health,dev,dev,keep-as-is,none,"Single-tier (dev), 76L — already canonical. No action."
+ci-management,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+code-analysis,admin,admin,trim-only,medium,Single-tier (admin). Trim candidate (264→220L): 4 analysis modes with similar examples — merge
+code-hygiene-rules,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+code-review,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+code-simplify,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+codebase-audit,admin,admin,keep-as-is,none,"Single-tier (admin), 223L — already canonical. No action."
+context-discovery,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=90. Untouchable.
+cost-analytics,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=137. Untouchable.
+decision-log,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+deep-research,core,core,keep-as-is,none,"Single-tier (core), 119L — already canonical. No action."
+deploy-hotfix,admin,admin,keep-as-is,none,"Single-tier (admin), 156L — already canonical. No action."
+devops-deploy,admin,admin,keep-as-is,none,"Single-tier (admin), 232L — already canonical. No action."
+discovery,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=88. Untouchable.
+document-generator,core,core,keep-as-is,none,"Single-tier (core), 127L — already canonical. No action."
+engineering-ops,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+enterprise-audit,admin,admin,keep-as-is,none,"Single-tier (admin), 234L — already canonical. No action."
+episode-create,core,core,keep-as-is,none,"Single-tier (core), 96L — already canonical. No action."
+executing-plans,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+execution-strategy,dev+admin,dev,canonical-dev-only+trim,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. admin-addon should INHERIT via build.sh — remove from admin profile skills list. Also trim-candidate (346→280L): Long prose — move manifest schema to refs/
+experiment-loop,admin,admin,keep-as-is,none,"Single-tier (admin), 111L — already canonical. No action."
+feature-board,admin,admin,trim-only,medium,"Single-tier (admin). Trim candidate (497→300L): Dashboard rendering logic belongs in script, not SKILL.md body"
+finishing-branch,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+forgejo-pr,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+frontend-design,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+frontend-workflow,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+git-worktrees,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+gms-cockpit,admin,admin,keep-as-is,high,gms-cockpit + gms-profiler + gms-insights + gms-onboard form a G Mining suite (596L total) — consider `gms` skill with subcommands
+gms-insights,admin,admin,keep-as-is,none,"Single-tier (admin), 100L — already canonical. No action."
+gms-onboard,admin,admin,keep-as-is,none,"Single-tier (admin), 135L — already canonical. No action."
+gms-profiler,admin,admin,keep-as-is,none,"Single-tier (admin), 148L — already canonical. No action."
+hardware-capacity,shared,infra,keep-as-is,none,Already tier-specific via _metadata.yaml owner=infra. Not in profile tier lists (shared).
+hookify,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+iac-orchestrator,shared,infra,keep-as-is,none,Already tier-specific via _metadata.yaml owner=infra. Not in profile tier lists (shared).
+idle-curiosity,admin,admin,keep-as-is,none,"Single-tier (admin), 204L — already canonical. No action."
+infra-health,admin,admin,keep-as-is,none,"Single-tier (admin), 177L — already canonical. No action."
+infra-inventory,shared,infra,keep-as-is,none,Already tier-specific via _metadata.yaml owner=infra. Not in profile tier lists (shared).
+infrastructure-change,admin,admin,trim-only,medium,Single-tier (admin). Trim candidate (306→250L): 5 component runbooks — split into refs/ with SKILL.md summary
+infrastructure-ops,admin,admin,keep-as-is,none,"Single-tier (admin), 112L — already canonical. No action."
+interactive-flow,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+intuition-log,core,core,keep-as-is,none,"Single-tier (core), 74L — already canonical. No action."
+knowledge-builder,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=83. Untouchable.
+knowledge-engine,admin,admin,keep-as-is,none,"Single-tier (admin), 155L — already canonical. No action."
+knowledge-manager,admin,admin,merge-siblings,high,knowledge-engine (155L) and knowledge-manager (97L) both expose Unified Knowledge Layer — consolidate
+marketplace-manager,admin,admin,keep-as-is,none,"Single-tier (admin), 163L — already canonical. No action."
+memory-dream,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=1167. Untouchable.
+mesh-diagnostics,shared,infra,keep-as-is,none,Already tier-specific via _metadata.yaml owner=infra. Not in profile tier lists (shared).
+morning-brief,core,core,keep-as-is,none,"Single-tier (core), 185L — already canonical. No action."
+morning-routine,core,core,merge-siblings,medium,morning-routine (130L) and morning-brief (185L) both start-of-day — merge as `morning` skill with 2 sub-commands
+network-audit,shared,infra,keep-as-is,none,Already tier-specific via _metadata.yaml owner=infra. Not in profile tier lists (shared).
+note-capture,core,core,keep-as-is,none,"Single-tier (core), 156L — already canonical. No action."
+onboarding-check,admin,admin,trim-only,medium,Single-tier (admin). Trim candidate (385→280L): 12 checks with verbose prose — tabulate
+persona-loadout,admin,admin,keep-as-is,none,"Single-tier (admin), 107L — already canonical. No action."
+plan-builder,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+plan-review,admin,admin,keep-as-is,none,"Single-tier (admin), 170L — already canonical. No action."
+platform-update,admin,admin,keep-as-is,none,"Single-tier (admin), 218L — already canonical. No action."
+plugin-builder,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+product-health,admin,admin,trim-only,medium,Single-tier (admin). Trim candidate (324→260L): Long validation table — move matrix spec to refs/
+programme-manager,admin,admin,keep-as-is,none,"Single-tier (admin), 155L — already canonical. No action."
+proxmox-admin,shared,infra,keep-as-is,none,Already tier-specific via _metadata.yaml owner=infra. Not in profile tier lists (shared).
+relationship-manager,core,core,keep-as-is,none,"Single-tier (core), 89L — already canonical. No action."
+reminder-scheduler,core,core,keep-as-is,none,"Single-tier (core), 175L — already canonical. No action."
+scope-check,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=41. Untouchable.
+secret-manager,admin,admin,keep-as-is,none,Tier-1 protected — foundational/security. Lines=113. Untouchable.
+security-audit,admin,admin,keep-as-is,none,"Single-tier (admin), 131L — already canonical. No action."
+self-propose,shared,enterprise,keep-as-is,none,Already tier-specific via _metadata.yaml owner=enterprise. Not in profile tier lists (shared).
+senior-discipline-checklist,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+senior-review-checklist,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+session-pickup,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=168. Untouchable.
+session-retrospective,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=186. Untouchable.
+session-spawn,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=351. Untouchable.
+ship-all,dev+admin,dev,canonical-dev-only+trim,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. admin-addon should INHERIT via build.sh — remove from admin profile skills list. Also trim-candidate (281→230L): Multi-env orchestrator — consolidate env-specific branches
+skill-management,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+skill-security-audit,admin,admin,keep-as-is,none,Tier-1 protected — foundational/security. Lines=118. Untouchable.
+smoke-gate,dev,dev,keep-as-is,none,"Single-tier (dev), 80L — already canonical. No action."
+sota-code-patterns,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+statusline-setup,admin,admin,trim-only,medium,Single-tier (admin). Trim candidate (278→220L): Cross-platform installer logic — externalize to script
+subagent-dispatch,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+systematic-debugging,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+tdd,dev+admin,dev,canonical-dev-only,low,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+test-affected,dev,dev,keep-as-is,none,"Single-tier (dev), 70L — already canonical. No action."
+test-orchestrator,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+ultrathink,admin,admin,trim-only,medium,Single-tier (admin). Trim candidate (293→240L): 6 subcommands with verbose examples — tabulate
+user-profiler,core,core,keep-as-is,none,Tier-1 protected — foundational/security. Lines=95. Untouchable.
+verification,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+vision-alignment,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+visual-generator,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+visual-qa,dev+admin,dev,canonical-dev-only,medium,Listed in BOTH dev-addon.yaml AND admin-addon.yaml. Files identical on disk (single SKILL.md). Fix: remove from admin-addon.yaml and add `inherits: dev-addon` to admin-addon.yaml. Build.sh already supports inheritance via resolve_field().
+weekly-review,core,core,keep-as-is,none,"Single-tier (core), 162L — already canonical. No action."
+youtube-transcript,core,core,keep-as-is,none,"Single-tier (core), 167L — already canonical. No action."
+atlas-visual-identity,core-ref,core-ref,keep-as-is,none,Reference catalog (87L) — already single-ownership via refs/. Not a skill duplicate.
+cc-native-features,core-ref,core-ref,keep-as-is,none,Reference catalog (350L) — already single-ownership via refs/. Not a skill duplicate.
+code-smells-catalog,dev-ref+admin-ref,dev-ref,keep-as-is,none,Reference catalog (192L) — already single-ownership via refs/. Not a skill duplicate.
+composition-patterns,dev-ref+admin-ref,dev-ref,keep-as-is,none,Reference catalog (25L) — already single-ownership via refs/. Not a skill duplicate.
+external-tools,core-ref,core-ref,keep-as-is,none,Reference catalog (22L) — already single-ownership via refs/. Not a skill duplicate.
+folder-structure-patterns,dev-ref+admin-ref,dev-ref,keep-as-is,none,Reference catalog (207L) — already single-ownership via refs/. Not a skill duplicate.
+gmining-excel,dev-ref+admin-ref,dev-ref,keep-as-is,none,Reference catalog (23L) — already single-ownership via refs/. Not a skill duplicate.
+model-benchmarks-2026-04,core-ref+admin-ref,core-ref,keep-as-is,none,Reference catalog (122L) — already single-ownership via refs/. Not a skill duplicate.
+naming-conventions,dev-ref+admin-ref,dev-ref,keep-as-is,none,Reference catalog (43L) — already single-ownership via refs/. Not a skill duplicate.
+react-best-practices,dev-ref+admin-ref,dev-ref,keep-as-is,none,Reference catalog (31L) — already single-ownership via refs/. Not a skill duplicate.
+sota-architecture-patterns,dev-ref+admin-ref,dev-ref,keep-as-is,none,Reference catalog (286L) — already single-ownership via refs/. Not a skill duplicate.
+web-design-guidelines,dev-ref+admin-ref,dev-ref,keep-as-is,none,Reference catalog (25L) — already single-ownership via refs/. Not a skill duplicate.

@@ -6,1162 +6,510 @@ effort: high
 
 # Memory Dream v6 — Self-Improving Consolidation Engine
 
-> Implements CC's auto-dream pattern: a 16-phase memory consolidation cycle inspired by
-> sleep-time compute (UC Berkeley + Letta, 2025) and cognitive architectures (ACT-R/SOAR).
-> v6 adds **4 cognitive phases**: replay analysis (2.9), gap detection (2.10),
-> improvement proposals (4.7), auto-scheduling (4.8), and dream quality metrics (4.9).
-> The self-improvement loop: Dream proposes → User approves → System implements → Dream validates.
-> v5.5 added learning velocity audit (Phase 2.8).
-> v5 added workflow audit (Phase 2.7).
-> v4 added the experiential layer: 5 new memory types, inference-first capture, growth trajectory.
+> CC auto-dream pattern: 16-phase memory consolidation inspired by sleep-time compute (UC Berkeley+Letta, 2025) and ACT-R/SOAR.
+> v6 adds 4 cognitive phases: replay (2.9), gap detection (2.10), improvement proposals (4.7), auto-scheduling (4.8), quality metrics (4.9).
+> Self-improvement loop: Dream proposes → User approves → System implements → Dream validates.
 > Scope: memory + handoffs + docs + plans + features + plugin state + experiential + workflow + replay.
 
 ## When to Use
 
-- MEMORY.md growing past 150 lines
-- 5+ sessions since last consolidation
+- MEMORY.md > 150 lines, 5+ sessions since last consolidation, end of sprint
 - User says "dream", "clean memory", "consolidate", "memory audit", "memory health"
-- End of sprint or major feature work
-- Before fresh planning session (clean slate)
-- After receiving handoffs from another session
-- When suspecting stale status claims or outdated tech info
+- After receiving handoffs, before fresh planning, suspecting stale status claims
 
 ## Subcommands
 
 | Command | Phases | Time | Action |
 |---------|--------|------|--------|
-| `/atlas dream` | 1-4 | ~10 min | Standard 4-phase cycle with HITL gates |
-| `/atlas dream --deep` | 1-5 + 4.6 | ~20 min | Full intelligence: validate + self-model update + cross-project |
-| `/atlas dream --dry-run` | 1-2 | ~2 min | Report only — zero writes |
-| `/atlas dream report` | 1-2 | ~2 min | Quick staleness + orphan report only |
-| `/atlas dream --validate` | 1+2.5 | ~5 min | Code freshness + status claim check |
-| `/atlas dream --cross-project` | 1+5 | ~5 min | Multi-repo consistency scan |
-| `/atlas dream --docs` | 1+1.5 | ~3 min | .blueprint/ + plans/ + handoffs/ audit |
-| `/atlas dream --handoffs` | 1+1.5-D3 | ~3 min | Ingest recent handoffs as signal |
-| `/atlas dream journal` | J1 only | ~2 min | Synthesize current session into journal entry |
-| `/atlas dream --tech` | 1+1.5-D6 | ~5 min | Technical state consolidation (stack, versions, ports) |
-| `/atlas dream --split <file>` | 3.6 only | ~5 min | Split wizard for one oversized file |
-| `/atlas dream health` | Score | ~1 min | 10D health dashboard |
-| `/atlas dream trends` | History | ~1 min | Health over time from dream-history.jsonl |
-| `/atlas dream status` | 2+2.5 | ~3 min | ACTIVE WORK status claim verification |
+| `/atlas dream` | 1-4 | ~10m | Standard 4-phase with HITL |
+| `/atlas dream --deep` | 1-5 + 4.6 | ~20m | Full intelligence + self-model + cross-project |
+| `/atlas dream --dry-run` | 1-2 | ~2m | Report only, zero writes |
+| `/atlas dream report` | 1-2 | ~2m | Staleness + orphan report |
+| `/atlas dream --validate` | 1+2.5 | ~5m | Code freshness + status claim check |
+| `/atlas dream --cross-project` | 1+5 | ~5m | Multi-repo consistency scan |
+| `/atlas dream --docs` | 1+1.5 | ~3m | .blueprint/ + plans/ + handoffs/ audit |
+| `/atlas dream --handoffs` | 1+1.5-D3 | ~3m | Ingest recent handoffs as signal |
+| `/atlas dream journal` | J1 only | ~2m | Synthesize session into journal entry |
+| `/atlas dream --tech` | 1+1.5-D6 | ~5m | Technical state consolidation |
+| `/atlas dream --split <file>` | 3.6 only | ~5m | Split wizard for oversized file |
+| `/atlas dream health` | Score | ~1m | 17D health dashboard |
+| `/atlas dream trends` | History | ~1m | Health over time from dream-history.jsonl |
+| `/atlas dream status` | 2+2.5 | ~3m | ACTIVE WORK status claim verification |
 | `/atlas dream --schedule` | — | — | Schedule recurring dream via CronCreate |
-| `/atlas dream --experiential` | 1+2+2.6+3.7 | ~10 min | Experiential audit + synthesis |
-| `/atlas dream --reflection` | 1+2+4.5 | ~5 min | Generate monthly reflection |
-| `/atlas dream --full` | ALL phases + 4.6 | ~25 min | Complete cycle including experiential + self-model update |
-| `/atlas dream --topic {name}` | topic consolidation | ~3 min | Consolidate topic memory into summary |
-| `/atlas episode create` | standalone | ~3 min | Create episode file for current session |
-| `/atlas intuition log` | standalone | ~2 min | Capture a gut feeling or emerging pattern |
-| `/atlas relationship {person}` | standalone | ~3 min | Create/update relationship file |
+| `/atlas dream --experiential` | 1+2+2.6+3.7 | ~10m | Experiential audit + synthesis |
+| `/atlas dream --reflection` | 1+2+4.5 | ~5m | Monthly reflection |
+| `/atlas dream --full` | ALL + 4.6 | ~25m | Complete cycle including experiential + self-model |
+| `/atlas dream --topic {name}` | topic | ~3m | Consolidate topic memory into summary |
+| `/atlas episode create` | standalone | ~3m | Create episode file for current session |
+| `/atlas intuition log` | standalone | ~2m | Capture gut feeling or emerging pattern |
+| `/atlas relationship {person}` | standalone | ~3m | Create/update relationship file |
 
 ### Progressive Disclosure Tiers
 
-| Tier | Invocation | Phases Run | Writes? |
-|------|------------|------------|---------|
-| Report | `dream report`, `dream health`, `dream trends`, `dream status` | Read-only subset | No |
-| Standard | `dream`, `dream --docs`, `dream --handoffs`, `dream journal`, `dream --topic` | 1 through 4 (subset varies) | Yes (HITL) |
-| Experiential | `dream --experiential`, `dream --reflection`, `episode create`, `intuition log`, `relationship` | 1+2.6+3.7 or standalone | Yes (HITL) |
-| Deep | `dream --deep`, `dream --full`, `dream --validate`, `dream --cross-project` | 1 through 5 (all phases) | Yes (HITL) |
+| Tier | Invocation | Writes? |
+|------|------------|---------|
+| Report | `dream report/health/trends/status` | No |
+| Standard | `dream`, `dream --docs/handoffs/journal/topic` | Yes (HITL) |
+| Experiential | `dream --experiential/reflection`, `episode/intuition/relationship` | Yes (HITL) |
+| Deep | `dream --deep/full/validate/cross-project` | Yes (HITL) |
 
-## Phase 1 — Orient (Enhanced)
+## Phase 1 — Orient
 
-Scan memory directory and build a complete mental map.
-
-### Steps
+Scan memory directory, build mental map.
 
 1. **Detect memory directory**:
    ```bash
    MEMORY_DIR=$(find ~/.claude/projects -path "*/memory/MEMORY.md" -printf "%h\n" 2>/dev/null | head -1)
    ```
-   If multiple projects, use the one matching the current working directory.
-
-2. **Read MEMORY.md**: Count lines, extract `## Section` headers, build section-to-line map.
-
-3. **List all topic files**:
-   ```bash
-   ls "$MEMORY_DIR"/*.md | grep -v MEMORY.md | wc -l
-   ```
-
-4. **Detect orphans**: Files in memory dir NOT referenced in MEMORY.md.
+2. **Read MEMORY.md**: Count lines, extract `## Section` headers.
+3. **List topic files**: `ls "$MEMORY_DIR"/*.md | grep -v MEMORY.md | wc -l`
+4. **Detect orphans**: Files in dir NOT referenced in MEMORY.md:
    ```bash
    for f in "$MEMORY_DIR"/*.md; do
-     base=$(basename "$f")
-     [ "$base" = "MEMORY.md" ] && continue
+     base=$(basename "$f"); [ "$base" = "MEMORY.md" ] && continue
      grep -q "$base" "$MEMORY_DIR/MEMORY.md" || echo "ORPHAN: $base"
    done
    ```
+5. **File size audit**: `du -k "$MEMORY_DIR"/*.md | awk '$1 > 50 {print "OVERSIZED:", $2, $1"KB"}'`
+6. **Cross-project discovery**: `find ~/.claude/projects -name "MEMORY.md" -printf "%h\n"`
+7. **Check consolidation lock**: `[ -f "$MEMORY_DIR/.consolidate-lock" ] && echo "LOCKED"`
+8. **Output orient summary**: MEMORY.md lines, topic count, orphans, oversized, cross-project dirs, lock, last modified.
 
-5. **File size audit** (NEW): Detect oversized files.
-   ```bash
-   du -k "$MEMORY_DIR"/*.md | awk '$1 > 50 {print "OVERSIZED:", $2, $1"KB"}'
-   ```
-   Classify: normal (<25KB) | large (25-50KB) | oversized (>50KB).
+## Phase 1.5 — Docs & Ecosystem Audit
 
-6. **Cross-project discovery** (NEW): Find all memory directories.
-   ```bash
-   find ~/.claude/projects -name "MEMORY.md" -printf "%h\n" 2>/dev/null
-   ```
+> Always with `--deep`. Standalone with `--docs`/`--handoffs`/`--tech`. Details: `${SKILL_DIR}/references/docs-audit.md`
 
-7. **Check consolidation lock**:
-   ```bash
-   [ -f "$MEMORY_DIR/.consolidate-lock" ] && echo "LOCKED"
-   ```
+- **D1 .blueprint/ audit**: Count files, verify INDEX.md freshness, stale >30d
+- **D2 Plans audit**: List `.blueprint/plans/*.md`, verify links, detect dead refs
+- **D3 Handoffs ingestion**: Scan `.blueprint/handoffs/handoff-*.md`, extract decisions/gotchas, compare with lessons.md (**HITL H1**)
+- **D4 FEATURES.md sync**: Count by tier, compare with MEMORY.md claims, detect shipped still in ACTIVE WORK (**HITL H2**)
+- **D5 ATLAS plugin state**: Compare version, skill/agent/command counts vs memory claims
+- **D6 Technical state** (`--tech`): Compare stack versions, Docker, ports, IPs vs live system
 
-8. **Output orient summary**:
-   ```
-   Memory Orient — YYYY-MM-DD HH:MM TZ
-   ├─ MEMORY.md: {N} lines (limit: 200)
-   ├─ Topic files: {N} total
-   ├─ Orphans: {N} (not referenced in MEMORY.md)
-   ├─ Oversized: {N} files >50KB
-   ├─ Cross-project dirs: {N}
-   ├─ Lock: {free|locked}
-   └─ Last modified: {YYYY-MM-DD HH:MM TZ}
-   ```
+Output: Ecosystem Audit table per source (items, stale, status).
 
-## Phase 1.5 — Docs & Ecosystem Audit (NEW)
+## Phase 2 — Gather Signal
 
-> Always runs with `--deep`. Standalone with `--docs`, `--handoffs`, or `--tech`.
+Identify what needs attention without changes.
 
-Scans the full documentation ecosystem beyond memory/.
+1. **Staleness buckets**: `<7d fresh | 7-14d aging | 14-30d stale | >30d archive candidate`
+2. **Feedback audit**: Count `feedback_*.md`, detect near-duplicates (Levenshtein ≤3)
+3. **Duplicate detection**: Jaccard similarity >70% on non-feedback pairs
+4. **Relative dates**: `grep -rn "yesterday\|last week\|today\|ce matin\|hier" "$MEMORY_DIR"/*.md`
+5. **Memory type distribution**: Count by frontmatter `type:`, flag untyped
+6. **Importance scoring** (1-5 stars): References 30% + Recency 25% + Size penalty 15% + Type bonus 15% + Active Work link 15%
+7. **Status claim scan**: Grep `COMPLETE|LIVE|DONE|SHIPPED` for Phase 2.5 validation
+8. **Reference extraction**: URLs, file paths, API endpoints
 
-For details, read `${SKILL_DIR}/references/docs-audit.md`
+If `--dry-run` or `report`: STOP HERE, display and exit.
 
-### Steps
+## Phase 2.5 — Validate (HITL H3)
 
-- **D1 — .blueprint/ audit**: Count files, verify INDEX.md freshness, detect orphan docs and stale files (>30d).
-- **D2 — Plans audit**: List `.blueprint/plans/*.md`, verify links in MEMORY.md, detect dead plan references and plans >6 months without update.
-- **D3 — Handoffs ingestion**: Scan `.blueprint/handoffs/handoff-*.md`, extract decisions/gotchas/quick-start, compare with lessons.md, identify recent handoffs (<7d) with uncaptured insights. **HITL gate H1**.
-- **D4 — FEATURES.md sync**: Count features by tier, compare with MEMORY.md claims, detect shipped features still in ACTIVE WORK. **HITL gate H2**.
-- **D5 — ATLAS plugin state**: Compare plugin version, skill/agent/command counts against memory claims.
-- **D6 — Technical state validation** (`--tech`): Compare stack versions, Docker state, ports, IPs, and infra claims against live system reality.
+> `--deep`/`--validate`. Details: `${SKILL_DIR}/references/validate-phase.md`
 
-### Output
+- **V1 Code staleness**: Verify file paths, function/hook names, API endpoints exist
+- **V2 Status claim verification**: For each `COMPLETE/LIVE/DONE`, verify via git branch, tests, health endpoint, counts, versions
+- **V3 External refs**: File paths (`[ -f ]`), plan refs, URLs (with `--deep`: `curl -sI --max-time 5`)
 
-```
-Ecosystem Audit — YYYY-MM-DD HH:MM TZ
-┌──────────────────────┬───────┬────────┬────────┐
-│ Source               │ Items │ Stale  │ Status │
-├──────────────────────┼───────┼────────┼────────┤
-│ .blueprint/          │ {N}   │ {N}    │ OK/WARN│
-│ .blueprint/plans/    │ {N}   │ {N}    │ OK/WARN│
-│ .blueprint/handoffs/ │ {N}   │ {N}    │ OK     │
-│ FEATURES.md          │ {N}   │ {N}    │ OK/WARN│
-│ ATLAS plugin         │ v{X}  │ —      │ OK/WARN│
-│ Tech stack           │ —     │ {N}    │ OK/WARN│
-└──────────────────────┴───────┴────────┴────────┘
-```
+## Phase 2.6 — Experiential Audit
 
-## Phase 2 — Gather Signal (Enhanced)
+> `--deep`/`--experiential`/`--full`. Details: `${SKILL_DIR}/references/experiential-schema.md`
 
-Identify what needs attention without making changes.
+1. **Episode coverage**: Count `type: episode` (last 14d) vs session-log.md entries. Target 50%.
+2. **Relationship freshness**: Flag `last_interaction` >30d for active members
+3. **Temporal validity expiry**: Flag `valid_until` past facts
+4. **Intuition backlog**: Count `validated: false` older than 30d
+5. **Experiential field coverage**: % with `energy/mood/confidence/time_quality`
 
-### Steps
+Output: Dimension table (Count, Target, Status).
 
-1. **Staleness report**: Categorize files by last modification date.
-   Buckets: `<7d` (fresh) | `7-14d` (aging) | `14-30d` (stale) | `>30d` (archive candidate).
+## Phase 2.7 — Workflow Audit
 
-2. **Feedback audit**: Count and categorize `feedback_*.md`, detect near-duplicates (Levenshtein distance <= 3).
+> `--deep`/`--experiential`/`--full`. Tracks skill effectiveness.
 
-3. **Duplicate detection**: Jaccard similarity on word sets between non-feedback file pairs. Flag >70% overlap.
+1. **Skill usage**: Scan session for invocations (count, success, errors)
+2. **Timing**: Flag skills >5min (optimization targets)
+3. **Error tracking**: Failures, permission denials, retries grouped by skill/hook
+4. **Unused skills**: Compare installed vs invoked in 7d; flag 30+d unused
 
-4. **Relative date detection**: Find dates that will become meaningless.
-   ```bash
-   grep -rn "yesterday\|last week\|today\|this morning\|ce matin\|hier" "$MEMORY_DIR"/*.md
-   ```
+Output: Skill table (Uses, Errors, Avg ms, Status) + Unused list + Suggestions.
 
-5. **Memory type distribution**: Count by frontmatter `type:` field. Flag untyped files.
+## Phase 2.8 — Learning Velocity Audit
 
-6. **Importance scoring** (NEW, 1-5 stars per file):
-   - Reference count (30%): times cited in MEMORY.md + other files
-   - Recency (25%): days since last modification
-   - Size penalty (15%): penalize >100KB
-   - Type bonus (15%): user=5, feedback=4, project=3, reference=2
-   - Active Work link (15%): +2 if in ACTIVE WORK table
+> `--deep`/`--full`. Measures learning rate from feedback and bias corrections.
 
-7. **Status claim scan** (NEW): Grep `COMPLETE|LIVE|DONE|SHIPPED` across all memory files. Build list for Phase 2.5 validation.
+1. **New feedback (30d)**: Count `feedback_*.md` + `feedback-*.md` files
+2. **Bias correction tracking**: Diff `self-model.md` Known Biases counts vs previous dream
+3. **Confidence audit**: % feedback with `confidence:` frontmatter
+4. **Regression detection**: Bias triggered 3+ times since last dream
 
-8. **Reference extraction** (NEW): Grep URLs, file paths, API endpoints. Prepare for Phase 2.5 validation.
+Output: Metric table (Count, Target, Status) + D17 score.
 
-9. **Output gather summary**: Dashboard table with all metrics.
-
-If `--dry-run` or `report` subcommand: **STOP HERE**. Display report and exit.
+## Phase 2.9 — Replay Analysis
 
-## Phase 2.5 — Validate (NEW)
+> `--deep`/`--full`. Parses `~/.claude/session-replay.jsonl` (need 50+ events). SP-EVOLUTION P8.1.
 
-> Requires `--deep` or `--validate`. Intelligence layer that validates memory against reality.
+1. **Load replay**: `[ -f "$REPLAY_FILE" ] || { echo "No replay data"; return; }`
+2. **Tool sequences**: Bigrams/trigrams (healthy: `Read→Edit→Bash(test)`, anti: `Edit→Edit→Edit` thrashing)
+3. **Skill frequency**: Unused (30+d) vs over-relied (>50%)
+4. **Session flow templates**: healthy `explore→plan→implement→verify`, spiral `implement→fix→fix→fix`, paralysis `plan→plan→plan`
 
-For details, read `${SKILL_DIR}/references/validate-phase.md`
-
-### Steps
-
-- **V1 — Code staleness**: Extract file paths and function/hook names from memory, verify existence in codebase (`[ -f ]`, `grep`). Extract API endpoints, match against backend routes.
-- **V2 — Status claim verification**: For each `COMPLETE/LIVE/DONE` claim, verify via git branch, tests, health endpoint. Check counts (test files, features) and versions (plugin, packages) against reality. **HITL gate H3** for stale claims.
-- **V3 — External reference validation**: File paths (`[ -f ]`), plan references (`.blueprint/plans/` existence), URLs (with `--deep` only: `curl -sI --max-time 5`).
-
-## Phase 2.6 — Experiential Audit (NEW, v4)
-
-> Requires `--deep`, `--experiential`, or `--full`. Assesses experiential coverage gaps.
-
-For details, read `${SKILL_DIR}/references/experiential-schema.md`
-
-### Steps
-
-1. **Episode coverage check**: Count `type: episode` files created in last 14 days. Compare with session-log.md entries. Gap = sessions without episode files. Target: 50% coverage.
-   ```bash
-   MEMORY_DIR=...
-   SESSION_COUNT=$(grep -c "^📅" "$MEMORY_DIR/session-log.md" 2>/dev/null || echo "0")
-   EPISODE_COUNT=$(find "$MEMORY_DIR" -name "episode-*.md" -mtime -14 2>/dev/null | wc -l)
-   COVERAGE=$((EPISODE_COUNT * 100 / (SESSION_COUNT > 0 ? SESSION_COUNT : 1)))
-   ```
-
-2. **Relationship freshness**: For each `type: relationship` file, check `last_interaction` field. Flag if >30 days for active team members.
-   ```bash
-   for f in "$MEMORY_DIR"/relationship-*.md; do
-     last=$(grep "^last_interaction:" "$f" 2>/dev/null | awk '{print $2}')
-     days_old=$(( ($(date +%s) - $(date -d "$last" +%s 2>/dev/null || echo 0)) / 86400 ))
-     [ $days_old -gt 30 ] && echo "STALE: $(basename $f) — $days_old days"
-   done
-   ```
-
-3. **Temporal validity expiry**: Scan `valid_until` fields across all memory files. Flag facts past their validity window.
-   ```bash
-   grep -rl "^valid_until:" "$MEMORY_DIR"/*.md 2>/dev/null | while read f; do
-     until_date=$(grep "^valid_until:" "$f" | awk '{print $2}')
-     [ "$(date -d "$until_date" +%s 2>/dev/null)" -lt "$(date +%s)" ] && echo "EXPIRED: $(basename $f)"
-   done
-   ```
-
-4. **Intuition validation backlog**: Count `type: intuition` files where `validated: false` and older than 30 days.
-5. **Experiential field coverage**: Across ALL files, count how many have `energy:`, `mood:`, `confidence:`, `time_quality:` fields. Report percentage.
-
-### Output
-
-```
-Phase 2.6 — Experiential Audit
-+---------------------------+-------+--------+--------+
-| Dimension                 | Count | Target | Status |
-+---------------------------+-------+--------+--------+
-| Episodes (last 14d)       | {N}   | 50%+   | OK/GAP |
-| Relationships (active)    | {N}   | 3+     | OK/GAP |
-| Temporal facts (expired)  | {N}   | 0      | OK/STALE|
-| Intuitions (unvalidated)  | {N}   | N/A    | OK     |
-| Energy coverage (%)       | {N}%  | 30%+   | OK/LOW |
-+---------------------------+-------+--------+--------+
-```
-
-## Phase 2.7 — Workflow Audit (NEW, v5)
-
-> Runs with `--deep`, `--experiential`, or `--full`. Tracks skill effectiveness and workflow patterns.
-
-### Steps
-
-1. **Skill usage tracking**: Scan the current session's conversation for skill invocations.
-   Count how many times each skill was triggered, which completed successfully, which errored.
-   ```bash
-   # Skills invoked this session (from session transcript if available)
-   # Alternatively, check session-log for skill mentions
-   grep -c "Skill(" "$TRANSCRIPT_FILE" 2>/dev/null || echo "0"
-   ```
-
-2. **Timing estimation**: For each skill invocation, estimate duration from surrounding timestamps.
-   Flag skills that took >5 minutes (potential optimization targets).
-
-3. **Error tracking**: Count tool call failures, permission denials, and retries.
-   Group by skill/hook to identify problematic patterns.
-
-4. **Unused skill detection**: Compare installed skills (from plugin cache) with skills actually invoked in last 7 days (from session logs). Flag skills never used in 30+ days.
-
-5. **Output**:
-   ```
-   Phase 2.7 — Workflow Audit
-   +-------------------+-------+--------+--------+---------+
-   | Skill             | Uses  | Errors | Avg ms | Status  |
-   +-------------------+-------+--------+--------+---------+
-   | plan-builder      | 3     | 0      | ~120s  | OK      |
-   | tdd               | 5     | 1      | ~90s   | OK      |
-   | browser-automation| 0     | 0      | —      | UNUSED  |
-   +-------------------+-------+--------+--------+---------+
-   Unused skills (30d+): browser-automation, experiment-loop
-   Suggested: consider uninstalling atlas-frontend if not needed
-   ```
-
-## Phase 2.8 — Learning Velocity Audit (NEW, v5.5)
-
-> Runs with `--deep` or `--full`. Measures learning rate from feedback and bias corrections.
-
-### Steps
-
-1. **New feedback detection**: Count `feedback_*.md` files created in last 30 days.
-   ```bash
-   NEW_FB=$(find "$MEMORY_DIR" -name "feedback_*.md" -mtime -30 2>/dev/null | wc -l)
-   NEW_CONSOL=$(find "$MEMORY_DIR" -name "feedback-*.md" -mtime -30 2>/dev/null | wc -l)
-   TOTAL_NEW=$((NEW_FB + NEW_CONSOL))
-   ```
-
-2. **Bias correction tracking**: Read `self-model.md` Known Biases section. Compare correction counts with previous dream report. Count increments.
-   ```bash
-   # Extract current bias counts from self-model.md
-   grep -A1 "corrections" "$MEMORY_DIR/self-model.md" 2>/dev/null
-   ```
-
-3. **Feedback confidence audit**: Count feedback files WITH vs WITHOUT `confidence:` frontmatter field.
-   ```bash
-   TOTAL_FB=$(find "$MEMORY_DIR" -name "feedback*.md" 2>/dev/null | wc -l)
-   SCORED_FB=$(grep -rl "^confidence:" "$MEMORY_DIR"/feedback*.md 2>/dev/null | wc -l)
-   ```
-
-4. **Regression detection**: Check if any bias from self-model.md has been triggered 3+ times since last dream.
-
-5. **Output**:
-   ```
-   Phase 2.8 — Learning Velocity Audit
-   +---------------------------+-------+--------+--------+
-   | Metric                    | Count | Target | Status |
-   +---------------------------+-------+--------+--------+
-   | New feedback (30d)        | {N}   | 2+     | OK/LOW |
-   | Bias corrections          | {N}   | 1+     | OK/LOW |
-   | Confidence scored (%)     | {N}%  | 50%+   | OK/GAP |
-   | Regressions               | {N}   | 0      | OK/WARN|
-   +---------------------------+-------+--------+--------+
-   D17 Score: {N}/10
-   ```
-
-## Phase 2.9 — Replay Analysis (NEW, v6)
-
-> Runs with `--deep` or `--full`. Parses session-replay.jsonl to detect workflow patterns.
-> SP-EVOLUTION P8.1 — Foundation for workflow learning.
-
-### Prerequisites
-- `~/.claude/session-replay.jsonl` must exist (populated by session hooks or `atlas replay`)
-- At least 50 events for meaningful pattern extraction
-
-### Steps
-
-1. **Load replay data**: Read `session-replay.jsonl`. Parse tool names, timestamps, task context.
-   ```bash
-   REPLAY_FILE="${HOME}/.claude/session-replay.jsonl"
-   [ -f "$REPLAY_FILE" ] || { echo "No replay data. Run sessions first."; return; }
-   EVENT_COUNT=$(wc -l < "$REPLAY_FILE")
-   ```
-
-2. **Extract tool sequences**: Find recurring tool call patterns (bigrams/trigrams).
-   - Common sequences: `Read → Edit → Bash(test)`, `Grep → Read → Edit`
-   - Detect "anti-patterns": `Edit → Edit → Edit` (thrashing without verification)
-
-3. **Skill usage frequency**: Count which skills are invoked, measure time-between-invocations.
-   - Identify unused skills (installed but never triggered in 30+ days)
-   - Identify over-relied skills (>50% of invocations)
-
-4. **Session flow templates**: Extract typical session shapes:
-   - "explore → plan → implement → verify" (healthy)
-   - "implement → fix → fix → fix" (debugging spiral)
-   - "plan → plan → plan" (planning paralysis)
-
-5. **Output**:
-   ```
-   Phase 2.9 — Replay Analysis
-   Events: {N} | Sessions: {N} | Span: {days}d
-   
-   Top tool sequences:
-     Read → Edit → Bash(test)     42 occurrences (healthy TDD)
-     Grep → Read → Grep → Read    18 occurrences (exploration)
-     Edit → Edit → Edit           7 occurrences (⚠️ thrashing)
-   
-   Skill usage (30d):
-     systematic-debugging  28 invocations  ██████████
-     plan-builder          14 invocations  █████
-     tdd                    3 invocations  █ (underused?)
-   
-   Session shapes:
-     Explore→Plan→Implement  45% (healthy)
-     Fix→Fix→Fix             25% (⚠️ debug spiral)
-     Plan→Plan               15% (consider implementing)
-   ```
-
-## Phase 2.10 — Knowledge Gap Detection (NEW, v6)
-
-> Runs with `--deep` or `--full`. Cross-references skills used vs. outcomes achieved.
-> SP-EVOLUTION P8.2 + P8.6 — Identifies blind spots and unresolved topics.
-
-### Steps
-
-1. **Skill outcome tracking**: For each skill invocation, check if it led to a task completion.
-   - Parse `agent-stats.jsonl` for dispatch outcomes (success/fail per model).
-   - Parse `session-state.json` history for task completion rates.
-
-2. **Unresolved topic detection**: Search memory for topics that appear in 3+ handoffs but have no corresponding completed plan.
-   - Pattern: topic mentioned in handoff "remaining" sections repeatedly.
-   - Flag: "This topic has been deferred 3x. Escalate or archive."
-
-3. **Skill gap analysis**: Compare skills available (from plugin manifest) vs skills actually used.
-   - Unused skills → suggest removal or training
-   - Failed skills → suggest investigation or alternative
-
-4. **Cross-session pattern merge**: When multiple session-state.json files exist (from worktrees/tmux):
-   - Aggregate completion rates across sessions
-   - Identify tasks that stall across multiple sessions
-
-5. **Output**:
-   ```
-   Phase 2.10 — Knowledge Gap Detection
-   
-   Unresolved topics (deferred 3+ times):
-     ⚠️ "Telegram notifications" — deferred in 4 handoffs (network blocker)
-     ⚠️ "SP-COGNITION P2" — mentioned 3x, never started
-   
-   Skill gaps:
-     📊 tdd: installed but used 3x in 30d (target: every implementation)
-     📊 security-audit: 0 invocations (last audit: 26d ago)
-   
-   Model success rates (from dispatch):
-     Haiku: 91% (89 tasks) | Sonnet: 94% (147 tasks) | Opus: 96% (23 tasks)
-   
-   Cross-session stalls:
-     ❌ "Fix Caddy→VM560" — attempted in 3 sessions, unresolved
-   ```
-
-## Phase 3 — Consolidate (Enhanced, HITL Required)
-
-Make changes with explicit user approval at every step.
-
-### Steps
-
-1. **Merge duplicates** (H4): Show both files, options: "Merge into A" / "Merge into B" / "Keep both" / "Skip".
-2. **Normalize dates** (H5): Show relative dates with context, propose absolute replacement.
-3. **Flag contradictions** (H6): Show opposing statements, ask which is current truth.
-4. **Categorize orphans** (H7): Read first 10 lines, propose: add to MEMORY.md or archive.
-5. **Type missing frontmatter** (H8): Suggest frontmatter based on content.
-6. **Large file split wizard** (H9, NEW): Auto-trigger for files >50KB.
-   - `lessons.md` splits by domain (backend, frontend, infra, ai, domain)
-   - `session-log.md` archives entries >60 days into `session-log-archive-YYYY-Q.md`
-   - Safety: create new files BEFORE modifying the original.
-   For details, read `${SKILL_DIR}/references/large-file-strategy.md`
-7. **Smart pruning** (H10, NEW): Files with importance <=1 AND stale >30d proposed for archival. NEVER prune feedback files or ACTIVE WORK files.
-8. **Auto-categorization** (H11, NEW): Propose sub-types (plan|architecture|status|integration|vision|audit). Propose ACTIVE WORK updates (DONE items removal).
-
-## Phase 3.5 — Session Journal & Handoff Synthesis (NEW)
-
-Capture live session context + bidirectional handoff integration.
-
-For details, read `${SKILL_DIR}/references/session-journal.md`
-
-### Steps
-
-- **J1 — Session journal entry** (H13): Synthesize current conversation into structured journal (What Went Well, What Blocked, Key Decisions, Technical Insights, Open Questions). Preview before writing.
-- **J2 — Handoff signal extraction** (H12): For recent handoffs (<7d), extract decisions, gotchas, dead-ends, quick-start commands. Cross-reference with `lessons.md` and `decisions.jsonl`. Propose new memory files for uncaptured insights.
-- **J3 — Handoff-to-memory sync**: For each uncaptured insight, HITL gate to create memory file.
-- **J4 — Session-to-handoff feed**: Dream report v2 includes "Handoff Context" section for `/a-handoff`.
-
-**Standalone**: `/atlas dream journal` runs J1 only, appends to `session-log.md`, no full cycle needed.
-Format: `YYYY-MM-DD HH:MM TZ -- {one-line summary}`.
-
-## Phase 3.7 — Experiential Synthesis (NEW, v4)
-
-> Requires `--deep`, `--experiential`, or `--full`. Synthesizes patterns from experiential data.
-
-For details, read `${SKILL_DIR}/references/experiential-synthesis.md`
-
-### Steps
-
-- **H19 — Energy pattern detection**: Analyze `energy:` fields across recent episodes. Detect trends ("Energy consistently low on Fridays", "Peak energy during infrastructure work"). Present patterns for confirmation.
-- **H20 — Productivity cycle mapping**: Cross-reference `time_quality:` and `flow_state:` with session outcomes. Surface patterns ("Deep work sessions = 3x more decisions").
-- **H21 — Intuition log generation**: When multiple episodes share similar observations not yet captured as intuition files, propose creating one.
-- **H22 — Relationship depth check**: For relationship files not updated in 30+ days but where the person appears in recent sessions, propose update.
-- **H23 — Growth trajectory snapshot**: Compare this month's experiential data with previous month. Track average energy, flow frequency, decision confidence trend, blocker frequency.
-
-**Output**: Patterns persisted to `patterns-experiential.md` (HITL on each pattern).
-
-## Phase 3.9 — Active Forgetting: Retention Tier Scan (NEW, P3-COG-5)
-
-> Runs during every dream cycle. Scans memory files for retention tier compliance.
-> See `${SKILL_DIR}/references/retention-tiers.md` for full tier definitions.
-
-### Steps
-
-- **H28 — Tier classification**: For each memory file, determine retention tier:
-  1. Check explicit `retention_tier:` in frontmatter → use if present
-  2. Infer from `type:` field (feedback→0, user→0, reference→0, project→1)
-  3. Infer from filename pattern (handoff-*→2, episode-*→2, debug-*→3)
-  4. Default: Tier 2 (medium-term, 60 days)
-
-- **H29 — Expiry scan**: Compare file age (from modification time) against tier TTL:
-  - Tier 0: skip (permanent)
-  - Tier 1 (180d): warn at 150d, propose archive at 180d
-  - Tier 2 (60d): warn at 45d, propose archive at 60d
-  - Tier 3 (14d): warn at 10d, auto-archive at 14d
-
-- **H30 — Archive proposal**: For each expired file, present via AskUserQuestion:
-  - "Archive {filename}? (Tier {N}, {age} days old, TTL={ttl}d)"
-  - Options: Archive / Keep (extend TTL) / Promote (change tier)
-  - Tier 3 files: auto-archive without asking (report in summary)
-
-- **H31 — Archive execution**: For approved archives:
-  1. Extract key facts (first 5 lines after frontmatter)
-  2. Append summary to `archive-expired-{year}-{month}.md`
-  3. Remove original file
-  4. Update MEMORY.md index (remove entry)
-  5. Log to dream report
-
-- **H32 — Retention health metric (D18)**: Compute retention health score:
-  ```
-  D18 = (files_within_ttl / total_tier_1_2_3_files) × 10
-  ```
-  Include in dream health scoring table.
+Output: Top sequences, skill usage bars, session shape percentages.
+
+## Phase 2.10 — Knowledge Gap Detection
+
+> `--deep`/`--full`. SP-EVOLUTION P8.2+P8.6.
+
+1. **Skill outcome tracking**: Parse `agent-stats.jsonl` dispatch outcomes, `session-state.json` completion rates
+2. **Unresolved topics**: Topics in 3+ handoffs with no completed plan (flag for escalation/archive)
+3. **Skill gap analysis**: Unused → suggest removal; failed → suggest investigation
+4. **Cross-session pattern merge**: Aggregate across worktrees/tmux; identify stalled tasks
+
+Output: Unresolved topics, skill gaps, model success rates, cross-session stalls.
+
+## Phase 3 — Consolidate (HITL Required)
+
+Changes with explicit approval.
+
+1. **Merge duplicates** (H4): Options "Merge into A/B" / "Keep both" / "Skip"
+2. **Normalize dates** (H5): Relative → absolute
+3. **Flag contradictions** (H6): Opposing statements → pick current truth
+4. **Categorize orphans** (H7): Add to MEMORY.md or archive
+5. **Type frontmatter** (H8): Suggest based on content
+6. **Large file split** (H9): Auto-trigger >50KB. `lessons.md` by domain, `session-log.md` archive >60d entries. Safety: create new BEFORE modifying original. Details: `${SKILL_DIR}/references/large-file-strategy.md`
+7. **Smart pruning** (H10): importance ≤1 AND stale >30d → archive. NEVER prune feedback or ACTIVE WORK files.
+8. **Auto-categorization** (H11): Sub-types (plan|architecture|status|integration|vision|audit); ACTIVE WORK DONE removal.
+
+## Phase 3.5 — Session Journal & Handoff Synthesis
+
+> Details: `${SKILL_DIR}/references/session-journal.md`
+
+- **J1 Journal entry** (H13): Synthesize conversation into What Went Well / Blocked / Decisions / Insights / Open Questions. Preview before write.
+- **J2 Handoff signal extraction** (H12): For recent handoffs (<7d), extract decisions/gotchas/dead-ends/quick-start. Cross-ref lessons.md + decisions.jsonl. Propose new memory files for uncaptured insights.
+- **J3 Handoff-to-memory sync**: HITL gate per insight → create file
+- **J4 Session-to-handoff feed**: Dream report v2 includes "Handoff Context" section for `/a-handoff`
+
+**Standalone**: `/atlas dream journal` = J1 only, appends to `session-log.md`. Format: `YYYY-MM-DD HH:MM TZ -- {one-line summary}`.
+
+## Phase 3.7 — Experiential Synthesis
+
+> `--deep`/`--experiential`/`--full`. Details: `${SKILL_DIR}/references/experiential-synthesis.md`
+
+- **H19 Energy patterns**: Trends from `energy:` across recent episodes
+- **H20 Productivity cycles**: Cross-ref `time_quality/flow_state` with outcomes
+- **H21 Intuition generation**: Multiple episodes share pattern → propose intuition file
+- **H22 Relationship depth**: Files not updated 30+d but person in recent sessions → propose update
+- **H23 Growth trajectory**: Month vs previous month (energy, flow, confidence, blockers)
+
+Output: Patterns persisted to `patterns-experiential.md`.
+
+## Phase 3.9 — Active Forgetting: Retention Tier Scan
+
+> Every dream cycle. Details: `${SKILL_DIR}/references/retention-tiers.md`
+
+- **H28 Tier classification**: frontmatter `retention_tier:` → `type:` → filename pattern → default Tier 2
+- **H29 Expiry scan**: T0 skip, T1 180d, T2 60d, T3 14d (warn at 75% TTL)
+- **H30 Archive proposal**: AskUserQuestion per file. T3 = auto-archive.
+- **H31 Archive execution**: Extract 5 lines → append `archive-expired-{year}-{month}.md` → remove → update MEMORY.md
+- **H32 Retention health (D18)**: `D18 = files_within_ttl / total_tier_1_2_3_files × 10`
 
 ### Scan Command (outside Dream)
 
 ```bash
-# Quick scan without archiving
 python3 -c "
 import os, re, json
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-
 MEMORY_DIR = Path('$MEMORY_DIR')
 TIER_TTL = {0: float('inf'), 1: 180, 2: 60, 3: 14}
 TYPE_TIER = {'feedback': 0, 'user': 0, 'reference': 0, 'project': 1}
-NAME_TIER_0 = ['feedback_', 'feedback-', 'user_', 'relationship_', 'self-model', 'MEMORY', 'lessons']
-NAME_TIER_2 = ['handoff-', 'episode-', 'checkpoint-', 'session-', 'dream-report-', 'archive-']
-NAME_TIER_3 = ['debug-', 'temp-', 'scratch-', 'experiment-']
-
+NAME_T0 = ['feedback_','feedback-','user_','relationship_','self-model','MEMORY','lessons']
+NAME_T2 = ['handoff-','episode-','checkpoint-','session-','dream-report-','archive-']
+NAME_T3 = ['debug-','temp-','scratch-','experiment-']
 now = datetime.now()
-results = {'fresh': 0, 'warning': 0, 'expired': 0, 'permanent': 0}
-
+results = {'fresh':0,'warning':0,'expired':0,'permanent':0}
 for f in MEMORY_DIR.glob('*.md'):
     if f.name == 'MEMORY.md': continue
-    # Read frontmatter
-    content = f.read_text()
-    tier = 2  # default
+    content = f.read_text(); tier = 2
     fm = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
     if fm:
-        if m := re.search(r'retention_tier:\s*(\d)', fm.group(1)):
-            tier = int(m.group(1))
-        elif m := re.search(r'type:\s*(\w+)', fm.group(1)):
-            tier = TYPE_TIER.get(m.group(1), 2)
-    # Filename override
-    for pat in NAME_TIER_0:
+        if m := re.search(r'retention_tier:\s*(\d)', fm.group(1)): tier = int(m.group(1))
+        elif m := re.search(r'type:\s*(\w+)', fm.group(1)): tier = TYPE_TIER.get(m.group(1), 2)
+    for pat in NAME_T0:
         if f.name.startswith(pat): tier = 0; break
     if tier != 0:
-        for pat in NAME_TIER_3:
+        for pat in NAME_T3:
             if f.name.startswith(pat): tier = 3; break
-        for pat in NAME_TIER_2:
+        for pat in NAME_T2:
             if f.name.startswith(pat): tier = 2; break
-
-    if tier == 0:
-        results['permanent'] += 1
-        continue
-
+    if tier == 0: results['permanent']+=1; continue
     age = (now - datetime.fromtimestamp(f.stat().st_mtime)).days
     ttl = TIER_TTL[tier]
-    if age > ttl:
-        results['expired'] += 1
-        print(f'  EXPIRED T{tier}: {f.name} ({age}d > {ttl}d)')
-    elif age > ttl * 0.75:
-        results['warning'] += 1
-        print(f'  WARNING T{tier}: {f.name} ({age}d, TTL={ttl}d)')
-    else:
-        results['fresh'] += 1
-
-total = sum(results.values())
-print(f'\nRetention: {results[\"permanent\"]} permanent, {results[\"fresh\"]} fresh, {results[\"warning\"]} warning, {results[\"expired\"]} expired')
+    if age > ttl: results['expired']+=1; print(f'  EXPIRED T{tier}: {f.name} ({age}d>{ttl}d)')
+    elif age > ttl*0.75: results['warning']+=1; print(f'  WARNING T{tier}: {f.name} ({age}d, TTL={ttl}d)')
+    else: results['fresh']+=1
+print(f'Retention: {results[\"permanent\"]}p / {results[\"fresh\"]}f / {results[\"warning\"]}w / {results[\"expired\"]}e')
 "
 ```
 
-## Phase 3.8 — Cross-Project Memory Reconciliation (NEW, P2-MEM-6)
+## Phase 3.8 — Cross-Project Memory Reconciliation
 
-> Optional. Only runs with `--full` flag. Scans multiple project memory directories for duplicates and inconsistencies.
+> `--full` only. Multi-project scan for duplicates + inconsistencies.
 
-### Steps
+- **H24 Multi-project scan**: Find `~/.claude/projects/*/memory/` dirs, list with file counts
+- **H25 Duplicate detection**: Hash-based across projects, flag >80% similarity
+- **H26 Stale cross-ref check**: File A references file B in another project → verify B exists
+- **H27 Reconciliation**: Per pair: Merge/Keep both/Archive one
 
-- **H24 — Multi-project scan**: Find all `~/.claude/projects/*/memory/` directories. List projects with memory file counts.
-- **H25 — Duplicate detection**: Hash-based comparison of memory files across projects. Flag files with >80% content similarity.
-- **H26 — Stale cross-reference check**: If memory file A references file B in another project, verify B still exists and is not stale.
-- **H27 — Reconciliation proposals**: For each duplicate pair, propose via AskUserQuestion:
-  - Merge (combine unique content into one file, symlink the other)
-  - Keep both (mark as "cross-project shared" in MEMORY.md)
-  - Archive one (move to archive bundle)
+**Trigger**: Only if 2+ project dirs with 10+ files each.
 
-**Trigger condition**: Only runs if 2+ project memory directories exist with 10+ files each.
-**Output**: Reconciliation report added to dream report. Cross-project links documented.
+## Phase 4 — Prune & Index
 
-**Example reconciliation**:
-```
-Cross-Project Memory Reconciliation:
-  Projects scanned: synapse (197 files), atlas-core (23 files), nexus (8 files)
-  Duplicates found: 3
-    - feedback_zustand_selectors.md (synapse ↔ nexus) — 92% similar → MERGE
-    - git-workflow.md (synapse ↔ atlas-core) — 85% similar → KEEP BOTH
-    - deploy-targets.md (synapse ↔ atlas-core) — 88% similar → ARCHIVE atlas-core copy
-```
-
-## Phase 4 — Prune & Index (Enhanced)
-
-Regenerate MEMORY.md and compute health.
-
-### Steps
-
-1. **Generate proposed MEMORY.md**: Group by category, tables for compact representation, 200-line hard limit (180-line soft target).
-2. **Show proposed structure** via AskUserQuestion (H14): "Write as-is" / "Adjust" / "Cancel".
-3. **Write MEMORY.md** if approved.
-3b. **Topics INDEX generation** (if `.claude/topics/` exists):
+1. **Generate proposed MEMORY.md**: Group by category, tables, 200-line hard / 180-line soft limit.
+2. **Show proposed structure** (H14): "Write as-is" / "Adjust" / "Cancel"
+3. **Write** if approved.
+3b. **Topics INDEX generation** (if `.claude/topics/` exists): Generate `INDEX.md` table per topic dir (status, created, decisions, sessions, summary).
+4. **Health score** (17D): Compute + dashboard. Details: `${SKILL_DIR}/references/health-scoring.md`.
+   D11-D15 (experiential) bash:
    ```bash
-   TOPICS_DIR=".claude/topics"
-   if [ -d "$TOPICS_DIR" ]; then
-     # Generate INDEX.md
-     echo "# Topic Memory Index" > "$TOPICS_DIR/INDEX.md"
-     echo "" >> "$TOPICS_DIR/INDEX.md"
-     echo "| Topic | Status | Created | Decisions | Sessions | Summary |" >> "$TOPICS_DIR/INDEX.md"
-     echo "|-------|--------|---------|-----------|----------|---------|" >> "$TOPICS_DIR/INDEX.md"
-
-     for topic_dir in "$TOPICS_DIR"/*/; do
-       [ -d "$topic_dir" ] || continue
-       topic_name=$(basename "$topic_dir")
-       decisions=$(grep -c "^## Decision:" "$topic_dir/decisions.md" 2>/dev/null || echo "0")
-       sessions=$(ls "$topic_dir/handoffs/" 2>/dev/null | wc -l)
-       has_summary=$([ -f "$topic_dir/topic-summary.md" ] && echo "yes" || echo "—")
-       # Get status from topics.json
-       status=$(python3 -c "import json,os; t=json.load(open(os.path.expanduser('~/.atlas/topics.json'))); print(t.get('$topic_name',{}).get('status','?'))" 2>/dev/null || echo "?")
-       created=$(python3 -c "import json,os; t=json.load(open(os.path.expanduser('~/.atlas/topics.json'))); print(t.get('$topic_name',{}).get('created','?')[:10])" 2>/dev/null || echo "?")
-       echo "| $topic_name | $status | $created | $decisions | $sessions | $has_summary |" >> "$TOPICS_DIR/INDEX.md"
-     done
-   fi
+   # D11 Experiential Coverage: episode count (30d) / session count; Score 10@80%+, 2@<20%
+   # D12 Relational Depth: rel files × freshness %; Score 10@3+rels & >50% fresh
+   # D13 Temporal Validity: 10 if 0 expired, -2 per expired (min 0)
+   # D14 Intuition Quality: 10 if 3+ intuitions & <30% stale
+   # D15 Growth Trajectory: 10 rising, 7 stable, 4 declining from dream-history.jsonl
    ```
-4. **Health score computation** (v5.5): Calculate 17 dimensions (10 structural + 5 experiential + 1 workflow + 1 learning), display dashboard.
-   For details, read `${SKILL_DIR}/references/health-scoring.md`
+5. **Dream report v5.5** (H15): 17D health, trend, importance, code staleness, ecosystem, tech claims, experiential (episodes, energy, relationships, intuitions), workflow, learning velocity, session journal, handoff context, cross-project. Details: `${SKILL_DIR}/references/dream-report-v2.md`
+6. **Trend persistence** (H16): Append JSON line to `dream-history.jsonl`
+7. **Release lock**: Remove `.consolidate-lock`
 
-   D1-D10 computed per existing health-scoring.md. D11-D15 (experiential):
-   ```bash
-   # D11: Experiential Coverage (5%)
-   SESSION_COUNT=$(grep -c "^📅" "$MEMORY_DIR/session-log.md" 2>/dev/null || echo "0")
-   EPISODE_COUNT=$(find "$MEMORY_DIR" -name "episode-*.md" -mtime -30 | wc -l)
-   # Score: 10 if 80%+, 8 if 60-79%, 6 if 40-59%, 4 if 20-39%, 2 if <20%
+## Phase 4.5 — Reflection Generator
 
-   # D12: Relational Depth (4%)
-   REL_COUNT=$(find "$MEMORY_DIR" -name "relationship-*.md" | wc -l)
-   REL_FRESH=$(find "$MEMORY_DIR" -name "relationship-*.md" -exec grep -l "last_interaction: $(date +%Y)" {} \; | wc -l)
-   # Score: 10 if 3+ relationships AND >50% fresh, scale down proportionally
+> `--reflection`/`--full`. Details: `${SKILL_DIR}/references/reflection-template.md`
 
-   # D13: Temporal Validity (5%)
-   TOTAL_TEMPORAL=$(grep -rl "valid_until:" "$MEMORY_DIR"/*.md 2>/dev/null | wc -l)
-   EXPIRED=$(grep -rl "valid_until:" "$MEMORY_DIR"/*.md 2>/dev/null | while read f; do
-     d=$(grep "^valid_until:" "$f" | awk '{print $2}')
-     [ "$(date -d "$d" +%s 2>/dev/null)" -lt "$(date +%s)" ] && echo "$f"
-   done | wc -l)
-   # Score: 10 if 0 expired, -2 per expired fact (min 0)
-
-   # D14: Intuition Quality (3%)
-   INTUITION_COUNT=$(find "$MEMORY_DIR" -name "intuition-*.md" | wc -l)
-   STALE_INTUITIONS=$(find "$MEMORY_DIR" -name "intuition-*.md" -mtime +60 | wc -l)
-   # Score: 10 if 3+ intuitions AND <30% stale, scale down proportionally
-
-   # D15: Growth Trajectory (3%)
-   # Read last 3 dream-history.jsonl entries, compute energy/flow/confidence trends
-   # Score: 10 if all rising, 7 if stable, 4 if declining, 2 if no data
-   ```
-5. **Generate dream report v5.5** (H15): Enriched format with 17D health score, trend, importance distribution, code staleness, ecosystem sources, tech claims table, **experiential context (episodes, energy trends, relationships, intuitions)**, **workflow audit (skill usage, errors, unused)**, **learning velocity audit (new feedback, bias corrections, confidence scoring)**, session journal, handoff context, cross-project summary.
-   For details, read `${SKILL_DIR}/references/dream-report-v2.md`
-6. **Trend persistence** (H16): Append one JSON line to `dream-history.jsonl`.
-7. **Release lock**: Remove `.consolidate-lock`.
-
-## Phase 4.5 — Reflection Generator (NEW, v4)
-
-> Requires `--reflection` or `--full`. Generates monthly/sprint reflection from experiential data.
-
-For details, read `${SKILL_DIR}/references/reflection-template.md`
-
-### Steps
-
-1. Read all `type: episode` files from current month/sprint period
-2. Read all `type: intuition` files (validated and unvalidated)
-3. Read growth trajectory from `dream-history.jsonl` (last 3-5 entries)
-4. Read recent decisions from `.claude/decisions.jsonl`
-5. Synthesize into reflection using `${SKILL_DIR}/references/reflection-template.md`:
-   - **Energy Dashboard**: Avg energy, peak/low days, day-of-week heatmap
-   - **What Went Well**: Top 3 accomplishments with supporting episode refs
-   - **What Was Difficult**: Top 3 blockers/challenges, resolution status
-   - **Patterns Observed**: Recurring themes from episodes + intuition files
-   - **Intuitions Reviewed**: Validated vs. unvalidated, confidence changes
-   - **Decision Confidence Review**: Decisions from `.claude/decisions.jsonl` with hindsight assessment
-   - **Sustainability Check**: Work hours trend, energy sustainability, recovery patterns
-   - **Strategies for Next Month**: Actionable recommendations based on patterns
-6. **HITL gate H24**: Preview reflection, approve/edit/skip
+1. Read `type: episode` files (current month/sprint)
+2. Read `type: intuition` files (validated + unvalidated)
+3. Read growth trajectory from `dream-history.jsonl` (last 3-5)
+4. Read recent `.claude/decisions.jsonl`
+5. Synthesize: Energy Dashboard, Went Well, Difficult, Patterns, Intuitions Reviewed, Decision Review, Sustainability, Strategies Next Month
+6. **H24**: Preview → approve/edit/skip
 7. Write to `memory/reflection-YYYY-MM.md`
 
-**Frequency**: Max 2 per month. One at sprint end, one at month end.
+**Frequency**: Max 2/month (sprint end + month end).
 
-## Phase 4.6 — Self-Model Auto-Update (NEW, v5.5)
+## Phase 4.6 — Self-Model Auto-Update
 
-> Runs with `--deep` or `--full`. Updates self-model.md based on recent feedback and session data.
+> `--deep`/`--full`.
 
-### Steps
+1. **Read self-model.md**, parse Known Biases
+2. **Scan new feedback** since last dream: `find -newer "$LAST_DREAM" -name "feedback*.md"`
+3. **Detect biases**: Behavior in Biases? → increment count. Else → propose new (**H25**)
+4. **Update Known Biases**: Count 3+ = HIGH priority; no new 30d = consider demotion
+5. **Review Ranked Values**: Feedback contradicts ranking → flag (**H26**)
+6. **Update Growth Log**: Date, changes, trigger feedback files
+7. **H25**: "Apply all" / "Review each" / "Skip"
+8. **H26**: "Update ranking" / "Keep current" / "Discuss"
+9. **Write** with `Updated:` footer timestamp
 
-1. **Read current self-model**: Load `memory/self-model.md`, parse Known Biases section.
+## Phase 4.7 — Improvement Proposal Engine
 
-2. **Scan recent feedback**: Find feedback files modified since last dream cycle.
-   ```bash
-   LAST_DREAM=$(ls -t "$MEMORY_DIR"/dream-report-*.md 2>/dev/null | head -1)
-   LAST_DATE=$(stat -c %Y "$LAST_DREAM" 2>/dev/null || echo 0)
-   NEW_FEEDBACK=$(find "$MEMORY_DIR" -name "feedback*.md" -newer "$LAST_DREAM" 2>/dev/null)
-   ```
+> `--deep`/`--full`. SP-EVOLUTION P8.3+P8.8. Self-improvement loop.
 
-3. **Detect new biases**: For each new feedback file, check if the behavior is already in Known Biases.
-   - If YES: increment correction count
-   - If NO: propose adding as new bias (HITL gate H25)
+1. **Collect insights**: Aggregate Phases 2.7-2.10
+2. **Generate proposals**: Unused skill → remove/onboard; debug spiral → pre-debug checklist; high Haiku fail → raise threshold; deferred topic → plan/archive
+3. **Prioritize**: `Score = Impact × Urgency / Effort` (1-5 each)
+4. **Track lifecycle**: `~/.claude/dream-proposals.jsonl` with `{date, proposal, type, impact, effort, status}`. Auto-mark "implemented" when commit/file matches.
+5. **Feedback loop closure** (P8.8): Grep keywords in recent commits; mark "implemented" or "stale" >30d
+6. **Output** (HITL per): Top 3 by score with Why + Action. Previously proposed/implemented/stale/rejected counts.
 
-4. **Update Known Biases**: For each bias with incremented count:
-   - If count reaches 3+: ensure marked as HIGH priority
-   - If count was 3+ and no new occurrence in 30d: consider for demotion
+## Phase 4.8 — Auto-Schedule Next Dream
 
-5. **Review Ranked Values**: Check if any new feedback contradicts the current value ranking.
-   - Example: if "Speed > Completeness" appears in feedback but current ranking is reversed → flag for review (HITL gate H26)
+> SP-EVOLUTION P8.5.
 
-6. **Update Growth Log**: Append entry with date, changes made, trigger feedback files.
+1. **Measure activity**: Events in session-replay.jsonl since last dream
+2. **Schedule**: HIGH (>200/wk)=3d | MEDIUM (50-200)=7d | LOW (<50)=14d
+3. **CronCreate** if approved: `/atlas dream --deep` for `{date}`
+4. **Output**: Activity level, recommendation, target date
 
-7. **HITL gate H25**: Present proposed changes to Known Biases
-   Options: "Apply all" / "Review each" / "Skip"
+## Phase 4.9 — Dream Quality Metrics
 
-8. **HITL gate H26**: Present value ranking conflicts (if any)
-   Options: "Update ranking" / "Keep current" / "Discuss"
+> SP-EVOLUTION P8.7.
 
-9. **Write**: Update self-model.md with approved changes. Add `Updated: YYYY-MM-DD HH:MM TZ` to footer.
-
-## Phase 4.7 — Improvement Proposal Engine (NEW, v6)
-
-> Runs with `--deep` or `--full`. Aggregates insights from all phases → generates concrete proposals.
-> SP-EVOLUTION P8.3 + P8.8 — The self-improvement loop.
-
-### Steps
-
-1. **Collect insights**: Gather findings from Phases 2.9 (replay), 2.10 (gaps), 2.8 (velocity), 2.7 (workflow).
-
-2. **Generate proposals**: For each finding, propose a concrete action:
-   - Unused skill → "Remove skill X or create onboarding example"
-   - Debug spiral pattern → "Add pre-debug checklist to systematic-debugging skill"
-   - High Haiku failure rate → "Increase complexity threshold for Haiku dispatch"
-   - Deferred topic → "Create plan for X or explicitly archive with rationale"
-
-3. **Prioritize**: Score proposals by:
-   - **Impact** (1-5): How much does this improve workflow?
-   - **Effort** (1-5): How hard to implement?
-   - **Urgency** (1-5): Is this blocking other work?
-   - **Score** = Impact × Urgency / Effort
-
-4. **Track proposal lifecycle**:
-   - Write proposals to `~/.claude/dream-proposals.jsonl`
-   - Format: `{"date":"...","proposal":"...","type":"skill|hook|config|plan","impact":N,"effort":N,"status":"proposed|accepted|implemented|rejected"}`
-   - When a proposal matches a subsequent commit or skill change → auto-mark as "implemented"
-
-5. **Feedback loop closure** (P8.8): Compare previous proposals with current state:
-   - Read `dream-proposals.jsonl`, find "accepted" proposals
-   - Check if corresponding changes exist (grep for keywords in recent commits/files)
-   - Mark as "implemented" if evidence found, or "stale" if >30d without progress
-
-6. **Output** (HITL gate — user approves/rejects each):
-   ```
-   Phase 4.7 — Improvement Proposals
-   
-   🏆 Top 3 proposals (by score):
-   
-   1. [Score: 8.3] Add TDD guard hook
-      Type: hook | Impact: 5 | Effort: 3 | Urgency: 5
-      Why: Only 3 TDD invocations in 30d despite 47 implementation tasks
-      Action: Create hook that warns when implementing without test file open
-   
-   2. [Score: 5.0] Archive SP-COGNITION P2
-      Type: plan | Impact: 3 | Effort: 1 | Urgency: 5
-      Why: Deferred in 3 consecutive handoffs. No progress path visible.
-      Action: Move to archive/deferred/ with explicit rationale
-   
-   3. [Score: 4.2] Upgrade Haiku dispatch threshold
-      Type: config | Impact: 3 | Effort: 2 | Urgency: 4
-      Why: Haiku fails 9% of tasks. Increasing threshold from score≤2 to score≤1 reduces failures.
-      Action: Edit task-complexity.sh line 78: change `<= 2` to `<= 1`
-   
-   Previously proposed: 5 | Implemented: 3 | Stale: 1 | Rejected: 1
-   ```
-
-## Phase 4.8 — Auto-Schedule Next Dream (NEW, v6)
-
-> SP-EVOLUTION P8.5 — Auto-schedule next dream based on activity volume.
-
-### Steps
-
-1. **Measure activity since last dream**: Count events in session-replay.jsonl since last dream-report date.
-   ```bash
-   LAST_DREAM=$(ls -t "$MEMORY_DIR"/dream-report-*.md 2>/dev/null | head -1)
-   LAST_DATE=$(stat -c %Y "$LAST_DREAM" 2>/dev/null || echo 0)
-   ```
-
-2. **Determine schedule**:
-   - High activity (>200 events/week): Schedule dream in 3 days
-   - Medium activity (50-200 events/week): Schedule dream in 7 days
-   - Low activity (<50 events/week): Schedule dream in 14 days
-
-3. **Schedule via CronCreate** (if in interactive session):
-   ```
-   Suggest: "Schedule next dream for {date}?"
-   If approved: CronCreate with prompt "/atlas dream --deep"
-   ```
-
-4. **Output**:
-   ```
-   Phase 4.8 — Auto-Schedule
-   Activity: {N} events in last {N}d (HIGH/MEDIUM/LOW)
-   Recommendation: Next dream in {N} days ({date})
-   ```
-
-## Phase 4.9 — Dream Quality Metrics (NEW, v6)
-
-> SP-EVOLUTION P8.7 — Quantify dream effectiveness.
-
-### Steps
-
-1. **Pre/post metrics**: Compare state before and after consolidation:
-   - Memory file count (before → after)
-   - Total MEMORY.md lines (before → after)
-   - Orphan files removed
-   - Stale entries corrected
-   - Proposals generated
-
-2. **Track in history**: Append to `~/.claude/dream-history.jsonl`:
+1. **Pre/post metrics**: Memory file count, MEMORY.md lines, orphans, stale, proposals
+2. **Track**: Append to `~/.claude/dream-history.jsonl`:
    ```json
    {"date":"2026-04-05","version":"v6","memory_before":195,"memory_after":192,"orphans_removed":3,"stale_fixed":2,"proposals":5,"duration_min":20,"health_score":78}
    ```
+3. **Quality indicators**: Compression ratio, freshness lift, accuracy %
+4. **Output**: Before/After table (files, lines, orphans, stale, proposals, health score) + delta summary.
 
-3. **Quality indicators**:
-   - **Compression ratio**: bytes saved / total bytes before
-   - **Freshness lift**: avg age_days reduction
-   - **Accuracy**: % of status claims verified as correct (from Phase 2.5)
+## Phase 5 — Cross-Project
 
-4. **Output**:
-   ```
-   Phase 4.9 — Dream Quality Metrics
-   ┌─────────────────────┬────────┬────────┐
-   │ Metric              │ Before │ After  │
-   ├─────────────────────┼────────┼────────┤
-   │ Memory files        │ 197    │ 194    │
-   │ MEMORY.md lines     │ 198    │ 185    │
-   │ Orphan files        │ 5      │ 0      │
-   │ Stale entries       │ 3      │ 0      │
-   │ Proposals generated │ —      │ 5      │
-   │ Health score        │ 72/100 │ 85/100 │
-   └─────────────────────┴────────┴────────┘
-   Dream effectiveness: +13 health points, 3 files archived
-   ```
+> `--deep`/`--cross-project`. Read-only. Details: `${SKILL_DIR}/references/cross-project.md`
 
-## Phase 5 — Cross-Project (NEW)
-
-> Requires `--deep` or `--cross-project`. Read-only scan across all project memory directories.
-
-For details, read `${SKILL_DIR}/references/cross-project.md`
-
-### Steps
-
-1. **Discovery**: Find all `MEMORY.md` directories in `~/.claude/projects`.
-2. **Entity reconciliation**: Build map of shared entities (VMs, services, repos, IPs, versions).
-3. **Contradiction detection**: Same entity with different status/version between projects.
-4. **Output**: Cross-project table with file count, health estimate, contradictions.
-5. **HITL gate H17**: Resolve each contradiction individually. **NEVER write to other projects' memory directories.**
+1. **Discovery**: All `MEMORY.md` dirs in `~/.claude/projects`
+2. **Entity reconciliation**: Shared VMs, services, repos, IPs, versions
+3. **Contradiction detection**: Same entity differing across projects
+4. **Output**: Cross-project table (files, health, contradictions)
+5. **H17**: Resolve each. **NEVER write to other projects' memory.**
 
 ## Standalone Commands (v4)
 
-> These commands run independently of the dream cycle. They create experiential
-> memory files with HITL approval. Schema: `${SKILL_DIR}/references/experiential-schema.md`
+> HITL-approved experiential memory creation. Schema: `${SKILL_DIR}/references/experiential-schema.md`
 
 ### `/atlas episode create`
 
-Create a narrative episode file capturing the current session's experiential context.
+Narrative episode capturing session's experiential context. Template: `${SKILL_DIR}/references/episode-template.md`
 
-For template details, read `${SKILL_DIR}/references/episode-template.md`
-
-#### Steps
-
-1. **Read signals**: Load `~/.claude/atlas-experiential-signals.json` if exists
-2. **Read session context**: Scan conversation for tasks completed, files modified, decisions made
-3. **Synthesize narrative**: Generate episode using template format (story, NOT task list)
-4. **Auto-populate frontmatter**:
-   - `energy`: Median of accumulated energy signals (or ask if none)
-   - `mood`: Dominant mood signal (or ask if none)
-   - `time_quality`: "deep" if flow detected, else infer from signal pattern
-   - `confidence`: Average of decision-related confidence signals
-   - `flow_state`: true if 2+ "deep focus" signals detected
-   - `energy_arc`: Infer from chronological energy signal timestamps
-   - `duration_minutes`: Session end - start (from signals timestamps, or estimate)
-   - `key_decisions`: Extract from conversation (max 5)
-   - `blockers_hit`: Extract from conversation (tool call failures, pivots)
-5. **HITL gate**: Present complete episode via AskUserQuestion for review
-   Options: "Write as-is" / "Edit" / "Skip"
-6. **Write**: Save to `memory/episode-YYYY-MM-DD.md` (or `-2.md` if same day exists)
-7. **Cleanup**: Clear `~/.claude/atlas-experiential-signals.json` after successful write
-8. **Index**: If MEMORY.md has `## EXPERIENTIAL CONTEXT` section, update episode count. If not, add the section:
-   ```markdown
-   ## EXPERIENTIAL CONTEXT
-
-   | Type | Count | Latest | Coverage |
-   |------|-------|--------|----------|
-   | Episodes | {N} | {date} | {%} of sessions |
-   | Relationships | {N} | {date} | — |
-   | Intuitions | {N} | — | — |
-   | Reflections | {N} | {date} | — |
-   ```
+1. Read `~/.claude/atlas-experiential-signals.json`
+2. Scan session for tasks/files/decisions
+3. Synthesize narrative (story, not task list)
+4. Auto-populate frontmatter: energy (median), mood (dominant), time_quality, confidence (avg), flow_state (2+ "deep focus"), energy_arc, duration_minutes, key_decisions (max 5), blockers_hit
+5. **HITL**: "Write as-is" / "Edit" / "Skip"
+6. Save `memory/episode-YYYY-MM-DD.md` (or `-2.md` if same day)
+7. Cleanup signals file
+8. Index: Update `## EXPERIENTIAL CONTEXT` table in MEMORY.md (or create)
 
 ### `/atlas intuition log`
 
-Capture a gut feeling or emerging pattern as a persistent intuition file.
+Capture gut feeling as persistent intuition file. Template: `${SKILL_DIR}/references/intuition-template.md`
 
-For template details, read `${SKILL_DIR}/references/intuition-template.md`
-
-#### Steps
-
-1. **Ask the feeling** via AskUserQuestion: "What's the gut feeling or pattern you're noticing?"
-   - Free text input (no predefined options for creativity)
-2. **Ask supporting observations** via AskUserQuestion: "What observations support this?"
-   - Options: user provides 1-3 observations
-3. **Ask domain** via AskUserQuestion: "What domain does this relate to?"
-   - Options: "Technical" / "Team" / "Strategic" / "Process" / "Product"
-4. **Generate file**: Use intuition template with:
-   - `confidence`: 0.4-0.5 (initial hunch)
-   - `confidence_trend`: "rising" (just created)
-   - `validated`: false
-   - Auto-generate validation plan based on domain
-5. **HITL gate**: Present complete file for review
-6. **Write**: Save to `memory/intuition-{topic-slug}.md`
-7. **Link**: If related to a recent decision in `.claude/decisions.jsonl`, add cross-reference
+1. Ask feeling (free text)
+2. Ask 1-3 supporting observations
+3. Ask domain: Technical/Team/Strategic/Process/Product
+4. Generate: confidence 0.4-0.5, confidence_trend rising, validated false, auto-plan
+5. **HITL**: preview
+6. Save `memory/intuition-{topic-slug}.md`
+7. Link to recent `.claude/decisions.jsonl` if related
 
 ### `/atlas relationship {person}`
 
-Create or update a relationship file for a team member or collaborator.
+Template: `${SKILL_DIR}/references/relationship-template.md`
 
-For template details, read `${SKILL_DIR}/references/relationship-template.md`
-
-#### Steps
-
-1. **Check existing**: Look for `memory/relationship-{person-slug}.md`
-2. **If exists** (UPDATE mode):
-   a. Read current file
-   b. Ask what to update via AskUserQuestion: "What's changed?"
-      Options: "New interaction" / "Trust level changed" / "New strength observed" / "Update role"
-   c. Update relevant sections
-   d. Update `last_interaction` date
-   e. Add entry to Interaction History table
-   f. HITL gate: show diff before writing
-3. **If new** (CREATE mode):
-   a. Ask role via AskUserQuestion
-   b. Ask organization
-   c. Ask 2-3 strengths
-   d. Ask interaction style
-   e. Ask trust level: "Low" / "Medium" / "High"
-   f. Generate file from template
-   g. HITL gate: preview before write
-4. **Reclassification check**: If `memory/team_{person_slug}.md` exists (old format):
-   a. Read the old file
-   b. Propose via AskUserQuestion: "Found existing team_{person}.md. Migrate to relationship format?"
-      Options: "Yes, migrate + archive old" / "Keep both" / "Skip"
-   c. If migrate: create relationship file, rename old to `_archived-team_{person}.md`
-5. **Write**: Save to `memory/relationship-{person-slug}.md`
-6. **Index**: Update MEMORY.md EXPERIENTIAL CONTEXT table
+1. Check existing `memory/relationship-{person-slug}.md`
+2. **If exists** (UPDATE): ask changed (interaction/trust/strength/role) → update sections + `last_interaction` + history row → **HITL** diff
+3. **If new** (CREATE): ask role, org, 2-3 strengths, style, trust (Low/Med/High) → generate → **HITL** preview
+4. **Reclassification**: If `team_{person_slug}.md` exists, propose migrate + archive old
+5. Save `memory/relationship-{person-slug}.md`
+6. Index: Update MEMORY.md EXPERIENTIAL CONTEXT table
 
 ### `/atlas dream --topic {name}`
 
-Consolidate a topic's accumulated memory into a summary. Use when a topic is completed (branch merged) or when topic memory needs cleanup.
+Consolidate topic memory when branch merged or needs cleanup.
 
-#### Steps
-
-1. **Read topic directory**: Check `.claude/topics/{name}/` exists
-   ```bash
-   TOPIC_DIR=".claude/topics/${name}"
-   [ -d "$TOPIC_DIR" ] || { echo "Topic not found: ${name}"; exit 1; }
-   ```
-
-2. **Read topic files**:
-   - `decisions.md` — all decisions made during this topic
-   - `lessons.md` — lessons learned (if exists)
-   - `context.md` — last known technical context
-   - `handoffs/` — count handoff files (number of sessions)
-
-3. **Generate topic summary**: Synthesize into `topic-summary.md`:
-   ```markdown
-   # Topic Summary: {name}
-
-   **Project**: {from topics.json}
-   **Duration**: {created} to {completed/now}
-   **Sessions**: {handoff count}
-   **Decisions**: {decision count}
-
-   ## Key Decisions
-   {Summarize top 3-5 decisions with rationale}
-
-   ## Lessons Learned
-   {Extract from lessons.md or synthesize from decisions}
-
-   ## Technical Outcome
-   {From context.md: what was built, which files, which patterns}
-
-   ## What Would I Do Differently
-   {Retrospective insight based on decision confidence and outcomes}
-   ```
-
-4. **HITL gate**: Present topic-summary.md via AskUserQuestion
-   - Options: "Write as-is" / "Edit" / "Skip"
-
-5. **Write**: Save to `.claude/topics/{name}/topic-summary.md`
-
-6. **Update topics.json**: Set status to "archived", add summaryPath
-   ```bash
-   python3 -c "
-   import json, os
-   from datetime import datetime
-   topics_file = os.path.expanduser('~/.atlas/topics.json')
-   with open(topics_file) as f:
-       topics = json.load(f)
-   if '${name}' in topics:
-       topics['${name}']['status'] = 'archived'
-       topics['${name}']['archivedAt'] = datetime.now().isoformat()
-       topics['${name}']['summaryPath'] = '.claude/topics/${name}/topic-summary.md'
-       with open(topics_file, 'w') as f:
-           json.dump(topics, f, indent=2)
-   "
-   ```
+1. `[ -d ".claude/topics/${name}" ]` or error
+2. Read decisions.md, lessons.md, context.md, count handoffs/
+3. Generate `topic-summary.md`: Project, Duration, Sessions, Decisions, Key Decisions (top 3-5), Lessons, Technical Outcome, What Would I Do Differently
+4. **HITL**: "Write as-is" / "Edit" / "Skip"
+5. Save `.claude/topics/{name}/topic-summary.md`
+6. Update `~/.atlas/topics.json`: status=archived, add archivedAt + summaryPath
 
 ## Schedule Mode
 
-When invoked with `--schedule`:
 ```python
-# Default: weekdays at 5:57 PM (off-minute to avoid load spikes)
+# --schedule default: weekdays 5:57 PM (off-minute)
 CronCreate(cron="57 17 * * 1-5", prompt="/atlas dream --dry-run", recurring=True)
 ```
-Display job ID. Scheduled jobs are session-scoped (7-day max, dies on exit).
+Session-scoped (7-day max).
 
-## Learning Verbosity Configuration
+## Learning Verbosity
 
-Configure how actively the system communicates its learning:
+Setting: `ATLAS_LEARNING_VERBOSITY` in `~/.claude/settings.json` env block.
 
 | Level | Name | Behavior |
 |-------|------|----------|
-| 1 | Silent | Zero injections. Dream reports only. Auto-learn still captures in background. |
-| 2 | Semi (DEFAULT) | Max 2 injections per session: energy alerts, topic context. Episode suggested at end. |
-| 3 | Full | Every detection injected: energy, mood, confidence, patterns, skill suggestions. |
+| 1 | Silent | Zero injections. Dream reports only. Auto-learn background only. |
+| 2 | Semi (DEFAULT) | Max 2 injections/session: energy alerts, topic context. Episode suggested at end. |
+| 3 | Full | Every detection: energy, mood, confidence, patterns, skill suggestions. |
 
-**Setting**: `atlas_learning_verbosity` in `~/.claude/settings.json` env block:
-```json
-{
-  "env": {
-    "ATLAS_LEARNING_VERBOSITY": "2"
-  }
-}
-```
+Affects: session-start (topic inject L2+), focus-guard (switch alerts L2+), experiential-capture (episode L2+), auto-learn (always), dream cycle (always).
 
-**Affects**:
-- session-start: topic context injection (level 2+)
-- focus-guard: context-switch alerts (level 2+)
-- experiential-capture: episode suggestion (level 2+)
-- auto-learn: signal capture always runs (all levels)
-- dream cycle: always runs fully (all levels)
+## Safety Rules (12)
 
-## Safety Rules (12 Rules)
-
-1. **NEVER auto-delete** -- archive only, never permanent delete
-2. **NEVER write** without HITL (AskUserQuestion before every Write/Edit)
-3. **Lock protection** -- `.consolidate-lock` at start, remove at end, timeout 30 min
-4. **Backup MEMORY.md** -- read content before overwrite, restore if failure
-5. **Read-only `--dry-run`** -- zero writes
-6. **Cross-project isolation** -- NEVER write to other projects' memory directories
-7. **Feedback immutability** -- NEVER suggest deleting or modifying `feedback_*.md`
-8. **Large file safety** -- create new files BEFORE modifying/deleting the original
-9. **Branch awareness** -- missing file may be on another branch, note git context
-10. **Trend append-only** -- `dream-history.jsonl` is never truncated
-11. **Max 2 retries** -- if a step fails 2x, escalate to human via AskUserQuestion
-12. **NEVER edit plugin cache** -- only write to source repo, never `~/.claude/plugins/cache/`
+1. **NEVER auto-delete** — archive only
+2. **NEVER write** without HITL
+3. **Lock protection** — `.consolidate-lock` start/end, 30min timeout
+4. **Backup MEMORY.md** — read before overwrite, restore on failure
+5. **Read-only `--dry-run`**
+6. **Cross-project isolation** — NEVER write to other projects' memory
+7. **Feedback immutability** — NEVER suggest deleting/modifying `feedback_*.md`
+8. **Large file safety** — create new BEFORE modifying original
+9. **Branch awareness** — missing file may be on other branch
+10. **Trend append-only** — `dream-history.jsonl` never truncated
+11. **Max 2 retries** — escalate to human via AskUserQuestion
+12. **NEVER edit plugin cache** — only source repo
 
 ## HITL Gate Map (23 Gates)
 
-| Gate | Phase | Trigger | Required? |
-|------|-------|---------|-----------|
-| H1 | 1.5-D3 | Handoff insight to memory sync | Yes (--docs/--deep) |
-| H2 | 1.5-D4 | FEATURES.md sync corrections | Yes (--docs/--deep) |
-| H3 | 2.5-V2 | Stale status claims update | Yes (--validate/--deep) |
-| H4 | 3.1 | Duplicate merge | Yes |
-| H5 | 3.2 | Date normalization | Yes |
-| H6 | 3.3 | Contradiction resolution | Yes |
-| H7 | 3.4 | Orphan categorization | Yes |
-| H8 | 3.5 | Frontmatter typing (includes new v4 types) | Yes |
-| H9 | 3.6 | Large file split | Yes |
-| H10 | 3.7 | Smart pruning batch | Yes |
-| H11 | 3.8 | Auto-categorization | Yes |
-| H12 | 3.5-J2 | Handoff to memory file creation | Yes |
-| H13 | 3.5-J4 | Session journal entry write (v4: +Energy/Mood sections) | Yes |
-| H14 | 4.2 | MEMORY.md write | Yes |
-| H15 | 4.4 | Dream report write | Yes |
-| H16 | 4.5 | Trend data persist | Yes |
-| H17 | 5.4 | Cross-project contradiction fixes | Yes (--deep) |
-| **H19** | **3.7** | **Energy pattern confirmation** | **Yes (--experiential/--deep)** |
-| **H20** | **3.7** | **Productivity cycle confirmation** | **Yes (--experiential/--deep)** |
-| **H21** | **3.7** | **Intuition log creation from patterns** | **Yes (--experiential/--deep)** |
-| **H22** | **3.7** | **Relationship update proposal** | **Yes (--experiential/--deep)** |
-| **H23** | **3.7** | **Growth trajectory snapshot approval** | **Yes (--experiential/--deep)** |
-| **H24** | **4.5** | **Reflection file approval** | **Yes (--reflection/--full)** |
-| **H25** | **4.6** | **New bias addition to Known Biases** | **Yes (--deep/--full)** |
-| **H26** | **4.6** | **Value ranking conflict resolution** | **Yes (--deep/--full)** |
+| Gate | Phase | Trigger |
+|------|-------|---------|
+| H1 | 1.5-D3 | Handoff insight to memory sync (--docs/deep) |
+| H2 | 1.5-D4 | FEATURES.md sync corrections (--docs/deep) |
+| H3 | 2.5-V2 | Stale status claims (--validate/deep) |
+| H4 | 3.1 | Duplicate merge |
+| H5 | 3.2 | Date normalization |
+| H6 | 3.3 | Contradiction resolution |
+| H7 | 3.4 | Orphan categorization |
+| H8 | 3.5 | Frontmatter typing |
+| H9 | 3.6 | Large file split |
+| H10 | 3.7 | Smart pruning batch |
+| H11 | 3.8 | Auto-categorization |
+| H12 | 3.5-J2 | Handoff → memory file creation |
+| H13 | 3.5-J4 | Session journal write |
+| H14 | 4.2 | MEMORY.md write |
+| H15 | 4.4 | Dream report write |
+| H16 | 4.5 | Trend data persist |
+| H17 | 5.4 | Cross-project fixes (--deep) |
+| H19-23 | 3.7 | Energy/productivity/intuition/relationship/growth (--experiential/deep) |
+| H24 | 4.5 | Reflection approval (--reflection/full) |
+| H25 | 4.6 | New bias addition (--deep/full) |
+| H26 | 4.6 | Value ranking conflict (--deep/full) |
 
 ## Model Strategy
 
 | Phase | Model | Reason |
 |-------|-------|--------|
-| Phase 1 (Orient) | Sonnet | Simple scan, count |
-| Phase 1.5 (Docs Audit) | Sonnet | File existence, staleness, version check |
-| Phase 2 (Gather) | Sonnet | Pattern matching, scoring |
-| Phase 2.5 (Validate) | Opus | Code understanding, semantic verification |
-| Phase 2.6 (Experiential Audit) | Sonnet | File counting, date comparison |
-| Phase 2.7 (Workflow Audit) | Sonnet | Skill counting, log scanning |
-| Phase 2.8 (Learning Velocity Audit) | Sonnet | Feedback counting, bias diff |
-| Phase 3 (Consolidate) | Opus | Merge decisions, split strategy |
-| Phase 3.5 (Journal) | Opus | Session synthesis, handoff reasoning |
-| Phase 3.7 (Experiential Synthesis) | Opus | Pattern recognition, growth analysis |
-| Phase 4 (Prune & Index) | Opus | Index design, report synthesis, 16D scoring |
-| Phase 4.5 (Reflection Generator) | Opus | Narrative synthesis, trend analysis |
-| Phase 4.6 (Self-Model Auto-Update) | Opus | Self-model decisions need deep reasoning |
-| Phase 5 (Cross-Project) | Opus | Cross-repo reasoning |
+| 1, 1.5, 2, 2.6-2.8 | Sonnet | Scan, count, pattern match |
+| 2.5 (Validate) | Opus | Code understanding, semantic verification |
+| 3, 3.5, 3.7 | Opus | Merge decisions, session synthesis, pattern recognition |
+| 4, 4.5, 4.6 | Opus | Index design, narrative, self-model decisions |
+| 5 (Cross-Project) | Opus | Cross-repo reasoning |
 
 ## Health Scoring (17 Dimensions)
 
-Health is a weighted composite score (0-10) across 17 dimensions (normalized to 100%):
+Weighted composite (0-10) normalized to 100%:
 
-| # | Dimension | Weight |
-|---|-----------|--------|
-| D1 | Index Capacity | 10% |
-| D2 | Orphan Rate | 10% |
-| D3 | Staleness | 8% |
-| D4 | Referential Integrity | 10% |
-| D5 | Content Freshness | 5% |
-| D6 | File Size Balance | 6% |
-| D7 | Type Coverage | 6% |
-| D8 | Cross-Project Coherence | 6% |
-| D9 | Docs Freshness | 8% |
-| D10 | Tech Accuracy | 6% |
-| **D11** | **Experiential Coverage** | **5%** |
-| **D12** | **Relational Depth** | **4%** |
-| **D13** | **Temporal Validity** | **5%** |
-| **D14** | **Intuition Quality** | **3%** |
-| **D15** | **Growth Trajectory** | **3%** |
-| **D16** | **Workflow Efficiency** | **3%** |
-| **D17** | **Learning Velocity** | **5%** |
+| # | Dimension | W% |
+|---|-----------|----|
+| D1 | Index Capacity | 10 |
+| D2 | Orphan Rate | 10 |
+| D3 | Staleness | 8 |
+| D4 | Referential Integrity | 10 |
+| D5 | Content Freshness | 5 |
+| D6 | File Size Balance | 6 |
+| D7 | Type Coverage | 6 |
+| D8 | Cross-Project Coherence | 6 |
+| D9 | Docs Freshness | 8 |
+| D10 | Tech Accuracy | 6 |
+| D11 | Experiential Coverage | 5 |
+| D12 | Relational Depth | 4 |
+| D13 | Temporal Validity | 5 |
+| D14 | Intuition Quality | 3 |
+| D15 | Growth Trajectory | 3 |
+| D16 | Workflow Efficiency | 3 |
+| D17 | Learning Velocity | 5 |
 
-Grade: A (9-10) | B (7-8.9) | C (5-6.9) | D (3-4.9) | F (<3)
-
-For scoring thresholds, formulas, dashboard template, and edge cases, read `${SKILL_DIR}/references/health-scoring.md`
+Grade: A (9-10) / B (7-8.9) / C (5-6.9) / D (3-4.9) / F (<3). Details: `${SKILL_DIR}/references/health-scoring.md`
 
 ## Timestamp Standard (NON-NEGOTIABLE)
 
-ALL dream output uses the full timestamp with hour:minutes.
+All dream output uses full timestamp with hour:minutes.
 
 | Context | Format | Example |
 |---------|--------|---------|
 | Dream report header | `YYYY-MM-DD HH:MM TZ` | `2026-03-25 17:38 EDT` |
-| Phase output | HH:MM in each section | `Phase 1 completed at 17:40 EDT` |
+| Phase output | HH:MM per section | `Phase 1 completed at 17:40 EDT` |
 | dream-history.jsonl | ISO 8601 | `"timestamp": "2026-03-25T17:38:00-04:00"` |
-| Session journal entries | `YYYY-MM-DD HH:MM TZ` | Full, never date alone |
+| Session journal | `YYYY-MM-DD HH:MM TZ` | Full, never date alone |
 | Memory file footers | `Updated: YYYY-MM-DD HH:MM TZ` | `Updated: 2026-03-25 17:38 EDT` |
-| Trend display | `YYYY-MM-DD HH:MM` | With delta in minutes/hours |
 
-Rule: If timestamp not available, run `date '+%Y-%m-%d %H:%M %Z'` via Bash.
-Rule: NEVER just the date without the time. Minimum = `YYYY-MM-DD HH:MM`.
+Rule: If missing, run `date '+%Y-%m-%d %H:%M %Z'` via Bash. NEVER date without time. Min = `YYYY-MM-DD HH:MM`.
