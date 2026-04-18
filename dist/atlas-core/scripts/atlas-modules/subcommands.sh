@@ -51,14 +51,44 @@ _atlas_list() {
 _atlas_resume() {
   # v5.7.0+ — Dual-mode resume (Phase 4):
   #   1. atlas resume               → claude -c (last session)
-  #   2. atlas resume <project>     → cd to project + claude -c (legacy)
-  #   3. atlas resume <session-name> → claude --resume <name> (v2.0.64+)
-  # Disambiguation: project lookup first, fallback to --resume by name.
+  #   2. atlas resume --picker      → claude --resume (native CC picker, v5.28.0+ P5.1)
+  #   3. atlas resume --last        → claude -c (explicit last)
+  #   4. atlas resume <project>     → cd to project + claude -c (legacy)
+  #   5. atlas resume <session-name> → claude --resume <name> (v2.0.64+)
+  # Disambiguation: flag first, then project lookup, fallback to --resume by name.
   local arg="$1"
   if [[ -z "$arg" ]]; then
     claude -c --chrome
     return
   fi
+
+  # P5.1: Handle picker / last flags
+  case "$arg" in
+    --picker|-p)
+      # Native CC resume picker (cross-project session list)
+      echo "📋 Opening Claude Code session picker..."
+      claude --resume
+      return
+      ;;
+    --last|-l)
+      echo "⏮  Resuming last session..."
+      claude -c
+      return
+      ;;
+    -h|--help|help)
+      cat <<'EOF'
+atlas resume [--picker | --last | <project> | <session-name>]
+
+Subcommands:
+  (no arg)              → claude -c (continue last session with chrome)
+  --picker, -p          → claude --resume (native CC picker, cross-project)
+  --last, -l            → claude -c (explicit last, no chrome)
+  <project>             → cd to project + claude -c
+  <session-name>        → claude --resume <session-name>
+EOF
+      return 0
+      ;;
+  esac
 
   # Priority 1: resolve as project path (legacy behavior)
   local path
@@ -1371,4 +1401,363 @@ _atlas_upgrade() {
   fi
   _atlas_footer
   return $rc
+}
+
+# ─── Launch Profile Management (P2.6, v5.28.0+) ──────────────
+# atlas profile <subcmd> [args]
+# Subcommands: list, show, create, validate, edit, help
+
+_atlas_profile_cmd() {
+  local subcmd="${1:-list}"
+  shift 2>/dev/null || true
+  case "$subcmd" in
+    list|ls)           _atlas_profile_list "$@" ;;
+    show|cat)          _atlas_profile_show "$@" ;;
+    create|new)        _atlas_profile_create "$@" ;;
+    validate|check)    _atlas_profile_validate "$@" ;;
+    edit)              _atlas_profile_edit "$@" ;;
+    -h|--help|help|"") _atlas_profile_help ;;
+    *) echo "❌ Unknown profile subcommand: '$subcmd'. Run 'atlas profile help'." >&2; return 1 ;;
+  esac
+}
+
+_atlas_profile_help() {
+  cat <<'EOF'
+atlas profile <subcommand> — manage launch profiles
+
+Subcommands:
+  list                            List available profiles
+  show <name>                     Show profile YAML content
+  create <name> [--from base]     Create new profile from template
+  validate <name>                 Validate profile schema (yq-based)
+  edit <name>                     Open profile in $EDITOR
+  help                            Show this help
+
+Profiles are stored in ~/.atlas/profiles/<name>.yaml.
+Bundle Claude Code launch config (tier, permission_mode, effort, worktree, etc.).
+
+Activate via: atlas --profile <name>
+Override fields: atlas --profile <name> --override <field>=<value>
+
+Examples:
+  atlas profile list
+  atlas profile show dev-synapse
+  atlas profile create my-custom --from dev-synapse
+  atlas profile validate my-custom
+EOF
+}
+
+_atlas_profile_list() {
+  local profile_dir="$HOME/.atlas/profiles"
+  if [ ! -d "$profile_dir" ] || [ -z "$(ls -A "$profile_dir" 2>/dev/null)" ]; then
+    echo "No profiles found at $profile_dir"
+    echo "Bootstrap: cp -r ~/workspace_atlas/projects/atlas-dev-plugin/templates/profiles/* $profile_dir/"
+    return 0
+  fi
+  if ! command -v yq &>/dev/null; then
+    echo "⚠️  yq not installed — showing names only" >&2
+    ls -1 "$profile_dir"/*.yaml 2>/dev/null | xargs -n1 basename | sed 's/\.yaml$//'
+    return
+  fi
+  printf "  %-20s %-10s %-10s %s\n" "PROFILE" "TIER" "EFFORT" "DESCRIPTION"
+  printf "  %-20s %-10s %-10s %s\n" "--------------------" "----------" "----------" "----------------------------------"
+  local f name tier effort desc
+  for f in "$profile_dir"/*.yaml; do
+    [ -f "$f" ] || continue
+    name=$(basename "$f" .yaml)
+    tier=$(yq eval '.tier // "—"' "$f" 2>/dev/null)
+    effort=$(yq eval '.effort // "—"' "$f" 2>/dev/null)
+    desc=$(yq eval '.description // "—"' "$f" 2>/dev/null | head -c 60)
+    printf "  %-20s %-10s %-10s %s\n" "$name" "$tier" "$effort" "$desc"
+  done
+  echo ""
+  echo "Activate: atlas --profile <name>"
+}
+
+_atlas_profile_show() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas profile show <name>" >&2
+    return 1
+  fi
+  local file="$HOME/.atlas/profiles/${name}.yaml"
+  if [ ! -f "$file" ]; then
+    echo "❌ Profile '$name' not found at $file" >&2
+    return 1
+  fi
+  cat "$file"
+}
+
+_atlas_profile_create() {
+  local name="${1:-}"
+  local from="base"
+  shift 2>/dev/null || true
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --from) from="${2:-base}"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  if [ -z "$name" ]; then
+    echo "Usage: atlas profile create <name> [--from <template>]" >&2
+    return 1
+  fi
+  local target="$HOME/.atlas/profiles/${name}.yaml"
+  local source="$HOME/.atlas/profiles/${from}.yaml"
+  if [ -f "$target" ]; then
+    echo "❌ Profile '$name' already exists. Use 'atlas profile edit $name' or choose another name." >&2
+    return 1
+  fi
+  if [ ! -f "$source" ]; then
+    echo "❌ Template '$from' not found at $source" >&2
+    return 1
+  fi
+  mkdir -p "$HOME/.atlas/profiles"
+  cp "$source" "$target"
+  sed -i "s/^name:.*/name: ${name}/" "$target"
+  sed -i "1s/^/# Created $(date '+%Y-%m-%d') from template: ${from}\n/" "$target"
+  echo "✅ Profile '$name' created at $target"
+  echo "   Edit with: atlas profile edit $name"
+}
+
+_atlas_profile_validate() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas profile validate <name>" >&2
+    return 1
+  fi
+  local file="$HOME/.atlas/profiles/${name}.yaml"
+  if [ ! -f "$file" ]; then
+    echo "❌ Profile '$name' not found at $file" >&2
+    return 1
+  fi
+  if ! command -v yq &>/dev/null; then
+    echo "⚠️  yq not installed — cannot validate schema" >&2
+    return 2
+  fi
+  local errors=0
+  # Required fields (either directly or via extends)
+  local has_extends
+  has_extends=$(yq eval '.extends // ""' "$file" 2>/dev/null)
+  local field
+  for field in name tier permission_mode effort; do
+    local val
+    val=$(yq eval ".${field}" "$file" 2>/dev/null)
+    if [ -z "$val" ] || [ "$val" = "null" ]; then
+      if [ -z "$has_extends" ] || [ "$has_extends" = "null" ]; then
+        echo "⚠️  Missing required field: '$field' (no 'extends' fallback)"
+        errors=$((errors + 1))
+      fi
+    fi
+  done
+  # Enum validation
+  local tier_val
+  tier_val=$(yq eval '.tier // ""' "$file" 2>/dev/null)
+  case "$tier_val" in
+    ""|null|core|dev|admin|none) ;;
+    *) echo "❌ Invalid tier: '$tier_val' (expected: core|dev|admin|none)"; errors=$((errors + 1)) ;;
+  esac
+  local mode_val
+  mode_val=$(yq eval '.permission_mode // ""' "$file" 2>/dev/null)
+  case "$mode_val" in
+    ""|null|default|plan|auto|dontAsk|acceptEdits|bypassPermissions) ;;
+    *) echo "❌ Invalid permission_mode: '$mode_val'"; errors=$((errors + 1)) ;;
+  esac
+  local effort_val
+  effort_val=$(yq eval '.effort // ""' "$file" 2>/dev/null)
+  case "$effort_val" in
+    ""|null|low|medium|high|xhigh|max) ;;
+    *) echo "❌ Invalid effort: '$effort_val' (expected: low|medium|high|xhigh|max)"; errors=$((errors + 1)) ;;
+  esac
+  if [ "$errors" -eq 0 ]; then
+    echo "✅ Profile '$name' valid"
+    return 0
+  else
+    echo "❌ Profile '$name' has $errors validation error(s)"
+    return 1
+  fi
+}
+
+_atlas_profile_edit() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas profile edit <name>" >&2
+    return 1
+  fi
+  local file="$HOME/.atlas/profiles/${name}.yaml"
+  if [ ! -f "$file" ]; then
+    echo "❌ Profile '$name' not found at $file. Create with: atlas profile create $name" >&2
+    return 1
+  fi
+  local editor="${EDITOR:-vi}"
+  "$editor" "$file"
+}
+
+# ─── MCP Server Management (P4, v5.28.0+) ────────────────────
+# atlas mcp <subcmd> [args] — wraps claude mcp with ATLAS MCP profile support
+
+_atlas_mcp_cmd() {
+  local subcmd="${1:-list}"
+  shift 2>/dev/null || true
+  case "$subcmd" in
+    list|ls)           _atlas_mcp_list "$@" ;;
+    add)               _atlas_mcp_add "$@" ;;
+    remove|rm|delete)  _atlas_mcp_remove "$@" ;;
+    get|show)          _atlas_mcp_get "$@" ;;
+    profile)           _atlas_mcp_profile_cmd "$@" ;;
+    doctor|check|health) _atlas_mcp_doctor "$@" ;;
+    raw)               claude mcp "$@" ;;  # Direct passthrough to `claude mcp`
+    -h|--help|help|"") _atlas_mcp_help ;;
+    *) echo "❌ Unknown mcp subcommand: '$subcmd'. Run 'atlas mcp help'." >&2; return 1 ;;
+  esac
+}
+
+_atlas_mcp_help() {
+  cat <<'EOF'
+atlas mcp <subcommand> — manage Claude Code MCP servers
+
+Subcommands:
+  list                         List configured MCP servers (claude mcp list + health)
+  add <name> <cmdOrUrl>        Add new MCP server (passthrough claude mcp add)
+  remove <name>                Remove MCP server (passthrough)
+  get <name>                   Get MCP server details (passthrough)
+  profile <name>               Show MCP profile content from ~/.atlas/mcp-profiles/
+  profile list                 List available MCP profiles
+  doctor                       Health check all MCP servers with summary
+  raw <args>                   Direct passthrough to `claude mcp <args>`
+  help                         Show this help
+
+MCP profiles bundle multiple servers (e.g. chrome-playwright = chrome + playwright + context7).
+Referenced in launch profiles via mcp_profile field.
+
+Examples:
+  atlas mcp list
+  atlas mcp add context7 https://mcp.context7.com/mcp
+  atlas mcp profile chrome-playwright
+  atlas mcp doctor
+EOF
+}
+
+_atlas_mcp_list() {
+  if ! command -v claude &>/dev/null; then
+    echo "❌ claude CLI not found in PATH" >&2
+    return 1
+  fi
+  printf "  📡 ${ATLAS_BOLD}Configured MCP Servers${ATLAS_RESET}\n\n"
+  claude mcp list 2>&1 | sed 's/^/  /'
+  echo
+  echo "  Add: atlas mcp add <name> <url-or-cmd>"
+  echo "  Health: atlas mcp doctor"
+}
+
+_atlas_mcp_add() {
+  if [ $# -lt 2 ]; then
+    echo "Usage: atlas mcp add <name> <command-or-url> [args...]" >&2
+    echo "Examples:" >&2
+    echo "  atlas mcp add context7 https://mcp.context7.com/mcp" >&2
+    echo "  atlas mcp add my-server -- npx my-mcp-server" >&2
+    return 1
+  fi
+  claude mcp add "$@"
+}
+
+_atlas_mcp_remove() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas mcp remove <name>" >&2
+    return 1
+  fi
+  claude mcp remove "$name"
+}
+
+_atlas_mcp_get() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    echo "Usage: atlas mcp get <name>" >&2
+    return 1
+  fi
+  claude mcp get "$name"
+}
+
+_atlas_mcp_profile_cmd() {
+  local sub="${1:-}"
+  shift 2>/dev/null || true
+  case "$sub" in
+    list|"") _atlas_mcp_profile_list ;;
+    *)       _atlas_mcp_profile_show "$sub" ;;
+  esac
+}
+
+_atlas_mcp_profile_list() {
+  local dir="$HOME/.atlas/mcp-profiles"
+  if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
+    echo "No MCP profiles at $dir"
+    echo "Bootstrap: cp -r ~/workspace_atlas/projects/atlas-dev-plugin/templates/mcp-profiles/* $dir/"
+    return 0
+  fi
+  if ! command -v yq &>/dev/null; then
+    ls "$dir"/*.yaml 2>/dev/null | xargs -n1 basename -s .yaml
+    return
+  fi
+  printf "  %-24s %-8s %s\n" "MCP PROFILE" "SERVERS" "DESCRIPTION"
+  printf "  %-24s %-8s %s\n" "------------------------" "--------" "-----------------------------------"
+  local f name count desc
+  for f in "$dir"/*.yaml; do
+    [ -f "$f" ] || continue
+    name=$(basename "$f" .yaml)
+    count=$(yq eval '.servers // [] | length' "$f" 2>/dev/null)
+    desc=$(yq eval '.description // "—"' "$f" 2>/dev/null | head -c 60)
+    printf "  %-24s %-8s %s\n" "$name" "$count" "$desc"
+  done
+}
+
+_atlas_mcp_profile_show() {
+  local name="${1:-}"
+  if [ -z "$name" ]; then
+    _atlas_mcp_profile_list
+    return
+  fi
+  local file="$HOME/.atlas/mcp-profiles/${name}.yaml"
+  if [ ! -f "$file" ]; then
+    echo "❌ MCP profile '$name' not found at $file" >&2
+    echo "Available:" >&2
+    _atlas_mcp_profile_list >&2
+    return 1
+  fi
+  printf "  📡 ${ATLAS_BOLD}MCP Profile: %s${ATLAS_RESET}\n\n" "$name"
+  sed 's/^/  /' "$file"
+  echo
+  if command -v yq &>/dev/null; then
+    echo "  Servers:"
+    yq eval '.servers[]' "$file" 2>/dev/null | sed 's/^/    - /'
+  fi
+}
+
+_atlas_mcp_doctor() {
+  if ! command -v claude &>/dev/null; then
+    echo "❌ claude CLI not found in PATH" >&2
+    return 1
+  fi
+  printf "  🩺 ${ATLAS_BOLD}MCP Server Health Check${ATLAS_RESET}\n\n"
+  local output
+  output=$(claude mcp list 2>&1)
+  if [ -z "$output" ]; then
+    echo "  ℹ️  No MCP servers configured"
+    echo
+    echo "  Add one: atlas mcp add <name> <url-or-cmd>"
+    return 0
+  fi
+  echo "$output" | sed 's/^/  /'
+  echo
+  # Count health states by parsing claude mcp list output
+  local connected=0 needs_auth=0 failed=0
+  while IFS= read -r line; do
+    case "$line" in
+      *"✓"*|*"Connected"*)       connected=$((connected + 1)) ;;
+      *"!"*|*"Needs auth"*)      needs_auth=$((needs_auth + 1)) ;;
+      *"✗"*|*"Failed"*|*"Error"*) failed=$((failed + 1)) ;;
+    esac
+  done <<< "$output"
+  printf "  Summary: ${ATLAS_GREEN}✅ %d connected${ATLAS_RESET} | ${ATLAS_YELLOW}⚠️  %d needs auth${ATLAS_RESET} | ${ATLAS_RED}❌ %d failed${ATLAS_RESET}\n" \
+    "$connected" "$needs_auth" "$failed"
 }

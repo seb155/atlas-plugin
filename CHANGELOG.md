@@ -1,5 +1,27 @@
 # Changelog
 
+## v5.28.0 (2026-04-18)
+
+### ✨ Features
+- feat(distribution): npm package + postinstall + publish.sh extend (P6.2, P6.3)
+- feat(cli): P5 CLI evolution — resume picker, fork-session wire, --print-command (P5.1-P5.5)
+- feat(mcp): atlas mcp subcommand family wraps claude mcp (P4)
+- feat(profiles): 3 overlays WiFi + git branch + time (P3.3+P3.4+P3.5)
+- feat(profiles): auto-detect + --detect-only dry-run (P3.1, P3.2, P3.6)
+- feat(profiles): atlas profile {list,show,create,validate,edit} subcommands (P2.6)
+- feat(launcher): --override key=value syntax for profile field overrides (P2.5)
+- feat(launcher): --profile flag applies launch profile (P2.4)
+- feat(profiles): _atlas_load_profile helper with inheritance (P2.3)
+- feat(profiles): seed 5 launch profiles + 2 MCP profiles (P2.1+P2.2)
+
+### 🔧 Other Changes
+- Merge feature/atlas-cli-sota-refactor — ATLAS CLI SOTA Refactor v5.28.0
+- docs: P6.4-P6.5 + P7 install/migration/setup/profile/ADR docs (v5.28.0)
+- refactor(launcher): yolo flag → --permission-mode dontAsk (safer)
+- docs(release): complete v5.27.0 CHANGELOG notes
+
+
+
 ## v5.28.0 (2026-04-18) — ATLAS CLI SOTA Refactor
 
 ### 🎯 Feature: Profile-First Architecture
