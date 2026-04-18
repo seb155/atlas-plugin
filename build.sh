@@ -207,29 +207,64 @@ PYEOF
 
 # Resolve profile inheritance and collect all items for a field
 # Usage: resolve_field <tier> <field>
+#
+# `inherits:` field accepts EITHER:
+#   - a scalar  → `inherits: dev-addon`
+#   - a list    → `inherits: [core, dev-addon]`
+#   - or absent → no inheritance (backward-compat for profiles without inherits)
+#
+# Parents are resolved left-to-right (first parent = oldest ancestor), then
+# current profile's items are appended. Set union via `awk '!seen[$0]++'`
+# guarantees dedup while preserving first-seen ordering (stable output).
+#
+# `tier` argument is the profile basename (without `.yaml`). Works for any
+# profile convention — tiers (`core`, `dev-addon`, `admin-addon`) and legacy
+# tier names (`user`, `worker`) share the same function.
 resolve_field() {
   local tier="$1"
   local field="$2"
   local profile="profiles/${tier}.yaml"
   local items=""
 
-  # Check if this tier inherits from another
-  local parent
-  parent=$(yq -r '.inherits // ""' "$profile")
-
-  # Recurse into parent first (base items come first)
-  if [ -n "$parent" ] && [ -f "profiles/${parent}.yaml" ]; then
-    items=$(resolve_field "$parent" "$field")
+  if [ ! -f "$profile" ]; then
+    return 0
   fi
 
-  # Add this tier's items
+  # Extract parents as a newline-delimited list. Handles three YAML shapes:
+  #   - scalar: `inherits: dev-addon`         → emit "dev-addon"
+  #   - list:   `inherits: [core, dev-addon]` → emit "core\ndev-addon"
+  #   - absent or null: emit nothing
+  # Two select() arms cover scalar and sequence; tag check is yq v4 idiom.
+  local parents
+  parents=$(yq -r '(.inherits | select(tag == "!!str")), (.inherits | select(tag == "!!seq") | .[])' "$profile" 2>/dev/null || true)
+
+  # Recurse into each parent IN ORDER (base items come first).
+  # Earlier parents are more generic → their items appear first in the union.
+  local parent
+  while IFS= read -r parent; do
+    [ -z "$parent" ] && continue
+    if [ -f "profiles/${parent}.yaml" ]; then
+      local parent_items
+      parent_items=$(resolve_field "$parent" "$field")
+      if [ -n "$parent_items" ]; then
+        if [ -n "$items" ]; then
+          items="${items}"$'\n'"${parent_items}"
+        else
+          items="$parent_items"
+        fi
+      fi
+    fi
+  done <<< "$parents"
+
+  # Append this tier's own items (current profile always wins last position).
   local tier_items
   tier_items=$(yq -r ".${field} // [] | .[]" "$profile" 2>/dev/null || true)
 
   if [ -n "$items" ] && [ -n "$tier_items" ]; then
-    echo -e "${items}\n${tier_items}" | awk '!seen[$0]++'
+    # Dedup while preserving first-seen order.
+    echo -e "${items}\n${tier_items}" | awk 'NF && !seen[$0]++'
   elif [ -n "$items" ]; then
-    echo "$items"
+    echo "$items" | awk 'NF && !seen[$0]++'
   else
     echo "$tier_items"
   fi
@@ -696,14 +731,17 @@ build_modular_plugin() {
   local name="$1"
   local profile=""
   local output_name=""
+  local profile_key=""  # basename of the profile file (without .yaml) — key for resolve_field
 
   # Resolve profile path and output name
   if [ -f "profiles/${name}.yaml" ]; then
     profile="profiles/${name}.yaml"
     output_name="$name"
+    profile_key="$name"
   elif [ -f "profiles/${name}-addon.yaml" ]; then
     profile="profiles/${name}-addon.yaml"
     output_name="${name%-addon}"  # dev-addon → dev
+    profile_key="${name}-addon"
   else
     echo "❌ modular profile not found for: $name"
     exit 1
@@ -724,9 +762,14 @@ build_modular_plugin() {
     cp "manifests/atlas-${name}.yaml" "$output/_addon-manifest.yaml"
   fi
 
-  # Skills: read directly from profile YAML
+  # v6.0 SP-DEDUP Phase 1: resolve `inherits:` via `resolve_field`.
+  # Behavior is identical to the prior direct-yq read when the profile has NO
+  # `inherits:` key (baseline: core=30, dev-addon=36, admin-addon=67). When
+  # `inherits:` is present (scalar or list), parents are merged in order and
+  # deduplicated, enabling DRY profiles without regressing shipped counts.
+  # Skills: merge inherited + own (union, dedup, first-seen order).
   local skills
-  skills=$(yq -r '.skills // [] | .[]' "$profile" 2>/dev/null || true)
+  skills=$(resolve_field "$profile_key" "skills")
 
   for skill in $skills; do
     if [ -d "skills/$skill" ]; then
@@ -738,7 +781,7 @@ build_modular_plugin() {
 
   # Refs
   local refs
-  refs=$(yq -r '.refs // [] | .[]' "$profile" 2>/dev/null || true)
+  refs=$(resolve_field "$profile_key" "refs")
   if [ -n "$refs" ]; then
     mkdir -p "$output/skills/refs"
     for ref in $refs; do
@@ -748,14 +791,19 @@ build_modular_plugin() {
 
   # Agents
   local agents
-  agents=$(yq -r '.agents // [] | .[]' "$profile" 2>/dev/null || true)
+  agents=$(resolve_field "$profile_key" "agents")
   for agent in $agents; do
     [ -d "agents/$agent" ] && cp -r "agents/$agent" "$output/agents/"
   done
 
-  # Hooks
+  # Hooks — resolve inherited + own.
+  # NOTE: legacy `build_tier` uses delta-only hooks for child tiers to avoid
+  # SessionStart duplication when multiple tiers install side-by-side. In the
+  # v5+ modular world, each plugin stands alone (core / dev-addon / admin-addon
+  # are installed independently) and needs its own full hooks.json. Therefore
+  # hooks ARE resolved via inheritance here — unlike tier builds.
   local hooks
-  hooks=$(yq -r '.hooks // [] | .[]' "$profile" 2>/dev/null || true)
+  hooks=$(resolve_field "$profile_key" "hooks")
   if [ -z "$hooks" ]; then
     echo '{"hooks":{}}' > "$output/hooks/hooks.json"
   else

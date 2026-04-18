@@ -1,0 +1,128 @@
+[
+  {
+    "prompt": "commit pending changes with message fix typo",
+    "expected_effort": "low",
+    "resolved_effort": "low",
+    "match": true,
+    "latency_ms": 27.64,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "bump version and push tag to release",
+    "expected_effort": "low",
+    "resolved_effort": "low",
+    "match": true,
+    "latency_ms": 28.79,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "grep for TODOs in the codebase",
+    "expected_effort": "low",
+    "resolved_effort": "low",
+    "match": true,
+    "latency_ms": 27.26,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "review this small pull request for style",
+    "expected_effort": "medium",
+    "resolved_effort": "medium",
+    "match": true,
+    "latency_ms": 25.54,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "explain what atlas-loop does",
+    "expected_effort": "medium",
+    "resolved_effort": "medium",
+    "match": true,
+    "latency_ms": 27.28,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "document the API endpoints in routes.py",
+    "expected_effort": "medium",
+    "resolved_effort": "medium",
+    "match": true,
+    "latency_ms": 24.27,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "implement user authentication with JWT",
+    "expected_effort": "high",
+    "resolved_effort": "high",
+    "match": true,
+    "latency_ms": 24.87,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "add feature to support dark mode toggle",
+    "expected_effort": "high",
+    "resolved_effort": "high",
+    "match": true,
+    "latency_ms": 25.78,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "fix bug in the login form validation",
+    "expected_effort": "high",
+    "resolved_effort": "high",
+    "match": true,
+    "latency_ms": 25.8,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "debug this race condition in the concurrent queue",
+    "expected_effort": "xhigh",
+    "resolved_effort": "xhigh",
+    "match": true,
+    "latency_ms": 26.68,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "optimize the slow query causing timeout",
+    "expected_effort": "xhigh",
+    "resolved_effort": "xhigh",
+    "match": true,
+    "latency_ms": 25.95,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "migrate postgres schema without downtime",
+    "expected_effort": "xhigh",
+    "resolved_effort": "xhigh",
+    "match": true,
+    "latency_ms": 25.27,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "design architecture for a distributed event sourcing system",
+    "expected_effort": "max",
+    "resolved_effort": "max",
+    "match": true,
+    "latency_ms": 24.96,
+    "version": "6.0.0-alpha.2"
+  }
+,
+  {
+    "prompt": "ultrathink the decision framework and mega plan",
+    "expected_effort": "max",
+    "resolved_effort": "max",
+    "match": true,
+    "latency_ms": 24.7,
+    "version": "6.0.0-alpha.2"
+  }
+
+]
