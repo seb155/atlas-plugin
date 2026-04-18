@@ -101,7 +101,7 @@ hooks:
 - tdd-guard               # PreToolUse[Write|Edit] — block edits without failing test
 - claudemd-lint           # PostToolUse[Write|Edit] on CLAUDE.md — validate frontmatter + W3H
 - detect-stale-git        # Stop — warn if working tree has stale refs / uncommitted
-- feature-drift-detector  # Stop — flag scope creep outside feature branch
+# feature-drift-detector registered in hooks.json SessionStart block (removed from Stop profile 2026-04-18)
 agents:
 - plan-architect
 - plan-reviewer
