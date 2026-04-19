@@ -1,0 +1,3 @@
+Admin-tier infrastructure management: VM/container orchestration (Proxmox, Docker, LXC), networking (Tailscale, DNS, Cloudflare), monitoring (Grafana, Prometheus, Uptime Kuma), backup/DR, database administration (PostgreSQL, Valkey), and hardware capacity planning. HITL gates on all destructive operations.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

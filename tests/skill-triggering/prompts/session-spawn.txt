@@ -1,0 +1,3 @@
+Session orchestration: spawn fresh CC in tmux with worktree isolation. /atlas continue (handoff + fresh), /atlas spawn (isolated task), /atlas sessions (list active). Max 5 concurrent. Plan-based (no API key). Integrates with Agent Teams for connected work.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

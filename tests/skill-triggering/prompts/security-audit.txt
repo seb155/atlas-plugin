@@ -1,0 +1,3 @@
+Admin-tier security audit pipeline: OWASP Top 10 scanning, RBAC configuration review, secret/credential detection, SSL/TLS validation, container security (Docker/K8s), network access controls, and structured report generation with severity classifications (CRITICAL/HIGH/MEDIUM/LOW). Compliance references: SOC2, ISO 27001.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

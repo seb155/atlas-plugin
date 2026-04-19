@@ -1,0 +1,3 @@
+AXOIQ Knowledge Engine — query and ingest project knowledge. TEG timeline, FTS5 search, cross-repo correlation, entity extraction. SP-19.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

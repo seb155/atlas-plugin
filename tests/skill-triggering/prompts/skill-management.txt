@@ -1,0 +1,1 @@
+I keep re-explaining how to set up our dev environment to new contributors. Can you create a new skill that packages this into a reusable workflow?

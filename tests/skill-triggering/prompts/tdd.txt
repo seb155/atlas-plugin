@@ -1,0 +1,7 @@
+Add a function `is_valid_email(email: str) -> bool` that validates:
+- contains @ symbol
+- at least one char before @
+- at least one dot after @
+- no whitespace
+
+Implement it properly with tests first.

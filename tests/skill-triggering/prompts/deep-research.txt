@@ -1,0 +1,1 @@
+I need to decide between using Redis Streams, Apache Kafka, and NATS JetStream for our event bus. Can you research the tradeoffs, look at recent benchmarks, and summarize which fits our scale (10K events/sec)?

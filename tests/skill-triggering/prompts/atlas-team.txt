@@ -1,0 +1,3 @@
+Agent Teams blueprints — spawn coordinated worker squads in tmux panes. 5 blueprints: jarvis, feature, debug, review, audit. Auto-detects tmux mode.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

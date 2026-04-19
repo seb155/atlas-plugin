@@ -1,0 +1,3 @@
+Application reality audit. Live validation of features via API, browser, and tests. Produces APPLICATION-REALITY-MATRIX.md. /atlas health for full scan, /atlas health api for backend, /atlas health ui for browser audit. Uses Chrome DevTools, Playwright, or headless — whichever is available.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

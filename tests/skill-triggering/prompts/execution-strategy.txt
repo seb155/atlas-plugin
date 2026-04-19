@@ -1,0 +1,3 @@
+Analyze a plan and produce an optimal execution strategy: model allocation per task, parallel vs sequential, team vs subagent, cost estimation. Auto with override. Bridge between plan-builder and executing-plans.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

@@ -1,0 +1,9 @@
+This function has grown to 200 lines and is hard to follow. The nested conditionals are a mess. Can you refactor it to be simpler and more readable?
+
+```python
+def process_order(order, user, inventory):
+    if order.status == 'pending':
+        if user.is_verified:
+            if inventory.check_availability(order.items):
+                # ... 180 more lines
+```

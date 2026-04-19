@@ -1,0 +1,66 @@
+# ATLAS Plugin — Skill-Triggering Eval (Nightly)
+# Runs tests/skill-triggering/run-all.sh against all ATLAS skills using
+# claude -p + --plugin-dir. Reports pass rate. Fails build if pass rate
+# regresses below threshold.
+#
+# Cadence: nightly at 03:00 UTC (cron trigger)
+# Duration: ~5-15 min depending on ATLAS skill count (106 currently)
+# Cost: ~5-10K tokens total (small model, short prompts, capped at 3 turns)
+#
+# Policy:
+# - Pass rate baseline: established via first run, stored in .atlas-eval-baseline
+# - Regression threshold: 80% initially (lower until first audit), raise to 85% after REC-002
+# - Warnings only — does NOT block releases (yet). Post issue label on regression.
+#
+# Reference: docs/ADR/ADR-007-skill-triggering-eval-framework.md
+# Source: plan joyful-hare Path B item #2 (REC-001)
+
+when:
+  event: [cron, manual]
+  cron: "0 3 * * *"   # 03:00 UTC nightly
+  branch: main
+
+steps:
+  skill-triggering-eval:
+    image: node:20-slim
+    commands:
+      # Preflight: install claude CLI, jq, git
+      - apt-get update -qq && apt-get install -y -qq git jq curl > /dev/null
+      - echo "Node:" && node --version
+
+      # Claude Code CLI install (needs npm install @anthropic-ai/claude-cli or equivalent)
+      # NOTE: this assumes claude CLI is available in the runner image or installed fresh.
+      # If not installable in CI (requires Anthropic auth), this job is effectively a
+      # scaffolding — the manual run via ./run-all.sh on dev machines is primary.
+      - |
+        if ! command -v claude >/dev/null 2>&1; then
+          echo "⚠️  claude CLI not available in this runner."
+          echo "This pipeline is scaffolding — manual eval via tests/skill-triggering/run-all.sh on dev machines remains primary."
+          echo "To enable CI eval: install Claude Code CLI in runner image + wire ANTHROPIC_API_KEY secret."
+          exit 0
+        fi
+
+      # Run eval with threshold check
+      - |
+        cd tests/skill-triggering
+        echo "Running skill-triggering eval against all prompts..."
+        set +e
+        bash run-all.sh --fail-under 80 --quiet > /tmp/eval-report.txt 2>&1
+        EVAL_EXIT=$$?
+        set -e
+
+        cat /tmp/eval-report.txt
+
+        if [ "$$EVAL_EXIT" -ne 0 ]; then
+          echo ""
+          echo "❌ Eval regressed below 80% pass rate."
+          echo "See logs above for failing skills."
+          exit 1
+        fi
+
+        echo ""
+        echo "✅ Skill-triggering eval passed."
+
+    environment:
+      NO_COLOR: "1"
+      # ANTHROPIC_API_KEY: from_secret (if CI runner has claude CLI)
