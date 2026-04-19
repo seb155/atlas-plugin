@@ -3,6 +3,20 @@
 ## v5.37.0 (2026-04-19)
 
 ### ✨ Features
+- feat(skill-security): fork skill-lint v0.2.0 as @axoiq/atlas-skill-lint (v5.37.0)
+
+### 🐛 Bug Fixes
+- fix(ci): plugin-json-validate failure:ignore (match yml comment intent)
+- fix(skill-lint): add MEDIUM_CAP_PER_RULE=3 symmetric to LOW cap
+
+### 🔧 Other Changes
+- Merge pull request 'feat(skill-security): fork skill-lint as atlas-skill-lint — end CI false-positive cycle (v5.37.0)' (#28) from feature/atlas-skill-lint-fork into main
+
+
+
+## v5.37.0 (2026-04-19)
+
+### ✨ Features
 
 - **feat(skill-security): fork skill-lint as `@axoiq/atlas-skill-lint`**
   for reasoning-agent-aware SKILL.md handling. Vendored at
