@@ -11,6 +11,21 @@ effort: medium
 Execute plan tasks by dispatching specialized subagents. Each task gets a subagent with the
 **model specified by the execution manifest** (default: Sonnet), followed by 2-stage review.
 
+## Red Flags (rationalization check)
+
+Before skipping subagent dispatch or bypassing its gates, ask yourself — are any of these thoughts running? If yes, STOP. Sequential solo execution costs 5x when Sonnet subagents could parallelize.
+
+| Thought | Reality |
+|---------|---------|
+| "I'll do it myself, faster than dispatching" | For 2+ independent tasks, parallel Sonnet wins on cost AND wall-clock. Dispatch. |
+| "Opus for everything — quality matters" | Sonnet is 97-99% of Opus coding at 5x cheaper. `--force-opus` exists for exceptions. |
+| "I'll skip spec-compliance review" | Spec + quality review is a 2-STAGE gate. Skipping either = drift from plan. |
+| "These tasks are obviously parallel-safe" | "Obvious" parallelism breaks on shared files. Build the dependency map first. |
+| "Forward full session context to subagents" | NEVER. Distill to ~20K tokens. Full context = $$$, slow, confused subagents. |
+| "Skip prompt-cache preamble, 5 subagents is small" | 3-block structure saves $30-50/month. Over a year = weekend hardware. Set it up. |
+| "Git ops in parallel is fine" | Git is ALWAYS sequential (commit, push, merge, tag). Database migrations too. |
+| "Review loops are ceremonial — merge anyway" | Max 2 fix loops. If still failing → escalate via AskUserQuestion. Never silently accept. |
+
 ## Model Strategy (Manifest-Driven)
 
 When an execution manifest is available (from `execution-strategy` skill):

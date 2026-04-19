@@ -6,6 +6,20 @@ effort: low
 
 # Decision Log
 
+## Red Flags (rationalization check)
+
+Before deferring a decision-log entry, ask yourself — are any of these thoughts running? If yes, STOP. Unlogged decisions are lost within 2 compactions.
+
+| Thought | Reality |
+|---------|---------|
+| "I'll remember why we picked this" | You won't. Future-you in 3 weeks has forgotten the alternatives. Log it. |
+| "Not architectural enough to log" | Lib choice, data model, pattern = architectural. Low bar. Err on logging. |
+| "The plan documents it, no need for JSONL" | Plans get archived. `.claude/decisions.jsonl` is append-only and grep-friendly. Dual-write. |
+| "I'll log at session-end in retrospective" | Decisions at session-end lose context (rationale fades by evening). Log now. |
+| "Alternatives field is padding" | "Rejected because" is the #1 reason future-you understands the decision. Fill it. |
+| "Reversibility is obvious" | EASY / MODERATE / HARD flag guides future refactor risk calculation. State it. |
+| "ATLAS_TOPIC is set, but topic memory is redundant" | Dual-write to `.claude/topics/${ATLAS_TOPIC}/decisions.md` — topic context survives branches. |
+
 ## When to Log
 - Choosing between 2+ approaches
 - Selecting a library/framework
