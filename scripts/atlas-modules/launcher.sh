@@ -490,7 +490,7 @@ print(handoffs[-1] if handoffs else '')
   fi
 
   # Auto-rebuild plugin if source is newer than cache (zero-friction dev)
-  local _plugin_src="${HOME}/workspace_atlas/projects/atlas-dev-plugin"
+  local _plugin_src="${ATLAS_PLUGIN_SOURCE:-${HOME}/workspace_atlas/projects/atlas-plugin}"
   if [ -f "${_plugin_src}/VERSION" ]; then
     local _src_time _cache_time
     _src_time=$(stat -c %Y "${_plugin_src}/VERSION" 2>/dev/null || echo 0)

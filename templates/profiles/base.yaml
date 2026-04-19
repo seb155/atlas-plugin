@@ -9,6 +9,8 @@
 # ~/.atlas/profile.json). Launch profiles are stored in ~/.atlas/profiles/ (plural).
 
 name: base
+# Utility profile — hidden from `atlas profile list` (use --all to show). Not user-selectable.
+list_visibility: hidden
 description: "Base profile — defaults for all ATLAS sessions. Extend this via 'extends: base'."
 
 # ─── Claude Code launch flags ──────────────────────────────

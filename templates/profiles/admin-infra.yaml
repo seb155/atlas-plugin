@@ -24,7 +24,7 @@ env:
 
 # Auto-detect: infrastructure + homelab repos
 cwd_match:
-  - "/home/sgagnon/workspace_atlas/infrastructure/**"
+  - "/home/sgagnon/workspace_atlas/homelab-iac/**"
   - "/home/sgagnon/workspace_atlas/atlas-homelab/**"
 
 # Medium trust required for infra (sensitive ops)

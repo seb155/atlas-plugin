@@ -192,7 +192,7 @@ effort: xhigh
 worktree: false            # Direct, not isolated
 mcp_profile: minimal
 cwd_match:
-  - "/home/sgagnon/workspace_atlas/infrastructure/**"
+  - "/home/sgagnon/workspace_atlas/homelab-iac/**"
 wifi_trust_required: medium  # Prefer trusted networks
 ```
 
