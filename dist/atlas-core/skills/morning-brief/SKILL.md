@@ -1,6 +1,6 @@
 ---
 name: morning-brief
-description: "Compile morning brief: today's agenda, important emails, open tasks, active projects, suggestions. The daily command center."
+description: "Daily morning brief compiler. This skill should be used when the user asks for the 'morning brief', 'daily brief', 'what's on today', 'brief me', '/atlas brief', or at session start on a fresh day."
 effort: low
 ---
 

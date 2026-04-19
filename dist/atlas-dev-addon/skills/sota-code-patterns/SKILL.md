@@ -1,6 +1,6 @@
 ---
 name: sota-code-patterns
-description: "Architecture pattern selection guide. Clean, Hexagonal, Onion, DDD, CQRS, Layered, Event-Driven — when to use each, pragmatic tradeoffs. Invoke when starting a new service/module or planning a refactor."
+description: "Architecture pattern selection guide. Use when starting a new service/module, planning a refactor, or when the user asks to 'choose architecture', 'pattern selection', 'clean vs hexagonal', 'CQRS', 'DDD', 'event-driven vs layered'."
 effort: medium
 refs:
   - sota-architecture-patterns

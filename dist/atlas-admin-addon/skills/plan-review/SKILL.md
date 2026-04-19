@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: "Iterative plan review with simulation, consolidation, and HITL gates. Multi-pass quality improvement for sub-plans and mega plans. Use when reviewing, validating, or consolidating engineering plans."
+description: "Iterative engineering plan review. This skill should be used when the user asks to 'review the plan', 'validate plan', 'consolidate plans', '/a-plan-review', or has a plan (sub-plan or mega-plan) needing multi-pass simulation and HITL gates."
 effort: high
 context: fork
 agent: plan-reviewer

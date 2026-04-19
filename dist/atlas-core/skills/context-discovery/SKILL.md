@@ -1,6 +1,6 @@
 ---
 name: context-discovery
-description: "Auto-discover project context + context engineering toolkit. 8-phase scan + audit + codemap + patterns + sync-plan + CLAUDE.md management (W3H). Run before any plan creation."
+description: "Auto-discover project context before planning. This skill should be used when the user asks to 'discover context', 'audit context', 'codemap', 'sync plan', '/atlas context', or before creating any new engineering plan."
 effort: medium
 ---
 
@@ -10,6 +10,20 @@ Run BEFORE any plan creation. Produces a context report that pre-fills enterpris
 Generic — works with any tech stack/framework/language.
 
 **Announce:** "Running context discovery..."
+
+## Red Flags (rationalization check)
+
+Before skipping context-discovery, ask yourself — are any of these thoughts running? If yes, STOP. Memory drifts; filesystem wins (per `feedback_ultrathink_plan_staleness_pattern.md`).
+
+| Thought | Reality |
+|---------|---------|
+| "I remember this project" | Memory drifts across compactions. Re-scan — 6/6 stale plans caught 2026-04-18 prove it. |
+| "We explored this subsystem yesterday" | Yesterday ≠ today. Commits, plans, docs change hourly. Re-scan. |
+| "I'll discover as I plan" | Discovery pre-fills sections A-B, H-M. Discovering mid-plan = 2x rework. |
+| "Trivial task, no context needed" | Trivial tasks trip on stack conventions (bun not npm, kebab-case files, etc). Check stack. |
+| "I'll just grep for what I need" | 8-phase scan catches architecture, security, observability patterns grep misses. |
+| "The CLAUDE.md has everything" | CLAUDE.md W3H is ≤100 lines by design. `.blueprint/` holds the detail. Load both. |
+| "Skip the plan INDEX — I know the active plans" | INDEX is SSoT. Active/archived/deferred status changes between sessions. |
 
 ## 8 Discovery Phases
 

@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: "Test-Driven Development. Failing test → minimal implementation → pass → commit. Strict cycle. Never write implementation without a failing test first."
+description: "Test-Driven Development cycle. This skill should be used when the user asks to implement any feature or bugfix, 'TDD this', 'write tests first', '/a-tdd', or before writing implementation code that has no failing test yet."
 effort: medium
 ---
 
@@ -18,6 +18,20 @@ effort: medium
 ```
 
 **Never skip step 2.** A test that passes without implementation is wrong.
+
+## Red Flags (rationalization check)
+
+Before skipping the TDD cycle, ask yourself — are any of these thoughts running? If yes, STOP. You're rationalizing.
+
+| Thought | Reality |
+|---------|---------|
+| "Just this once, let me code first" | The TDD cycle protects against exactly that. Write the test. |
+| "I know what the code should look like" | Knowing ≠ verified. Test first proves it. |
+| "The test is obvious — I'll write it after" | Tests-after validate what you wrote, not what you intended. |
+| "It's too simple to need a test" | Simple things break in production because nobody tested them. |
+| "The feature doesn't have a clear assertion yet" | Then you don't have a feature yet — you have an idea. Refine, then test. |
+| "Tests slow me down" | Untested code slows the NEXT session 10x. TDD pays compound interest. |
+| "I'll add tests at the end" | Tests-at-end = tests that match buggy code, not the spec. |
 
 ## Test First, Always
 

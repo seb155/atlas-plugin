@@ -1,6 +1,6 @@
 ---
 name: knowledge-manager
-description: "Enterprise knowledge layer orchestration — coverage, discovery, gaps, search, rules, vault. Powers the Unified Knowledge Layer (UKL)."
+description: "Unified Knowledge Layer orchestrator. This skill should be used when the user asks to '/atlas knowledge manager', 'UKL', 'knowledge coverage', 'knowledge gaps', 'knowledge rules', or manages enterprise knowledge discovery and search."
 effort: medium
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: gms-profiler
-description: "MSE auto-enriching profiles across 4 layers: Discipline, Personal, Enterprise, Team. Expertise maps, KC evidence, bus-factor analysis."
+description: "MSE profile auto-enrichment (4 layers). This skill should be used when the user asks to '/atlas gms profiler', 'profile MSE', 'expertise map', 'bus-factor', 'KC evidence', or updates a team member profile at G Mining."
 effort: medium
 triggers:
   - "/atlas gms profile"

@@ -11,6 +11,21 @@ agent: code-reviewer
 Unified code review combining local diff analysis and PR review into a single workflow.
 Two modes: **local** (uncommitted/unpushed changes) and **PR** (remote pull request).
 
+## Red Flags (rationalization check)
+
+Before shortcutting code-review, ask yourself — are any of these thoughts running? If yes, STOP. "LGTM" without parallel agents produces false-confidence reviews that let bugs through.
+
+| Thought | Reality |
+|---------|---------|
+| "LGTM, just a small diff" | Small diffs hide off-by-one, null deref, race conditions. Run the parallel agents. |
+| "I already read the code once" | Reading ≠ reviewing. Review checks against CLAUDE.md rules + enterprise compliance. |
+| "senior-review-checklist is overkill for this PR" | Only skip for trivial PRs (style-only, single-line). 50+ lines triggers full checklist. |
+| "I'll skip the LSP blast-radius check" | Rename without findReferences = 30 silent call sites broken. |
+| "Confidence 50 is fine to report" | Threshold is 75+. Below that = noise that buries real issues. |
+| "Pattern compliance is a nit" | PATTERNS.md exists to PREVENT duplication. Flag it. |
+| "Enterprise compliance is for production" | Multi-tenant project_id filter + RBAC gate MUST be on new endpoints from day 1. |
+| "Posting PR comments doesn't need confirmation" | HITL: confirm via AskUserQuestion before posting. Delete is possible; un-publish is not. |
+
 ## Mode Detection
 
 - If user provides a PR number/URL → **PR mode**

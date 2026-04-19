@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.34.1 (2026-04-19)
+
+### 🐛 Bug Fixes
+- fix(skills): trim memory-dream description to ≤500 chars (ADR-011)
+
+### 🔧 Other Changes
+- refactor(skills): CSO audit migration batch 3/3 (REC-002, ADR-008)
+- refactor(skills): CSO audit migration batch 2/3 (REC-002, ADR-008)
+- refactor(skills): Red Flags retrofit batch 4/4 (REC-003, ADR-009)
+- refactor(skills): CSO audit migration batch 1/3 (REC-002, ADR-008)
+- refactor(skills): Red Flags retrofit batch 3/4 (REC-003, ADR-009)
+- refactor(skills): Red Flags retrofit batch 2/4 (REC-003, ADR-009)
+- refactor(skills): Red Flags retrofit batch 1/4 (REC-003, ADR-009)
+
+
+
 ## v5.34.0 (2026-04-19)
 
 ### ✨ Features

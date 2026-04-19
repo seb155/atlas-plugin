@@ -1,6 +1,6 @@
 ---
 name: execution-strategy
-description: "Analyze a plan and produce an optimal execution strategy: model allocation per task, parallel vs sequential, team vs subagent, cost estimation. Auto with override. Bridge between plan-builder and executing-plans."
+description: "Execution strategy analyzer for plans. Use when a plan is ready but needs model allocation, parallelization decisions, subagent vs team routing, or cost estimation before executing-plans picks it up."
 effort: medium
 model: opus
 ---

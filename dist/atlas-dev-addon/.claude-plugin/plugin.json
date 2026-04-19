@@ -1,8 +1,8 @@
 {
   "name": "atlas-dev-addon",
-  "version": "5.34.0",
+  "version": "5.34.1",
   "description": "Developer tools — planning, TDD, review, shipping",
   "author": { "name": "AXOIQ", "email": "dev@axoiq.com" },
   "license": "UNLICENSED",
-  "buildTimestamp": "2026-04-19T15:43:52Z"
+  "buildTimestamp": "2026-04-19T16:15:30Z"
 }

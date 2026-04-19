@@ -1,6 +1,6 @@
 ---
 name: visual-qa
-description: "Multi-page visual QA via Chrome MCP or Playwright. Auto-navigate routes, screenshot, check for errors, report pass/fail matrix."
+description: "Multi-page visual QA via Chrome MCP or Playwright. This skill should be used when the user asks to 'visual QA', 'screenshot routes', 'check all pages', 'visual regression', '/atlas visual qa', or needs a pass/fail matrix across routes."
 triggers:
   - "/atlas visual-qa"
   - "/atlas qa"

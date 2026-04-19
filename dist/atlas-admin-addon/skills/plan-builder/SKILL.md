@@ -1,6 +1,6 @@
 ---
 name: plan-builder
-description: "Generate ultra-detailed 15+5 section engineering plans (A-O + execution strategy) with quality gate 16/20. Replaces superpowers:writing-plans. Uses context discovery report to pre-fill enterprise sections."
+description: "Engineering plan generator (15+5 sections). This skill should be used when the user asks to 'write a plan', 'build a plan', 'create sub-plan', '/plan-builder', '/a-dev feature', or needs an A-O structured plan graded against the 16/20 quality gate."
 effort: high
 ---
 
@@ -8,6 +8,21 @@ effort: high
 
 **Model**: ALWAYS Opus 4.7, max thinking effort, max output tokens. Never truncate.
 **Announce:** "Building engineering plan using Atlas Dev plan-builder..."
+
+## Red Flags (rationalization check)
+
+Before skipping plan-builder or shortcutting its workflow, ask yourself — are any of these thoughts running? If yes, STOP. Bad plans produce bad code that drags for weeks.
+
+| Thought | Reality |
+|---------|---------|
+| "I can start coding, plan later" | Plan before code. Otherwise plan drifts to match bad code. |
+| "This is simple, 5 sections is enough" | If task > 10h or crosses DB/API/FE, you need the full 15+5. |
+| "Score 12/15 is close enough" | Gate is 16/20 for new plans. Below gate = hidden gaps that blow up mid-exec. |
+| "I don't need Mermaid — paragraphs explain it" | Mermaid renders in the dashboard. Text-only = invisible to reviewers. |
+| "Enterprise sections (H-L) don't apply here" | They apply to EVERY feature. Fill "N/A — reason" explicitly if skipping. |
+| "Section O verification is boilerplate" | E2E persona + perf + security commands MUST be runnable. Copy-paste = dead gate. |
+| "The user will just approve whatever" | HITL Gate G1 requires score + approval. Half-formed plans get rejected. |
+| "I'll skip brainstorming — I know the design" | Brainstorming surfaces 2-3 approaches. One-approach plans = locked-in wrong pattern. |
 
 ## Workflow
 

@@ -1,6 +1,6 @@
 ---
 name: knowledge-builder
-description: "Learn facts, preferences, relationships about the user. Confidence-based with reinforcement. Powers the ATLAS learning engine."
+description: "User knowledge learning engine. Use when the user shares a new fact, preference, or relationship about themselves, when the agent needs to store 'remember that', 'I prefer', 'from now on' statements, or when reinforcing confidence on existing user facts."
 effort: medium
 ---
 

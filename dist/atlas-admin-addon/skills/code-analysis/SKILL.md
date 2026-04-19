@@ -1,6 +1,6 @@
 ---
 name: code-analysis
-description: "Codebase architecture analysis: dead code detection, dependency graphs, dataflow tracing, migration impact. Use for understanding what's alive vs dead, tracing data flows, or planning refactors."
+description: "Codebase architecture analyzer. This skill should be used when the user asks to 'analyze codebase', 'dead code', 'dependency graph', 'trace dataflow', 'migration impact', or plans a refactor needing alive-vs-dead mapping."
 effort: medium
 model: opus
 ---

@@ -1,6 +1,6 @@
 ---
 name: knowledge-engine
-description: "AXOIQ Knowledge Engine — query and ingest project knowledge. TEG timeline, FTS5 search, cross-repo correlation, entity extraction. SP-19."
+description: "AXOIQ Knowledge Engine (query + ingest). This skill should be used when the user asks to 'knowledge engine', 'TEG timeline', 'FTS5 search', 'cross-repo query', '/atlas knowledge', or needs project-wide entity extraction."
 effort: low
 ---
 

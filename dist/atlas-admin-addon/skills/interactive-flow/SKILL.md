@@ -1,6 +1,6 @@
 ---
 name: interactive-flow
-description: "Conversational development pipeline: discover → brainstorm → plan → implement → verify → ship. Full feature workflow with HITL at every phase."
+description: "Conversational end-to-end development pipeline. This skill should be used when the user asks to 'new feature', 'full flow', 'interactive dev', 'guide me through', or wants discover→brainstorm→plan→implement→verify→ship with HITL at every phase."
 effort: high
 inputs:
   feature_description: string

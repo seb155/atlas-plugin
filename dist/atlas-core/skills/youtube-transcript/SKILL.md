@@ -1,6 +1,6 @@
 ---
 name: youtube-transcript
-description: "Extract YouTube video transcripts (timestamped + plain text) using youtube-transcript-api. No API key required. Saves to markdown files. Supports language selection, translation, and batch processing."
+description: "YouTube transcript extractor. This skill should be used when the user asks to 'get the transcript', 'transcribe this YouTube video', 'extract captions', 'summarize this video', or provides a YouTube URL for analysis."
 ---
 
 # YouTube Transcript Extractor

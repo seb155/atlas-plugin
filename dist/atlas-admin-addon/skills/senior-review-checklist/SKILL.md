@@ -1,6 +1,6 @@
 ---
 name: senior-review-checklist
-description: "Systematic code review checklist: SOLID compliance, code smells, design smells, naming, cohesion/coupling, testability. Invoked as mandatory step in code-review skill."
+description: "Macro-level code review checklist. Use when invoked by code-review, when the user asks to 'senior review', 'SOLID audit', 'code smells check', or before shipping any non-trivial change needing architectural rigor."
 effort: medium
 refs:
   - code-smells-catalog
@@ -17,6 +17,21 @@ This skill is invoked by:
 - Manual invocation: "run senior review on this PR"
 
 **NOT for:** style nits, formatting, linter-catchable issues (those belong to lint + shellcheck).
+
+## Red Flags (rationalization check)
+
+Before skipping the senior checklist, ask yourself — are any of these thoughts running? If yes, STOP. "Quick glance" reviews let design smells pass that rot the codebase for months.
+
+| Thought | Reality |
+|---------|---------|
+| "Quick glance is fine for this PR" | Only trivial (style-only, single-line) PRs skip. 50+ lines or 3+ files = full checklist. |
+| "Correctness is obvious" | Race conditions, silent except-pass, null at boundaries are NOT obvious. Use the rubric. |
+| "Design weight can be eyeballed" | God Class (>500 lines), Long Method (>50 lines), Primitive Obsession have measurable thresholds. Score them. |
+| "SOLID is academic" | S (Single Resp), L (Liskov), I (Interface Segregation) failures = fragile code. Grade each. |
+| "Naming is a personal preference" | Naming = documentation. Ambiguous names force 2x reading on every future session. |
+| "Testability is for the test author" | Testable code is by design — tight coupling = unobservable code. Flag before merge. |
+| "Observability is the ops team problem" | No logging on a new mutation endpoint = incident 3 weeks later with no trace. Flag it. |
+| "I'll use intuition, not the catalog" | code-smells-catalog + sota-architecture-patterns are structured. Intuition misses 40%. |
 
 ## 7 Review Dimensions
 

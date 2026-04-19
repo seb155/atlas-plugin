@@ -1,6 +1,6 @@
 ---
 name: infra-health
-description: "Infrastructure health audit — 57 endpoints, LAN + WAN, SSO + SSL. Self-healing with auto-fix recipes. /atlas health infra for full audit, --fix for auto-repair. Uses endpoints.yml SSoT from homelab-iac repo."
+description: "Infrastructure health audit (57 endpoints). This skill should be used when the user asks to '/atlas health infra', 'infra health', 'endpoint audit', 'SSO SSL check', 'self-heal infra', or runs the LAN+WAN+SSO audit with --fix."
 effort: high
 ---
 

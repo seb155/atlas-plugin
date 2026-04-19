@@ -1,6 +1,6 @@
 ---
 name: note-capture
-description: "Quick capture notes with tags and context. Links to meetings, projects, people. Searchable knowledge base."
+description: "Quick note capture with tags and links. This skill should be used when the user asks to 'note this', 'capture note', 'take a note', 'quick note', '/atlas note', or needs to persist a thought tied to a meeting, project, or person."
 effort: low
 ---
 

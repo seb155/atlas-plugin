@@ -8,6 +8,21 @@ effort: medium
 
 Build production-grade Claude Code plugins: scaffold → define → implement → test → validate → publish.
 
+## Red Flags (rationalization check)
+
+Before guessing plugin structure, ask yourself — are any of these thoughts running? If yes, STOP. plugin.json schema errors block install silently; users never see your skill.
+
+| Thought | Reality |
+|---------|---------|
+| "I'll figure out the structure as I go" | Components (commands/, skills/, agents/, hooks/) go at ROOT, NOT inside .claude-plugin/. Wrong structure = plugin fails to load. |
+| "My plugin.json doesn't need a version" | `name` is required but `version` is required-in-practice for marketplace listing. Set semver from day 1. |
+| "Skills work without a separate directory" | Every skill needs `skills/{name}/SKILL.md`. Not optional. Claude won't discover loose files. |
+| "Hooks are just scripts I pipe in" | Hooks need `hooks.json` registration + script + plugin-registry + profile config (3-file pattern). |
+| "I'll validate after I publish" | `claude plugin validate ./my-plugin` BEFORE publish. After = bug in production. |
+| "My local test is enough" | Test with `--plugin-dir ./my-plugin` AND `/reload-plugins` AND `claude --debug`. 3-point check. |
+| "MCP / LSP config goes in plugin.json" | NO. `.mcp.json` and `.lsp.json` are SEPARATE files. Schema in references/mcp-lsp-spec.md. |
+| "Marketplace submission is optional" | If you want others to install, `marketplace.json` with `{name, owner, plugins[]}` is required. |
+
 ## Directory Structure (CRITICAL)
 
 ```

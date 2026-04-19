@@ -1,6 +1,6 @@
 ---
 name: git-worktrees
-description: "Isolated feature branch via git worktree. Auto-setup project. Safety: verify .gitignore. 1 worktree per feature."
+description: "Git worktree setup for feature isolation. Use when starting a feature branch that needs isolation, when the user asks to 'create a worktree', 'new feature branch isolated', '/atlas worktree', or before executing implementation plans that may conflict with the current tree."
 effort: low
 ---
 

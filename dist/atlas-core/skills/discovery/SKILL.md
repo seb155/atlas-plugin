@@ -1,6 +1,6 @@
 ---
 name: discovery
-description: "Display and refresh ATLAS capability discovery — shows installed addons, tier, persona, pipeline. Use to debug master atlas-assist routing or after installing/uninstalling addons."
+description: "ATLAS capability discovery inspector. Use when the user asks to 'show addons', 'refresh capabilities', 'discovery', '/atlas discovery', or when debugging master atlas-assist routing after installs."
 user-invocable: true
 ---
 

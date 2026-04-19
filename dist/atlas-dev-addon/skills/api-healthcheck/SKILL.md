@@ -1,6 +1,6 @@
 ---
 name: api-healthcheck
-description: "Batch test all API endpoints. Parallel curl, response time, status code, error detection. Config-driven from .atlas/healthcheck.yaml."
+description: "API endpoint health checker. This skill should be used when the user asks to 'healthcheck the API', 'check endpoints', 'ping all routes', 'api status', or needs a parallel curl sweep of .atlas/healthcheck.yaml."
 triggers:
   - "/atlas healthcheck"
   - "/atlas health api"

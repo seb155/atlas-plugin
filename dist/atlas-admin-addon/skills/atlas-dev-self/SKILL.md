@@ -1,6 +1,6 @@
 ---
 name: atlas-dev-self
-description: "Self-development workflow for the ATLAS plugin itself. Use when adding skills, agents, hooks, or commands to the plugin. Knows the full plugin structure, test suite, and release workflow."
+description: "ATLAS plugin self-development workflow. Use when adding or modifying a skill, agent, hook, or command inside the ATLAS source repo, or when the user asks to 'update the plugin', 'add atlas skill', 'atlas dev self'."
 effort: high
 ---
 

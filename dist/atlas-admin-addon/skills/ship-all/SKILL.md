@@ -1,6 +1,6 @@
 ---
 name: ship-all
-description: "Full repository ship: audit git state (branches, worktrees, stashes, PRs), clean stale refs, sync branches, merge PRs, deploy all environments, verify health. Use when 'ship all', 'clean repo', 'deploy everything', 'grand menage', 'sync all envs', 'merge and deploy', 'cleanup branches', or 'nettoyer le repo'."
+description: "Full-repository ship orchestrator. This skill should be used when the user asks to 'ship all', 'grand menage', 'nettoyer le repo', 'clean repo', 'deploy everything', 'sync all envs', 'merge and deploy', or 'cleanup branches'."
 argument-hint: "[--dry-run] [--skip-deploy] [--aggressive]"
 effort: medium
 ---

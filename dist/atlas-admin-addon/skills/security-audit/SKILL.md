@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: "Admin-tier security audit pipeline: OWASP Top 10 scanning, RBAC configuration review, secret/credential detection, SSL/TLS validation, container security (Docker/K8s), network access controls, and structured report generation with severity classifications (CRITICAL/HIGH/MEDIUM/LOW). Compliance references: SOC2, ISO 27001."
+description: "Admin-tier security audit pipeline. This skill should be used when the user asks to 'security audit', 'OWASP scan', 'RBAC review', 'secret scan', 'SSL audit', '/atlas security audit', or needs SOC2/ISO27001 compliance reports with CRITICAL/HIGH/MEDIUM/LOW severity."
 effort: high
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: product-health
-description: "Application reality audit. Live validation of features via API, browser, and tests. Produces APPLICATION-REALITY-MATRIX.md. /atlas health for full scan, /atlas health api for backend, /atlas health ui for browser audit. Uses Chrome DevTools, Playwright, or headless — whichever is available."
+description: "Application reality audit (live feature validation). This skill should be used when the user asks to '/atlas health', 'reality audit', 'application health', 'feature validation', 'UI audit', 'API audit', or needs a production-truth reality matrix."
 effort: high
 ---
 

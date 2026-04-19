@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: "Execute implementation plans using execution strategy manifests. Load plan → load/generate strategy → TaskCreate per step → execute with optimal model/mode per task → verify. Supports solo, subagent, team (tmux), and hybrid modes."
+description: "Plan executor with strategy manifests. This skill should be used when the user asks to 'execute the plan', 'run the plan', '/a-dev execute', 'start implementing', or has a written plan ready to drive TaskCreate dispatch."
 effort: medium
 ---
 
@@ -10,6 +10,21 @@ effort: medium
 
 Execute an engineering plan using the **execution strategy manifest** for optimal model allocation,
 parallelism, and cost efficiency. Falls back to sequential execution if no manifest exists.
+
+## Red Flags (rationalization check)
+
+Before starting execution or shortcutting the workflow, ask yourself — are any of these thoughts running? If yes, STOP. Plans deserve critical review BEFORE touching code.
+
+| Thought | Reality |
+|---------|---------|
+| "I'll read the plan as I go" | Critical review happens upfront. Raise concerns BEFORE Step 2 (TaskCreate). |
+| "Skip the manifest, I'll allocate models myself" | Manifest = deterministic cost + parallelism plan. Eyeballing = 2-4x cost. |
+| "TaskCreate is ceremonial" | Task list is the visible progress. Without it, mid-session compaction erases state. |
+| "These tasks are obviously parallel" | "Obvious" parallelism causes DB race conditions. Use the dependency DAG. |
+| "Explore phase is overkill" | Parallel Explore agents (read-only) cut research time 2-3x. Use them. |
+| "I can dispatch to Opus for everything" | Override flag `--force-opus` exists for a reason — 5x cost when Sonnet suffices. |
+| "Phase gate can wait until end" | HITL gates are in the manifest for a reason. Pause; ask; don't assume approval. |
+| "The plan is stale but I'll make it work" | Stale plan = re-run plan-review before executing. 86% overestimate caught 2026-04-18. |
 
 ## Process
 
