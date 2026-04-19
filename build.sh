@@ -224,7 +224,7 @@ build_tier() {
 
   # Copy runtime scripts (exclude build-only scripts)
   # v5.1+: atlas-discover-addons.sh added (capability scanner for adaptive master)
-  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh atlas-agents-module.sh atlas-effort-module.sh atlas-cost-usd-module.sh atlas-200k-badge-module.sh atlas-agent-tail.sh atlas-jsonl-format.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh)
+  local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh atlas-agents-module.sh atlas-effort-module.sh atlas-cost-usd-module.sh atlas-200k-badge-module.sh atlas-agent-tail.sh atlas-jsonl-format.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh doctor-prune.sh)
   mkdir -p "$output/scripts"
   for script in "${runtime_scripts[@]}"; do
     if [ -f "scripts/$script" ]; then
@@ -602,7 +602,7 @@ build_modular_plugin() {
   # Runtime scripts: core plugin gets scripts/, addons don't
   # v5.1+: atlas-discover-addons.sh (capability scanner) + atlas-resolve-version.sh (statusline)
   if [ "$output_name" = "core" ]; then
-    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh atlas-agents-module.sh atlas-effort-module.sh atlas-cost-usd-module.sh atlas-200k-badge-module.sh atlas-agent-tail.sh atlas-jsonl-format.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh)
+    local runtime_scripts=(parse-features.sh atlas-alert-module.sh atlas-context-size-module.sh atlas-agents-module.sh atlas-effort-module.sh atlas-cost-usd-module.sh atlas-200k-badge-module.sh atlas-agent-tail.sh atlas-jsonl-format.sh detect-platform.sh detect-network.sh shell-aliases.sh setup-terminal.sh get-secret.sh bw-login.sh atlas-keyring.sh atlas-e2e-validate.sh require-secrets.sh statusline-command.sh atlas-cli.sh setup-wizard.sh load-secrets.sh fix-cc-settings.sh mega-status-manager.sh atlas-discover-addons.sh atlas-resolve-version.sh doctor-prune.sh)
     mkdir -p "$output/scripts"
     for script in "${runtime_scripts[@]}"; do
       [ -f "scripts/$script" ] && cp "scripts/$script" "$output/scripts/" && chmod +x "$output/scripts/$script"
