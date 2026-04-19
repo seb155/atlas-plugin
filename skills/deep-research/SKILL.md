@@ -14,6 +14,21 @@ a concise summary. Optimized for technical decisions, library comparisons, and t
 
 **Model strategy:** Sonnet for research agent (search + fetch), Opus for final synthesis.
 
+## Red Flags (rationalization check)
+
+Before shortcutting deep research, ask yourself — are any of these thoughts running? If yes, STOP. Single-query research produces fragile decisions on one biased source.
+
+| Thought | Reality |
+|---------|---------|
+| "One search is enough" | Single query = one angle. Triangulation needs 2-3 angles minimum. |
+| "I'll synthesize from memory" | Memory = pre-cutoff training data. For 2026+ facts, use WebSearch with current year. |
+| "Skip WebFetch, snippets are enough" | Snippets strip context. Deep-dive 1-2 URLs per angle via WebFetch. |
+| "The first source looks authoritative" | That's LLM-as-judge bias. Always cross-check 2 independent sources. |
+| "500-word summary is too short" | It's the CAP, not the goal. Longer = displacive summary + copyright risk. |
+| "Sequential WebSearches are fine" | Sub-questions are independent — PARALLELIZE in the same message (2-3x faster). |
+| "Context7 isn't needed for well-known libs" | Training data is stale on recent library versions. Always check Context7 for API specifics. |
+| "No need to cite sources" | Citations = verifiable. Un-cited = hearsay. Always cite path or URL. |
+
 ## Process
 
 ### 1. Decompose the Query
