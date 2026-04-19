@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.34.0 (2026-04-19)
+
+### ✨ Features
+- feat(skills): integrate skill-lint into enterprise-audit + skill-security-audit (REC-019)
+- feat(skills): enforce Progressive Disclosure in template + ADR-010 (REC-009)
+
+
+
 ## v5.33.0 (2026-04-19)
 
 ### ✨ Features

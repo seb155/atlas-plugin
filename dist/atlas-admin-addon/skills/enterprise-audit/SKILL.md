@@ -77,6 +77,10 @@ python3 -m toolkit.audit \
 
 **Delegation rules:**
 - `security` dimension → invoke `security-audit` skill; import JSON results
+  - **Skill supply-chain sub-audit** (per ADR-013): also invoke `scripts/pre-install-skill-check.sh` on every skill directory under `skills/` and `dist/*/skills/`
+  - Aggregate skill-lint findings (R01-R10 per OWASP Agentic Top 10)
+  - Any TOXIC verdict → CRITICAL severity finding (blocks enterprise readiness)
+  - WARN verdicts → MEDIUM severity findings
 - `testing` dimension → invoke `verification` skill; import coverage + test counts
 - All other dimensions → run toolkit checker directly
 
