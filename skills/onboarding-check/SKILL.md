@@ -1,6 +1,6 @@
 ---
 name: onboarding-check
-description: "Team readiness assessment. 12 checks across docs, dev environment, CI, and Forgejo. Scores A-F. /atlas onboard for full check, /atlas onboard gaps for actionable fix list. Use before onboarding new developers or discipline engineers."
+description: "Team readiness assessment (12 checks). This skill should be used when the user asks to '/atlas onboard', 'team readiness', 'onboarding check', 'new developer', 'discipline engineer onboard', or needs an A-F score across docs/dev/CI/Forgejo."
 effort: medium
 ---
 

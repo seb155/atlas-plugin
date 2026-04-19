@@ -1,6 +1,6 @@
 ---
 name: atlas-team
-description: "Agent Teams blueprints — spawn coordinated worker squads in tmux panes. 5 blueprints: jarvis, feature, debug, review, audit. Auto-detects tmux mode."
+description: "Agent Teams blueprint spawner. This skill should be used when the user asks to 'spawn a team', 'agent teams', 'jarvis', '/atlas team', or needs a coordinated multi-pane tmux squad (feature/debug/review/audit/jarvis)."
 effort: medium
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: infra-inventory
-description: "Infrastructure inventory scan and state management. Live scanning of PVE nodes, VMs, storage, GPUs. Drift detection and state file updates."
+description: "Infrastructure inventory scanner with drift detection. This skill should be used when the user asks to '/atlas infra inventory', 'scan PVE', 'VM inventory', 'storage audit', 'GPU inventory', or needs a live drift check against state files."
 effort: high
 ---
 

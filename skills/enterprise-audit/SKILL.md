@@ -1,6 +1,6 @@
 ---
 name: enterprise-audit
-description: "14-dimension enterprise readiness audit for G Mining due diligence. Python checker engine (toolkit/audit/) + ATLAS skill orchestration. Covers: multi-tenancy, data integrity, deployment, security, testing, ops, code quality, docs, deps, API surface, i18n, a11y, governance, performance. Scoring A-F with HITL gates."
+description: "14-dimension enterprise readiness audit. This skill should be used when the user asks to '/atlas audit-enterprise', 'enterprise audit', 'due diligence', 'G Mining audit', 'SOC2 readiness', or needs an A-F scored audit of multi-tenancy/security/docs/governance."
 effort: high
 ---
 

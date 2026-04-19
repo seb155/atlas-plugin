@@ -1,6 +1,6 @@
 ---
 name: senior-review-checklist
-description: "Systematic code review checklist: SOLID compliance, code smells, design smells, naming, cohesion/coupling, testability. Invoked as mandatory step in code-review skill."
+description: "Macro-level code review checklist. Use when invoked by code-review, when the user asks to 'senior review', 'SOLID audit', 'code smells check', or before shipping any non-trivial change needing architectural rigor."
 effort: medium
 refs:
   - code-smells-catalog

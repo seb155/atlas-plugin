@@ -1,6 +1,6 @@
 ---
 name: iac-orchestrator
-description: "Infrastructure as Code orchestration. Terraform/OpenTofu plans, cloud-init templates, state management, drift detection."
+description: "Infrastructure-as-Code orchestrator. This skill should be used when the user asks to 'terraform plan', 'opentofu', 'IaC drift', 'cloud-init template', '/atlas iac', or manages state files for provisioned resources."
 effort: high
 ---
 

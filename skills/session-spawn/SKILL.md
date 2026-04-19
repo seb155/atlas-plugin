@@ -1,6 +1,6 @@
 ---
 name: session-spawn
-description: "Session orchestration: spawn fresh CC in tmux with worktree isolation. /atlas continue (handoff + fresh), /atlas spawn (isolated task), /atlas sessions (list active). Max 5 concurrent. Plan-based (no API key). Integrates with Agent Teams for connected work."
+description: "Session spawner with tmux and worktree isolation. This skill should be used when the user asks to '/atlas continue', '/atlas spawn', '/atlas sessions', 'new session', 'spawn fresh CC', or needs a handoff-driven isolated Claude Code child session."
 effort: medium
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: weekly-review
-description: "Weekly reflection — life domains survey, OKR progress, wins, blockers, next week priorities"
+description: "Weekly reflection routine. This skill should be used when the user asks for a 'weekly review', 'week retro', 'OKR check', '/atlas weekly', or at end-of-week for life-domains + wins + blockers + next-week priorities."
 effort: medium
 ---
 

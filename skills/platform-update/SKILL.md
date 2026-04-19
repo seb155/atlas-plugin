@@ -1,6 +1,6 @@
 ---
 name: platform-update
-description: "SOTA audit + auto-update for ATLAS plugin + Claude Code environment. Detects model, CC version, plugin version, researches latest best practices, proposes + applies fixes. /atlas update"
+description: "ATLAS platform SOTA auto-update. This skill should be used when the user asks to '/atlas update', 'platform update', 'SOTA audit', 'update Claude Code', 'update plugin', or needs model/version/best-practice research with fix application."
 effort: medium
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: proxmox-admin
-description: "Proxmox VE administration. VM/LXC lifecycle, storage pools, GPU passthrough, clustering, backup/restore, resource quotas."
+description: "Proxmox VE administration. This skill should be used when the user asks to 'proxmox admin', 'create VM', 'LXC lifecycle', 'GPU passthrough', 'cluster config', '/atlas proxmox', or manages storage pools and backup/restore."
 effort: high
 ---
 

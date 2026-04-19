@@ -1,6 +1,6 @@
 ---
 name: gms-cockpit
-description: "GMS POC command center — adoption tracking, KC stats, pilier coverage, magic moments. Dashboard for managing the Claude Code POC at G Mining Services (8 MSE, 4 disciplines, 4 Piliers)."
+description: "GMS POC command center dashboard. This skill should be used when the user asks to '/atlas gms cockpit', 'gms dashboard', 'adoption stats', 'KC coverage', 'pilier stats', or manages the G Mining Claude Code POC."
 effort: low
 ---
 
