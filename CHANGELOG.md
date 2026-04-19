@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.39.0 (2026-04-19)
+
+### ✨ Features
+- feat(perf): add performance-discipline doctrine (Plummer V1) (#30)
+
+
+
 ## v5.38.0 (2026-04-19)
 
 ### ✨ Features
