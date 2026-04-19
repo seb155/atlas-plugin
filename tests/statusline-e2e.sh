@@ -56,6 +56,20 @@ case "$MODE" in
     ;;
 
   ci|*)
+    # `jq` is a hard runtime dep of the plugin's statusline-command.sh.
+    # python:3.13-slim (Woodpecker l1-structural base) does not ship it.
+    # Install transparently so the E2E can exercise the real rendering path.
+    if ! command -v jq >/dev/null 2>&1; then
+      if command -v apt-get >/dev/null 2>&1; then
+        apt-get update -qq >/dev/null 2>&1 && \
+          apt-get install -y -qq jq >/dev/null 2>&1 || \
+          { echo "SKIP: jq not available and cannot be installed" >&2; exit 77; }
+      else
+        echo "SKIP: jq not available (required by statusline-command.sh)" >&2
+        exit 77
+      fi
+    fi
+
     # Hermetic environment: tmp HOME, no `claude` CLI, copies from plugin source
     TEST_HOME=$(mktemp -d)
     trap 'rm -rf "$TEST_HOME"' EXIT

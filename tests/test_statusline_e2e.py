@@ -32,12 +32,22 @@ def test_statusline_e2e_ci_mode() -> None:
     script_path = Path(__file__).parent / "statusline-e2e.sh"
     assert script_path.is_file(), f"E2E shell script missing at {script_path}"
 
+    import pytest
+
     result = subprocess.run(
         ["bash", str(script_path), "ci"],
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=60,  # jq install + hermetic setup + render, allow headroom
     )
+
+    # Exit 77 = skip (automake convention). The shell test emits this when jq
+    # is unavailable and cannot be installed (non-Debian environments).
+    if result.returncode == 77:
+        pytest.skip(
+            f"statusline-e2e.sh skipped — missing runtime dependency.\n"
+            f"stderr: {result.stderr.strip()}"
+        )
 
     assert result.returncode == 0, (
         "statusline-e2e.sh ci failed — the deployed wrapper did not render "
