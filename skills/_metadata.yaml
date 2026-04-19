@@ -235,6 +235,16 @@ skills:
     domains: [dev]
     description: "Refactoring for clarity, consistency, maintainability"
 
+  performance-discipline:
+    emoji: "🏎️"
+    category: Quality
+    owner: dev
+    plugin: dev
+    domains: [dev]
+    description: "Performance discipline doctrine — treat perf as first-class build artifact (Plummer)"
+    triggers: ["check perf", "is this fast enough", "review for performance", "AI wrote this is it efficient", "should we add this dependency", "startup time", "memory budget", "audit hot path", "optimize this loop", "why is this slow"]
+    weight: 7
+
   decision-log:
     emoji: "📋"
     category: Meta
