@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.29.1 (2026-04-19)
+
+### 🐛 Bug Fixes
+- fix(ci): resolve SC1125 em-dash in shellcheck disable directive
+
+### 🔧 Other Changes
+- chore(cleanup): rename + CLI noise reduction 2026-04-19
+
+
+
 ## v5.29.0 (2026-04-19)
 
 ### 🔧 Claude Migration Guide Application

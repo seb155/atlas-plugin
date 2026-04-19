@@ -1447,11 +1447,44 @@ Examples:
 EOF
 }
 
+# Resolve profile's cwd_match[0] to actual directory, return last git commit UNIX timestamp.
+# Profiles without cwd_match (or with broken paths) return 0 → sort last in list.
+_atlas_profile_freshness() {
+  local yaml="$1"
+  local cwd_pattern
+  cwd_pattern=$(yq eval '.cwd_match[0] // ""' "$yaml" 2>/dev/null)
+  [ -z "$cwd_pattern" ] && { echo "0"; return; }
+  local real_path=""
+  if [[ "$cwd_pattern" == /* ]]; then
+    real_path="${cwd_pattern%/\*\*}"
+  elif [[ "$cwd_pattern" == \*/* ]]; then
+    local partial="${cwd_pattern#\*}"
+    partial="${partial%/\*\*}"
+    for base in "$HOME/workspace_atlas/projects" "$HOME/workspace_atlas" "$HOME"; do
+      if [ -d "${base}${partial}" ]; then
+        real_path="${base}${partial}"
+        break
+      fi
+    done
+  fi
+  if [ -z "$real_path" ] || [ ! -d "$real_path" ]; then
+    echo "0"
+    return
+  fi
+  git -C "$real_path" log -1 --format=%ct 2>/dev/null || echo "0"
+}
+
+# List profiles sorted by target repo freshness (DESC — most recent first).
+# Filters 'list_visibility: hidden' by default; pass --all to show utilities (base, etc).
 _atlas_profile_list() {
   local profile_dir="$HOME/.atlas/profiles"
+  local show_all=0
+  for arg in "$@"; do
+    [ "$arg" = "--all" ] && show_all=1
+  done
   if [ ! -d "$profile_dir" ] || [ -z "$(ls -A "$profile_dir" 2>/dev/null)" ]; then
     echo "No profiles found at $profile_dir"
-    echo "Bootstrap: cp -r ~/workspace_atlas/projects/atlas-dev-plugin/templates/profiles/* $profile_dir/"
+    echo "Bootstrap: cp -r ~/workspace_atlas/projects/atlas-plugin/templates/profiles/* $profile_dir/"
     return 0
   fi
   if ! command -v yq &>/dev/null; then
@@ -1461,16 +1494,27 @@ _atlas_profile_list() {
   fi
   printf "  %-20s %-10s %-10s %s\n" "PROFILE" "TIER" "EFFORT" "DESCRIPTION"
   printf "  %-20s %-10s %-10s %s\n" "--------------------" "----------" "----------" "----------------------------------"
-  local f name tier effort desc
-  for f in "$profile_dir"/*.yaml; do
+  local f name tier effort desc visibility ts sorted_list hidden_count=0
+  sorted_list=$(for f in "$profile_dir"/*.yaml; do
     [ -f "$f" ] || continue
+    ts=$(_atlas_profile_freshness "$f")
+    echo "${ts}|${f}"
+  done | sort -rn -t'|' -k1)
+  while IFS='|' read -r ts f; do
+    [ -f "$f" ] || continue
+    visibility=$(yq eval '.list_visibility // "visible"' "$f" 2>/dev/null)
+    if [ "$visibility" = "hidden" ] && [ "$show_all" -eq 0 ]; then
+      hidden_count=$((hidden_count + 1))
+      continue
+    fi
     name=$(basename "$f" .yaml)
     tier=$(yq eval '.tier // "—"' "$f" 2>/dev/null)
     effort=$(yq eval '.effort // "—"' "$f" 2>/dev/null)
     desc=$(yq eval '.description // "—"' "$f" 2>/dev/null | head -c 60)
     printf "  %-20s %-10s %-10s %s\n" "$name" "$tier" "$effort" "$desc"
-  done
+  done <<< "$sorted_list"
   echo ""
+  [ "$hidden_count" -gt 0 ] && echo "  (${hidden_count} utility profile(s) hidden; use --all to show)"
   echo "Activate: atlas --profile <name>"
 }
 

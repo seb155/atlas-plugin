@@ -414,7 +414,8 @@ except Exception:
 
     while IFS= read -r pattern; do
       [ -z "$pattern" ] && continue
-      # shellcheck disable=SC2053 — intentional glob match with unquoted pattern
+      # Intentional glob match with unquoted pattern (SC2053 disabled below)
+      # shellcheck disable=SC2053
       if [[ "$cwd" == $pattern ]]; then
         matched="$profile_name"
         break 2
