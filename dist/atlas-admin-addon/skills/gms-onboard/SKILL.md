@@ -1,6 +1,6 @@
 ---
 name: gms-onboard
-description: "Onboarding Auto-Playbook Generator — auto-generate 4-week playbook for new MSE based on discipline, skills matrix, and existing KCs. Pilier 1 (RH). Triggers on: /atlas gms onboard, 'onboard new', 'new team member', 'playbook'."
+description: "Onboarding Auto-Playbook Generator (Pilier 1 RH). This skill should be used when the user asks to '/atlas gms onboard', 'onboard new', 'new team member', 'playbook', or needs a 4-week playbook based on discipline and KCs."
 effort: low
 ---
 

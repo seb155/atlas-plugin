@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.35.0 (2026-04-19)
+
+### ✨ Features
+- feat(skills): REC-002 + REC-003 shipped — 106 CSO-compliant + 20 Red Flags
+
+### 🔧 Other Changes
+- docs(cso-audit): update totals to 106 skills + post-migration summary
+- refactor(skills): CSO audit normalize 'Triggers on:' hybrids to Form A
+
+
+
 ## v5.34.1 (2026-04-19)
 
 ### 🐛 Bug Fixes

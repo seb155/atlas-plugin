@@ -1,6 +1,6 @@
 ---
 name: persona-loadout
-description: "Switch ATLAS behavior profile to match a work role. 6 personas: startup-cto, devops-lead, solo-founder, project-manager, security-auditor, ic-engineer. Adapts tone, skill emphasis, and pipeline. Triggers on: /atlas persona, 'switch role', 'mode', 'persona'."
+description: "ATLAS persona profile switcher (6 work-role personas). This skill should be used when the user asks to '/atlas persona', 'switch role', 'mode', 'persona', 'as a', 'comme un', or needs startup-cto/devops-lead/solo-founder/project-manager/security-auditor/ic-engineer mode."
 effort: low
 triggers: ["persona", "switch role", "switch mode", "as a", "comme un"]
 ---

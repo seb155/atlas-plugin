@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "atlas-core",
-      "version": "5.34.1",
+      "version": "5.35.0",
       "description": "ATLAS Core \u2014 shared base + Philosophy Engine + SOTA hooks + atlas-loop + atlas-routines.",
       "source": {
         "source": "git-subdir",
@@ -22,7 +22,7 @@
     },
     {
       "name": "atlas-admin",
-      "version": "5.34.1",
+      "version": "5.35.0",
       "description": "ATLAS Admin \u2014 superuser addon. knowledge + gms-mgmt merged + zero-paternalisme.",
       "source": {
         "source": "git-subdir",
@@ -36,7 +36,7 @@
     },
     {
       "name": "atlas-dev",
-      "version": "5.34.1",
+      "version": "5.35.0",
       "description": "ATLAS Dev \u2014 developer addon. Iron Laws + Red Flags + 10 Tier-1 migrated + bats v6.",
       "source": {
         "source": "git-subdir",

@@ -1,6 +1,6 @@
 ---
 name: ultrathink
-description: "Deep reasoning mode with structured decision frameworks. 6 subcommands: adr, matrix, risk, tradeoff, compare, chain. Auto-detects analysis type from topic. Persists decisions via decision-log. Triggers on: /ultrathink, 'think deeply about', 'analyze thoroughly', 'ultrathink'."
+description: "Deep reasoning mode with decision frameworks (adr/matrix/risk/tradeoff/compare/chain). This skill should be used when the user asks to '/ultrathink', 'think deeply about', 'analyze thoroughly', 'ultrathink', or needs structured decision analysis persisted via decision-log."
 effort: medium
 depends_on: [decision-log]
 triggers: ["ultrathink", "think deeply", "analyze thoroughly", "deep analysis", "architectural decision"]
