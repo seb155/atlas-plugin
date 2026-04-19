@@ -2,6 +2,23 @@
 
 ## v5.36.0 (2026-04-19)
 
+### ✨ Features
+- feat(statusline): SOTA v2 wrapper for dotfiles-free deployment
+
+### 🐛 Bug Fixes
+- fix(statusline): SOTA v2 unification — ends v4.44.0→v5.30.1 regression cycle (PR #27, v5.36.0)
+- fix(e2e): install jq in CI mode; skip cleanly if unavailable
+
+### 🔧 Other Changes
+- chore(build): rebuild dist for v5.36.0 + fix pre-existing CSO test drift
+- chore(release): v5.36.0 — statusline SOTA v2 unification
+- test(statusline): E2E regression coverage — the test that ends the cycle
+- test(statusline): bats coverage for capabilities-refresh UserPromptSubmit hook
+
+
+
+## v5.36.0 (2026-04-19)
+
 ### 🐛 Bug Fixes (ROOT CAUSE KILL)
 
 - **fix(statusline): SOTA v2 unification — ends the v4.44.0→v5.30.1 regression cycle.**
