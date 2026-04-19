@@ -1,19 +1,96 @@
 # ATLAS Skill Authoring Guide
 
-> **Version**: 1.0 | **Created**: 2026-04-19
+> **Version**: 2.0 | **Updated**: 2026-04-19 (Progressive Disclosure enforced)
 > **Template**: `templates/SKILL.md.template`
-> **Source**: plan `joyful-hare` REC-004 + benchmark findings (obra/superpowers, anthropics/claude-plugins-official)
+> **ADRs**: ADR-010 (Progressive Disclosure), ADR-011 (description convention), ADR-013 (security)
+> **Source**: plan `joyful-hare` — REC-004 (template) + REC-009 (PD enforcement)
 
 ---
 
 ## TL;DR
 
 1. Copy `templates/SKILL.md.template` to `skills/<name>/SKILL.md`
-2. Fill `name`, `description`, `effort`, `version` in frontmatter
-3. Write imperative workflow body (≤ 1,500-2,000 words)
-4. Include **Red Flags table** (anti-rationalization)
-5. Use **XML tags** for structured directives
-6. Run `scripts/validate-skill-frontmatter.sh` (future — REC-013)
+2. Fill frontmatter (Level 1): `name`, `description` (ADR-011), `effort`, `version`, `metadata`
+3. Write imperative workflow body (Level 2): **target 1500-2000 words, cap 5000**
+4. Add bundled resources (Level 3) only if needed: `scripts/` / `references/` / `assets/`
+5. Include **Red Flags table** (anti-rationalization)
+6. Use **XML tags** for structured directives
+7. Run verification: `wc -w SKILL.md` (≤5000) + `bash tests/skill-triggering/run-test.sh <name> prompts/<name>.txt` (activation check)
+
+---
+
+## Progressive Disclosure — 3 Levels (MANDATORY per ADR-010)
+
+ATLAS skills follow Anthropic's canonical 3-level loading system to balance discoverability with context efficiency.
+
+### Level 1 — Metadata (always loaded)
+
+Frontmatter only. ~100 words. Drives skill activation decision.
+
+```yaml
+---
+name: skill-name-kebab-case
+description: "{PURPOSE}. This skill should be used when the user asks to 'X', 'Y', 'Z'."
+effort: low | medium | high
+version: 0.1.0
+metadata:
+  category: workflow | meta | domain | infra
+  sources: [citations]
+---
+```
+
+### Level 2 — SKILL.md body (loaded when skill triggers)
+
+**Target**: 1,500-2,000 words. **Hard cap**: 5,000 words.
+
+Content structure:
+- Overview (1-2 sentences)
+- When to Use / When NOT to Use
+- Red Flags table (behavior-shaping skills)
+- Workflow (imperative steps)
+- Quick Reference
+- Common Mistakes
+
+### Level 3 — Bundled resources (on-demand)
+
+Sibling directories, strict semantics:
+
+| Subdir | Content type | Load behavior |
+|--------|--------------|---------------|
+| `scripts/` | Executable code (bash, python, node) | May be invoked via subprocess without loading to context |
+| `references/` | Markdown/JSON/YAML documentation | Loaded into context when Claude deems it needed |
+| `assets/` | Binary or static templates (PPTX, PNG, SVG) | **NEVER loaded as context** — used in Claude's OUTPUT only |
+
+**Example**:
+```
+skills/document-generator/
+├── SKILL.md              (Level 2, ~1800 words)
+├── scripts/
+│   └── render-pptx.py
+├── references/
+│   ├── pptx-schema.md
+│   └── style-guide.md
+└── assets/
+    ├── template-exec.pptx
+    └── template-technical.pptx
+```
+
+**Anti-patterns** (CSO-style failure modes):
+- ❌ Inline 100-line code snippets in SKILL.md body → move to `scripts/`
+- ❌ API reference tables in SKILL.md body → move to `references/`
+- ❌ Templates as inline code blocks → move to `assets/`
+- ❌ "Example output" in body when actual template exists in `assets/`
+
+### Budget verification
+
+```bash
+# Check body length
+wc -w skills/my-skill/SKILL.md   # target 1500-2000, must be ≤5000
+
+# If >5000: audit body for Level 3 candidates
+grep -n "```" skills/my-skill/SKILL.md  # long code blocks?
+grep -c "^##" skills/my-skill/SKILL.md  # too many sections?
+```
 
 ---
 
