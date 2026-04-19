@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Hook UserPromptSubmit — Refresh capabilities.json when drift sentinel exists.
+#
+# Read-side of the drift-sentinel pattern. Paired with atlas-resolve-version.sh
+# which touches ~/.atlas/runtime/.capabilities.stale whenever Tier-1 (claude plugin
+# list --json) disagrees with capabilities.json .version.
+#
+# This hook runs once per user turn and:
+#   1. Checks sentinel existence (instant, no CLI fork)
+#   2. If present → reruns atlas-discover-addons.sh (async) + deletes sentinel
+#   3. Silent on stdout (UserPromptSubmit hook contract)
+#
+# Why this pattern: Claude Code does NOT expose a `PluginReload` event. After
+# `/reload-plugins` or `/plugin install`, SessionStart is NOT re-triggered,
+# so capabilities.json stays stale. The sentinel gives us a CWD/event-agnostic
+# refresh path that costs zero when nothing changed.
+#
+# Idempotent: sentinel is removed before discover runs → even if discover fails,
+# the next prompt won't re-trigger unless resolve-version touches it again.
+
+set -uo pipefail
+
+STALE_SENTINEL="${HOME}/.atlas/runtime/.capabilities.stale"
+
+# Fast path: no sentinel → nothing to do (most user turns)
+[ -f "$STALE_SENTINEL" ] || exit 0
+
+# Resolve discover script path
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+DISCOVER_SCRIPT="${PLUGIN_ROOT}/scripts/atlas-discover-addons.sh"
+
+# Remove sentinel BEFORE running discover — avoids re-trigger loop if discover fails
+rm -f "$STALE_SENTINEL" 2>/dev/null
+
+# Rerun discover (silent, best-effort)
+if [ -x "$DISCOVER_SCRIPT" ]; then
+  "$DISCOVER_SCRIPT" 2>/dev/null || true
+fi
+
+exit 0

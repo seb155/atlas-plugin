@@ -20,6 +20,7 @@ Comprehensive diagnostic of the entire ATLAS ecosystem. Runs bash checks across 
 | `/atlas doctor tools` | Check tools only |
 | `/atlas doctor services` | Check services only |
 | `/atlas doctor project` | Check project context only |
+| `/atlas doctor --prune-plugin-cache` | Prune orphan plugin cache versions (dry-run by default). Add `--confirm` to apply. Keeps active + 2 orphans per plugin. Requires `claude` + `jq`. |
 
 ## Output Format
 
