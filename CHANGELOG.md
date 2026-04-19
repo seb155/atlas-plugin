@@ -1,5 +1,71 @@
 # Changelog
 
+## v5.36.0 (2026-04-19)
+
+### 🐛 Bug Fixes (ROOT CAUSE KILL)
+
+- **fix(statusline): SOTA v2 unification — ends the v4.44.0→v5.30.1 regression cycle.**
+  The ATLAS plugin version now displays correctly (`🏛️ ATLAS X.Y.Z  …`) in the
+  Claude Code status line, permanently. Root cause: `~/.claude-dotfiles/sync.sh`
+  was overwriting the plugin-deployed `statusline-command.sh` with a stale
+  2026-02-24 copy. Every prior fix (v4.44.0, v5.0.2, v5.5.1, v5.30.0, v5.30.1)
+  targeted code layers; none audited the deployment pipeline.
+
+### ⚠️ BREAKING CHANGE
+
+- **`statusLine.command` path in `settings.json` has moved.**
+  - OLD: `$HOME/.claude/statusline-command.sh` (deleted in this release — dotfiles-overwrite-prone)
+  - NEW: `$HOME/.local/share/atlas-statusline/statusline-wrapper.sh` (plugin-owned, dotfiles-free)
+  - **Migration**: edit `~/.claude/settings.json` statusLine.command to the new path.
+    Or run `/atlas doctor --fix` (v5.36.0+) to auto-update. Or `/atlas statusline-setup`.
+  - Users of dotfiles-like sync scripts: remove any `cp statusline-command.sh` lines —
+    the plugin's session-start hook now owns this deploy end-to-end.
+
+### ✨ Features
+
+- **feat(statusline): thin wrapper at `~/.local/share/atlas-statusline/statusline-wrapper.sh`**
+  - Reuses `atlas-resolve-version.sh` (ADR-006) for 3-tier version resolution.
+  - Exec's the plugin-shipped `statusline-command.sh` for the resolved version.
+  - Zero-overhead passthrough of stdin/stdout/exit code.
+  - Version-agnostic `settings.json` — users never edit on plugin upgrade.
+- **feat(doctor): new `/atlas doctor --statusline` subcommand**
+  - Fast SOTA v2 regression gate (Cat 10 only).
+  - Checks wrapper deployment, settings.json v2 path, AND E2E render.
+  - `[FIX]` hints inline for each failure mode.
+
+### 🧪 Testing
+
+- **test(statusline): 8 bats scenarios for wrapper** — delegation, update indicator
+  strip, filesystem fallback, unresolvable banner, missing plugin script,
+  highest-semver selection, stdin/exit passthrough.
+- **test(refresh): 6 bats scenarios for capabilities-refresh hook** — pins the
+  UserPromptSubmit drift-sentinel contract (dormant since v5.30.0, now live).
+- **test(e2e): `tests/statusline-e2e.sh` dual-mode** — hermetic CI run + real
+  system `--local` run. Strict assertion (version marker + model token) detects
+  the exact regression class that shipped across the v4.44.0 → v5.30.1 cycle.
+- **test(ci): `tests/test_statusline_e2e.py`** — pytest wrapper auto-discovered
+  by the existing `l1-structural` Woodpecker step. Zero CI config changes
+  (respects `.claude/rules/ci-config-freeze-week1.md` until 2026-04-24).
+
+### 🔧 Refactors
+
+- **refactor(session-start): hook deploys wrapper to `~/.local/share/atlas-statusline/`**
+  instead of copying `statusline-command.sh` to `~/.claude/`. Section 4 (modules)
+  unchanged — resolver + modules already used this safe pattern.
+- **refactor(doctor): Cat 10 (StatusLine) updated** to assert SOTA v2 invariants.
+
+### 📚 Docs
+
+- **ADR-019**: `docs/ADR/ADR-019-statusline-sota-v2-unification.md` — full rationale,
+  rejected alternatives, validation evidence, and migration guidance.
+
+### 📦 Also in this release
+
+- **chore(release): package.json version resynced to 5.36.0** (was 5.29.0 —
+  desync caused confusion during npm publish, now locked to VERSION file).
+
+
+
 ## v5.35.0 (2026-04-19)
 
 ### ✨ Features

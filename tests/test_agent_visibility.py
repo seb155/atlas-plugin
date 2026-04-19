@@ -400,11 +400,20 @@ def test_launcher_routes_agents_to_cmd():
 
 
 def test_agent_visibility_skill_exists():
-    """agent-visibility SKILL.md must exist with frontmatter."""
+    """agent-visibility SKILL.md must exist with frontmatter.
+
+    The original 'triggers/trigger' assertion was pre-CSO. After the REC-002
+    CSO audit (commit ee46ace), skill descriptions follow Form A ('Use when X,
+    Y, Z') which does not contain the word 'trigger'. Assertion updated to
+    match current convention (CSO ADR-011 / SKILL-AUTHORING.md Form A).
+    """
     assert AGENTS_SKILL.exists(), f"Missing: {AGENTS_SKILL}"
-    content = AGENTS_SKILL.read_text()
+    content = AGENTS_SKILL.read_text().lower()
     assert "name: agent-visibility" in content
-    assert "triggers" in content.lower() or "trigger" in content.lower()
+    assert "use when" in content or "use this skill" in content, (
+        "SKILL.md should include Form A triggering phrase "
+        "('Use when X, Y, Z' or 'Use this skill when …')"
+    )
     assert "atlas agents" in content
 
 

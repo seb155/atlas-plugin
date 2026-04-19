@@ -21,6 +21,7 @@ Comprehensive diagnostic of the entire ATLAS ecosystem. Runs bash checks across 
 | `/atlas doctor services` | Check services only |
 | `/atlas doctor project` | Check project context only |
 | `/atlas doctor --prune-plugin-cache` | Prune orphan plugin cache versions (dry-run by default). Add `--confirm` to apply. Keeps active + 2 orphans per plugin. Requires `claude` + `jq`. |
+| `/atlas doctor --statusline` | StatusLine health only (Cat 10) — runs the E2E render test + deployment checks. Fast gate for SOTA v2 (v5.36.0+) regressions. |
 
 ## Output Format
 
@@ -483,7 +484,11 @@ Display platform summary:
    └─ Arch: {arch} │ Docker: {bool} │ Starship: {bool} │ CShip: {bool}
 ```
 
-### Cat 10: StatusLine (5 checks)
+### Cat 10: StatusLine (5 checks — updated for SOTA v2 in v5.36.0)
+
+Covers the full bash-path render chain: deploy territory → wrapper → resolver →
+plugin-shipped statusline-command.sh. See ADR-019 for the SOTA v2 unification
+rationale (root-cause fix for the v4.44.0 → v5.30.1 regression cycle).
 
 ```bash
 # 1. CShip binary installed
@@ -492,26 +497,63 @@ command -v cship && cship --version
 # 2. Starship installed
 command -v starship && starship --version
 
-# 3. ATLAS StatusLine helper scripts deployed (alert + resolve-version)
-[ -x "${HOME}/.local/share/atlas-statusline/atlas-alert-module.sh" ] && \
-[ -x "${HOME}/.local/share/atlas-statusline/atlas-resolve-version.sh" ]
+# 3. SOTA v2 statusline artifacts deployed in dotfiles-free territory
+#    ~/.local/share/atlas-statusline/ is owned by the session-start hook.
+#    Wrapper + resolver + modules must all be present + executable.
+[ -x "${HOME}/.local/share/atlas-statusline/statusline-wrapper.sh" ] && \
+[ -x "${HOME}/.local/share/atlas-statusline/atlas-resolve-version.sh" ] && \
+[ -x "${HOME}/.local/share/atlas-statusline/atlas-alert-module.sh" ]
 
-# 4. session-state.json exists and is valid JSON
-cat "${CLAUDE_PLUGIN_DATA:-$HOME/.claude}/session-state.json" 2>/dev/null | \
-  python3 -c "import sys,json; json.load(sys.stdin); print('valid')"
+# 4. settings.json statusLine.command points to SOTA v2 wrapper (NOT legacy path)
+#    Legacy: $HOME/.claude/statusline-command.sh — dotfiles-overwrite-prone, deprecated in v5.36.0
+#    SOTA v2: $HOME/.local/share/atlas-statusline/statusline-wrapper.sh
+python3 -c "
+import json, sys
+with open('${HOME}/.claude/settings.json') as f: d = json.load(f)
+cmd = d.get('statusLine', {}).get('command', '')
+is_sota_v2 = 'atlas-statusline/statusline-wrapper.sh' in cmd
+is_legacy = cmd.endswith('/.claude/statusline-command.sh') or cmd.endswith('\$HOME/.claude/statusline-command.sh')
+print('ok' if is_sota_v2 else ('LEGACY_PATH' if is_legacy else f'UNKNOWN: {cmd}'))
+" 2>/dev/null | grep -qv "LEGACY_PATH\|UNKNOWN\|^$"
 
-# 5. settings.json statusLine configured
-cat "${HOME}/.claude/settings.json" 2>/dev/null | \
-  python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('statusLine',{}).get('command','MISSING'))" | \
-  grep -qv "MISSING"
+# 5. E2E render test passes — asserts "🏛️ ATLAS {VERSION}" + model token in stdout
+#    Delegates to tests/statusline-e2e.sh --local; fallback inline if plugin source unreachable.
+STATUSLINE_E2E="${CLAUDE_PLUGIN_ROOT}/tests/statusline-e2e.sh"
+if [ -x "$STATUSLINE_E2E" ]; then
+  "$STATUSLINE_E2E" --local >/dev/null 2>&1
+else
+  CURRENT_VER=$(jq -r '.version // "?"' "$HOME/.atlas/runtime/capabilities.json" 2>/dev/null || echo "?")
+  OUT=$(echo '{"workspace":{"current_dir":"/tmp"},"model":{"id":"claude-opus-4-7"},"context_window":{"used_percentage":0},"rate_limits":{"5h":{"used_percentage":0}},"effort":"high"}' | \
+    "${HOME}/.local/share/atlas-statusline/statusline-wrapper.sh" 2>/dev/null)
+  echo "$OUT" | grep -qF "🏛️ ATLAS $CURRENT_VER" && \
+    echo "$OUT" | grep -qF "opus" && \
+    ! echo "$OUT" | grep -qF "(statusline script missing"
+fi
 ```
 
-Auto-fix: dispatch to `/atlas statusline-setup` skill for full interactive setup.
+Auto-fix [FIX] tags for failing checks:
+
+```
+⚠️ Check 3: wrapper/resolver/modules not deployed
+   [FIX] Restart Claude Code session — session-start hook redeploys to
+         ~/.local/share/atlas-statusline/ from plugin cache
+
+⚠️ Check 4: settings.json points to legacy path (dotfiles-overwrite-prone)
+   [FIX] Edit ~/.claude/settings.json, change statusLine.command to:
+         "$HOME/.local/share/atlas-statusline/statusline-wrapper.sh"
+         (required v5.36.0+ — see ADR-019)
+
+⚠️ Check 5: E2E render test fails
+   [FIX] Run test directly for diagnostic:
+         ${CLAUDE_PLUGIN_ROOT}/tests/statusline-e2e.sh --local
+         If wrapper emits "(script missing)" → plugin cache is corrupted, run
+         /atlas doctor --prune-plugin-cache; else inspect resolver Tier 1/2/3.
+```
 
 Display:
 ```
 🏛️ ATLAS │ 📊 STATUSLINE │ CShip: {version} │ Starship: {version}
-   └─ Scripts: {deployed?} │ State: {valid?} │ Config: {wired?}
+   └─ SOTA v2 artifacts: {deployed?} │ Settings wired: {v2 path?} │ E2E render: {pass?}
 ```
 
 ### Cat 11: CC Settings (15 checks)
