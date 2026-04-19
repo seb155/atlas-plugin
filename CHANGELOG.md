@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.30.1 (2026-04-19)
+
+### 🐛 Bug Fixes
+- fix(statusline): show ATLAS plugin version in bash fallback script
+
+
+
 ## v5.30.0 (2026-04-19)
 
 ### ✨ Features
