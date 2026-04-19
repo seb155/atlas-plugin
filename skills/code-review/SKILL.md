@@ -25,6 +25,7 @@ Before shortcutting code-review, ask yourself — are any of these thoughts runn
 | "Pattern compliance is a nit" | PATTERNS.md exists to PREVENT duplication. Flag it. |
 | "Enterprise compliance is for production" | Multi-tenant project_id filter + RBAC gate MUST be on new endpoints from day 1. |
 | "Posting PR comments doesn't need confirmation" | HITL: confirm via AskUserQuestion before posting. Delete is possible; un-publish is not. |
+| "AI wrote this PR, the patterns must be fine" | AI clears `it works`, not `it respects the machine`. For diffs > 50 LoC with AI-generated portions, the AI-Perf Patterns dim (8th) of senior-review-checklist is **mandatory** — see step 2.25 below. |
 
 ## Mode Detection
 
@@ -49,9 +50,20 @@ git log --oneline origin/dev..HEAD # Unpushed commits
 ### 2.25 Senior Review Checklist (mandatory for non-trivial PRs)
 
 For PRs > 50 lines OR touching > 3 files, invoke the `senior-review-checklist`
-skill as a mandatory step. It scores 7 dimensions (correctness, design, SOLID,
-naming, cohesion/coupling, testability, observability) and produces a structured
-review output that informs the parallel agents below.
+skill as a mandatory step. It scores **8 dimensions** (correctness, design, SOLID,
+naming, cohesion/coupling, testability, observability, **AI-Perf patterns**) and
+produces a structured review output that informs the parallel agents below.
+
+**AI-Perf Patterns dim (8th)** is especially load-bearing for AI-assisted PRs.
+Detection heuristics for "AI-generated":
+- Branch name suggests automation (`copilot/*`, `ai/*`, `claude-*`, `cursor-*`, `bot/*`)
+- Commit author is an AI tool / matches AI-bot pattern
+- PR description mentions AI assistance ("written with Claude", "Copilot suggested")
+- Code style suggests AI verbosity (high comment-to-code ratio, defensive over-validation, generic naming)
+
+When any of those signals match, **score dim 8 explicitly** (not just sample-checked).
+Reference: `skills/performance-discipline/references/anti-patterns-from-plummer.md`
+for the 8 anti-patterns + grep heuristics.
 
 Skipped for trivial PRs (style-only, typo, single-line fix) — those go through
 lint + quick sanity check only.
@@ -59,6 +71,7 @@ lint + quick sanity check only.
 Senior-review-checklist reads:
 - `skills/refs/code-smells-catalog/` for design smell detection
 - `skills/refs/sota-architecture-patterns/` for architecture alignment
+- `skills/performance-discipline/references/anti-patterns-from-plummer.md` for AI-Perf dim 8
 
 ### 2.5 Semantic Impact (LSP) — if available
 

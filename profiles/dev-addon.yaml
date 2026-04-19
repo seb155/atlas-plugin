@@ -25,6 +25,7 @@ skills:
   # Quality & Review
   - code-review
   - code-simplify
+  - performance-discipline   # v5.39.0 — Plummer doctrine, AI-perf review lens
   - systematic-debugging
   - verification
   - test-orchestrator
