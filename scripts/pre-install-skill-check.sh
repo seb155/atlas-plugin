@@ -113,12 +113,32 @@ echo "${BLU}[skill-lint]${RST} Tool: npx --yes skill-lint (LichAmnesia/skill-lin
 TMP_OUT=$(mktemp)
 trap 'rm -f "$TMP_OUT"' EXIT
 
-# Run skill-lint from GitHub (not yet published to npm registry as of 2026-04-19).
-# skill-lint exit code is meaningful (0/1/2/3); we capture via npx github: prefix.
-# Allow override via SKILL_LINT_PACKAGE env var for pinned versions or forks.
-SKILL_LINT_PACKAGE="${SKILL_LINT_PACKAGE:-github:LichAmnesia/skill-lint}"
+# Run skill-lint. Default: vendored ATLAS fork at third_party/atlas-skill-lint
+# (v0.2.0-atlas.1, see ADR-019b). This is the canonical scanner for ATLAS
+# internal skills — tuned to recognize reasoning-agent SKILL.md as documentation
+# and not to flag CLI placeholders + fenced shell examples as executable intent.
+# To use the unmodified upstream or a different pinned version, set
+#   SKILL_LINT_PACKAGE=github:LichAmnesia/skill-lint@v0.2.0
+# or a tarball/git URL.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENDORED_PKG="${SCRIPT_DIR}/../third_party/atlas-skill-lint"
+SKILL_LINT_PACKAGE="${SKILL_LINT_PACKAGE:-}"
+
 set +e
-npx --yes "$SKILL_LINT_PACKAGE" "$TARGET" --json >"$TMP_OUT" 2>&1
+if [[ -z "$SKILL_LINT_PACKAGE" ]] && [[ -d "$VENDORED_PKG" ]] && [[ -f "$VENDORED_PKG/bin/skill-lint.js" ]]; then
+  # Fast path: run the vendored fork directly via node (no npx fork overhead,
+  # no network, no npm-cache stale-tarball surprise).
+  # Lazy-install the fork's 2 runtime deps (chalk, yaml) on first run so the
+  # vendored dir can be committed without node_modules. Idempotent.
+  if [[ ! -d "$VENDORED_PKG/node_modules" ]]; then
+    (cd "$VENDORED_PKG" && npm install --silent --omit=dev --no-audit --no-fund >&2)
+  fi
+  node "$VENDORED_PKG/bin/skill-lint.js" "$TARGET" --json >"$TMP_OUT" 2>&1
+else
+  # Fallback: override via SKILL_LINT_PACKAGE env (git URL, tarball, or npm spec).
+  SKILL_LINT_PACKAGE="${SKILL_LINT_PACKAGE:-github:LichAmnesia/skill-lint}"
+  npx --yes "$SKILL_LINT_PACKAGE" "$TARGET" --json >"$TMP_OUT" 2>&1
+fi
 LINT_EXIT=$?
 set -e
 

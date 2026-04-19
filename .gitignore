@@ -8,3 +8,8 @@ tests/__pycache__/
 __pycache__/
 tests/__pycache__/
 tests/__pycache__/
+
+# Vendored fork's node_modules — installed on-demand by
+# scripts/pre-install-skill-check.sh (lazy install when missing)
+third_party/atlas-skill-lint/node_modules/
+third_party/atlas-skill-lint/package-lock.json
