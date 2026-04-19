@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.33.0 (2026-04-19)
+
+### ✨ Features
+- feat(tests): add skill-triggering eval framework (REC-001, ADR-007)
+
+
+
 ## v5.32.0 (2026-04-19)
 
 ### ✨ Features
