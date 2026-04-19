@@ -1,6 +1,6 @@
 ---
 name: memory-dream
-description: "Memory consolidation engine v6 (CC auto-dream pattern). 16-phase cycle: orient, docs audit, gather, validate, replay analysis, experiential, workflow, learning velocity, gap detection, consolidate, session journal, experiential synthesis, propose improvements, prune (17D health), dream quality metrics, auto-schedule, reflection, cross-project. 9 memory types. Use when 'dream', 'consolidate memory', 'clean memory', 'memory audit', 'memory health', 'episode', 'intuition', 'relationship', 'reflection', 'experiential', 'dream report', 'dream health', 'dream trends', 'dream journal', 'dream status', 'tech state'."
+description: "Memory consolidation engine (CC auto-dream pattern). This skill should be used when the user asks to 'dream', 'consolidate memory', 'memory audit', 'memory health', 'dream report', 'reflection', '/atlas dream', or needs the 16-phase cycle across 9 memory types with gap detection and propose-improvements."
 effort: high
 ---
 
