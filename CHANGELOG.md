@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.31.0 (2026-04-19)
+
+### ✨ Features
+- feat(ci): add Woodpecker skill-security pipeline (REC-016)
+- feat(skills): adopt XML tags + Red Flags in skill template (REC-004)
+- feat(lint): add validate-plugin-json.sh linter (REC-008)
+- feat(security): add skill-lint pre-install gate (REC-015, ADR-013)
+
+### 🐛 Bug Fixes
+- fix(manifest): expand atlas-core plugin.json description to meet 50-char minimum
+- fix(lint): correct jq path composition in validate-plugin-json.sh
+
+### 🔧 Other Changes
+- docs: add SECURITY.md threat model + disclosure policy (REC-018)
+- docs: add PHILOSOPHY.md — 10 principles codifying ATLAS stance
+- docs(ADR): add ADR-011 skill description convention (hybrid Anthropic+obra)
+
+
+
 ## v5.30.1 (2026-04-19)
 
 ### 🐛 Bug Fixes
