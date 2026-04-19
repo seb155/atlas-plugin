@@ -1,5 +1,20 @@
 # Changelog
 
+## v5.40.0 (2026-04-19)
+
+### ✨ Features
+- feat(skills): atlas ci live CLI TUI (PR #31)
+- feat(skill): add atlas-ci SKILL.md (Form A, haiku, tier:dev)
+- feat(ci): add atlas ci live TUI dashboard subcommand (v5.19.0)
+
+### 🐛 Bug Fixes
+- fix(ci): split local declaration from assignment to avoid zsh stdout leak
+
+### 🔧 Other Changes
+- test(ci): add bats tests for atlas ci live (13/13 pass)
+
+
+
 ## v5.39.0 (2026-04-19)
 
 ### ✨ Features
