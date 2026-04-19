@@ -1,6 +1,6 @@
 ---
 name: gms-insights
-description: "Cross-Discipline Insight Engine — detect tacit connections between disciplines via shared KC tags. Pilier 1 (Coopération). Triggers on: /atlas gms insights, 'cross-discipline', 'insight', 'connections'."
+description: "Cross-Discipline Insight Engine (Pilier 1 Coopération). This skill should be used when the user asks to '/atlas gms insights', 'cross-discipline', 'insight', 'connections', or needs tacit connections detected via shared KC tags."
 effort: low
 ---
 

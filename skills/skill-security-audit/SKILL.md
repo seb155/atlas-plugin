@@ -1,6 +1,6 @@
 ---
 name: skill-security-audit
-description: "Scan ATLAS skills and hooks for security anti-patterns: eval injection, unquoted vars, secrets, HITL bypass, overly broad permissions. Produces severity report. Triggers on: 'audit skills', 'skill security', 'plugin security'."
+description: "ATLAS skills and hooks security scanner. This skill should be used when the user asks to 'audit skills', 'skill security', 'plugin security', 'scan hooks', or needs eval injection/unquoted-var/secret/HITL-bypass detection with severity report."
 effort: medium
 triggers: ["audit skills", "skill security", "plugin security", "scan hooks"]
 ---

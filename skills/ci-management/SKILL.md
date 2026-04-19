@@ -1,6 +1,6 @@
 ---
 name: ci-management
-description: "CI/CD pipeline management for Woodpecker CI. Check status, view logs, rerun pipelines, manage agent fleet. Triggers on: /ci, 'CI status', 'check pipeline', 'rerun CI', 'agent status'."
+description: "Woodpecker CI/CD pipeline management. This skill should be used when the user asks to '/ci', 'CI status', 'check pipeline', 'rerun CI', 'agent status', or needs log viewing and agent fleet management."
 effort: low
 ---
 
