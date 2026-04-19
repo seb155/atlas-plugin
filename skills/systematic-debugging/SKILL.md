@@ -6,6 +6,21 @@ effort: medium
 
 # Systematic Debugging
 
+## Red Flags (rationalization check)
+
+Before skipping systematic debugging, ask yourself — are any of these thoughts running? If yes, STOP. You're about to enter a guess-and-check loop.
+
+| Thought | Reality |
+|---------|---------|
+| "I think I see the bug already" | That's a hypothesis. Write it down first, then test it. |
+| "Let me just try a quick fix" | Max 2 attempts before escalation. Record what you tried. |
+| "The error message is obvious" | Error messages lie about root cause ~30% of the time. OBSERVE first. |
+| "I'll restart the service and see if it helps" | That's not a fix, that's avoidance. Find the cause. |
+| "This works locally, CI is flaky" | Run the premise check (see below). Flakiness has a cause. |
+| "Let me just add `try/except` to silence it" | Silencing ≠ fixing. The bug will reappear in 3 days. |
+| "3 pivots is progress" | 3 pivots = STOP + reframe. The premise is likely wrong. |
+| "I'll figure it out as I go" | Without observe → hypothesize → test, you're hoping, not debugging. |
+
 ## Process (STRICT ORDER)
 
 ### 1. OBSERVE — What exactly is happening?

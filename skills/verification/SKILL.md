@@ -8,6 +8,23 @@ effort: medium
 
 **Principle**: Evidence before assertions. NEVER claim work passes without running commands and confirming output.
 
+## Red Flags (rationalization check)
+
+Before skipping verification, ask yourself — are any of these thoughts running? If yes, STOP. The 2026-04-16 persona-bug incident is exactly this rationalization shipping to prod.
+
+| Thought | Reality |
+|---------|---------|
+| "Tests probably pass, I changed one line" | "Probably" ≠ "do". Run the commands. Persona-bug cost 4h because of "probably". |
+| "I ran these tests earlier in the session" | State changed since then (DB migrations, config, deps). Re-run. |
+| "Type-check isn't necessary for this change" | TypeScript strict mode catches bugs before runtime. Always type-check. |
+| "I don't need to check DoD tier, it's small" | NEVER report Progress > 20% if only Tier 1 passes. Show the score. |
+| "Build passed locally last time" | Last time ≠ this time. Build, types, lint, tests in order — every time. |
+| "E2E is overkill for this fix" | If the plan's Section O specifies E2E, run it. No skipping. |
+| "Enterprise audit is just for production" | `toolkit.audit --fail-on critical` catches project_id filters + RBAC gaps. Run it. |
+| "Mock-only tests prove it works" | Orchestrators with 3+ DI deps MUST have real smoke. Mock budget rule (2026-04-16). |
+
+## Verification Levels
+
 ## Verification Levels
 
 | Level | Scope | Command pattern | Notes |
