@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.30.0 (2026-04-19)
+
+### ✨ Features
+- feat: Status Line Version Resolver SOTA Refactor (#26)
+- feat(doctor): add --prune-plugin-cache subcommand
+- feat(hook): capabilities-refresh on UserPromptSubmit + sentinel pattern
+- feat(resolver): 3-tier chain with 5s TTL cache and drift sentinel
+- feat(discover): use claude plugin list --json as Tier 1 SSoT
+
+### 🔧 Other Changes
+- docs(adr): ADR-006 version resolver canonicalization + CLAUDE.md + decisions
+- test(bats): 17 scenarios for resolver + discover + hook + prune
+- chore(decisions): log ship-all follow-ups 2026-04-19
+
+
+
 ## v5.29.1 (2026-04-19)
 
 ### 🐛 Bug Fixes
