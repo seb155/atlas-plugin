@@ -11,6 +11,20 @@ Generic — works with any tech stack/framework/language.
 
 **Announce:** "Running context discovery..."
 
+## Red Flags (rationalization check)
+
+Before skipping context-discovery, ask yourself — are any of these thoughts running? If yes, STOP. Memory drifts; filesystem wins (per `feedback_ultrathink_plan_staleness_pattern.md`).
+
+| Thought | Reality |
+|---------|---------|
+| "I remember this project" | Memory drifts across compactions. Re-scan — 6/6 stale plans caught 2026-04-18 prove it. |
+| "We explored this subsystem yesterday" | Yesterday ≠ today. Commits, plans, docs change hourly. Re-scan. |
+| "I'll discover as I plan" | Discovery pre-fills sections A-B, H-M. Discovering mid-plan = 2x rework. |
+| "Trivial task, no context needed" | Trivial tasks trip on stack conventions (bun not npm, kebab-case files, etc). Check stack. |
+| "I'll just grep for what I need" | 8-phase scan catches architecture, security, observability patterns grep misses. |
+| "The CLAUDE.md has everything" | CLAUDE.md W3H is ≤100 lines by design. `.blueprint/` holds the detail. Load both. |
+| "Skip the plan INDEX — I know the active plans" | INDEX is SSoT. Active/archived/deferred status changes between sessions. |
+
 ## 8 Discovery Phases
 
 | # | Phase | Scan targets | Output |

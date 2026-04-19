@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS — AXOIQ's unified AI engineering assistant. Auto-routing co-pilot with HITL gates and autonomous optimization."
+description: "Master skill for ATLAS auto-routing co-pilot. Use when SessionStart injects the ATLAS plugin, when the user invokes '/atlas', or when any request needs tier-aware routing to ATLAS skills and HITL gates."
 ---
 
 <!-- SOURCE TEMPLATE — Built version in dist/ has correct tier-specific counts.
@@ -440,6 +440,11 @@ When the model is about to enter Claude's native plan mode (EnterPlanMode):
 | "This doesn't need a formal plan" | plan-quality rules say otherwise |
 | "I'll just do this one thing first" | Check BEFORE doing anything |
 | "The skill is overkill" | Use it. Simple things become complex |
+| "I remember the ATLAS skill list" | 131 skills. Memory drifts. Read `~/.atlas/runtime/capabilities.json`. |
+| "The user's intent is obvious" | Complexity gate auto-detects (trivial/moderate/complex). Run the gate. |
+| "I'll skip the persona header this one time" | Persona header is NON-NEGOTIABLE. Every response starts with it. |
+| "Subagents add overhead for this task" | MODERATE tasks (60% of requests) = dispatch Sonnet. Cost ratio is 5x. |
+| "Plan mode via EnterPlanMode is faster" | Native plan mode bypasses context-discovery + plan-builder. Always intercept. |
 
 ## Skill Name Priority (MANDATORY)
 

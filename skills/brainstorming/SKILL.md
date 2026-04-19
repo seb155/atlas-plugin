@@ -14,6 +14,21 @@ Present 2-3 approaches with comparison tables. Get approval before implementing.
 
 **Hard gate:** Do NOT write any code, invoke implementation skills, or take action until design is presented and user approves.
 
+## Red Flags (rationalization check)
+
+Before bypassing brainstorming, ask yourself — are any of these thoughts running? If yes, STOP. Locked-in wrong patterns from skipped brainstorms cost more than a month of rework.
+
+| Thought | Reality |
+|---------|---------|
+| "I know what the user wants" | You have ONE design. Brainstorm produces 2-3. The third is often the winner. |
+| "The design is obvious from the requirements" | Obvious to you. Requirements omit constraints only the user knows. Ask. |
+| "I'll just sketch and iterate" | Sketch = drift. Comparison table = forced tradeoffs. Use the table. |
+| "We don't have time for 2-3 approaches" | Approaches take minutes. Wrong choice takes weeks. |
+| "UX decisions aren't critical here" | Location decision (shared lib vs app) is architecturally irreversible. Decide first. |
+| "I can skip the design doc — memory is fine" | Design docs at `.blueprint/designs/{feature}.md` survive compaction. Memory does not. |
+| "ASCII mockup is overkill" | ASCII forces explicit layout decisions. Free prose hides ambiguity. |
+| "The user said 'go' in chat, no AskUserQuestion needed" | AskUserQuestion creates a paper trail. "Go" in free text is lost in compaction. |
+
 ## Process
 
 ### 1. Understand Context

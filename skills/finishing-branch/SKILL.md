@@ -6,6 +6,21 @@ effort: medium
 
 # Finishing a Development Branch
 
+## Red Flags (rationalization check)
+
+Before skipping finishing-branch or shortcutting its gates, ask yourself — are any of these thoughts running? If yes, STOP. Shipping broken branches is how you become the reason for an outage.
+
+| Thought | Reality |
+|---------|---------|
+| "Just push and move on" | `git push` is not "done". DoD tier, enterprise audit, and CI must be green. |
+| "Tests probably still pass since I only changed one file" | Run them. Workspace packages need `bun install` + restart on change. |
+| "I'll force-push to fix history" | NEVER force-push. Rebase local, pull --rebase if behind. |
+| "Merge to main bypasses the dev gate" | `dev` is the staging branch. Main only via PR with CI green. No exceptions. |
+| "Skip the DoD check, it's a quick fix" | Tier 1 incomplete (<20%) BLOCKS merge. Even for one-line fixes. |
+| "Enterprise audit is paranoid for this PR" | `toolkit.audit --fail-on critical` catches project_id/healthcheck gaps. Run it. |
+| "I'll `git add -A` just this once" | NEVER. Explicit staging. Exclude .env*, credentials*, *.pem. Secrets leak irreversibly. |
+| "Friday 15:00 EDT doesn't apply to this hotfix" | Check `.claude/rules/no-ship-friday.md`. Document exception in `decisions.jsonl`. |
+
 ## Process
 
 ### Step 1: Environment Health + Verify Tests Pass
