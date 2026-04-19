@@ -329,7 +329,7 @@ When the user requests development work AND complexity = COMPLEX, this pipeline 
 | Task Type | Model | Why | Key Benchmark |
 |-----------|-------|-----|---------------|
 | Planning, architecture, brainstorm | **Opus 4.7** | Deep reasoning justifies premium | GPQA 91.3% vs 74.1% (+17pts) |
-| Extended thinking (ultrathink) | **Opus 4.7** | 128K max output for detailed plans | Output limit 2x Sonnet |
+| Adaptive thinking (ultrathink, effort=xhigh/max) | **Opus 4.7** | 128K max output for detailed plans | Output limit 2x Sonnet |
 | Complex debugging, cross-system | **Opus 4.7** | Multi-file reasoning | Reasoning gap matters here |
 | Implementation, bug fixes | **Sonnet 4.6** | 97-99% coding quality, 5x cheaper | SWE-bench 79.6% vs 80.8% (1.2pts) |
 | Code review, security audit | **Sonnet 4.6** | Pattern matching sufficient | GDPval 1633 > 1606 (Sonnet leads) |

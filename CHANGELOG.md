@@ -1,5 +1,29 @@
 # Changelog
 
+## v5.29.0 (2026-04-19)
+
+### 🔧 Claude Migration Guide Application
+- docs(skills): `atlas-assist` SKILL.md Claude Model Strategy — "Extended thinking (ultrathink)" → "Adaptive thinking (ultrathink, effort=xhigh/max)"
+- docs(refs): `cc-native-features` SKILL.md section renamed "Extended Thinking" → "Adaptive Thinking (formerly Extended Thinking)" with migration note (API `thinking: {type: "enabled", budget_tokens}` → `{type: "adaptive"}`)
+- docs(refs): `model-benchmarks-2026-04` SKILL.md task-to-model mapping updated
+- docs(CLAUDE.md): plugin root CLAUDE.md model table mentions adaptive thinking + effort tiers
+
+### 📖 Audit Results (no code changes needed — all clean)
+- Model IDs already current (`claude-opus-4-7[1m]`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`) since v5.28.0
+- Sampling params (`temperature|top_p|top_k`) grep across plugin = **0 hits** (migration breaking change safe)
+- Old thinking API (`budget_tokens|extended_thinking`) grep = **0 hits**
+- Effort ladder documented (`atlas-team` L81-97, `platform-update` L80-82) includes `xhigh` tier — no changes required
+- Pricing table (`cost.sh` L117-121) current (Opus 4.7 $5/$25, Sonnet 4.6 $3/$15, Haiku 4.5 $0.25/$1.25)
+
+### 🛠️ Companion Changes (Synapse repo, tracked separately)
+- `synapse/CLAUDE.md` SSH mesh line updated (Tailscale deprecated → netbird migration pointer)
+- `memory/axoiq-ecosystem-map.md` ATLAS version: v4.38.0 → v5.29.0 + skill/agent counts refreshed (81/15 → 131/24)
+
+### 📚 Source Plan
+- `.blueprint/plans/ultrathink-corrige-tout-pour-floating-hartmanis.md` (Synapse worktree)
+
+---
+
 ## v5.28.0 (2026-04-18)
 
 ### ✨ Features

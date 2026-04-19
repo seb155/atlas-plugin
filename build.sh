@@ -684,15 +684,14 @@ echo "  ATLAS Plugin Builder v${VERSION}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
+# 2026-04-19: "all" aliased to "modular" (v5+ SP-DEDUP architecture).
+# Legacy tiers (admin/dev/user → profiles/admin.yaml etc) superseded by
+# modular plugins (admin-addon/dev-addon/core). "build.sh all" now identical to "modular".
 if [ "$TIERS" = "all" ]; then
-  for t in admin dev user; do
-    build_tier "$t"
-    echo ""
-  done
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  All 4 tiers built successfully!"
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-elif [ "$TIERS" = "domains" ]; then
+  TIERS="modular"
+fi
+
+if [ "$TIERS" = "domains" ]; then
   for d in "${DOMAIN_NAMES[@]}"; do
     build_domain "$d"
     echo ""
