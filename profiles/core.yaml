@@ -79,6 +79,7 @@ hooks:
 - session-replay-logger       # SessionEnd — append JSONL session archive
 - session-state-writer        # SessionStart/Stop — persist session state for resume
 - atlas-status-writer         # Stop/UserPromptSubmit — refresh statusline cache
+- capabilities-refresh        # UserPromptSubmit — rerun discover if .capabilities.stale sentinel exists (v5.30.0+)
 - context-budget-guardian     # PreCompact — warn if compaction happens too early
 # v6.0+ (2026-04-18): moved from dev-addon+admin-addon to core (was duplicated) — SessionStart scope creep detector
 - feature-drift-detector      # SessionStart — flag feat() commits vs FEATURES.md PLANNED/BACKLOG
