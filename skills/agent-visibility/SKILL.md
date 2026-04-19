@@ -1,6 +1,6 @@
 ---
 name: agent-visibility
-description: Subagent visibility (SP-AGENT-VIS). Surface what background subagents are doing in real-time via statusline counter, tmux side pane auto-tail, and `atlas agents` CLI. Triggers on "what are agents doing", "show agent output", "tail the agent", "agent status", "atlas agents".
+description: "Subagent visibility surfacing. This skill should be used when the user asks to 'show agent output', 'tail the agent', 'agent status', 'what are agents doing', '/atlas agents', or needs real-time visibility into background subagent work."
 tier: core
 category: observability
 emoji: "👁️"

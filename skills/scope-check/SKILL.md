@@ -1,6 +1,6 @@
 ---
 name: scope-check
-description: "Detect scope drift. Are you touching files outside the original task? Stop and verify before proceeding."
+description: "Scope drift detector. Use when touching files outside the original task scope, before proceeding with changes, or when a refactor seems to expand beyond the initial intent."
 effort: low
 ---
 

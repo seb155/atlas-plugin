@@ -1,6 +1,6 @@
 ---
 name: deep-research
-description: "Deep research with multi-query decomposition. Decompose question into 2-3 angles, search + fetch + triangulate, synthesize structured summary (500w max). Sonnet for research, Opus for synthesis."
+description: "Deep research with multi-query decomposition. This skill should be used when the user asks to 'research', 'deep research', 'investigate', 'compare options', '/a-research-deep', or needs a triangulated summary across 2-3 angles."
 effort: high
 ---
 

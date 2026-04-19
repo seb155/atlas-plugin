@@ -1,6 +1,6 @@
 ---
 name: context-discovery
-description: "Auto-discover project context + context engineering toolkit. 8-phase scan + audit + codemap + patterns + sync-plan + CLAUDE.md management (W3H). Run before any plan creation."
+description: "Auto-discover project context before planning. This skill should be used when the user asks to 'discover context', 'audit context', 'codemap', 'sync plan', '/atlas context', or before creating any new engineering plan."
 effort: medium
 ---
 
