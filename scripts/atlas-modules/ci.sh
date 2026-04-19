@@ -1175,7 +1175,9 @@ PY
     [ -z "$pipe_json" ] && continue
 
     # Fetch detail for running/pending pipelines to get workflow breakdown
-    local pnum pstatus detail_json=""
+    # NOTE: declare local BEFORE assignment — avoids zsh printing "pnum=X" to stdout
+    local pnum pstatus detail_json
+    detail_json=""
     pnum=$(/usr/bin/python3 -c "import json,sys; print(json.loads(sys.argv[1]).get('number',''))" "$pipe_json" 2>/dev/null)
     pstatus=$(/usr/bin/python3 -c "import json,sys; print(json.loads(sys.argv[1]).get('status',''))" "$pipe_json" 2>/dev/null)
 
