@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.32.0 (2026-04-19)
+
+### ✨ Features
+- feat(skills): add wiki-aggregate skill + ADR-018 (REC-030)
+
+
+
 ## v5.31.0 (2026-04-19)
 
 ### ✨ Features
