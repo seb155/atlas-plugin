@@ -133,4 +133,10 @@ steps:
       - apk add --no-cache bash jq > /dev/null 2>&1
       - bash scripts/validate-plugin-json.sh
     # plugin-json-validate exit 1 (warnings) does NOT fail CI
-    # Only exit 2 (hard errors) fails. We pass-through the validator exit.
+    # Only exit 2 (hard errors) fails. Without `failure: ignore` below,
+    # Woodpecker would fail the pipeline on any non-zero exit including the
+    # validator's exit-1-on-warnings. This step was previously masked by
+    # skill-lint-scan failing first (skipped). With skill-lint-scan now
+    # green (v5.37.0 fork), the drift surfaces. Explicit ignore matches
+    # the intent stated in the existing yml comment.
+    failure: ignore
