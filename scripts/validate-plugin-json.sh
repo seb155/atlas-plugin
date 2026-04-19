@@ -59,12 +59,16 @@ check_plugin_object() {
   local jq_path="$2"
   local obj_label="${3:-$file}"
 
+  # jq path composition: root "." becomes "", otherwise keep as-is for chained paths
+  local base="$jq_path"
+  [[ "$base" == "." ]] && base=""
+
   local name version description author license
-  name=$(jq -r "${jq_path}.name // empty" "$file" 2>/dev/null)
-  version=$(jq -r "${jq_path}.version // empty" "$file" 2>/dev/null)
-  description=$(jq -r "${jq_path}.description // empty" "$file" 2>/dev/null)
-  author=$(jq -r "${jq_path}.author // empty | if type == \"string\" then . else (.name // \"\") + \" <\" + (.email // \"\") + \">\" end" "$file" 2>/dev/null)
-  license=$(jq -r "${jq_path}.license // empty" "$file" 2>/dev/null)
+  name=$(jq -r "${base}.name // empty" "$file" 2>/dev/null)
+  version=$(jq -r "${base}.version // empty" "$file" 2>/dev/null)
+  description=$(jq -r "${base}.description // empty" "$file" 2>/dev/null)
+  author=$(jq -r "${base}.author // empty | if type == \"string\" then . else (.name // \"\") + \" <\" + (.email // \"\") + \">\" end" "$file" 2>/dev/null)
+  license=$(jq -r "${base}.license // empty" "$file" 2>/dev/null)
 
   echo ""
   echo "${BLD}→ ${obj_label}${RST}"
