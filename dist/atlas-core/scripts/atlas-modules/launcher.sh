@@ -252,6 +252,8 @@ atlas() {
     review) shift; _atlas_review "$@"; return ;;
     blast) shift; _atlas_blast "$@"; return ;;
     --check) shift; _atlas_preflight "$@"; return ;;
+    devportal|dp) shift; _atlas_devportal_cmd "$@"; return ;;
+    roadmap) shift; _dp_roadmap "$@"; return ;;
     dashboard|dash|d) _atlas_dashboard; return ;;
     help|-h|--help) _atlas_help; return ;;
     version) _atlas_version; return ;;

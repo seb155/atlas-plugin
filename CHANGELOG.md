@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.38.0 (2026-04-19)
+
+### ✨ Features
+- feat(skills): devportal-chat skill + CLI sub-command (PR #29)
+- feat(launcher): add devportal|dp + roadmap dispatch, source devportal.sh module
+- feat(devportal): add chat subcommand (SSE stream + MCP fallback, ATLAS_TOKEN/ATLAS_ENV support)
+- feat(skills): add devportal-chat skill (Form A, MCP SSE chat interface)
+
+### 🔧 Other Changes
+- test(devportal): add 15 bats tests for chat subcommand (arg parsing, env vars, SSE render, fallback)
+
+
+
 ## v5.37.0 (2026-04-19)
 
 ### ✨ Features
