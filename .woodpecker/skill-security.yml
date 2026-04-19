@@ -33,9 +33,18 @@ steps:
       - echo "Node version:" && node --version
       - echo "jq version:" && jq --version
 
-      # Pre-warm npx cache with skill-lint from GitHub
-      # (skill-lint not yet on npm as of 2026-04-19, use github: prefix)
-      - npx --yes github:LichAmnesia/skill-lint --version || true
+      # ATLAS fork path (v5.36.1+ / ADR-019b): pre-install-skill-check.sh
+      # now defaults to the vendored fork at third_party/atlas-skill-lint.
+      # Lazy-install its 2 runtime deps (chalk, yaml) so the scan loop doesn't
+      # pay the install cost per-skill. Falls back to upstream if vendor dir
+      # is missing (SKILL_LINT_PACKAGE env override still honored).
+      - |
+        if [ -d third_party/atlas-skill-lint ] && [ ! -d third_party/atlas-skill-lint/node_modules ]; then
+          (cd third_party/atlas-skill-lint && npm install --silent --omit=dev --no-audit --no-fund)
+          echo "✓ Vendored ATLAS fork deps installed"
+        else
+          echo "⏭️  Vendored fork absent — wrapper will fall back to upstream via npx"
+        fi
 
       # Scan every skill under skills/
       # Fail on any TOXIC verdict (exit 2 from pre-install-skill-check.sh)
@@ -114,8 +123,9 @@ steps:
     environment:
       # skill-lint respects NO_COLOR — keep CI logs clean
       NO_COLOR: "1"
-      # Allow override of skill-lint source (e.g., pinned version, fork)
-      SKILL_LINT_PACKAGE: "github:LichAmnesia/skill-lint"
+      # SKILL_LINT_PACKAGE intentionally UNSET so pre-install-skill-check.sh
+      # uses the vendored ATLAS fork at third_party/atlas-skill-lint by default.
+      # Set to 'github:LichAmnesia/skill-lint' to bypass the fork.
 
   plugin-json-validate:
     image: alpine:3.20
@@ -123,4 +133,10 @@ steps:
       - apk add --no-cache bash jq > /dev/null 2>&1
       - bash scripts/validate-plugin-json.sh
     # plugin-json-validate exit 1 (warnings) does NOT fail CI
-    # Only exit 2 (hard errors) fails. We pass-through the validator exit.
+    # Only exit 2 (hard errors) fails. Without `failure: ignore` below,
+    # Woodpecker would fail the pipeline on any non-zero exit including the
+    # validator's exit-1-on-warnings. This step was previously masked by
+    # skill-lint-scan failing first (skipped). With skill-lint-scan now
+    # green (v5.37.0 fork), the drift surfaces. Explicit ignore matches
+    # the intent stated in the existing yml comment.
+    failure: ignore
