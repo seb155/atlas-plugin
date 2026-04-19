@@ -1,6 +1,6 @@
 ---
 name: decision-log
-description: "Log architectural decisions to .claude/decisions.jsonl. Track non-obvious choices with context, alternatives, and rationale."
+description: "Architectural decision logger. Use when making a non-obvious technical choice, selecting a library, picking between approaches, or logging anything that future sessions will need to understand retroactively."
 effort: low
 ---
 

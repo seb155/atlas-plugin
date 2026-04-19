@@ -1,6 +1,6 @@
 ---
 name: subagent-dispatch
-description: "Dispatch subagents per task with manifest-driven model allocation. 2-stage review: spec compliance then code quality. Supports parallel dispatch for independent tasks. Cost-aware."
+description: "Subagent dispatcher with model allocation. Use when a plan has independent tasks ready for parallel execution, when the user asks to 'dispatch subagents', 'run in parallel', '/subagent-dispatch', or when cost-aware 2-stage review is needed across 2+ tasks."
 effort: medium
 ---
 

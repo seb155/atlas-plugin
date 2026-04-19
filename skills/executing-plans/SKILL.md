@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: "Execute implementation plans using execution strategy manifests. Load plan → load/generate strategy → TaskCreate per step → execute with optimal model/mode per task → verify. Supports solo, subagent, team (tmux), and hybrid modes."
+description: "Plan executor with strategy manifests. This skill should be used when the user asks to 'execute the plan', 'run the plan', '/a-dev execute', 'start implementing', or has a written plan ready to drive TaskCreate dispatch."
 effort: medium
 ---
 

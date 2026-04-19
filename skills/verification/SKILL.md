@@ -1,6 +1,6 @@
 ---
 name: verification
-description: "Complete verification: L1-L6 tests + quality gates pipeline (build→types→lint→tests→security→diff) + E2E persona tests + security scan + performance benchmarks + checkpoints. Evidence before assertions."
+description: "Complete verification pipeline (L1-L6 tests + quality gates). This skill should be used when the user asks to 'verify', '/a-verify', 'check everything', 'pre-ship verification', or before claiming any task complete — evidence before assertions."
 effort: medium
 ---
 

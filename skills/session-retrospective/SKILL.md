@@ -1,6 +1,6 @@
 ---
 name: session-retrospective
-description: "End-of-session review, close, and handoff. Capture lessons learned, update memory, note improvements, verify task completion. Includes session close (summary + cleanup) and handoff (context preservation for resume)."
+description: "Session retrospective, close, and handoff. This skill should be used when the user asks to 'end session', '/a-end', '/a-handoff', 'retrospective', 'wrap up', or when the agent has completed a significant chunk of work and should capture lessons before compaction."
 effort: low
 ---
 

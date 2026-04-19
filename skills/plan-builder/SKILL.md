@@ -1,6 +1,6 @@
 ---
 name: plan-builder
-description: "Generate ultra-detailed 15+5 section engineering plans (A-O + execution strategy) with quality gate 16/20. Replaces superpowers:writing-plans. Uses context discovery report to pre-fill enterprise sections."
+description: "Engineering plan generator (15+5 sections). This skill should be used when the user asks to 'write a plan', 'build a plan', 'create sub-plan', '/plan-builder', '/a-dev feature', or needs an A-O structured plan graded against the 16/20 quality gate."
 effort: high
 ---
 

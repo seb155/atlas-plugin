@@ -1,6 +1,6 @@
 ---
 name: frontend-workflow
-description: "Iterative frontend development workflow: brainstorm UX → mockup → HITL review → implement in shared lib → wire consumer → consolidate. Enforces architecture-first for UI work. Use when building pages, components, or UI features."
+description: "Iterative frontend development workflow. This skill should be used when the user asks to 'build a page', 'create a component', 'design UX', 'implement UI', or needs architecture-first routing from mockup to shared-lib consumer wiring."
 effort: high
 ---
 

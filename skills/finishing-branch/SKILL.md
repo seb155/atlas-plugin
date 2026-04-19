@@ -1,6 +1,6 @@
 ---
 name: finishing-branch
-description: "Complete development work: verify tests pass → intelligent commit (auto-detect type, conventional commits, exclude secrets) → present 4 options (merge/PR/keep/discard) → push → cleanup worktree → update INDEX."
+description: "Development branch finisher. This skill should be used when the user asks to 'finish the branch', 'ship this work', 'complete feature', '/finishing-branch', or when tests pass and the branch is ready to merge, PR, keep, or discard."
 effort: medium
 ---
 

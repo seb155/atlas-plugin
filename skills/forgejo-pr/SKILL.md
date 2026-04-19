@@ -1,6 +1,6 @@
 ---
 name: forgejo-pr
-description: "Forgejo PR lifecycle: create, rebase, merge, cleanup. One command to promote dev→main. Handles 'behind base branch', merge conflicts, branch cleanup."
+description: "Forgejo PR lifecycle manager. This skill should be used when the user asks to 'create a PR', 'merge PR', 'promote dev to main', 'rebase PR', '/forgejo-pr', or needs Forgejo-specific PR orchestration."
 triggers:
   - "/atlas pr"
   - "/atlas promote"

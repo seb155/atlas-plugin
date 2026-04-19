@@ -1,6 +1,6 @@
 ---
 name: visual-generator
-description: "Generate diagrams, infographics, photos via Gemini API (Imagen 4 + Flash). Style presets, text overlay mode, HITL iteration."
+description: "Diagram and image generator via Gemini API. This skill should be used when the user asks to 'generate a diagram', 'make an infographic', 'create an image', 'visualize this', '/atlas visual', or needs Imagen 4 / Flash output with style presets."
 effort: medium
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: "Test-Driven Development. Failing test → minimal implementation → pass → commit. Strict cycle. Never write implementation without a failing test first."
+description: "Test-Driven Development cycle. This skill should be used when the user asks to implement any feature or bugfix, 'TDD this', 'write tests first', '/a-tdd', or before writing implementation code that has no failing test yet."
 effort: medium
 ---
 

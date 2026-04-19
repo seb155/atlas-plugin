@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: "Structured debugging: observe → hypothesize → test → fix. Max 2 fix attempts, then escalate. Never guess-and-check randomly."
+description: "Structured debugging workflow. Use when encountering any bug, test failure, unexpected behavior, or before proposing any fix — especially when tempted to guess-and-check randomly."
 effort: medium
 ---
 

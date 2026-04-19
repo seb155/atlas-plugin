@@ -1,6 +1,6 @@
 ---
 name: deploy-hotfix
-description: "Deploy file hotfix to running container without CI rebuild. SCP → docker cp → clear pycache → restart → health check. Supports SSH jump hosts."
+description: "Container file hotfix deployer. This skill should be used when the user asks to 'hotfix prod', 'deploy without CI', 'patch the container', 'SCP fix', '/atlas hotfix', or needs an SSH-jump file push bypassing CI rebuild."
 triggers:
   - "/atlas hotfix"
   - "hotfix to prod"
