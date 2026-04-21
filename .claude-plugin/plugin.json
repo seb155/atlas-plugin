@@ -1,6 +1,6 @@
 {
   "name": "atlas-core",
-  "version": "5.41.0",
+  "version": "5.42.0",
   "description": "ATLAS Core \u2014 shared base for session, memory, context, personal workflows, and experiential tracking (28 skills, 1 agent).",
   "author": {
     "name": "AXOIQ",

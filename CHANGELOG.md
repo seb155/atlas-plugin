@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.42.0 (2026-04-21)
+
+### ✨ Features
+- feat(services): atlas-exchange microservice skeleton (Phase B.2.c)
+
+### 🔧 Other Changes
+- Merge pull request 'feat(services): atlas-exchange microservice skeleton (Phase B.2.c)' (#33) from feature/phase-b2c-atlas-exchange into main
+
+
+
 ## v5.41.0 (2026-04-21)
 
 ### ✨ Features
