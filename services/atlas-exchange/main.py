@@ -153,7 +153,9 @@ async def issue_cf_service_token(user_email: str) -> dict:
 
 
 # ─── Routes ───────────────────────────────────────────────────────────
-@app.get("/health")
+# Note: Caddy passes full path /atlas/exchange/* without strip, so routes
+# must include the /atlas/exchange prefix to match incoming requests.
+@app.get("/atlas/exchange/health")
 async def health():
     return {"status": "ok", "service": "atlas-exchange"}
 
