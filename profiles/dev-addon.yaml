@@ -19,6 +19,7 @@ skills:
   - executing-plans
   - subagent-dispatch
   - tdd
+  - test-value-decide   # TVT — when to write a test (Audit #22, 2026-04-20)
   - git-worktrees
   - browser-automation
 
