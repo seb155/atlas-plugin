@@ -139,7 +139,9 @@ while true; do
     exit 1
   fi
 
-  token_resp=$(curl -fsS -X POST "${AUTHENTIK_TOKEN_URL}" \
+  # Drop -f flag: RFC 8628 device flow returns HTTP 400 for authorization_pending
+  # which curl -f treats as a hard failure. We want the response body regardless.
+  token_resp=$(curl -sS -X POST "${AUTHENTIK_TOKEN_URL}" \
     --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:device_code" \
     --data-urlencode "device_code=${device_code}" \
     --data-urlencode "client_id=${AUTHENTIK_CLIENT_ID}" 2>/dev/null || echo '{"error":"curl_fail"}')
