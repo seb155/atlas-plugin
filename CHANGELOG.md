@@ -1,5 +1,19 @@
 # Changelog
 
+## v5.41.0 (2026-04-21)
+
+### ✨ Features
+- feat(scripts): atlas-setup.sh device flow OAuth marketplace auth (Phase B.2)
+- feat(hooks): HITL gate on auto-update to block silent supply-chain exec (Phase B.3)
+
+### 🔧 Other Changes
+- Merge pull request 'feat: Phase B Zero-Trust (partial) — HITL hook + atlas-setup.sh + ADRs + pilot template' (#32) from feature/phase-b-zero-trust-clean into main
+- docs: remove NDA prerequisite gate from G Mining pilot onboarding (per Seb)
+- docs: G Mining pilot onboarding template with NDA prerequisite (Phase B.6)
+- docs(adr): ADR-020, 021, 022 — Zero-Trust plugins.axoiq.com design rationale
+
+
+
 ## v5.40.0 (2026-04-19)
 
 ### ✨ Features
