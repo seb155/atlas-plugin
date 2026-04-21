@@ -1,40 +1,29 @@
 # G Mining Pilot Onboarding Procedure (Phase B.6)
 
-**Status**: DRAFT — pending NDA signature before activation
+**Status**: Operational template — ready for population when pilot starts
 **Target go-live**: 2026-05-20
 **Pilot scope**: ~10 users at G Mining (all ATLAS plugins: atlas-core + atlas-dev + atlas-admin)
 **Plan reference**: `.blueprint/plans/aujourdhui-su-rmon-ordinateur-clever-blum.md` Phase B.6
-**HITL Gate**: G5 (NDA signed + 2-user canary 48h, error rate < 5%)
+**HITL Gate**: G5 (2-user canary 48h, error rate < 5%)
 
-## Prerequisite — NDA Coverage (BLOCKING)
+## Prerequisites
 
-Before issuing any access token to a G Mining pilot user, a signed Non-Disclosure
-Agreement must be on file. The NDA MUST explicitly cover:
+Distribution of ATLAS skills to G Mining pilot users relies on the existing
+AXOIQ-G Mining collaboration agreement (the general working relationship covers
+the tooling aspect). No additional legal gate is required before onboarding.
 
-- **Methodology**: MSE 4-layer model, MBSE framework, CAGM (Capital Asset
-  Governance Model) conventions, ISA 5.1 classification internals
-- **Client references**: pilot data may include codenames THM-012 (Perama Hill),
-  BRTZ, CAJB, FORAN, GYOW/oko-ref, and any client-specific adaptation patterns
-- **Process**: ATLAS engineering chain (IMPORT → CLASSIFY → ENGINEER → SPEC GROUP
-  → E-BOM → PROCURE → ESTIMATE → OUTPUTS), G-Part/E-Part/M-Part/I-Part/S-Part
-  lifecycle, 3-tier rule inheritance (ISA → Company → Project)
-- **Infrastructure**: internal URLs (forgejo.axoiq.com, synapse.axoiq.com, etc.),
-  vault references, cognitive pattern framework (HID 5-layer), cost analytics
-- **Distribution restriction**: G Mining may use ATLAS internally but may not
-  redistribute plugin code, documentation, or workflow definitions to third
-  parties without AXOIQ written consent
+Operational prerequisites (what actually blocks pilot activation):
 
-**Status as of 2026-04-20**: no NDA located on Seb's laptop or vaults.
-Action required: Seb to confirm whether an NDA is in place (scan Vaultwarden /
-Cloud Drive / Gmail archive for G Mining NDA dated 2026), or to draft + send
-one via standard AXOIQ contract template before pilot activation.
-
-**Cross-reference**: if NDA is signed but not tracked in vault, store the signed
-PDF in `vault/AxoiQ/contracts/nda-gmining-<YYYY-MM-DD>.pdf` for future reference.
+1. **Phase B.1 CF Access app** on `plugins.axoiq.com` must be deployed (creates
+   the policy P3 slot where pilot user emails will be added).
+2. **Phase B.2.c Authentik OIDC provider + `/atlas/exchange` endpoint** for
+   the `atlas-setup.sh` device flow to work.
+3. **Vaultwarden collection** `AXOIQ/Marketplace Tokens/G Mining Pilot` created
+   with a naming convention template for per-user tokens.
 
 ## Pilot user roster (template)
 
-Populate this table AFTER NDA is signed, with the final list of G Mining
+Populate this table when the pilot starts, with the final list of G Mining
 engineers who will receive plugin access:
 
 | # | Name | Email | Role | Token issued | Token expiry | Notes |
@@ -48,9 +37,9 @@ Constraints on the roster:
 - Each user receives their own CF Access Service Token (1 token per identity,
   not a shared org token) — enables per-user audit trail + revocation
 - Email must be `@[REDACTED]` or a G Mining-approved domain
-- Must be listed in the signed NDA annexe or exhibit
+- Nominated by the G Mining pilot lead (Seb confirms roster before token issuance)
 
-## Per-user onboarding flow (once NDA signed + user in roster)
+## Per-user onboarding flow (user in roster + B.1/B.2.c shipped)
 
 ### Step 1 — Add user to Cloudflare Access policy P3
 
@@ -98,7 +87,7 @@ export ATLAS_CF_CLIENT_ID="<paste from Bitwarden Send>"
 export ATLAS_CF_CLIENT_SECRET="<paste from Bitwarden Send>"
 
 # Optional — Atlas-managed alternative: use atlas-setup.sh with device flow
-# (requires NDA signer's email provisioned in Authentik as G Mining external user)
+# (requires user email provisioned in Authentik as G Mining external user)
 curl -fsSL https://plugins.axoiq.com/atlas.sh | bash
 ```
 
@@ -159,4 +148,4 @@ Global rollback (all pilot users):
 
 ---
 
-*Document template | Created: 2026-04-20 21:42 EDT | Author: Seb Gagnon (with ATLAS) | Status: DRAFT pending NDA verification*
+*Document template | Created: 2026-04-20 21:42 EDT | Updated: 2026-04-20 21:48 EDT | Author: Seb Gagnon (with ATLAS) | Status: Operational template*
