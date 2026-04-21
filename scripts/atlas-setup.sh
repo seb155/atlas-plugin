@@ -27,7 +27,13 @@
 set -euo pipefail
 
 ATLAS_SETUP_VERSION="1.0.0"
+# Authentik OIDC endpoints (discovered 2026-04-21 via OIDC discovery at
+# /application/o/atlas-cli-device/.well-known/openid-configuration):
+#   device endpoint: /application/o/device/ (GLOBAL, app scoped via client_id param)
+#   token endpoint:  /application/o/token/  (GLOBAL)
 AUTHENTIK_BASE="${ATLAS_AUTHENTIK_BASE:-https://auth.axoiq.com/application/o}"
+AUTHENTIK_DEVICE_URL="${ATLAS_AUTHENTIK_DEVICE_URL:-${AUTHENTIK_BASE}/device/}"
+AUTHENTIK_TOKEN_URL="${ATLAS_AUTHENTIK_TOKEN_URL:-${AUTHENTIK_BASE}/token/}"
 AUTHENTIK_CLIENT_ID="${ATLAS_AUTHENTIK_CLIENT_ID:-atlas-cli-device}"
 CF_EXCHANGE_URL="${ATLAS_CF_EXCHANGE_URL:-https://auth.axoiq.com/atlas/exchange}"
 MARKETPLACE_URL="${ATLAS_MARKETPLACE_URL:-https://plugins.axoiq.com/marketplace.json}"
@@ -81,7 +87,7 @@ fi
 printf '🔑 ATLAS Marketplace Setup (Phase B.2)\n'
 printf '   Requesting device code from Authentik...\n'
 
-device_resp=$(curl -fsS -X POST "${AUTHENTIK_BASE}/device_authorize/" \
+device_resp=$(curl -fsS -X POST "${AUTHENTIK_DEVICE_URL}" \
   --data-urlencode "client_id=${AUTHENTIK_CLIENT_ID}" \
   --data-urlencode "scope=openid profile email" 2>&1) || {
   printf 'ERROR: device_authorize request failed:\n%s\n' "$device_resp" >&2
@@ -133,7 +139,7 @@ while true; do
     exit 1
   fi
 
-  token_resp=$(curl -fsS -X POST "${AUTHENTIK_BASE}/token/" \
+  token_resp=$(curl -fsS -X POST "${AUTHENTIK_TOKEN_URL}" \
     --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:device_code" \
     --data-urlencode "device_code=${device_code}" \
     --data-urlencode "client_id=${AUTHENTIK_CLIENT_ID}" 2>/dev/null || echo '{"error":"curl_fail"}')
