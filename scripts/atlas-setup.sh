@@ -37,7 +37,9 @@ AUTHENTIK_TOKEN_URL="${ATLAS_AUTHENTIK_TOKEN_URL:-${AUTHENTIK_BASE}/token/}"
 AUTHENTIK_CLIENT_ID="${ATLAS_AUTHENTIK_CLIENT_ID:-atlas-cli-device}"
 CF_EXCHANGE_URL="${ATLAS_CF_EXCHANGE_URL:-https://auth.axoiq.com/atlas/exchange}"
 MARKETPLACE_URL="${ATLAS_MARKETPLACE_URL:-https://plugins.axoiq.com/marketplace.json}"
-MARKETPLACE_NAME="atlas-axoiq"
+# MARKETPLACE_NAME must match the `name` field in marketplace.json manifest
+# (CC cross-checks this when running `claude plugin install <plugin>@<marketplace>`)
+MARKETPLACE_NAME="atlas-marketplace"
 
 SETTINGS_FILE="${HOME}/.claude/settings.json"
 POLL_INTERVAL_DEFAULT=5
