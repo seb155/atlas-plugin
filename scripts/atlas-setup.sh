@@ -238,6 +238,12 @@ printf '\n'
 printf '✓ Marketplace auth configured\n'
 
 if command -v claude >/dev/null 2>&1; then
+  # CC does not auto-load marketplaces from settings.json on first install.
+  # Explicit `marketplace add` is required to register + trust the URL before install.
+  printf '   Registering marketplace with CC...\n'
+  claude plugin marketplace add "$MARKETPLACE_URL" 2>&1 | tail -3 || {
+    printf '⚠ Marketplace add failed\n' >&2
+  }
   printf '   Running claude plugin install atlas-core@%s...\n' "$MARKETPLACE_NAME"
   claude plugin install "atlas-core@${MARKETPLACE_NAME}" || {
     printf '⚠ Install failed — run manually: claude plugin install atlas-core@%s\n' \
@@ -245,6 +251,7 @@ if command -v claude >/dev/null 2>&1; then
   }
 else
   printf '   (claude CLI not found on PATH — install ATLAS manually with:\n'
+  printf '      claude plugin marketplace add %s\n' "$MARKETPLACE_URL"
   printf '      claude plugin install atlas-core@%s)\n' "$MARKETPLACE_NAME"
 fi
 
