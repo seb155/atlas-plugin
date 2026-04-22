@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.43.0 (2026-04-22)
+
+### ✨ Features
+- feat(services): atlas-exchange microservice skeleton (Phase B.2.c)
+
+### 🐛 Bug Fixes
+- fix(atlas-setup): explicit marketplace add before plugin install (#39)
+- fix(atlas-setup): marketplace name must match manifest (#38)
+- fix(atlas-setup): drop curl -f flag for device flow polling (#37)
+- fix(atlas-exchange): match caddy passthrough path for healthcheck (#36)
+- fix(scripts): correct Authentik device flow endpoint path (Phase B.2.c)
+
+### 🔧 Other Changes
+- chore(plugin): add tvt skill, devportal bats test, ignore worktrees
+- Merge pull request 'feat(services): atlas-exchange microservice skeleton (re-deploy PR #33 lost in Forgejo outage)' (#35) from feature/atlas-exchange-redeploy into main
+- Merge pull request 'fix(scripts): correct Authentik device flow endpoint path (Phase B.2.c)' (#34) from feature/fix-authentik-device-endpoint into main
+
+
+
 ## v5.42.0 (2026-04-21)
 
 ### ✨ Features
