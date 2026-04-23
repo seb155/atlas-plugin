@@ -1,0 +1,7 @@
+# Gitleaks allowlist — public identifiers that look like secrets
+#
+# CF Access App IDs are PUBLIC identifiers used in docs + curl examples.
+# They are not credentials. See services/atlas-exchange/README.md for context.
+#
+# Format: <file>:<rule-id>:<line>
+services/atlas-exchange/README.md:generic-api-key:101
