@@ -99,18 +99,45 @@ esac
 NEXT_VERSION="${NEW_MAJ}.${NEW_MIN}.${NEW_PAT}"
 NEXT_TAG="v${NEXT_VERSION}"
 
-# Guard against stale tags from prior versioning schemes (e.g., a leftover
-# v0.3.0 from a pre-autorelease era blocks a fresh minor bump). Walk PATCH
-# forward until we find a free slot. Checks local refs; CI must have run
-# `git fetch --tags` beforehand so local reflects remote tag state.
+# Guard against collision with an existing tag of the same name. Two distinct
+# cases require opposite responses:
+#
+#   (a) Legacy stale tag from a pre-autorelease scheme — the tag points to a
+#       commit that is an *ancestor* of HEAD. Example: synapse had v0.3.0 from
+#       2026-03-07 (old refactor commit) blocking the autorelease v0.2.1 → v0.3.0
+#       bump on 2026-04-23. Resolution: walk PATCH forward to find a free slot.
+#
+#   (b) Concurrent pipeline already released — the tag points to a commit that
+#       is a *descendant* of HEAD. Example: pipeline A creates v0.4.1 + pushes
+#       while pipeline B races on the same base SHA; pipeline B should NOT
+#       double-release — it should exit 0 gracefully (the work is done).
+#
+# CI must have run `git fetch --tags` beforehand so local refs reflect remote.
 BUMP_ATTEMPTS=0
 while git rev-parse "refs/tags/${NEXT_TAG}" >/dev/null 2>&1; do
+  EXISTING_SHA=$(git rev-parse "refs/tags/${NEXT_TAG}^{commit}" 2>/dev/null || echo "")
+  if [ -z "$EXISTING_SHA" ]; then
+    echo "⚠️  Tag ${NEXT_TAG} exists but points nowhere — skipping"
+    NEW_PAT=$((NEW_PAT + 1))
+    NEXT_VERSION="${NEW_MAJ}.${NEW_MIN}.${NEW_PAT}"
+    NEXT_TAG="v${NEXT_VERSION}"
+    continue
+  fi
+
+  if ! git merge-base --is-ancestor "$EXISTING_SHA" HEAD; then
+    # Case (b): concurrent pipeline already released. Exit gracefully.
+    echo "ℹ️  Tag ${NEXT_TAG} already exists at ${EXISTING_SHA:0:10} which is NOT an ancestor of HEAD."
+    echo "    A concurrent pipeline has already released this bump. Exiting 0 (no-op)."
+    exit 0
+  fi
+
+  # Case (a): legacy stale tag. Walk PATCH forward.
   BUMP_ATTEMPTS=$((BUMP_ATTEMPTS + 1))
   if [ "$BUMP_ATTEMPTS" -gt 50 ]; then
     echo "❌ Could not find free tag after 50 PATCH bumps from ${NEW_MAJ}.${NEW_MIN}.x — aborting."
     exit 1
   fi
-  echo "⚠️  Tag ${NEXT_TAG} already exists — bumping PATCH to find free slot"
+  echo "⚠️  Tag ${NEXT_TAG} (legacy, ancestor of HEAD) already exists — bumping PATCH to find free slot"
   NEW_PAT=$((NEW_PAT + 1))
   NEXT_VERSION="${NEW_MAJ}.${NEW_MIN}.${NEW_PAT}"
   NEXT_TAG="v${NEXT_VERSION}"
