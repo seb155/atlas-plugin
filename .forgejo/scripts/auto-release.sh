@@ -37,9 +37,11 @@ for arg in "$@"; do
 done
 
 # ─── Detect last tag ─────────────────────────────────────────────────
-LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+# Only consider semver tags (v<major>.<minor>.<patch> [-prerelease]).
+# Filters out safety/* backup tags, release-candidates, and custom markers.
+LAST_TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo "")
 if [ -z "$LAST_TAG" ]; then
-  echo "ℹ️  No previous tags found — starting from v0.0.0"
+  echo "ℹ️  No previous semver tags found (v<N>.<N>.<N>) — starting from v0.0.0"
   LAST_TAG="v0.0.0"
   COMMIT_RANGE="HEAD"
 else
