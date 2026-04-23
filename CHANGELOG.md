@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.44.3 (2026-04-23)
+
+### 🐛 Bug Fixes
+- fix(ci-release): auto-release loops past stale tags (#43)
+
+
+
 ## v5.44.2 (2026-04-23)
 
 ### 🐛 Bug Fixes

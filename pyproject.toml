@@ -37,7 +37,7 @@ Repository = "https://forgejo.axoiq.com/axoiq/atlas-dev-plugin"
 Issues = "https://forgejo.axoiq.com/axoiq/atlas-dev-plugin/issues"
 
 [tool.setuptools.dynamic]
-version = "5.44.2"
+version = "5.44.3"
 
 [tool.setuptools.packages.find]
 where = ["."]
