@@ -1,7 +1,7 @@
 {
   "name": "@axoiq/atlas-cli",
-  "version": "5.37.0",
-  "description": "ATLAS CLI — Unified Claude Code launcher with profile-first architecture and auto-context detection",
+  "version": "5.44.0",
+  "description": "ATLAS CLI \u2014 Unified Claude Code launcher with profile-first architecture and auto-context detection",
   "author": "AXOIQ Inc. <atlas@axoiq.com>",
   "license": "UNLICENSED",
   "private": false,

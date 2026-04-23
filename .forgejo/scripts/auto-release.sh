@@ -180,7 +180,10 @@ print('ok')
 " && echo "📄 Updated ${MARKETPLACE_JSON} version → ${NEXT_VERSION}"
     git add "$MARKETPLACE_JSON"
   fi
-elif [ -f "package.json" ]; then
+fi
+
+# Also sync package.json if it exists (even when VERSION file is primary)
+if [ -f "package.json" ]; then
   # Update version in package.json using python3 (no jq dependency)
   python3 -c "
 import json
@@ -189,8 +192,10 @@ d['version'] = '${NEXT_VERSION}'
 with open('package.json', 'w') as f: json.dump(d, f, indent=2)
 print('ok')
 " && echo "📄 Updated package.json version → ${NEXT_VERSION}"
-  VERSION_FILE="package.json"
-elif [ -f "pyproject.toml" ]; then
+  [ -z "$VERSION_FILE" ] && VERSION_FILE="package.json"
+fi
+
+if [ -f "pyproject.toml" ]; then
   sed -i "s/^version = .*/version = \"${NEXT_VERSION}\"/" pyproject.toml
   echo "📄 Updated pyproject.toml version → ${NEXT_VERSION}"
   VERSION_FILE="pyproject.toml"

@@ -234,7 +234,7 @@ if [[ "$ERRORS" -gt 0 ]]; then
   exit 2
 elif [[ "$WARNINGS" -gt 0 ]]; then
   echo "${YEL}⚠ PASS (with warnings)${RST} — consider addressing style issues."
-  exit 1
+  exit 0  # warnings do not fail CI (errors=exit 2 still fail)
 else
   echo "${GRN}✅ PASS${RST} — all objects conform to canonical schema."
   exit 0
