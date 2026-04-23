@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.44.1 (2026-04-23)
+
+### 🐛 Bug Fixes
+- fix(ci): unblock release pipeline — 3 false-positive fixes
+
+### 🔧 Other Changes
+- Merge pull request 'fix(ci): unblock release pipeline — 3 false-positive fixes' (#41) from hotfix/release-pipeline-false-positives into main
+
+
+
 ## v5.44.0 (2026-04-23)
 
 ### ✨ Features
