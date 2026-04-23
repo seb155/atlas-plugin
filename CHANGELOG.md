@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.44.4 (2026-04-23)
+
+### 🐛 Bug Fixes
+- fix(ci-release): distinguish legacy stale tags from concurrent pipelines (#44)
+
+
+
 ## v5.44.3 (2026-04-23)
 
 ### 🐛 Bug Fixes
