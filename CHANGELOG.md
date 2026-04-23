@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.44.2 (2026-04-23)
+
+### 🐛 Bug Fixes
+- fix(ci): filter non-semver tags in auto-release detection
+
+### 🔧 Other Changes
+- Merge pull request 'fix(ci): filter non-semver tags in auto-release' (#42) from hotfix/semver-tag-filter into main
+
+
+
 ## v5.44.1 (2026-04-23)
 
 ### 🐛 Bug Fixes
