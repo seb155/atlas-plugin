@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.44.0 (2026-04-23)
+
+### ✨ Features
+- feat(perf): add performance-discipline doctrine (Plummer V1)
+
+### 🔧 Other Changes
+- Merge pull request 'chore(gitignore): untrack accidentally-committed __pycache__' (#40) from feature/perf-discipline-v1 into main
+- chore(gitignore): untrack accidentally-committed __pycache__
+
+
+
 ## v5.43.0 (2026-04-22)
 
 ### ✨ Features
