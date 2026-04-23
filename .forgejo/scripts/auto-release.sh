@@ -91,12 +91,31 @@ IFS='.' read -r MAJ MIN PAT <<< "$CURRENT"
 MAJ=${MAJ:-0}; MIN=${MIN:-0}; PAT=${PAT:-0}
 
 case "$BUMP" in
-  major) NEXT_VERSION="$((MAJ + 1)).0.0" ;;
-  minor) NEXT_VERSION="${MAJ}.$((MIN + 1)).0" ;;
-  patch) NEXT_VERSION="${MAJ}.${MIN}.$((PAT + 1))" ;;
+  major) NEW_MAJ=$((MAJ + 1)); NEW_MIN=0;              NEW_PAT=0 ;;
+  minor) NEW_MAJ=$MAJ;         NEW_MIN=$((MIN + 1));   NEW_PAT=0 ;;
+  patch) NEW_MAJ=$MAJ;         NEW_MIN=$MIN;           NEW_PAT=$((PAT + 1)) ;;
 esac
 
+NEXT_VERSION="${NEW_MAJ}.${NEW_MIN}.${NEW_PAT}"
 NEXT_TAG="v${NEXT_VERSION}"
+
+# Guard against stale tags from prior versioning schemes (e.g., a leftover
+# v0.3.0 from a pre-autorelease era blocks a fresh minor bump). Walk PATCH
+# forward until we find a free slot. Checks local refs; CI must have run
+# `git fetch --tags` beforehand so local reflects remote tag state.
+BUMP_ATTEMPTS=0
+while git rev-parse "refs/tags/${NEXT_TAG}" >/dev/null 2>&1; do
+  BUMP_ATTEMPTS=$((BUMP_ATTEMPTS + 1))
+  if [ "$BUMP_ATTEMPTS" -gt 50 ]; then
+    echo "❌ Could not find free tag after 50 PATCH bumps from ${NEW_MAJ}.${NEW_MIN}.x — aborting."
+    exit 1
+  fi
+  echo "⚠️  Tag ${NEXT_TAG} already exists — bumping PATCH to find free slot"
+  NEW_PAT=$((NEW_PAT + 1))
+  NEXT_VERSION="${NEW_MAJ}.${NEW_MIN}.${NEW_PAT}"
+  NEXT_TAG="v${NEXT_VERSION}"
+done
+
 echo ""
 echo "🏷️  ${LAST_TAG} → ${NEXT_TAG} (${BUMP} bump)"
 
