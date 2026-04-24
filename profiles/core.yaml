@@ -68,6 +68,9 @@ hooks:
 # v6.0.0-alpha.7+: Phase 3+4 native maintenance hooks
 - memory-auto-index           # SessionStart — memory drift detection (new files + TTL handoffs)
 - rules-conditional-loader    # SessionStart — load .claude/rules/*.md by context triggers
+# v6.1.0+: workflow library git-push discipline (LAW-WORKFLOW-001)
+- pre-git-push                # PreToolUse[Bash] — advisory checks before git push (v6.1.0 Task 1.6)
+- post-git-push               # PostToolUse[Bash] — audit log + ci-feedback-loop reminder (v6.1.0 Task 1.5)
 # v5.7.0+: Model-aware context threshold (replaces hardcoded CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=83)
 - context-threshold-injector  # SessionStart + UserPromptSubmit — dynamic 92/83 per model
 # v5.19.0+: SP-DAIMON P1 — personal profile auto-calibration
