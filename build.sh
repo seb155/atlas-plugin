@@ -6,6 +6,7 @@
 #
 # Flags:
 #        --skip-frontmatter    Bypass v6.0 frontmatter validation (dev iteration)
+#        --skip-hard-gate      Bypass Philosophy Engine hard-gate linting (dev iteration)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -19,11 +20,15 @@ CMD_METADATA_FILE="commands/_metadata.yaml"
 # Separate positional args from flags so validation can be bypassed
 # during dev iteration without changing the tier/domain selection.
 SKIP_FRONTMATTER=0
+SKIP_HARD_GATE=0
 POSITIONAL=()
 for arg in "$@"; do
   case "$arg" in
     --skip-frontmatter)
       SKIP_FRONTMATTER=1
+      ;;
+    --skip-hard-gate)
+      SKIP_HARD_GATE=1
       ;;
     --*)
       echo "❌ Unknown flag: $arg"
@@ -918,6 +923,29 @@ else
     echo "❌ Build aborted: fix violations or re-run with --skip-frontmatter"
     exit 1
   fi
+  echo ""
+fi
+
+# ── Philosophy Engine hard-gate linting (v6.0 Sprint 2) ──────────────
+# Validates Tier-1 skills against Iron Laws + Red Flags + HARD-GATE contracts.
+# Idempotent: reruns produce identical output.
+# Bypass with --skip-hard-gate for dev iteration (not recommended for release).
+# Exit 1 if any violation detected (safety net, previously not enforced).
+if [ "$SKIP_HARD_GATE" -eq 1 ]; then
+  echo "⏭️  Skipping Philosophy Engine hard-gate linting (--skip-hard-gate)"
+  echo ""
+elif [ -x scripts/execution-philosophy/hard-gate-linter.sh ]; then
+  echo "🔍 Philosophy Engine lint (Tier-1 skills)..."
+  if ! ./scripts/execution-philosophy/hard-gate-linter.sh all; then
+    echo ""
+    echo "❌ Build aborted: Philosophy Engine violations detected."
+    echo "   Fix violations in Tier-1 skills, or re-run with --skip-hard-gate (not recommended)"
+    echo "   Schema: .blueprint/schemas/philosophy-engine-schema.md"
+    exit 1
+  fi
+  echo ""
+else
+  echo "⚠️  Philosophy Engine linter not found (scripts/execution-philosophy/hard-gate-linter.sh missing or not executable)"
   echo ""
 fi
 

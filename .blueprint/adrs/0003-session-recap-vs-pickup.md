@@ -1,8 +1,11 @@
 # ADR 0003 — Claude Code Session Recap vs ATLAS session-pickup
 
-**Status**: PROPOSED (HITL Seb)
-**Date**: 2026-04-17
+**Status**: APPROVED
+**Date**: 2026-04-17 (proposed) → 2026-04-23 (approved)
+**Approver**: Seb Gagnon (HITL Gate 2 batch approval, 2026-04-23 19:52 EDT)
 **Context**: ATLAS v6.0 Sprint 6 — feature deduplication audit
+
+> **Approval note**: Shipped de facto in v6.0.0-alpha.3 with `Status: PROPOSED` (audit trail gap). Retroactively stamped APPROVED during v6.0.0-alpha.5 P0 fixes after HITL Gate 2 batch approval explicitly covered "ADR-0003 status resolution" as part of pruning batch.
 
 ## Context
 

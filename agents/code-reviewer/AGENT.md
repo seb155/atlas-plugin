@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: "Code review a pull request or working tree diff. Opus 4.7 agent. Checks CLAUDE.md compliance, patterns, security, tests, and produces structured feedback."
-model: opus
+model: claude-opus-4-7[1m]
 effort: xhigh
 thinking_mode: adaptive
 isolation: worktree
