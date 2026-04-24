@@ -31,6 +31,9 @@ skills:
   - test-orchestrator
   - visual-qa
   - api-healthcheck
+  # v6.1.0 — workflow library foundation skills
+  - task-framing             # v6.1.0 — complexity assessment (LAW-WORKFLOW-002)
+  - ci-feedback-loop         # v6.1.0 — post-push CI polling (LAW-WORKFLOW-001)
 
   # Ship
   - finishing-branch

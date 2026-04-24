@@ -105,7 +105,7 @@ workflows:
     priority: P0
     description: "Small focused code change with verify + CI gate"
     iron_laws: [LAW-WORKFLOW-001, LAW-VERIFY-001]
-    chains: [task-framing, verification-before-completion, ci-feedback-loop]
+    chains: [task-framing, verification, ci-feedback-loop]
     estimated_duration_min: 30
     persona_tags: [engineer]
     triggers: ["change code", "tweak", "small fix", "modify function"]
@@ -116,7 +116,7 @@ workflows:
     priority: P0
     description: "Full feature development pipeline — task-framing through CI-verified ship"
     iron_laws: [LAW-WORKFLOW-001, LAW-WORKFLOW-002, LAW-WORKFLOW-003, LAW-TDD-001]
-    chains: [task-framing, brainstorming, writing-plans, tdd, code-review, verification-before-completion, finishing-a-development-branch, ci-feedback-loop]
+    chains: [task-framing, brainstorming, plan-builder, tdd, code-review, verification, finishing-branch, ci-feedback-loop]
     estimated_duration_min: 120
     persona_tags: [engineer]
     triggers: ["new feature", "add feature", "build a feature", "implement"]
@@ -127,7 +127,7 @@ workflows:
     priority: P1
     description: "Bug fix with regression test + CI verify"
     iron_laws: [LAW-DBG-001, LAW-TDD-001, LAW-WORKFLOW-001]
-    chains: [task-framing, systematic-debugging, tdd, code-review, verification-before-completion, ci-feedback-loop]
+    chains: [task-framing, systematic-debugging, tdd, code-review, verification, ci-feedback-loop]
     estimated_duration_min: 60
     persona_tags: [engineer]
     triggers: ["fix bug", "broken", "error", "debug"]
@@ -138,7 +138,7 @@ workflows:
     priority: P1
     description: "Refactor with baseline review + after review + CI"
     iron_laws: [LAW-VERIFY-001, LAW-WORKFLOW-001]
-    chains: [task-framing, code-review, verification-before-completion, code-review, verification-before-completion, ci-feedback-loop]
+    chains: [task-framing, code-review, verification, code-review, verification, ci-feedback-loop]
     estimated_duration_min: 90
     persona_tags: [engineer]
     triggers: ["refactor", "clean up", "restructure"]
@@ -149,7 +149,7 @@ workflows:
     priority: P1
     description: "Atlas-plugin self-development flow"
     iron_laws: [LAW-WORKFLOW-001, LAW-WORKFLOW-003]
-    chains: [plan-builder, skill-management, hookify, plugin-builder, verification-before-completion, ship-all]
+    chains: [plan-builder, skill-management, hookify, plugin-builder, verification, ship-all]
     estimated_duration_min: 120
     persona_tags: [engineer]
     triggers: ["add skill", "new hook", "plugin feature", "atlas skill"]
@@ -293,7 +293,7 @@ workflows:
     category: architecture
     priority: P1
     description: "Architecture decision + plan + ADR"
-    chains: [deep-research, writing-plans, decision-log]
+    chains: [deep-research, plan-builder, decision-log]
     estimated_duration_min: 120
     persona_tags: [engineer, architect]
     triggers: ["architecture", "design system", "architectural decision"]
@@ -386,7 +386,7 @@ workflows:
     priority: P0
     description: "Deploy with verification + CI gate + audit-ship"
     iron_laws: [LAW-WORKFLOW-001, LAW-VERIFY-001]
-    chains: [devops-deploy, verification-before-completion, ci-feedback-loop]
+    chains: [devops-deploy, verification, ci-feedback-loop]
     estimated_duration_min: 45
     persona_tags: [devops]
     triggers: ["deploy", "push to prod", "ship", "release"]
@@ -416,7 +416,7 @@ workflows:
     category: infrastructure
     priority: P1
     description: "Security audit + remediation + verify"
-    chains: [security-audit, verification-before-completion]
+    chains: [security-audit, verification]
     estimated_duration_min: 90
     persona_tags: [devops, infra_engineer]
     triggers: ["security audit", "security fix", "vulnerability"]
@@ -426,7 +426,7 @@ workflows:
     category: infrastructure
     priority: P0
     description: "Incident triage + hotfix + postmortem"
-    chains: [deploy-hotfix, verification-before-completion]
+    chains: [deploy-hotfix, verification]
     estimated_duration_min: 120
     persona_tags: [devops]
     triggers: ["incident", "outage", "production down", "P0"]
@@ -550,7 +550,7 @@ workflows:
     priority: P0
     description: "Verification + code review + audit-ship"
     iron_laws: [LAW-VERIFY-001]
-    chains: [verification-before-completion, code-review, ship-all]
+    chains: [verification, code-review, ship-all]
     estimated_duration_min: 30
     persona_tags: [engineer]
     triggers: ["quality gate", "before shipping", "final check"]
