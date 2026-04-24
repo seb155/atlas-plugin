@@ -10,7 +10,7 @@
 #     {"continue": true} and exits 0
 #   - Reads hook input (JSON) from stdin, extracts tool_input.description or
 #     tool_input.prompt or tool_input.subject (first non-empty)
-#   - Calls effort-heuristic.sh with 2s timeout
+#   - Calls effort-heuristic.sh with 5s timeout (v6.0.0-alpha.7 P1-4: was 2s)
 #   - Emits hookSpecificOutput.additionalContext with the suggestion
 #
 # Plan: .blueprint/plans/v6.0 section K Sprint 3 Task 3.4
@@ -61,8 +61,11 @@ if [ -z "$DESC" ]; then
   exit 0
 fi
 
-# Call heuristic with 2s timeout — never block; default to 'auto' on any failure
-EFFORT=$(timeout 2 bash "$HEURISTIC" "$DESC" 2>/dev/null || echo "auto")
+# Call heuristic with 5s timeout — never block; default to 'auto' on any failure.
+# v6.0.0-alpha.7 P1-4 (SOTA review Agent B): bumped 2s → 5s to accommodate
+# keyword-heavy prompts (50+ word descriptions) without premature timeout fallback.
+# Still bounded to avoid blocking tool invocations on pathological input.
+EFFORT=$(timeout 5 bash "$HEURISTIC" "$DESC" 2>/dev/null || echo "auto")
 
 # Guard: if heuristic returned empty or unexpected, fallback to 'auto'
 case "$EFFORT" in
