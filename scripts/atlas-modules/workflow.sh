@@ -124,12 +124,112 @@ workflow_validate() {
   fi
 }
 
+# ==========================================================================
+# Phase 7 escape hatches (Section N.4)
+# ==========================================================================
+
+workflow_skip() {
+  local step="${1:-}"
+  local reason="${2:-no reason provided}"
+
+  if [[ -z "$step" ]]; then
+    echo "Usage: atlas workflow skip <step-number> [reason]" >&2
+    return 1
+  fi
+
+  # Check if step is HARD_GATE (forbidden)
+  local state_file="${CLAUDE_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude}/session-state.json"
+  local active_wf=""
+  if [[ -f "$state_file" ]]; then
+    active_wf=$(python3 -c "import json; d=json.load(open('$state_file')); aw=d.get('active_workflow') or {}; print(aw.get('name','') if aw else '')" 2>/dev/null)
+  fi
+
+  if [[ -z "$active_wf" ]]; then
+    echo "❌ No active workflow. Nothing to skip." >&2
+    return 1
+  fi
+
+  # Lookup step gate in skill frontmatter
+  local skill_file="${PLUGIN_ROOT}/skills/${active_wf}/SKILL.md"
+  if [[ -f "$skill_file" ]]; then
+    local gate
+    gate=$(python3 <<PYEOF 2>/dev/null
+import yaml, re
+content = open("$skill_file").read()
+m = re.match(r'^---\n(.*?)\n---', content, re.DOTALL)
+if m:
+    fm = yaml.safe_load(m.group(1))
+    for s in fm.get('workflow_steps', []):
+        if str(s.get('step')) == "$step":
+            print(s.get('gate', 'UNKNOWN'))
+            break
+PYEOF
+)
+    if [[ "$gate" == "HARD_GATE" ]]; then
+      echo "⛔ Step $step is HARD_GATE — cannot skip without HITL AskUserQuestion override." >&2
+      echo "   Use /atlas workflow customize to edit workflow_steps inline, OR answer HITL prompt when it fires." >&2
+      return 1
+    fi
+  fi
+
+  # Log skip to decision-log
+  local decisions_file="${CLAUDE_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude}/decisions.jsonl"
+  local ts
+  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  echo "{\"ts\":\"${ts}\",\"event\":\"workflow_step_skipped\",\"workflow\":\"${active_wf}\",\"step\":${step},\"reason\":\"${reason}\"}" >> "$decisions_file" 2>/dev/null || true
+
+  echo "⏭️  Skipped step $step of $active_wf (reason logged to decisions.jsonl)"
+}
+
+workflow_abort() {
+  local reason="${1:-user requested}"
+
+  local state_file="${CLAUDE_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude}/session-state.json"
+  local active_wf=""
+  if [[ -f "$state_file" ]]; then
+    active_wf=$(python3 -c "import json; d=json.load(open('$state_file')); aw=d.get('active_workflow') or {}; print(aw.get('name','') if aw else '')" 2>/dev/null)
+  fi
+
+  if [[ -z "$active_wf" ]]; then
+    echo "❌ No active workflow to abort." >&2
+    return 1
+  fi
+
+  # Log abort + clear active_workflow
+  local decisions_file="${CLAUDE_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude}/decisions.jsonl"
+  local ts
+  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  echo "{\"ts\":\"${ts}\",\"event\":\"workflow_abandoned\",\"workflow\":\"${active_wf}\",\"reason\":\"${reason}\"}" >> "$decisions_file" 2>/dev/null || true
+
+  # Clear active_workflow in session-state
+  if [[ -f "$state_file" ]]; then
+    python3 <<PYEOF 2>/dev/null || true
+import json
+d = json.load(open("$state_file"))
+d['active_workflow'] = None
+json.dump(d, open("$state_file", 'w'), indent=2)
+PYEOF
+  fi
+
+  echo "🛑 Workflow $active_wf aborted. Session continues in ad-hoc mode."
+  echo "   Decision logged. Abandon reason: $reason"
+}
+
+workflow_customize() {
+  echo "🎨 Workflow customize — edit workflow_steps inline for this session"
+  echo "   (stub: advanced feature for v6.1.x — use AskUserQuestion overrides for now)"
+  echo "   Alternative: edit the skill SKILL.md directly (local only), then /reload-plugins"
+}
+
 # Entry point
 case "${1:-list}" in
   list) shift; workflow_list "$@" ;;
   show) shift; workflow_show "$@" ;;
   validate) shift; workflow_validate "$@" ;;
-  suggest) shift; echo "TODO: intent detection coming in Phase 7 Task 7.9" ;;
+  suggest) shift; echo "Intent detection via hooks/workflow-intent-detect (UserPromptSubmit). See /atlas workflow list triggers." ;;
+  skip) shift; workflow_skip "$@" ;;
+  abort) shift; workflow_abort "$@" ;;
+  customize) shift; workflow_customize "$@" ;;
   --help|-h|help)
     cat <<'EOF'
 atlas workflow — SOTA workflow library
