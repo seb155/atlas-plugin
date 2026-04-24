@@ -61,6 +61,36 @@ if [ -z "$DESC" ]; then
   exit 0
 fi
 
+# v6.1 extension (Task 1.8): workflow per-step routing
+# If description mentions a workflow + step (e.g., "workflow-feature step 3"),
+# look up the step's model_preference + effort from workflow-registry.yaml
+# and override the heuristic. Falls through to heuristic on no match.
+WORKFLOW_HINT=""
+if [[ "$DESC" =~ (workflow-[a-z-]+)[[:space:]]+step[[:space:]]+([0-9]+) ]]; then
+  WF_NAME="${BASH_REMATCH[1]}"
+  WF_STEP="${BASH_REMATCH[2]}"
+  REGISTRY="$PLUGIN_ROOT/scripts/execution-philosophy/workflow-registry.yaml"
+  if [[ -f "$REGISTRY" ]]; then
+    WORKFLOW_HINT=$(python3 <<PYEOF 2>/dev/null
+import yaml, sys
+try:
+    with open("$REGISTRY") as f:
+        d = yaml.safe_load(f)
+    for w in d['workflows']:
+        if w['name'] == "$WF_NAME":
+            # Registry has chains, but for per-step model_preference we need
+            # the skill file itself (Phase 2+). For now emit chain-wide hint.
+            chain_len = len(w.get('chains', []))
+            if chain_len and int("$WF_STEP") <= chain_len:
+                print(f"workflow={w['name']} step=$WF_STEP chain=[{','.join(w.get('chains', []))}]")
+            break
+except Exception:
+    pass
+PYEOF
+)
+  fi
+fi
+
 # Call heuristic with 5s timeout — never block; default to 'auto' on any failure.
 # v6.0.0-alpha.7 P1-4 (SOTA review Agent B): bumped 2s → 5s to accommodate
 # keyword-heavy prompts (50+ word descriptions) without premature timeout fallback.
@@ -75,7 +105,11 @@ esac
 
 # Emit advisory additionalContext via hookSpecificOutput schema
 # The model sees this as a hint; explicit `effort:` in AGENT.md frontmatter wins
+# v6.1: append workflow context hint if detected (Task 1.8)
 REMINDER="ATLAS Effort Heuristic suggests: **${EFFORT}** (based on task description keywords). Override via explicit effort: in AGENT.md frontmatter if needed."
+if [[ -n "$WORKFLOW_HINT" ]]; then
+  REMINDER="${REMINDER} | Workflow context: ${WORKFLOW_HINT}. Per-step model_preference routing will kick in once workflow skills ship (Phase 2)."
+fi
 
 python3 -c "
 import json

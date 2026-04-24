@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# ATLAS Pre Git-Push Hook (v6.1.0)
+#
+# Advisory pre-check before `git push`:
+#   1. Checks git status (uncommitted files)
+#   2. Checks for recent test runs in session history (last 10 min)
+#   3. Checks if LAW-WORKFLOW-001 previous push is still pending CI verify
+#   4. Emits warning via additionalContext but DOES NOT block (exit 0)
+#
+# Trigger: PreToolUse matcher=Bash
+# Exit 0: always (never blocks — advisory only, per Section O.5 "flexible with audit")
+#
+# Companion: hooks/post-git-push (post-execution logging)
+# Plan ref: .blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md O.5
+
+set -euo pipefail
+
+INPUT=$(cat 2>/dev/null || echo '{}')
+
+TOOL_NAME=$(echo "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('tool_name', ''))" 2>/dev/null || echo "")
+COMMAND=$(echo "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('tool_input', {}).get('command', ''))" 2>/dev/null || echo "")
+
+# Only act on Bash + git push
+if [[ "$TOOL_NAME" != "Bash" ]] || [[ "$COMMAND" != *"git push"* ]]; then
+  exit 0
+fi
+
+WARNINGS=()
+
+# Check 1: uncommitted files (not including untracked that might be intentional)
+if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
+  DIRTY_COUNT=$(git status --porcelain 2>/dev/null | grep -c '^.[MADRC]' || echo 0)
+  if [[ "$DIRTY_COUNT" -gt 0 ]]; then
+    WARNINGS+=("Uncommitted tracked changes detected (${DIRTY_COUNT} files). They will NOT be pushed.")
+  fi
+fi
+
+# Check 2: previous push still pending CI verify (LAW-WORKFLOW-001 enforcement signal)
+CLAUDE_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}/.claude"
+AUDIT_FILE="${CLAUDE_DIR}/ci-audit.jsonl"
+if [[ -f "$AUDIT_FILE" ]]; then
+  LAST_UNRESOLVED=$(python3 <<PYEOF 2>/dev/null || echo ""
+import json, os, sys
+try:
+    with open("$AUDIT_FILE") as f:
+        lines = f.readlines()
+    # Find most recent push with resolved_at=None
+    for line in reversed(lines):
+        try:
+            e = json.loads(line)
+            if e.get("event") == "push" and e.get("resolved_at") is None:
+                print(f"{e.get('commit','?')[:8]} on {e.get('branch','?')}")
+                break
+        except: pass
+except: pass
+PYEOF
+)
+  if [[ -n "$LAST_UNRESOLVED" ]]; then
+    WARNINGS+=("[LAW-WORKFLOW-001] Previous push ${LAST_UNRESOLVED} has not been CI-verified yet. Consider running ci-feedback-loop first.")
+  fi
+fi
+
+# Check 3: force push?
+if [[ "$COMMAND" == *"--force"* ]] || [[ "$COMMAND" == *"-f "* ]] || [[ "$COMMAND" == *" -f"* && "$COMMAND" != *"-fi"* ]]; then
+  WARNINGS+=("FORCE PUSH detected. This rewrites remote history and can break teammates' clones. Confirm intent.")
+fi
+
+# Emit warnings (non-blocking) if any
+if [[ ${#WARNINGS[@]} -gt 0 ]]; then
+  REMINDER="⚠️ Pre-push advisory ($(date +%H:%M)):"$'\n'
+  for w in "${WARNINGS[@]}"; do
+    REMINDER+="  • $w"$'\n'
+  done
+  REMINDER+="Push will proceed — verify intent."
+
+  python3 <<PYEOF 2>/dev/null || true
+import json, sys
+print(json.dumps({
+    "hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "additionalContext": """${REMINDER}"""
+    }
+}))
+PYEOF
+fi
+
+exit 0

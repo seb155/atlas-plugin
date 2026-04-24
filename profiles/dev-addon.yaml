@@ -31,6 +31,77 @@ skills:
   - test-orchestrator
   - visual-qa
   - api-healthcheck
+  # v6.1.0 — workflow library foundation skills
+  - task-framing             # v6.1.0 — complexity assessment (LAW-WORKFLOW-002)
+  - ci-feedback-loop         # v6.1.0 — post-push CI polling (LAW-WORKFLOW-001)
+
+  # v6.1.0 — Workflow library Cat 1 Programming (5 P0/P1 orchestrators)
+  - workflow-code-change     # P0 — small focused change with verify + CI
+  - workflow-feature         # P0 — full feature pipeline (flagship, 9 steps)
+  - workflow-bug-fix         # P1 — reproducer → regression test → root cause
+  - workflow-refactor        # P1 — behavior-preserving restructure
+  - workflow-plugin-dev      # P1 — atlas-plugin self-development
+
+  # v6.1.0 — Workflow library Cat 2 Product & Vision (5 orchestrators)
+  - workflow-product-vision        # P0 — 3-12 month vision doc for stakeholders
+  - workflow-product-roadmap       # P1 — strategic roadmap + OKRs
+  - workflow-feature-discovery     # P1 — JTBD + personas + problem validation
+  - workflow-client-alignment      # P1 — demo prep + stakeholder sync
+  - workflow-pitch-narrative       # P2 — elevator pitch / investor deck
+
+  # v6.1.0 — Workflow library Cat 3 UX/UI Design (5 orchestrators)
+  - workflow-ux-wireframe          # P1 — low-fi ASCII mockups via AskUserQuestion
+  - workflow-ui-mockup             # P1 — hi-fi + design system + 6 states
+  - workflow-user-flow             # P2 — Mermaid user journey map
+  - workflow-design-review         # P1 — WCAG 2.2 AA + Nielsen 10 heuristics
+  - workflow-prototype             # P2 — interactive HTML/React stub + browser smoke
+
+  # v6.1.0 — Workflow library Cat 4 Collaboration (3 orchestrators)
+  - workflow-brainstorm-collab     # P0 — HITL divergent/convergent with user
+  - workflow-facilitate-decision   # P1 — tradeoff matrix + ADR
+  - workflow-stakeholder-sync      # P1 — meeting prep + status narrative
+
+  # v6.1.0 — Workflow library Cat 5 Architecture (4 orchestrators)
+  - workflow-architecture          # P1 — system design + plan + ADR
+  - workflow-brainstorm-solo       # P2 — autonomous ideation doc
+  - workflow-spec-first            # P1 — spec + stakeholder review
+  - workflow-system-design         # P1 — C4 + NFR + ADR
+
+  # v6.1.0 — Workflow library Cat 6 Planning (5 orchestrators)
+  - workflow-plan-large            # P0 — 15-section plan with ≥12/15 gate
+  - workflow-plan-feature          # P1 — 5-8 section shorter plan
+  - workflow-sprint-plan           # P1 — 2-week sprint slicing
+  - workflow-estimate              # P2 — calibrated sizing (x0.15-0.25)
+  - workflow-sprint-retro          # P1 — session retro + action items
+
+  # v6.1.0 — Workflow library Cat 7 Infrastructure (5 orchestrators)
+  - workflow-deploy                # P0 — deploy with pre+post smoke
+  - workflow-infra-change          # P1 — IaC change + peer review + snapshot
+  - workflow-network               # P2 — VLAN/firewall/DNS + multi-vantage verify
+  - workflow-security              # P1 — 4-phase security audit + remediation
+  - workflow-incident-response     # P0 — triage + hotfix + postmortem scheduled
+
+  # v6.1.0 — Workflow library Cat 8 Research (4 orchestrators)
+  - workflow-research-deep         # P1 — multi-query decomposition + synthesis
+  - workflow-audit                 # P1 — 4-phase audit (inventory/fix/enforce/verify)
+  - workflow-debug-investigation   # P1 — systematic debugging + root cause doc
+  - workflow-exploration           # P2 — 8-phase context discovery + codemap
+
+  # v6.1.0 — Workflow library Cat 9 Documentation (4 orchestrators)
+  - workflow-doc-write             # P1 — per doc-type templates (README/API/runbook/tutorial)
+  - workflow-adr-log               # P1 — ADR template + decisions.jsonl
+  - workflow-retrospective         # P1 — session retro + memory dream
+  - workflow-handoff               # P0 — handoff file with 6 mandatory sections
+
+  # v6.1.0 — Workflow library Cat 10 Data / Analytics (3 orchestrators)
+  - workflow-data-analysis         # P2 — hypothesis + evidence + viz
+  - workflow-benchmark             # P2 — baseline + delta + significance
+  - workflow-cost-tracking         # P2 — spend + trend + alerts
+
+  # v6.1.0 — Workflow library Cat 11 Meta / Cross-cutting (3 orchestrators)
+  - workflow-quality-gate          # P0 — verify + review + score ≥ 8/10
+  - workflow-audit-ship            # P1 — enterprise 15-layer + ship-all
+  - workflow-incident-postmortem   # P1 — blameless RCA + enforcement protocol
 
   # Ship
   - finishing-branch

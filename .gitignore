@@ -22,3 +22,4 @@ third_party/atlas-skill-lint/package-lock.json
 .claude/session-state.json
 .claude/decisions.jsonl
 .claude/skill-usage.jsonl
+.session-lock

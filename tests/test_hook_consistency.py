@@ -23,7 +23,12 @@ PROFILES_DIR = PLUGIN_ROOT / "profiles"
 # CLI helpers: scripts in hooks/ that are invoked on-demand by skills (not by CC events).
 # These are intentionally NOT registered in hooks.json as they don't respond to any event.
 # v6.0.0-alpha.12: added autonomy-gate.sh (Phase 5 Approved-Mode helper).
-CLI_HELPERS = {"run-hook.sh", "autonomy-gate.sh"}
+# v6.1.0: added atlas-lock-acquire/release (invoked from scripts/atlas-modules/session.sh)
+CLI_HELPERS = {
+    "run-hook.sh", "autonomy-gate.sh",
+    "atlas-lock-acquire", "atlas-lock-release",
+    "ci-audit-log",  # v6.1.0 — invoked from workflows, not CC events
+}
 
 # Directories/files to skip when scanning hooks/
 SKIP_NAMES = {"hooks.json", "lib", "ts", "__pycache__"} | CLI_HELPERS
