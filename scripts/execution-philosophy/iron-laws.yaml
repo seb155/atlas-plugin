@@ -429,21 +429,148 @@ laws:
     created: 2026-04-17
     version: 1.0.0
 
+  # ==========================================================================
+  # LAW-WORKFLOW-001 — No Push Without CI Verify
+  # Source: workflow library v6.1.0 (root-cause of 2026-04-23 incident)
+  # Enforcement: post-git-push hook + workflow-code-change HARD-GATE
+  # ==========================================================================
+  - id: LAW-WORKFLOW-001
+    name: no-push-without-ci-verify
+    title: "Never push a second commit without CI-verifying the previous push"
+    statement: |
+      NEVER push a second commit to the same branch without first verifying the previous commit's CI pipeline is green. If CI is red, fix before push. This applies regardless of branch (feat/*, dev, main) — the discipline is about feedback loop integrity, not branch protection.
+    rationale: >-
+      The 2026-04-23 incident proved the cost: 27 consecutive commits pushed
+      across ~4 hours with pipelines #306-#312 all red, detected only when
+      the user flagged via screenshot. 7 distinct test failures that
+      incremental CI checks would have caught after commit #1 accumulated
+      into a hostile refactor debugging session. CI is the cheapest
+      real-environment validation available — skipping it is not velocity,
+      it is deferred-cost accumulation.
+    applicable_skills:
+      - workflow-code-change
+      - workflow-feature
+      - workflow-bug-fix
+      - workflow-refactor
+      - workflow-plugin-dev
+      - workflow-deploy
+      - ci-feedback-loop
+      - finishing-a-development-branch
+    applicable_agents:
+      - team-engineer
+      - devops-engineer
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      I just pushed commit A. Let me quickly push commit B to fix something else
+      before checking A's CI. The pipeline will probably be green.
+    compliant_example: |
+      Pushed commit A → invoke ci-feedback-loop → poll until state terminal.
+      If green → OK to prepare commit B. If red → triage failures, fix,
+      amend or new commit, push again, re-verify before any further work.
+    signature_sha256: "db7f6890b4e49ec020980a354a420ea142965d2725e48ef6227bab12adacc188"
+    created: 2026-04-24
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-WORKFLOW-002 — Task Framing Before Code
+  # Source: workflow library v6.1.0 + Anthropic task-framing pattern
+  # Enforcement: workflow-feature + workflow-bug-fix HARD-GATE
+  # ==========================================================================
+  - id: LAW-WORKFLOW-002
+    name: task-framing-before-code
+    title: "No feature implementation >1h without task-framing complexity assessment"
+    statement: |
+      NEVER write production code for a feature expected to take more than 1 hour without first invoking task-framing to assess complexity (trivial/moderate/complex) and set the rigor level for the remaining steps. Framing is not a deliverable — it is a decision about which downstream gates apply.
+    rationale: >-
+      Unframed tasks spawn scope drift. A 1-line change becomes a 10-file
+      refactor because no one scoped "what does done mean here?" up front.
+      Task-framing takes 5-10 minutes and parameterizes the rest of the
+      workflow: trivial gets skip-tests allowance, moderate gets TDD,
+      complex gets 15-section plan. Without framing, every workflow runs
+      at max-rigor (wasteful) or min-rigor (dangerous) — neither is right.
+    applicable_skills:
+      - workflow-feature
+      - workflow-bug-fix
+      - workflow-refactor
+      - workflow-plan-large
+      - workflow-plan-feature
+      - task-framing
+    applicable_agents:
+      - team-engineer
+      - plan-architect
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      I know what to build — let me just start coding. Task-framing would
+      be bureaucracy for a 2-hour feature.
+    compliant_example: |
+      Invoke task-framing → output "moderate complexity, 2 files, 3h estimated".
+      → Apply moderate-tier gates: TDD required, peer review, no 15-section plan.
+      → Proceed to TDD with appropriate scope.
+    signature_sha256: "635e7c7cea429759f6cd216286d8ea111fc1ce81203d818630b76dbacb4d018f"
+    created: 2026-04-24
+    version: 1.0.0
+
+  # ==========================================================================
+  # LAW-WORKFLOW-003 — Finishing Branch Before PR
+  # Source: workflow library v6.1.0 + finishing-a-development-branch skill
+  # Enforcement: workflow-feature + workflow-plugin-dev HARD-GATE
+  # ==========================================================================
+  - id: LAW-WORKFLOW-003
+    name: finishing-branch-before-pr
+    title: "Never create a PR without invoking finishing-a-development-branch"
+    statement: |
+      NEVER create a pull request without first invoking finishing-a-development-branch. This skill performs verification, commit hygiene, changelog update, and handoff-readiness checks. A PR created without it is a PR that will be sent back.
+    rationale: >-
+      PRs that skip the finishing ritual consistently generate rework
+      cycles: missing changelog entries, WIP commits not squashed, test
+      evidence absent, branch name not aligned with conventions. Each
+      round of "please fix X before I review" is 30+ minutes of reviewer
+      + author wall-clock. finishing-a-development-branch front-loads
+      that cost to 5-10 minutes, once.
+    applicable_skills:
+      - workflow-feature
+      - workflow-plugin-dev
+      - workflow-refactor
+      - finishing-a-development-branch
+      - forgejo-pr
+      - ship-all
+    applicable_agents:
+      - team-engineer
+      - devops-engineer
+    tier: [core, dev, admin]
+    enforcement: hard_gate
+    override_requires: HITL
+    violation_example: |
+      Feature works, tests pass, let me just open the PR. The reviewer can
+      flag anything cosmetic.
+    compliant_example: |
+      Invoke finishing-a-development-branch → verify commit messages follow
+      convention → squash WIP commits → update CHANGELOG → run full test
+      suite → write PR description with test evidence → THEN forgejo-pr.
+    signature_sha256: "f3979bd6749768e75fee1f66059c7d02f0141eb30a9abd8ca6b7f71134562c0d"
+    created: 2026-04-24
+    version: 1.0.0
+
 # ==========================================================================
 # Registry metadata
 # ==========================================================================
 metadata:
-  total_laws: 9
+  total_laws: 12
   enforcement_levels:
-    hard_gate: 9
+    hard_gate: 12
     recommendation: 0
   coverage:
-    core_tier: 9
-    dev_tier: 9
-    admin_tier: 9
+    core_tier: 12
+    dev_tier: 12
+    admin_tier: 12
   source_skills:
     superpowers_verbatim: 4   # LAW-TDD, LAW-DBG, LAW-DESIGN, LAW-VERIFY
     atlas_native: 5           # LAW-PLAN, LAW-SCOPE, LAW-DISPATCH, LAW-COMPLIANCE, LAW-CONTEXT
+    workflow_library: 3       # LAW-WORKFLOW-001, LAW-WORKFLOW-002, LAW-WORKFLOW-003 (v6.1.0)
   linter_rules:
     - "L3: skills with superpowers_pattern: [iron_law] MUST reference name: here"
     - "L4: <HARD-GATE> signature MUST match signature_sha256 byte-for-byte"
