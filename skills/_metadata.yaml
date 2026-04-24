@@ -1046,5 +1046,13 @@ skills:
     plugin: admin
     description: "Infrastructure health audit \u2014 57 endpoints, auto-heal recipes"
   flow-analytics:
-    tier: admin
-    since: v6.0.0-alpha.6
+    emoji: "\U0001F4CA"
+    category: Meta
+    owner: admin
+    plugin: admin
+    domains:
+    - analytics
+    - observability
+    description: "Analyze skill-usage telemetry \u2014 hot skills, zombies, failure\
+      \ rates, promote/archive candidates. Admin-tier observability (v6.0.0-alpha.7+)"
+    since: v6.0.0-alpha.7
