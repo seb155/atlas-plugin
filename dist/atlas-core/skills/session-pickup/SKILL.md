@@ -87,6 +87,43 @@ Extract from each handoff: the "Focus" line (header or first summary), "What was
    - The active plan file (from handoff)
    - `.blueprint/plans/INDEX.md`
    - Any other files listed
+
+### Step 2.5: Restore Approved-Mode State (v6.0.0-alpha.8+)
+
+If handoff contains an `approved_gates_persist` YAML block (from previous session's session-retrospective), restore it into `.claude/session-state.json`:
+
+```yaml
+# Example handoff section:
+approved_gates_persist:
+  autonomy_mode: approved
+  approved_gates:
+    - gate_id: plan-arch
+      scope: branch-feat/atlas-v6-consolidation
+      approved_at: 2026-04-23T20:53:00Z
+    - gate_id: dedup-phase-2
+      scope: session
+  ttl_hours: 24
+```
+
+Restoration logic:
+```bash
+# If handoff has approved_gates_persist + TTL not expired
+if grep -q "^approved_gates_persist:" "$HANDOFF_FILE"; then
+  # Extract block, apply via autonomy-gate
+  python3 -c "
+import yaml
+with open('$HANDOFF_FILE') as f: content = f.read()
+# Parse approved_gates_persist block ...
+# For each gate, call: ./hooks/autonomy-gate.sh approve <gate_id> <scope>
+# Also: ./hooks/autonomy-gate.sh set-mode approved
+"
+  echo "🔐 Restored N approved_gates from handoff (v6.0 Phase 5 persistence)"
+fi
+```
+
+**TTL check**: If handoff `session_start` > TTL (default 24h), DO NOT restore approved_gates — default back to `strict` mode. Safe fallback.
+
+**User override**: Add `--no-approved-restore` flag to skip restoration even if handoff has it.
 3. Check git state:
    ```bash
    git branch --show-current

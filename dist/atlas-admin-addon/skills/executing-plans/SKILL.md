@@ -95,6 +95,37 @@ For each task (respecting dependency order from manifest):
 - Show progress so far + what's next
 - Wait for user approval before continuing
 
+**Approved-Mode Integration** (v6.0.0-alpha.7+, Phase 5 autonomy engine):
+
+Before every `AskUserQuestion` call at a HITL gate, check session-state via `autonomy-gate.sh`:
+
+```bash
+# Extract gate info from manifest task
+GATE_ID="${task.gate_id:-phase-${phase}-gate}"
+TIER="${task.dod_tier:-VALIDATING}"   # CODED | VALIDATING | VALIDATED | SHIPPED
+ACTION="${task.action:-}"              # e.g., deploy:production (optional)
+
+if "$CLAUDE_PLUGIN_ROOT/hooks/autonomy-gate.sh" check "$GATE_ID" "$TIER" "$ACTION"; then
+  # Gate auto-approved (strict mode or pre-approved gate + skippable tier)
+  log_decision "auto-approved via approved-mode"
+else
+  # Fire AskUserQuestion normally
+  AskUserQuestion("Proceed with ${GATE_ID}?", ...)
+fi
+```
+
+**Rules**:
+- If `task.action` matches an immutable always-ask action (destructive, deploy:prod, etc.) → ALWAYS fire AskUserQuestion (autonomy-gate check returns 1)
+- If `task.dod_tier` is in `always_ask_tiers: [VALIDATED, SHIPPED]` → ALWAYS fire
+- If `autonomy_mode: strict` (default) → ALWAYS fire (safe baseline)
+- If `autonomy_mode: approved` + `gate_id` in approved_gates + `tier` in skip_tiers → SKIP
+
+**User activation**: "fais tout", "approuve tout", "full autonomy", or explicit `autonomy-gate.sh set-mode approved` + `autonomy-gate.sh approve <gate_id>`.
+
+**Audit trail**: Every check logged to `.claude/decisions.jsonl` with {ts, gate_id, tier, action, mode, decision}.
+
+Schema: `.blueprint/schemas/session-state-v1.md`
+
 ### Step 4: Verify All
 - Run full test suite (backend + frontend + type-check)
 - Run E2E if specified in plan Section O

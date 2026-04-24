@@ -60,6 +60,14 @@ hooks:
 - subagent-output-capture     # PostToolUse[matcher=Agent] (SP-AGENT-VIS Layer 1)
 - subagent-track-stop         # SubagentStop (SP-AGENT-VIS Layer 3 cleanup)
 - auto-tail-agent             # SubagentStart — SP-AGENT-VIS Layer 3 auto-tail tmux pane (2026-04-17)
+# v6.0.0-alpha.1+: SOTA hooks (Philosophy Engine integration)
+- inject-meta-skill           # SessionStart — injects atlas-assist FULL (23KB) + 9 Iron Laws
+- pre-compact-sota-context    # PreCompact — 6-section preservation reminder
+- session-end-retro           # SessionEnd — retrospective nudge (empty-detection v6.0.0-alpha.6)
+- effort-router               # PreToolUse[Task|Agent|TaskCreate] — effort heuristic advisory (5s timeout v6.0.0-alpha.7)
+# v6.0.0-alpha.7+: Phase 3+4 native maintenance hooks
+- memory-auto-index           # SessionStart — memory drift detection (new files + TTL handoffs)
+- rules-conditional-loader    # SessionStart — load .claude/rules/*.md by context triggers
 # v5.7.0+: Model-aware context threshold (replaces hardcoded CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=83)
 - context-threshold-injector  # SessionStart + UserPromptSubmit — dynamic 92/83 per model
 # v5.19.0+: SP-DAIMON P1 — personal profile auto-calibration

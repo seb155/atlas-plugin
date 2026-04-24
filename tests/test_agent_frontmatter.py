@@ -13,7 +13,18 @@ import pytest
 
 from conftest import AGENTS_DIR, parse_frontmatter
 
-_VALID_MODELS = {"sonnet", "opus", "haiku", "inherit"}
+# v6.0.0-alpha.12 (2026-04-23 P1-0): Accept canonical model IDs per schema.
+# Schema source of truth: .blueprint/schemas/agent-frontmatter-v6.md
+# Includes both shortcuts (opus/sonnet/haiku) AND full IDs with optional [1m] variant suffix.
+# Full IDs mandated for Opus 4.7 to avoid silent 256K fallback (user concern #1, Sprint 0 P0-1).
+_VALID_MODELS = {
+    # Shortcuts (legacy, still accepted)
+    "sonnet", "opus", "haiku", "inherit",
+    # Canonical full IDs (v6.0+)
+    "claude-opus-4-7", "claude-opus-4-7[1m]",
+    "claude-sonnet-4-6",
+    "claude-haiku-4-5", "claude-haiku-4-5-20251001",
+}
 
 
 def _collect_agent_mds() -> list[Path]:

@@ -86,6 +86,31 @@ Execute metric command → record `{metric, timestamp, config_snapshot}` → sav
 Generate report → save to `.claude/assay/reports/{experiment}-{date}.md`.
 **HITL Gate**: Keep all / rollback to baseline / cherry-pick iterations.
 
+## Approved-Mode Integration (v6.0.0-alpha.7+)
+
+Every HITL gate in experiment-loop respects session autonomy state via `hooks/autonomy-gate.sh`:
+
+| Gate | Default gate_id | Default tier | Always-ask action |
+|------|-----------------|--------------|-------------------|
+| Step 1 LOAD (confirm params) | `experiment-params` | CODED | — |
+| Step 3f DECIDE (delta > threshold) | `experiment-decide` | VALIDATING | — |
+| Step 4 REPORT (keep/rollback/cherry-pick) | `experiment-final` | VALIDATED | `data:modify_prod_schema` (if rule changes affect prod) |
+
+**Auto-approval scenarios**:
+- In `approved` mode with `experiment-params` + `experiment-decide` gates approved → iteration loop runs autonomously
+- Step 4 REPORT with `VALIDATED` tier → ALWAYS asks (always_ask_tiers)
+- If experiment touches prod rule config → `data:modify_prod_schema` action forces ask
+
+**User activation pattern**:
+```bash
+./hooks/autonomy-gate.sh approve experiment-params
+./hooks/autonomy-gate.sh approve experiment-decide
+./hooks/autonomy-gate.sh set-mode approved
+/atlas tune my-experiment  # runs autonomously until Step 4 HITL
+```
+
+Audit trail: every gate decision logged to `.claude/decisions.jsonl`.
+
 ## Integration APIs
 
 | System | Endpoints |

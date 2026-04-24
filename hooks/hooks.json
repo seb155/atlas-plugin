@@ -107,13 +107,13 @@
           },
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/rules-conditional-loader.sh\"",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/rules-conditional-loader\"",
             "async": true,
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/memory-auto-index.sh\"",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/memory-auto-index\"",
             "async": true,
             "timeout": 5
           }
