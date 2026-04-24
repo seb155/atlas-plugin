@@ -49,7 +49,7 @@ The `Agent(name1, name2)` syntax restricts which subagents this agent can delega
 | `model` | `string` | `inherit` | Which model runs this agent. Values: `sonnet`, `opus`, `haiku`, `inherit`, or a full model ID like `claude-sonnet-4-20250514`. |
 | `maxTurns` | `number` | — | Maximum number of tool-use turns before the agent stops. Safety limit to prevent runaway agents. |
 | `permissionMode` | `string` | `default` | How the agent handles permission prompts (see Permission Modes below). |
-| `thinking` | `string` | — | Set to `extended` to enable extended thinking for complex reasoning tasks. |
+| `thinking_mode` | `string` | `adaptive` | Thinking mode for the agent. Opus 4.7+ requires `adaptive` (extended thinking API deprecated 2026-04). Sonnet 4.6 still supports `extended` but ATLAS standardizes on `adaptive`. |
 | `background` | `boolean` | `false` | When `true`, the agent runs in the background. User can continue working while the agent processes. |
 
 ### Permission Modes
@@ -199,7 +199,7 @@ tools: "WebSearch, WebFetch, Read, Write"
 disallowedTools: "Edit, Bash"
 background: true
 maxTurns: 50
-thinking: extended
+thinking_mode: adaptive  # Opus 4.7+ requires adaptive mode (extended thinking API deprecated)
 memory: project
 color: "#2196F3"
 ---

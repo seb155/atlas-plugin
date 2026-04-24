@@ -16,3 +16,9 @@ third_party/atlas-skill-lint/package-lock.json
 
 # Git worktrees (local ephemeral)
 .claude/worktrees/
+
+# v6.0 Approved-Mode Autonomy Engine (Phase 5)
+# Per-project session state + decision log — never committed
+.claude/session-state.json
+.claude/decisions.jsonl
+.claude/skill-usage.jsonl

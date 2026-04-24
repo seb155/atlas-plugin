@@ -82,6 +82,33 @@ After steps 1-5:
 | **Feedback Humain** | What user said that shaped approach + memory file ref | Preserve user preferences |
 | **Worktrees** | Active worktrees with branch mapping | Know the git topology |
 | **Fichiers Modifiés** | Files changed this session (from git) | Quick scan of scope |
+| **Approved-Mode State** (v6.0.0-alpha.8+) | `approved_gates_persist:` YAML block | Next session via /pickup restores autonomy state |
+
+**Approved-Mode Persistence** (Phase 5 cross-session):
+
+If session was in `approved` mode, extract state from `.claude/session-state.json` and embed as YAML block in handoff:
+
+```bash
+if [ -f .claude/session-state.json ]; then
+  python3 <<'PYEOF'
+import json, yaml
+with open(".claude/session-state.json") as f:
+    state = json.load(f)
+if state.get("autonomy_mode") == "approved":
+    persist = {
+        "autonomy_mode": state["autonomy_mode"],
+        "approved_gates": state.get("approved_gates", []),
+        "ttl_hours": 24,  # Default TTL for cross-session persistence
+    }
+    print("\napproved_gates_persist:")
+    print(yaml.dump(persist, default_flow_style=False, indent=2))
+PYEOF
+fi >> "$HANDOFF_FILE"
+```
+
+Next session's `/pickup` detects this block + restores via autonomy-gate.sh approve commands. TTL check prevents stale approvals from auto-applying.
+
+**Audit trail**: All gate decisions this session are in `.claude/decisions.jsonl` (already persistent, no migration needed).
 | **Issues Connues** | Open bugs, blockers, infra issues | Don't be surprised |
 | **Pour Reprendre** | Exact commands to run | Zero-friction resume |
 

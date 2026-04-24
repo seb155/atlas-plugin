@@ -132,9 +132,9 @@ The actual list of available skills is what's installed. Read `capabilities.json
 **Infra**: devops-deploy, deploy-hotfix, infrastructure-ops, infrastructure-change, statusline-setup
 **Security**: security-audit, enterprise-audit, codebase-audit, code-analysis, skill-security-audit, secret-manager
 **Governance**: programme-manager, feature-board, onboarding-check, marketplace-manager, persona-loadout, platform-update
-**Knowledge**: knowledge-engine, knowledge-manager, idle-curiosity, atlas-analytics, plan-review
+**Knowledge**: knowledge, idle-curiosity, atlas-analytics, plan-review
 **Orchestration**: auto-orchestrator, ultrathink, atlas-team, atlas-dev-self, experiment-loop
-**GMS**: gms-cockpit, gms-profiler, gms-onboard, gms-insights
+**GMS**: gms-mgmt
 **Health**: product-health, agent-readiness, infra-health
 
 If a skill's tier is NOT in `capabilities.json` `addons[]`, **do not invoke it**. Tell the user "this requires installing atlas-{tier}-addon".

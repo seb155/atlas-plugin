@@ -7,7 +7,49 @@ description: "Claude Opus 4.7 vs Sonnet 4.6 benchmark comparison, decision frame
 
 > Reference for ATLAS model allocation decisions.
 > SSoT for task-to-model routing: `skills/execution-strategy/model-rules.yaml`
-> Last updated: 2026-04-16 (Opus 4.7 GA)
+> Last updated: 2026-04-23 (P1 doc pass — [1m] variant mandate clarified)
+
+## 🔴 CRITICAL — Opus [1m] Variant Mandate
+
+**Always use `claude-opus-4-7[1m]` for Opus allocations, never shortcut `opus`.**
+
+The shortcut `model: opus` in AGENT.md / skill frontmatter **silently resolves to the 256K context variant** (not the 1M variant) in some Claude Code configurations. For long sessions, multi-plan work, or anything requiring > 200K context, this is a silent capability regression.
+
+**Correct**:
+```yaml
+# AGENT.md / SKILL.md frontmatter
+model: claude-opus-4-7[1m]       # ✅ explicit 1M context variant
+effort: max | xhigh
+```
+
+**Incorrect (silent 256K fallback risk)**:
+```yaml
+model: opus                       # ❌ may resolve to 256K variant
+```
+
+**Model IDs canonical list**:
+| Intended | Variant | Correct ID | Context |
+|----------|---------|-----------|---------|
+| Opus (deep reasoning) | 1M | `claude-opus-4-7[1m]` | 1M tokens |
+| Opus (default) | 256K | `claude-opus-4-7` | 256K tokens (NOT for ATLAS) |
+| Sonnet | — | `claude-sonnet-4-6` | 200K tokens |
+| Haiku | — | `claude-haiku-4-5-20251001` | 200K tokens |
+
+**Enforcement layers** (v6.0.0-alpha.5+):
+- L1 (type): `.atlas/models.yaml` registry (planned v6.1)
+- L3 (semgrep): `.semgrep/atlas-opus-1m-only.yaml` (planned v6.1)
+- L5 (CI gate): blocking if non-[1m] opus detected (planned v6.1)
+- L7 (doc): THIS DOCUMENT + `~/.claude/CLAUDE.md` critical reminder
+
+**History**: Sprint 0 P0 fixes (2026-04-23 / v6.0.0-alpha.5) fixed 3 AGENT.md that had
+`model: opus` shortcut:
+- `agents/code-reviewer/AGENT.md`
+- `agents/infra-expert/AGENT.md`
+- `agents/plan-architect/AGENT.md`
+
+All now explicitly use `claude-opus-4-7[1m]`.
+
+---
 
 ## Model Comparison
 

@@ -57,6 +57,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/daimon-context-injector\"",
             "async": false,
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/inject-meta-skill\"",
+            "async": false,
+            "timeout": 5
           }
         ]
       },
@@ -98,6 +104,18 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/detect-stale-git\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/rules-conditional-loader\"",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/memory-auto-index\"",
+            "async": true,
+            "timeout": 5
           }
         ]
       }
@@ -121,6 +139,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/experiential-capture\"",
             "async": true,
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-end-retro\"",
+            "async": true,
+            "timeout": 3
           }
         ]
       }
@@ -165,6 +189,17 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Task|Agent|TaskCreate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/effort-router\"",
+            "async": true,
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PreCompact": [
@@ -185,6 +220,12 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" precompact-snapshot",
             "async": true,
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact-sota-context\"",
+            "async": false,
+            "timeout": 3
           }
         ]
       }

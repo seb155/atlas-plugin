@@ -1,45 +1,29 @@
 tier: admin-addon
 description: Superuser — includes dev tools + infra, security, governance, GMS
+# v6.0 SP-DEDUP Phase 1: admin-addon INHERITS dev-addon.
+# The build resolves skills/refs/agents/hooks via `resolve_field` (union + dedup).
+# Delta below lists ONLY admin-specific items; shared items come from dev-addon.
+# 2026-04-17 — 33 skills, 13 hooks, 7 agents, 8 refs removed (inherited from dev-addon).
+inherits: dev-addon
 skills:
-- brainstorming
-- plan-builder
-- execution-strategy
-- frontend-design
-- frontend-workflow
-- vision-alignment
-- interactive-flow
-- executing-plans
-- subagent-dispatch
-- tdd
-- git-worktrees
-- browser-automation
-- code-review
-- code-simplify
-- systematic-debugging
-- verification
-- test-orchestrator
-- visual-qa
-- api-healthcheck
-- finishing-branch
-- ship-all
-- forgejo-pr
-- ci-management
-- decision-log
-- hookify
-- plugin-builder
-- skill-management
-- engineering-ops
-- visual-generator
+- flow-analytics
+# Infrastructure & DevOps
 - devops-deploy
 - deploy-hotfix
 - infrastructure-ops
 - infrastructure-change
 - statusline-setup
+- infra-health
+- secret-manager
+# Security & Audit
 - security-audit
 - enterprise-audit
 - codebase-audit
 - code-analysis
+- skill-security-audit
+- agent-readiness
 - product-health
+# Governance & Planning
 - plan-review
 - programme-manager
 - feature-board
@@ -48,50 +32,26 @@ skills:
 - persona-loadout
 - auto-orchestrator
 - platform-update
-- knowledge-engine
-- knowledge-manager
+# Knowledge & Experiments
+- knowledge
 - experiment-loop
 - idle-curiosity
 - atlas-team
 - atlas-dev-self
-- gms-cockpit
-- gms-profiler
-- gms-onboard
-- gms-insights
 - atlas-analytics
 - ultrathink
-- secret-manager
-- skill-security-audit
-- agent-readiness
-- infra-health
-# v5.7.0+ Phase 8A — SOTA senior patterns
-- sota-code-patterns
-- senior-review-checklist
-# v5.7.0+ Phase 9A — Code hygiene micro-discipline
-- code-hygiene-rules
-- senior-discipline-checklist
+# GMS-specific (G Mining Services) — 2026-04-17 SP-DEDUP merged 4→1
+- gms-mgmt
 refs:
-- composition-patterns
-- react-best-practices
-- web-design-guidelines
-- gmining-excel
+# Inherited from dev-addon: composition-patterns, react-best-practices,
+# web-design-guidelines, gmining-excel, code-smells-catalog,
+# sota-architecture-patterns, naming-conventions, folder-structure-patterns.
 - model-benchmarks-2026-04
-# v5.7.0+ Phase 8A — SOTA reference catalogs
-- code-smells-catalog
-- sota-architecture-patterns
-# v5.7.0+ Phase 9A — Hygiene references
-- naming-conventions
-- folder-structure-patterns
 hooks:
-- post-edit-lint
-- enterprise-check
-- test-impact-analysis
-- code-quality-check
-- frontend-ux-gate
-- skill-usage-tracker
-- ci-auto-monitor
-- enforce-worktree-name
-- cleanup-worktrees
+# Inherited from dev-addon (13): post-edit-lint, enterprise-check,
+# test-impact-analysis, code-quality-check, frontend-ux-gate, skill-usage-tracker,
+# ci-auto-monitor, enforce-worktree-name, cleanup-worktrees, tdd-guard,
+# claudemd-lint, detect-stale-git, feature-drift-detector.
 - session-end-memory-cleanup
 - post-compact
 - suggest-episode
@@ -103,13 +63,8 @@ hooks:
 - detect-stale-git        # Stop — warn if working tree has stale refs / uncommitted
 # feature-drift-detector registered in hooks.json SessionStart block (removed from Stop profile 2026-04-18)
 agents:
-- plan-architect
-- plan-reviewer
-- code-reviewer
-- team-engineer
-- team-tester
-- team-researcher
-- design-implementer
+# Inherited from dev-addon (7): plan-architect, plan-reviewer, code-reviewer,
+# team-engineer, team-tester, team-researcher, design-implementer.
 - context-scanner
 - experiment-runner
 - team-reviewer

@@ -102,6 +102,27 @@ triggers:
 
 **Cannot skip**: Verification is non-negotiable.
 
+**Approved-Mode Integration** (v6.0.0-alpha.7+, Phase 5):
+
+Every AskUserQuestion gate in interactive-flow phases respects session autonomy state. Before firing, check via `hooks/autonomy-gate.sh`:
+
+| Phase | Default gate_id | Default tier | Default always-ask action |
+|-------|-----------------|--------------|---------------------------|
+| DISCOVER | `flow-discover` | CODED | — |
+| BRAINSTORM | `flow-brainstorm` | CODED | — |
+| PLAN | `flow-plan` | CODED | — (ExitPlanMode has its own gate) |
+| IMPLEMENT | `flow-phase-N` | VALIDATING | — |
+| VERIFY | `flow-verify` | VALIDATING | — |
+| SHIP-commit | `flow-commit` | VALIDATING | — |
+| SHIP-push | `flow-push` | VALIDATED | — |
+| SHIP-merge-main | `flow-merge-main` | SHIPPED | `deploy:main_branch_merge` (always asks) |
+| SHIP-deploy-prod | `flow-deploy-prod` | SHIPPED | `deploy:production` (always asks) |
+
+In approved mode with `plan-arch` gate approved + default skip_tiers [CODED, VALIDATING]:
+- DISCOVER, BRAINSTORM, IMPLEMENT, VERIFY, SHIP-commit, SHIP-push gates auto-approve
+- SHIP-merge-main + SHIP-deploy-prod ALWAYS ask (always_ask_actions)
+- Full flow from plan approval → commit + push can run autonomously while preserving prod safety
+
 ### Phase 6: SHIP
 
 **Goal**: Commit, push, and optionally deploy.

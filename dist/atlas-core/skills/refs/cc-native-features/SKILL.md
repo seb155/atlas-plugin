@@ -5,7 +5,7 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 
 # Claude Code Native Features Reference (v2.1.111)
 
-> SSoT for CC features that ATLAS leverages. Updated: 2026-04-16 (Opus 4.7 GA).
+> SSoT for CC features ATLAS leverages. Updated: 2026-04-16 (Opus 4.7 GA).
 > Self-improving: update this file when CC releases new features via `/atlas platform-update`.
 
 ## Effort System (v2.1.72+ / xhigh v2.1.111)
@@ -19,19 +19,16 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 | `max` | ◉ | No thinking constraint (Opus only) | `/effort max` |
 | `auto` | varies | Reset to plan default | `/effort auto` |
 
-**`/effort` interactive slider** (v2.1.111): Call with no arguments → arrow-key navigation + Enter to confirm.
-
-**Per-turn override**: `ultrathink` keyword = max effort for one turn only (v2.1.68).
-
+**`/effort` interactive slider** (v2.1.111): Call with no args → arrow-key + Enter.
+**Per-turn override**: `ultrathink` keyword = max effort one turn (v2.1.68).
 **Frontmatter**: `effort: low|medium|high|xhigh` in AGENT.md (v2.1.78) and SKILL.md (v2.1.80).
-
-**Rule**: Opus = high/xhigh by default. Sonnet = medium. Haiku = low. Non-Opus fallback `xhigh` → `high`.
+**Rule**: Opus = high/xhigh default | Sonnet = medium | Haiku = low. Non-Opus fallback `xhigh` → `high`.
 
 ## Session Management
 
 | Command | Version | Purpose |
 |---------|---------|---------|
-| `/rename [name]` | v2.0.64 | Name session (auto-generates from context if no arg, v2.1.72) |
+| `/rename [name]` | v2.0.64 | Name session (auto-generates if no arg, v2.1.72) |
 | `/color [color]` | v2.1.75 | Set prompt-bar color. `/color default` to reset |
 | `/resume [name]` | v2.0.93 | Resume by name, ID, or pick from list |
 | `/branch` | v2.1.77 | Fork conversation (alias: `/fork`) |
@@ -39,30 +36,28 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 | `--session-id` | v2.0.73 | Custom session ID for forking |
 | `--from-pr` | v2.1.27 | Resume session linked to a PR |
 
-**Auto-naming**: Sessions auto-named from plan content (v2.1.77) or first prompt.
+**Auto-naming**: From plan content (v2.1.77) or first prompt.
 
 ## Task Management (v2.1.16)
 
 | Tool | Purpose |
 |------|---------|
-| `TaskCreate` | Create task with subject, description, activeForm |
+| `TaskCreate` | Create with subject, description, activeForm |
 | `TaskUpdate` | Update status, owner, dependencies, or delete |
-| `TaskGet` | Get full task details by ID |
-| `TaskList` | List all tasks with status |
+| `TaskGet` | Get full details by ID |
+| `TaskList` | List all with status |
 
-**Dependency tracking**: `addBlocks`, `addBlockedBy` fields.
-**Delete**: `status: "deleted"` in TaskUpdate.
-**Statuses**: `pending` → `in_progress` → `completed`.
+**Dependencies**: `addBlocks`, `addBlockedBy` fields. **Delete**: `status: "deleted"` in TaskUpdate. **Statuses**: `pending` → `in_progress` → `completed`.
 
 ## Auto-Memory (v2.1.32/v2.1.59)
 
-- Claude auto-saves useful context to `~/.claude/projects/{project}/memory/`
-- Manage with `/memory` command
+- Auto-saves to `~/.claude/projects/{project}/memory/`
+- `/memory` command to manage
 - `autoMemoryDirectory` setting for custom location (v2.1.74)
-- `MEMORY.md` = index (max 200 lines / 25KB)
-- Individual topic files with frontmatter (name, description, type)
-- Last-modified timestamps added to memory files (v2.1.75)
-- Memory shared across git worktrees of same repo (v2.1.63)
+- `MEMORY.md` index (max 200 lines / 25KB)
+- Topic files with frontmatter (name, description, type)
+- Last-modified timestamps (v2.1.75)
+- Memory shared across worktrees of same repo (v2.1.63)
 
 **ATLAS integration**: `memory-dream` skill implements CC auto-dream pattern.
 
@@ -71,12 +66,12 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 | Feature | Version | Purpose |
 |---------|---------|---------|
 | `claude -w name` | v2.1.49 | Start in isolated git worktree |
-| `EnterWorktree` tool | v2.1.49 | Create worktree mid-session |
-| `ExitWorktree` tool | v2.1.72 | Leave worktree (keep or remove) |
-| `isolation: "worktree"` | v2.1.49 | Agent frontmatter for worktree isolation |
+| `EnterWorktree` tool | v2.1.49 | Create mid-session |
+| `ExitWorktree` tool | v2.1.72 | Leave (keep or remove) |
+| `isolation: "worktree"` | v2.1.49 | Agent frontmatter for isolation |
 | `worktree.sparsePaths` | v2.1.76 | Partial checkout for monorepos |
 
-**Field in statusline**: `worktree` object with name, path, branch, original_dir (v2.1.69).
+**Statusline field**: `worktree` object with name, path, branch, original_dir (v2.1.69).
 
 ## Plan Mode
 
@@ -86,7 +81,7 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 | `ExitPlanMode` | v1.0.33 | Present plan for approval |
 | `/plan [description]` | v2.1.72 | Shortcut with optional prompt |
 | `plansDirectory` | v2.1.9 | Custom plan file location |
-| `showClearContextOnPlanAccept` | v2.1.69 | Show "clear context" after plan approval |
+| `showClearContextOnPlanAccept` | v2.1.69 | Show "clear context" after approval |
 
 **ATLAS integration**: `plan-builder` skill generates 15-section plans (A-O format).
 
@@ -95,20 +90,18 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 - Auto-compacts at configurable % (`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`, default 80%)
 - `PreCompact` hook: inject context to preserve (v1.0.48)
 - `PostCompact` hook: restore critical state (v2.1.76)
-- Images survive compaction (v2.1.72+)
-- Text nuances may be lost — use memory files for critical info
-- `/compact` manual trigger
-- "Summarize from here" for partial compaction (v2.1.32)
+- Images survive (v2.1.72+); text nuances may be lost — use memory files for critical info
+- `/compact` manual trigger; "Summarize from here" partial (v2.1.32)
 
-**1M optimization**: Set autocompact to 92% (920K/1M) for maximum context before compact.
+**1M optimization**: Set autocompact to 92% (920K/1M) for max context before compact.
 
 ## Context Window
 
 | Model | Window | Max Output | Notes |
 |-------|--------|------------|-------|
-| Opus 4.7 | 1M tokens | 128K | Default for Max (v2.1.111+) |
-| Sonnet 4.6 | 1M tokens | 128K | Same window, faster |
-| Haiku 4.5 | 200K tokens | 64K | Smaller, cheapest |
+| Opus 4.7 | 1M | 128K | Default for Max (v2.1.111+) |
+| Sonnet 4.6 | 1M | 128K | Same window, faster |
+| Haiku 4.5 | 200K | 64K | Smaller, cheapest |
 
 **Rule**: With 1M context, NEVER suggest session handoff for context reasons.
 
@@ -116,17 +109,20 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 
 > **Post-migration 2026-04-19**: Anthropic renamed "extended thinking" → "adaptive thinking". API param now `thinking: {type: "adaptive"}` (old `{type: "enabled", budget_tokens: N}` returns 400). CC uses `/effort` setting to control depth.
 
-- Opus 4.7: thinking enabled by default (v2.0.67); new `xhigh` effort tier (v2.1.111+, between `high` and `max`)
+- **API change 2026-04**: Opus 4.7 deprecated explicit thinking-enabled mode + token budgets. Only adaptive (`{"type": "adaptive"}` or via effort).
+- Opus 4.7: adaptive enabled by default (v2.0.67); new `xhigh` tier (v2.1.111+, between `high` and `max`)
 - `ultrathink` = max effort for one turn
-- Budget scales with `/effort` setting
+- Budget scales with `/effort` (CC layer, not API)
 - Toggle: Alt+T (v2.0.72), or `/config`
-- `CLAUDE_CODE_MAX_THINKING_TOKENS` env var for custom limit
+- `CLAUDE_CODE_MAX_THINKING_TOKENS` env var (CC client hint, not API budget)
+- Sonnet 4.6 still supports legacy extended thinking API; ATLAS standardizes on adaptive
 
 ## Plugin Settings (v2.1.49)
 
 - Plugins ship `settings.json` at root for CC defaults
 - Priority: managed > user > project > plugin (lowest)
 - Plugin settings auto-applied on install/update
+
 | Variable | Purpose | Since |
 |----------|---------|-------|
 | `${CLAUDE_PLUGIN_ROOT}` | Absolute path to plugin | v2.1.x |
@@ -154,8 +150,7 @@ permissionMode: default|plan|acceptEdits
 
 ## Structured Questions (AskUserQuestion)
 
-- Up to 4 questions per call
-- Each with 2-4 options + auto "Other"
+- Up to 4 questions per call, each 2-4 options + auto "Other"
 - `multiSelect: true` for checkboxes
 - `preview` field for code/mockup comparison
 - `header` for short label (max 12 chars)
@@ -164,9 +159,9 @@ permissionMode: default|plan|acceptEdits
 
 ## Keyboard Shortcuts (v2.1.18)
 
-**File**: `~/.claude/keybindings.json` — auto-detected on change, no restart needed.
+**File**: `~/.claude/keybindings.json` — auto-detected on change, no restart.
 
-**Format**: context-based binding blocks (NOT `{ key, command }` objects):
+**Format**: context-based binding blocks (NOT `{ key, command }`):
 ```json
 {
   "$schema": "https://www.schemastore.org/claude-code-keybindings.json",
@@ -176,7 +171,7 @@ permissionMode: default|plan|acceptEdits
 }
 ```
 
-**Contexts**: `Global`, `Chat`, `Autocomplete`, `Confirmation`, `Transcript`, `HistorySearch`, `Task`, `ThemePicker`, `Attachments`, `Footer`, `MessageSelector`, `DiffDialog`, `ModelPicker`, `Select`, `Plugin`, `Settings`, `Help`, `Tabs`
+**Contexts**: `Global` | `Chat` | `Autocomplete` | `Confirmation` | `Transcript` | `HistorySearch` | `Task` | `ThemePicker` | `Attachments` | `Footer` | `MessageSelector` | `DiffDialog` | `ModelPicker` | `Select` | `Plugin` | `Settings` | `Help` | `Tabs`
 
 **Key rebindable actions**:
 
@@ -191,141 +186,79 @@ permissionMode: default|plan|acceptEdits
 | `app:toggleTodos` | Global | Ctrl+T | v2.1.18 |
 | `app:toggleTranscript` | Global | Ctrl+O | v2.1.18 |
 
-Set to `null` to unbind. Chords: `"ctrl+k ctrl+s"` (space-separated). Reserved: Ctrl+C, Ctrl+D, Ctrl+M.
+`null` = unbind | Chords: `"ctrl+k ctrl+s"` (space-separated) | Reserved: Ctrl+C, Ctrl+D, Ctrl+M.
 
 ## Statusline
 
-**Input JSON fields** (available to statusline scripts):
-
-| Field | Version | Type |
-|-------|---------|------|
-| `workspace.current_dir` | v1.0.71 | string |
-| `model.id` | v1.0.71 | string |
-| `session_name` | v2.0.64 | string |
-| `context_window.used_percentage` | v2.1.6 | number |
-| `context_window.remaining_percentage` | v2.1.6 | number |
-| `current_usage` | v2.0.70 | number |
-| `rate_limits["5h"].used_percentage` | v2.1.80 | number |
-| `rate_limits["5h"].resets_at` | v2.1.80 | string |
-| `rate_limits["7d"].used_percentage` | v2.1.80 | number |
-| `effort` | v2.1.72 | string |
-| `worktree` | v2.1.69 | object |
-| `exceeds_200k_tokens` | v1.0.88 | boolean |
+**Input JSON fields**: `workspace.current_dir` (v1.0.71, str) | `model.id` (v1.0.71, str) | `session_name` (v2.0.64, str) | `context_window.used_percentage` / `.remaining_percentage` (v2.1.6, num) | `current_usage` (v2.0.70, num) | `rate_limits["5h"].used_percentage` / `.resets_at` (v2.1.80) | `rate_limits["7d"].used_percentage` (v2.1.80) | `effort` (v2.1.72, str) | `worktree` (v2.1.69, obj) | `exceeds_200k_tokens` (v1.0.88, bool)
 
 ## Scheduled Execution
 
 | Feature | Scope | Persistence |
 |---------|-------|-------------|
-| `CronCreate` | Session | Dies when Claude exits (7-day auto-expire) |
+| `CronCreate` | Session | Dies on Claude exit (7-day auto-expire) |
 | `CronDelete` | Session | Remove by job ID |
 | `CronList` | Session | List all scheduled jobs |
-| `/loop interval cmd` | Session | Recurring slash command execution (v2.1.71) |
+| `/loop interval cmd` | Session | Recurring slash command (v2.1.71) |
 | Remote Triggers | Cloud | Persists across sessions (v2.0.48) |
 
 ## Hook Events (v2.1.83 complete — 22 events)
 
-| Event | Version | Trigger |
-|-------|---------|---------|
-| `SessionStart` | v1.0.62 | New/resumed/cleared session |
-| `SessionEnd` | v1.0.85 | Session close |
-| `Setup` | v2.1.10 | `--init` or `--maintenance` flags |
-| `PreToolUse` | v1.0.38 | Before any tool execution |
-| `PostToolUse` | v1.0.38 | After any tool execution |
-| `PreCompact` | v1.0.48 | Before context compaction |
-| `PostCompact` | v2.1.76 | After context compaction |
-| `UserPromptSubmit` | v1.0.54 | User sends a message |
-| `PermissionRequest` | v2.1.45 | Tool needs permission |
-| `Notification` | v1.0.41 | System notification |
-| `SubagentStart` | v2.0.43 | Subagent spawned |
-| `SubagentStop` | v1.0.41 | Subagent completed |
-| `Stop` | v1.0.38 | Turn ends normally |
-| `StopFailure` | v2.1.78 | Turn ends due to API error |
-| `InstructionsLoaded` | v2.1.69 | CLAUDE.md/rules loaded |
-| `ConfigChange` | v2.1.41 | Settings file changed |
-| `CwdChanged` | v2.1.81 | Working directory changed |
-| `FileChanged` | v2.1.81 | Watched file modified |
-| `TeammateIdle` | v2.1.33 | Agent team member idle |
-| `TaskCompleted` | v2.1.33 | Background task done |
-| `WorktreeCreate` | v2.1.50 | Worktree created |
-| `WorktreeRemove` | v2.1.50 | Worktree removed |
+Session: `SessionStart` (v1.0.62) | `SessionEnd` (v1.0.85) | `Setup` (v2.1.10, --init/--maintenance)
+Tool: `PreToolUse` / `PostToolUse` (v1.0.38) | `PermissionRequest` (v2.1.45)
+Compact: `PreCompact` (v1.0.48) | `PostCompact` (v2.1.76)
+User: `UserPromptSubmit` (v1.0.54) | `Notification` (v1.0.41)
+Subagent: `SubagentStart` (v2.0.43) | `SubagentStop` (v1.0.41) | `TeammateIdle` (v2.1.33)
+Lifecycle: `Stop` (v1.0.38) | `StopFailure` (v2.1.78) | `TaskCompleted` (v2.1.33)
+Config: `InstructionsLoaded` (v2.1.69, CLAUDE.md/rules) | `ConfigChange` (v2.1.41)
+File: `CwdChanged` / `FileChanged` (v2.1.81)
+Worktree: `WorktreeCreate` / `WorktreeRemove` (v2.1.50)
 
-## v2.1.111 (2026-04-16) — Opus 4.7 Era
+## Recent Releases (April 2026 — Opus 4.7 Era)
 
-| Feature | Impact |
-|---------|--------|
-| **Opus 4.7 xhigh effort** | NEW effort tier between `high` and `max` — `/effort xhigh`, or `--effort xhigh`; other models fallback to `high` |
-| **Auto mode native** | No more `--enable-auto-mode` flag — auto mode is now first-class for Max subscribers on Opus 4.7 |
-| `/less-permission-prompts` | NEW skill — scans transcripts for common read-only Bash/MCP calls, proposes prioritized allowlist |
-| `/ultrareview` | NEW cloud parallel multi-agent code review — `/ultrareview` (current branch) or `/ultrareview <PR#>` (GitHub PR) |
-| `/effort` slider | Interactive mode when called without args (arrow keys + Enter) |
-| "Auto (match terminal)" theme | Auto dark/light matches terminal — select from `/theme` |
-| PowerShell tool | Progressively rolling out on Windows; opt-in via `CLAUDE_CODE_USE_POWERSHELL_TOOL` |
-| Read-only bash globs | `ls *.ts` and `cd <proj> && ...` no longer prompt for permission |
-| Named plan files | Plan files named after prompt (e.g. `fix-auth-race-snug-otter.md`) instead of random |
-| `/skills` sort by tokens | Press `t` in menu to toggle sort by estimated token count |
-| `Ctrl+U` behavior | Now clears entire input buffer (was: delete to line start); `Ctrl+Y` restores |
-| `Ctrl+L` | Forces full screen redraw + input clear |
-| `OTEL_LOG_RAW_API_BODIES` | NEW env var — emit full API request/response as OTel log events (debugging) |
+### v2.1.111 (2026-04-16)
+- **Opus 4.7 `xhigh` effort** — NEW tier between `high` and `max` (other models fallback to `high`)
+- **Auto mode native** — No more `--enable-auto-mode` flag, first-class for Max on Opus 4.7
+- `/less-permission-prompts` — NEW skill, scans transcripts for read-only Bash/MCP
+- `/ultrareview` — NEW cloud parallel multi-agent review (current branch or `<PR#>`)
+- `/effort` interactive slider when called without args (arrows + Enter)
+- "Auto (match terminal)" theme
+- PowerShell tool (Windows rollout, opt-in `CLAUDE_CODE_USE_POWERSHELL_TOOL`)
+- Read-only bash globs (`ls *.ts`, `cd <proj> && ...`) no permission prompt
+- Named plan files (e.g. `fix-auth-race-snug-otter.md`)
+- `/skills` sort by tokens (press `t`); `Ctrl+U` clears entire buffer (`Ctrl+Y` restores); `Ctrl+L` redraws
+- `OTEL_LOG_RAW_API_BODIES` — full API req/res as OTel events
 
-## v2.1.110 (2026-04-15)
+### v2.1.110 (2026-04-15)
+- `/tui` + `/tui fullscreen` (flicker-free rendering)
+- **Push notification tool** — mobile push when Remote Control + "Push when Claude decides"
+- `Ctrl+O` toggles normal/verbose transcript (focus split to `/focus`)
+- `autoScrollEnabled`, `Ctrl+G` with last response as comment context
+- `/doctor` warns on MCP server in multiple scopes; `--resume`/`--continue` resurrect scheduled tasks
+- `/context`, `/exit`, `/reload-plugins` work from Remote Control
 
-| Feature | Impact |
-|---------|--------|
-| `/tui` command + `tui` setting | `/tui fullscreen` switches to flicker-free rendering in same conversation |
-| **Push notification tool** | NEW — Claude sends mobile push notifs when Remote Control + "Push when Claude decides" enabled |
-| `Ctrl+O` behavior change | Now toggles normal/verbose transcript only (focus view split to new `/focus` command) |
-| `autoScrollEnabled` config | Disable conversation auto-scroll in fullscreen mode |
-| `Ctrl+G` editor with context | Option to show Claude's last response as commented context in external editor |
-| `/doctor` | Warns when MCP server defined in multiple scopes with different endpoints |
-| `--resume`/`--continue` | Resurrects unexpired scheduled tasks |
-| `/context`, `/exit`, `/reload-plugins` | Now work from Remote Control (mobile/web) |
+### v2.1.108 (2026-04-13)
+- `ENABLE_PROMPT_CACHING_1H` — 1h prompt cache TTL (API/Bedrock/Vertex/Foundry); `FORCE_PROMPT_CACHING_5M` to force 5min
+- `/recap` + `CLAUDE_CODE_ENABLE_AWAY_SUMMARY`
+- **Skill → built-in commands** — Model discovers `/init`, `/review`, `/security-review` via Skill tool
+- `/undo` alias for `/rewind`; `/model` warns before mid-conversation switch; `/resume` picker shows current dir first
 
-## v2.1.108 (2026-04-13)
+### v2.1.105 (2026-04-12)
+- `EnterWorktree path` switch into existing worktree
+- **PreCompact hook block** via exit 2 or `{"decision":"block"}`
+- **Plugin `monitors` manifest** — auto-arm background monitors at session start or skill invoke
+- `/proactive` alias for `/loop`; stalled stream abort 5min; `/doctor` press `f` to fix
+- Skill description cap 250 → 1,536 chars; `WebFetch` strips `<style>/<script>`; stale agent worktree cleanup
 
-| Feature | Impact |
-|---------|--------|
-| `ENABLE_PROMPT_CACHING_1H` | NEW env var — opt into 1-hour prompt cache TTL (API key, Bedrock, Vertex, Foundry). `FORCE_PROMPT_CACHING_5M` to force 5min |
-| `/recap` + recap feature | NEW — context when returning to session, configurable via `/config`. `CLAUDE_CODE_ENABLE_AWAY_SUMMARY` for telemetry-disabled users |
-| **Skill → built-in slash commands** | Model can now discover/invoke `/init`, `/review`, `/security-review` via Skill tool |
-| `/undo` alias for `/rewind` | Mnemonic alias |
-| `/model` warning | Warns before switching mid-conversation (next response re-reads full history uncached) |
-| `/resume` picker default | Sessions from current directory shown first; `Ctrl+A` to show all projects |
-
-## v2.1.105 (2026-04-12)
-
-| Feature | Impact |
-|---------|--------|
-| `EnterWorktree path` param | Switch into existing worktree of current repo (not just create new) |
-| **PreCompact hook block** | PreCompact hooks can now block compaction via exit code 2 or `{"decision":"block"}` |
-| **Plugin `monitors` manifest** | NEW top-level key — background monitors auto-arm at session start or on skill invoke |
-| `/proactive` alias for `/loop` | Mnemonic alias |
-| Stalled stream abort | API streams abort after 5min no data, retry non-streaming instead of hanging |
-| `/doctor` status icons | Press `f` to have Claude fix reported issues |
-| Skill description cap raised | 250 → 1,536 chars; startup warning if truncated |
-| `WebFetch` `<style>/<script>` strip | CSS-heavy pages no longer exhaust content budget |
-| Stale agent worktree cleanup | Removes worktrees of squash-merged PRs (was: kept indefinitely) |
-
-## v2.1.101 (2026-04-11)
-
-| Feature | Impact |
-|---------|--------|
-| `/team-onboarding` | New — generate teammate ramp-up guide from local CC usage |
-| OS CA cert trust | Enterprise TLS proxies work by default (`CLAUDE_CODE_CERT_STORE=bundled` for bundled only) |
-| `/ultraplan` auto-env | Auto-creates cloud env, no web setup needed |
-| `OTEL_LOG_*` env vars | Beta tracing: `OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_TOOL_DETAILS`, `OTEL_LOG_TOOL_CONTENT` |
-| `API_TIMEOUT_MS` fix | No longer hardcoded 5min — respects env var |
-| `context: fork` fix | **Plugin skills can now fork to subagent** |
-| `agent` frontmatter fix | **Skill → agent delegation works in plugins** |
-| `disallowedTools` enforcement | Better tool-not-available error messages |
-| `--resume <name>` | Accepts session titles set via `/rename` or `--name` |
-| Settings resilience | Unrecognized hook event in settings.json no longer breaks entire file |
-| `allowManagedHooksOnly` | Plugin hooks from force-enabled plugins now run |
-| Subagent MCP inheritance | **Subagents inherit MCP tools from dynamic servers** |
-| Subagent worktree access | **Read/Edit access in isolated worktrees fixed** |
-| `permissions.deny` priority | Deny rules properly override hook `permissionDecision: "ask"` |
-| Memory leak fix | Long sessions no longer retain historical message copies |
-| Security: POSIX `which` | Command injection vulnerability patched |
-| Plugin fixes | `context: fork` and `agent` frontmatter fields honored; duplicate `name:` resolved |
+### v2.1.101 (2026-04-11)
+- `/team-onboarding`; OS CA cert trust (`CLAUDE_CODE_CERT_STORE=bundled`)
+- `OTEL_LOG_*` beta tracing (USER_PROMPTS, TOOL_DETAILS, TOOL_CONTENT)
+- `API_TIMEOUT_MS` no longer hardcoded; `context: fork` fix → **plugin skills can fork to subagent**
+- `agent` frontmatter → **skill → agent delegation works in plugins**
+- **Subagents inherit MCP tools from dynamic servers**; **Read/Edit in isolated worktrees fixed**
+- `--resume <name>` accepts titles; settings resilient to unrecognized hook events
+- `permissions.deny` overrides hook `permissionDecision: "ask"`
+- Memory leak fix; POSIX `which` injection vuln patched
 
 ## Bundled Commands
 
@@ -341,7 +274,7 @@ Set to `null` to unbind. Chords: `"ctrl+k ctrl+s"` (space-separated). Reserved: 
 
 ## Self-Improvement Integration
 
-ATLAS leverages these CC features for self-improvement:
+ATLAS leverages these for self-improvement:
 
 1. **Version detection**: `session-start` hook compares CC version with `KNOWN_CC_VERSION`
 2. **Platform update**: `/atlas platform-update` parses `/release-notes` → identifies gaps

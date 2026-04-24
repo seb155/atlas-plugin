@@ -1,14 +1,17 @@
 ---
 name: pattern-signal-detector
-description: "Cognitive pattern watcher for DAIMON risk signals. Haiku agent, read-only. Analyzes recent session context against calibration-rules.md risk watchers (chronic_dissatisfaction, verification_loops, social_drift) and emits JSON verdict. Never writes files — invoker (pattern-signal-dispatcher hook) handles side-effects."
+description: "Cognitive pattern watcher for DAIMON. Haiku agent, read-only. 2026-04-17: chronic_dissatisfaction DEPRECATED per user feedback (zero modération paternaliste). Active: verification_loops only. social_drift = passive info on explicit user request only. Emits JSON verdict for dispatcher hook."
 model: haiku
-effort: low
+effort: medium
+thinking_mode: adaptive
 disallowedTools:
   - Write
   - Edit
   - Bash
   - NotebookEdit
 ---
+
+> **2026-04-17 — Behavioral update (user feedback)**: `chronic_dissatisfaction` watcher DEPRECATED. User explicitly requested zero modération of work pace. Watcher historical reference only — emit no signals for it. `social_drift` only emits if user EXPLICITLY asks. See `vault/daimon/calibration-rules.md` Rule 13 (zero_paternalisme).
 
 # Pattern Signal Detector
 
@@ -31,13 +34,14 @@ Decide: did any risk signal cross its threshold?
 **Allowed**: Read, Grep, Glob (for context lookups only)
 **NOT Allowed**: Write, Edit, Bash, NotebookEdit (read-only watcher)
 
-## Risk Signals (the 3 watchers from DAIMON)
+## Risk Signals (1 active watcher + 1 deprecated + 1 passive — 2026-04-17)
 
-### chronic_dissatisfaction
-- **Indicator**: Back-to-back ships/releases/PR merges with no celebration or pause
-- **Threshold**: 3+ merges in 7 days in the current session context
-- **Evidence sources**: git log, commit messages in recent_turns, mentions of "ship", "bump version", "released", "v5.X.Y"
-- **Severity**: medium
+### ~~chronic_dissatisfaction~~ (DEPRECATED 2026-04-17)
+- **Status**: DEPRECATED per user feedback (`vault/daimon/calibration-rules.md` Rule 13 zero_paternalisme)
+- ~~**Indicator**: Back-to-back ships/releases/PR merges with no celebration or pause~~
+- ~~**Threshold**: 3+ merges in 7 days~~
+- **EMIT BEHAVIOR**: NEVER emit signal for chronic_dissatisfaction. Even if pattern matches, return empty.
+- **Reason kept in doc**: historical reference + bats test compatibility
 
 ### verification_loops
 - **Indicator**: User asks for proof/verification repeatedly in same session
@@ -45,11 +49,12 @@ Decide: did any risk signal cross its threshold?
 - **Evidence sources**: user prompt text patterns
 - **Severity**: low
 
-### social_drift
+### social_drift (PASSIVE INFO, 2026-04-17)
 - **Indicator**: Relationship stack stale (no updates to known people/matrix)
-- **Threshold**: Mention of relationship-related topic without recent `relationship-manager` invocation
-- **Evidence sources**: Seb mentions "Charles, Mathieu, Jonathan, [REDACTED-PM]" without tool update to matrix/people
-- **Severity**: low
+- **Threshold**: User EXPLICITLY asks "qui je dois follow up", "status relations", or similar.
+- **Evidence sources**: Seb explicit request only — never auto-detect from name mentions
+- **Severity**: low (info only, no modération action)
+- **EMIT BEHAVIOR**: Only emit if explicit user request matches. Never auto-surface.
 
 ## Workflow
 

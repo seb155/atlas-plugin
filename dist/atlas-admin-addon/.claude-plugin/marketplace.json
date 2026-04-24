@@ -5,7 +5,7 @@
     {
       "name": "atlas-admin-addon",
       "description": "Superuser — includes dev tools + infra, security, governance, GMS",
-      "version": "5.44.4",
+      "version": "6.0.0-alpha.11",
       "source": { "source": "git", "url": "https://plugins.axoiq.com" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }

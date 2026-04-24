@@ -2,7 +2,28 @@
 name: context-discovery
 description: "Auto-discover project context before planning. This skill should be used when the user asks to 'discover context', 'audit context', 'codemap', 'sync plan', '/atlas context', or before creating any new engineering plan."
 effort: medium
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [plan-builder, brainstorming]
+thinking_mode: adaptive
 ---
+
+<HARD-GATE>
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it.
+This applies to EVERY project regardless of perceived simplicity.
+Context discovery MUST run before any plan creation or major refactor.
+</HARD-GATE>
+
+<red-flags>
+
+| Thought | Reality |
+|---|---|
+| "This feature is too simple to need a plan" | Simple projects are where unexamined assumptions cause the most wasted work. The plan can be short, but it MUST exist and be approved. 'Too simple to plan' precedes 90% of scope-drift incidents. |
+| "Let me just start coding and see where it goes" | Coding without a plan = architecting in your prefrontal cortex under tool-use latency. You will burn 10x tokens exploring paths a 15-min plan would have rejected. STOP. Invoke brainstorming skill. Present 2-3 approaches via AskUserQuestion. Wait for design approval. THEN invoke plan-builder. THEN code. |
+| "I know the pattern from last sprint, same plan applies" | Patterns repeat but CONTEXT does not. Tables, personas, constraints, API shape — all different. Reusing a plan verbatim skips the discovery where the gotcha lives. Run context-discovery FIRST. |
+| "I know this codebase, no need to audit" | You know what was true at your last read. Files moved, patterns evolved, new constraints were added. The 30-second audit catches the 3-hour surprise. |
+| "It's obvious what to do, skip the discovery" | "Obvious" is the label you give to the thing that later breaks in ways you did not see. Discovery is cheap. Rework is not. |
+
+</red-flags>
 
 # Context Discovery
 

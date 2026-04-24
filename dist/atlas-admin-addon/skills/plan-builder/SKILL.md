@@ -2,6 +2,9 @@
 name: plan-builder
 description: "Engineering plan generator (15+5 sections). This skill should be used when the user asks to 'write a plan', 'build a plan', 'create sub-plan', '/plan-builder', '/a-dev feature', or needs an A-O structured plan graded against the 16/20 quality gate."
 effort: high
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [brainstorming, context-discovery, plan-reviewer]
+thinking_mode: adaptive
 ---
 
 # Plan Builder
@@ -9,20 +12,23 @@ effort: high
 **Model**: ALWAYS Opus 4.7, max thinking effort, max output tokens. Never truncate.
 **Announce:** "Building engineering plan using Atlas Dev plan-builder..."
 
-## Red Flags (rationalization check)
+<HARD-GATE>
+NO IMPLEMENTATION STARTS WITHOUT A PLAN SCORING >= 12/15 ON THE QUALITY GATE.
+A plan below 12/15 is a liability, not a blueprint.
+Revise weak sections and re-score before Gate G1 approval.
+</HARD-GATE>
 
-Before skipping plan-builder or shortcutting its workflow, ask yourself — are any of these thoughts running? If yes, STOP. Bad plans produce bad code that drags for weeks.
+**Iron Law**: `LAW-PLAN-001` (plan-gate-12-over-15). Override requires HITL AskUserQuestion. Source: `scripts/execution-philosophy/iron-laws.yaml`.
 
+<red-flags>
 | Thought | Reality |
-|---------|---------|
-| "I can start coding, plan later" | Plan before code. Otherwise plan drifts to match bad code. |
-| "This is simple, 5 sections is enough" | If task > 10h or crosses DB/API/FE, you need the full 15+5. |
-| "Score 12/15 is close enough" | Gate is 16/20 for new plans. Below gate = hidden gaps that blow up mid-exec. |
-| "I don't need Mermaid — paragraphs explain it" | Mermaid renders in the dashboard. Text-only = invisible to reviewers. |
-| "Enterprise sections (H-L) don't apply here" | They apply to EVERY feature. Fill "N/A — reason" explicitly if skipping. |
-| "Section O verification is boilerplate" | E2E persona + perf + security commands MUST be runnable. Copy-paste = dead gate. |
-| "The user will just approve whatever" | HITL Gate G1 requires score + approval. Half-formed plans get rejected. |
-| "I'll skip brainstorming — I know the design" | Brainstorming surfaces 2-3 approaches. One-approach plans = locked-in wrong pattern. |
+|---|---|
+| "This feature is too simple to need a plan" | Simple projects are where unexamined assumptions cause the most wasted work. The plan can be short, but it MUST exist and be approved. "Too simple to plan" precedes 90% of scope-drift incidents. |
+| "Let me just start coding and see where it goes" | Coding without a plan = architecting in your prefrontal cortex under tool-use latency. You will burn 10x tokens exploring paths a 15-min plan would have rejected. |
+| "Plan later, let me prototype first to see if it works" | "Prototype first" = "write production code I will pretend to throw away". You will adapt the prototype, not rewrite it. Prototyping without a plan is planning-by-accretion. |
+| "I know the pattern from last sprint, same plan applies" | Patterns repeat but CONTEXT does not. Tables, personas, constraints, API shape — all different. Reusing a plan verbatim skips the discovery where the gotcha lives. |
+| "Plan scored 10/15 but deadline is tight, let's ship it" | A plan below 12/15 has 3+ weak sections. Those sections become your incident retrospectives. Gate G1 at 12/15 is calibrated on historical data — below it, rework cost > plan-enrichment cost. |
+</red-flags>
 
 ## Workflow
 

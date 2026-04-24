@@ -4,25 +4,101 @@
 # ATLAS CLI Module: Agent Dispatch (lightweight fire-and-forget)
 # Sourced by atlas-cli.sh — do not execute directly
 # SP-EVOLUTION P7.4 — atlas dispatch "task" [--model sonnet]
+# Plan v6.0 Sprint 5.5 — 6-level effort routing + AGENT.md frontmatter inspection
+
+# ── v6.0: 6-level effort → model routing ────────────────────────
+# Valid effort levels (ordered low→max; "auto" = fallback)
+_ATLAS_VALID_EFFORTS="low medium high xhigh max auto"
+
+# Validate effort level
+_atlas_validate_effort() {
+  local effort="$1"
+  case " $_ATLAS_VALID_EFFORTS " in
+    *" $effort "*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Parse `effort:` from AGENT.md YAML frontmatter
+# Usage: _atlas_get_agent_effort <agent_name>
+# Returns: effort string (low|medium|high|xhigh|max) or "auto" if not found
+_atlas_get_agent_effort() {
+  local agent_name="$1"
+  local plugin_root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+  local agent_md="${plugin_root}/agents/${agent_name}/AGENT.md"
+  [ -f "$agent_md" ] || { echo "auto"; return 0; }
+
+  python3 -c "
+import sys
+try:
+    import yaml
+except ImportError:
+    print('auto'); sys.exit(0)
+try:
+    with open('$agent_md') as f:
+        content = f.read()
+    parts = content.split('---')
+    if len(parts) >= 3:
+        fm = yaml.safe_load(parts[1]) or {}
+        eff = str(fm.get('effort', 'auto')).lower().strip()
+        valid = {'low','medium','high','xhigh','max','auto'}
+        print(eff if eff in valid else 'auto')
+    else:
+        print('auto')
+except Exception:
+    print('auto')
+" 2>/dev/null || echo "auto"
+}
+
+# Map a 6-level effort to a model tier (Opus/Sonnet/Haiku)
+# Usage: _atlas_effort_to_model <effort>
+# Returns: opus|sonnet|haiku
+_atlas_effort_to_model() {
+  case "$1" in
+    max|xhigh)    echo "opus" ;;
+    high|medium)  echo "sonnet" ;;
+    low)          echo "haiku" ;;
+    *)            echo "sonnet" ;;  # auto/unknown → sonnet default
+  esac
+}
 
 _atlas_dispatch() {
   local desc=""
   local model=""
   local mode="auto"
+  local effort=""
 
   # Parse args
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --model) model="$2"; shift 2 ;;
       --mode) mode="$2"; shift 2 ;;
+      --effort=*) effort="${1#--effort=}"; shift ;;
+      --effort) effort="$2"; shift 2 ;;
       *) desc="$desc $1"; shift ;;
     esac
   done
   desc="${desc## }"  # trim leading space
 
   if [ -z "$desc" ]; then
-    echo "Usage: atlas dispatch \"task description\" [--model sonnet|opus|haiku]"
+    echo "Usage: atlas dispatch \"task description\" [--model sonnet|opus|haiku] [--effort low|medium|high|xhigh|max|auto]"
     return 1
+  fi
+
+  # v6.0: Validate --effort if provided; reject invalid values early
+  if [ -n "$effort" ]; then
+    if ! _atlas_validate_effort "$effort"; then
+      echo "❌ Invalid --effort '$effort'. Valid: low, medium, high, xhigh, max, auto"
+      return 1
+    fi
+    # effort=auto means "fall back to complexity detection" — clear it
+    [ "$effort" = "auto" ] && effort=""
+  fi
+
+  # v6.0: If --effort set and no --model, route via effort tier map
+  if [ -n "$effort" ] && [ -z "$model" ]; then
+    model=$(_atlas_effort_to_model "$effort")
+    echo "🎚️  Effort: ${effort} → model: ${model}"
   fi
 
   # Auto-detect model if not specified

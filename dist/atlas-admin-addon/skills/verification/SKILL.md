@@ -2,28 +2,32 @@
 name: verification
 description: "Complete verification pipeline (L1-L6 tests + quality gates). This skill should be used when the user asks to 'verify', '/a-verify', 'check everything', 'pre-ship verification', or before claiming any task complete — evidence before assertions."
 effort: medium
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [tdd, systematic-debugging, code-review]
+thinking_mode: adaptive
 ---
 
 # Verification
 
 **Principle**: Evidence before assertions. NEVER claim work passes without running commands and confirming output.
 
-## Red Flags (rationalization check)
+<HARD-GATE>
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.
+If you have not run the verification command in this message, you cannot claim it passes.
+Evidence before assertions, always.
+</HARD-GATE>
 
-Before skipping verification, ask yourself — are any of these thoughts running? If yes, STOP. The 2026-04-16 persona-bug incident is exactly this rationalization shipping to prod.
+**Iron Law**: `LAW-VERIFY-001` (evidence-before-assertions). Override requires HITL AskUserQuestion. Source: `scripts/execution-philosophy/iron-laws.yaml`.
 
+<red-flags>
 | Thought | Reality |
-|---------|---------|
-| "Tests probably pass, I changed one line" | "Probably" ≠ "do". Run the commands. Persona-bug cost 4h because of "probably". |
-| "I ran these tests earlier in the session" | State changed since then (DB migrations, config, deps). Re-run. |
-| "Type-check isn't necessary for this change" | TypeScript strict mode catches bugs before runtime. Always type-check. |
-| "I don't need to check DoD tier, it's small" | NEVER report Progress > 20% if only Tier 1 passes. Show the score. |
-| "Build passed locally last time" | Last time ≠ this time. Build, types, lint, tests in order — every time. |
-| "E2E is overkill for this fix" | If the plan's Section O specifies E2E, run it. No skipping. |
-| "Enterprise audit is just for production" | `toolkit.audit --fail-on critical` catches project_id filters + RBAC gaps. Run it. |
-| "Mock-only tests prove it works" | Orchestrators with 3+ DI deps MUST have real smoke. Mock budget rule (2026-04-16). |
-
-## Verification Levels
+|---|---|
+| "Tests should pass now, committing" | "Should pass" is a wish, not evidence. Confidence is not verification. Until the command runs and the output is read, you do not know — you hope. |
+| "Good enough, we can refactor later" | "Later" is the cemetery where good intentions go. Code merged ships to production. Every refactor-later is a mortgage with compound interest paid in incident reviews. |
+| "YAGNI — nobody will notice this edge case" | YAGNI means "don't build speculative features", not "don't handle real inputs". Edge cases happen IN PRODUCTION to REAL users, not in your head. |
+| "The agent reported success, task is done" | Agent reports are NOT evidence. Agents can claim success while leaving an empty diff, broken tests, or uncommitted files. Trust but verify — always check the VCS diff independently. |
+| "Trust me, I've done this pattern 20 times" | Experience speeds recognition, not verification. The 20 previous times had 20 different contexts. This one has its own gotcha you have not met yet. |
+</red-flags>
 
 ## Verification Levels
 

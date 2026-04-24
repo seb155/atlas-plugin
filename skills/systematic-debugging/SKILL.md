@@ -2,7 +2,27 @@
 name: systematic-debugging
 description: "Structured debugging workflow. Use when encountering any bug, test failure, unexpected behavior, or before proposing any fix — especially when tempted to guess-and-check randomly."
 effort: medium
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [verification-before-completion, tdd]
+thinking_mode: adaptive
 ---
+
+<HARD-GATE>
+NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
+If you have not completed Phase 1, you cannot propose fixes.
+Symptom fixes are failure.
+</HARD-GATE>
+
+<red-flags>
+
+| Thought | Reality |
+|---|---|
+| "Quick fix for now, investigate the real cause later" | STOP. Complete Phase 1 (Root Cause Investigation) FIRST. Read error carefully, reproduce, check recent changes, trace data flow. Only then propose a fix. |
+| "Just catch the exception and log it" | Identify WHY the exception fires. Fix the root cause. If the exception is genuinely unrecoverable, wrap it with a specific recovery path AND alert — never a silent catch. |
+| "It's probably X, let me try changing that" | Write the hypothesis as a single sentence: 'I think X is root cause because Y'. If Y is weak, investigate more before testing. One variable at a time. |
+| "Works on my machine, must be an environment issue" | List every environment variable / system dependency your code touches. Pin, validate, or inject each one. Make the machine difference explicit, then eliminate it. |
+
+</red-flags>
 
 # Systematic Debugging
 

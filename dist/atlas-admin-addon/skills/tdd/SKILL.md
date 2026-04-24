@@ -2,7 +2,26 @@
 name: tdd
 description: "Test-Driven Development cycle. This skill should be used when the user asks to implement any feature or bugfix, 'TDD this', 'write tests first', '/a-tdd', or before writing implementation code that has no failing test yet."
 effort: medium
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [verification-before-completion, systematic-debugging]
+thinking_mode: adaptive
 ---
+
+<HARD-GATE>
+NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
+This is not a recommendation. This is an Iron Law.
+Write code before the test? Delete it. Start over.
+</HARD-GATE>
+
+<red-flags>
+
+| Thought | Reality |
+|---|---|
+| "I'll add tests after the implementation works" | STOP. Delete any uncommitted implementation. Restart with Red-Green-Refactor. Watch the test fail for the RIGHT reason before writing any code. |
+| "This test is trivial, don't need to write it" | Write the test. 30 seconds of effort prevents hour-long debugging later. 'Too simple to test' is the #1 excuse preceding production bugs. |
+| "I already manually tested all the edge cases" | Convert each manual check into an automated test. Run the suite. Commit tests + code. Now regressions are impossible, not just unlikely. |
+
+</red-flags>
 
 # Test-Driven Development
 

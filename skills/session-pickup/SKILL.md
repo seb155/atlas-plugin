@@ -87,6 +87,43 @@ Extract from each handoff: the "Focus" line (header or first summary), "What was
    - The active plan file (from handoff)
    - `.blueprint/plans/INDEX.md`
    - Any other files listed
+
+### Step 2.5: Restore Approved-Mode State (v6.0.0-alpha.8+)
+
+If handoff contains an `approved_gates_persist` YAML block (from previous session's session-retrospective), restore it into `.claude/session-state.json`:
+
+```yaml
+# Example handoff section:
+approved_gates_persist:
+  autonomy_mode: approved
+  approved_gates:
+    - gate_id: plan-arch
+      scope: branch-feat/atlas-v6-consolidation
+      approved_at: 2026-04-23T20:53:00Z
+    - gate_id: dedup-phase-2
+      scope: session
+  ttl_hours: 24
+```
+
+Restoration logic:
+```bash
+# If handoff has approved_gates_persist + TTL not expired
+if grep -q "^approved_gates_persist:" "$HANDOFF_FILE"; then
+  # Extract block, apply via autonomy-gate
+  python3 -c "
+import yaml
+with open('$HANDOFF_FILE') as f: content = f.read()
+# Parse approved_gates_persist block ...
+# For each gate, call: ./hooks/autonomy-gate.sh approve <gate_id> <scope>
+# Also: ./hooks/autonomy-gate.sh set-mode approved
+"
+  echo "🔐 Restored N approved_gates from handoff (v6.0 Phase 5 persistence)"
+fi
+```
+
+**TTL check**: If handoff `session_start` > TTL (default 24h), DO NOT restore approved_gates — default back to `strict` mode. Safe fallback.
+
+**User override**: Add `--no-approved-restore` flag to skip restoration even if handoff has it.
 3. Check git state:
    ```bash
    git branch --show-current
@@ -166,3 +203,18 @@ When user selects a next action, **stay in that context**. No re-presenting the 
 - Never go back to the handoff/pickup menu after this point
 - Stay in the selected feature/plan context for the rest of the session
 - If user wants to switch -> they say "switch to X" or run `/pickup` again
+
+## Complementary to Claude Code Session Recap (v6.0+)
+
+CC ships an automatic Session Recap (one-line summary) on every resume. **session-pickup is complementary**, not a replacement:
+
+- **CC Recap** = auto, "what happened last" summary
+- **session-pickup** = opt-in via `/pickup`, full context reload from explicit handoff file
+
+Use `session-pickup` after CC's Recap when you need:
+- Full context reload (handoff parsing)
+- Vault profile auto-load
+- Multi-project state (Blueprint plans, etc.)
+- Plan mode gate enforcement
+
+See ADR-0003 for design rationale.

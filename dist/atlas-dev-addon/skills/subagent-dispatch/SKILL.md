@@ -2,9 +2,29 @@
 name: subagent-dispatch
 description: "Subagent dispatcher with model allocation. Use when a plan has independent tasks ready for parallel execution, when the user asks to 'dispatch subagents', 'run in parallel', '/subagent-dispatch', or when cost-aware 2-stage review is needed across 2+ tasks."
 effort: medium
+superpowers_pattern: [iron_law, red_flags, hard_gate]
+see_also: [dispatching-parallel-agents, atlas-team]
+thinking_mode: adaptive
 ---
 
 # Subagent Dispatch
+
+<HARD-GATE>
+Subagents MUST work on independent tasks. Verify no shared state before parallel dispatch — merge conflicts and race conditions are the price of skipping this check.
+Build the dependency graph. Confirm no two parallel tasks touch the same file, the same DB migration, or the same git operation. Agent reports are NOT evidence — check `git diff` independently before closing the loop.
+</HARD-GATE>
+
+<red-flags>
+
+| Thought | Reality |
+|---------|---------|
+| "The agents can figure it out, just dispatch them all in parallel" | Agents running in parallel cannot coordinate. Each one commits to its own branch view. Shared-file writes produce lost updates, silently. If you dispatch without a dependency graph, you are paying for merge-conflict debugging later. |
+| "Independence is obvious, no need to map the graph" | Implicit dependencies dominate real codebases: imported hooks, shared DB migrations, overlapping test fixtures, same router config. "Obvious" means you have not looked. Map it anyway. |
+| "Shared files are fine, last write wins" | Last-write-wins in git = lost work in the loser's diff. The loser agent reports success, you believe them, their changes vanish on merge. This is how parallel dispatch creates ghost bugs. |
+| "The agent reported success, task is done" | Agent reports are NOT evidence. Agents can claim success while leaving an empty diff, broken tests, or uncommitted files. Trust but verify — always check the VCS diff independently. |
+| "Good enough, we can refactor the race conditions later" | "Later" is the cemetery where good intentions go. Code merged ships to production. Every refactor-later is a mortgage with compound interest paid in incident reviews. |
+
+</red-flags>
 
 ## Overview
 

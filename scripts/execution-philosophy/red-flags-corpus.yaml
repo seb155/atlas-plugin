@@ -1,0 +1,304 @@
+# ATLAS v6.0 — Red Flags Corpus
+# Authority: .blueprint/plans/regarde-comment-adapter-atlas-compressed-wave.md (Section E)
+# Schema: .blueprint/schemas/philosophy-engine-schema.md (Section 3)
+# Inspired by: Obra/superpowers-upstream (Thought | Reality tables across skills)
+#
+# Red Flags = cognitive rationalizations that signal the agent is about to
+# break an Iron Law. Each flag has:
+#   - a "thought" quoted verbatim (how the agent phrases the rationalization)
+#   - a "reality" counter-statement (what is actually true)
+#   - applicable_skills[] that must inject this flag into their <red-flags> table
+#   - severity (low | medium | high | critical) — drives linter warning escalation
+#   - counter_action = concrete ACTION the agent must take instead
+#
+# Categories:
+#   1. TDD rationalizations      (5 flags, FLAG-TDD-*)
+#   2. Debugging rationalizations (5 flags, FLAG-DBG-*)
+#   3. Planning rationalizations  (5 flags, FLAG-PLAN-*)
+#   4. Review rationalizations    (5 flags, FLAG-REVIEW-*)
+#
+# Updated: 2026-04-17
+# Version: 6.0.0
+
+version: 6.0.0
+updated: 2026-04-17
+
+flags:
+
+  # ==========================================================================
+  # CATEGORY 1 — TDD RATIONALIZATIONS
+  # Maps to LAW-TDD-001 (test-first-development)
+  # ==========================================================================
+
+  - id: FLAG-TDD-001
+    category: tdd
+    thought: "This test is trivial, don't need to write it"
+    reality: "Trivial tests catch trivial regressions. Skills evolve — today's trivial is tomorrow's silent corruption. Write it anyway."
+    applicable_skills: [tdd, test-affected, verification, senior-review-checklist]
+    severity: high
+    counter_action: "Write the test. 30 seconds of effort prevents hour-long debugging later. 'Too simple to test' is the #1 excuse preceding production bugs."
+    linked_law: LAW-TDD-001
+
+  - id: FLAG-TDD-002
+    category: tdd
+    thought: "It's just a typo fix, no test needed"
+    reality: "Typos in code are still behavior. If behavior is worth changing, it is worth testing. Regression proof requires a test."
+    applicable_skills: [tdd, code-review, verification, finishing-branch]
+    severity: medium
+    counter_action: "Write a 1-line test asserting the corrected behavior. Commit test + fix together. Cost: 60 seconds. Value: permanent regression shield."
+    linked_law: LAW-TDD-001
+
+  - id: FLAG-TDD-003
+    category: tdd
+    thought: "I'll add tests after the implementation works"
+    reality: "Tests written after implementation pass immediately. Passing immediately proves nothing — might test wrong thing, implementation not behavior, or miss the bug you never saw."
+    applicable_skills: [tdd, code-review, verification, senior-review-checklist]
+    severity: critical
+    counter_action: "STOP. Delete any uncommitted implementation. Restart with Red-Green-Refactor. Watch the test fail for the RIGHT reason before writing any code."
+    linked_law: LAW-TDD-001
+
+  - id: FLAG-TDD-004
+    category: tdd
+    thought: "I already manually tested all the edge cases"
+    reality: "Manual testing is ad-hoc — no record, can't re-run under pressure, easy to forget cases when code changes. 'It worked when I tried it' is not comprehensive coverage."
+    applicable_skills: [tdd, verification, visual-qa, test-orchestrator]
+    severity: high
+    counter_action: "Convert each manual check into an automated test. Run the suite. Commit tests + code. Now regressions are impossible, not just unlikely."
+    linked_law: LAW-TDD-001
+
+  - id: FLAG-TDD-005
+    category: tdd
+    thought: "I know exactly what this does, testing is overkill"
+    reality: "You know what it does TODAY. In 6 months, another Claude session (or you) will touch this file blind. Tests are how future you tells past you what mattered."
+    applicable_skills: [tdd, senior-review-checklist, code-review, code-hygiene-rules]
+    severity: medium
+    counter_action: "Write the test in the voice of future-you who does not remember context. Document the behavioral contract, not the implementation detail."
+    linked_law: LAW-TDD-001
+
+  # ==========================================================================
+  # CATEGORY 2 — DEBUGGING RATIONALIZATIONS
+  # Maps to LAW-DBG-001 (no-fixes-without-root-cause)
+  # ==========================================================================
+
+  - id: FLAG-DBG-001
+    category: debugging
+    thought: "Quick fix for now, investigate the real cause later"
+    reality: "First fix sets the pattern. 'Later' never comes. The band-aid becomes permanent and compounds with the next band-aid into an untraceable tangle."
+    applicable_skills: [systematic-debugging, code-review, senior-review-checklist, scope-check]
+    severity: critical
+    counter_action: "STOP. Complete Phase 1 (Root Cause Investigation) FIRST. Read error carefully, reproduce, check recent changes, trace data flow. Only then propose a fix."
+    linked_law: LAW-DBG-001
+
+  - id: FLAG-DBG-002
+    category: debugging
+    thought: "Just catch the exception and log it"
+    reality: "Swallowing errors is not debugging — it is hiding the bug in production. Logs without a fix = technical debt that fires at 3am in six months."
+    applicable_skills: [systematic-debugging, code-review, senior-review-checklist]
+    severity: critical
+    counter_action: "Identify WHY the exception fires. Fix the root cause. If the exception is genuinely unrecoverable, wrap it with a specific recovery path AND alert — never a silent catch."
+    linked_law: LAW-DBG-001
+
+  - id: FLAG-DBG-003
+    category: debugging
+    thought: "Not reproducible, probably a flaky test"
+    reality: "95% of 'flaky' tests are actually race conditions, timing assumptions, or shared-state pollution. 'Flaky' is the label you apply when you refuse to investigate."
+    applicable_skills: [systematic-debugging, ci-health, test-affected, verification]
+    severity: high
+    counter_action: "Run the test 100x in isolation. Run it 100x in the full suite. Compare. The diff between the two reveals the coupling. Fix at the source, not with a retry."
+    linked_law: LAW-DBG-001
+
+  - id: FLAG-DBG-004
+    category: debugging
+    thought: "Works on my machine, must be an environment issue"
+    reality: "Environment differences are the issue's HIDING place, not its cause. If your code assumes your environment, the code is wrong — the environment is not."
+    applicable_skills: [systematic-debugging, infra-health, ci-management, verification]
+    severity: high
+    counter_action: "List every environment variable / system dependency your code touches. Pin, validate, or inject each one. Make the machine difference explicit, then eliminate it."
+    linked_law: LAW-DBG-001
+
+  - id: FLAG-DBG-005
+    category: debugging
+    thought: "It's probably X, let me try changing that"
+    reality: "Guess-and-check thrashes. One hypothesis at a time, tested minimally. If you cannot articulate 'I think X is root cause because Y', you do not have a hypothesis — you have a wish."
+    applicable_skills: [systematic-debugging, code-review, tdd]
+    severity: high
+    counter_action: "Write the hypothesis as a single sentence: 'I think X is root cause because Y'. If Y is weak, investigate more before testing. One variable at a time."
+    linked_law: LAW-DBG-001
+
+  # ==========================================================================
+  # CATEGORY 3 — PLANNING RATIONALIZATIONS
+  # Maps to LAW-DESIGN-001 + LAW-PLAN-001
+  # ==========================================================================
+
+  - id: FLAG-PLAN-001
+    category: planning
+    thought: "This feature is too simple to need a plan"
+    reality: "Simple projects are where unexamined assumptions cause the most wasted work. The plan can be short, but it MUST exist and be approved. 'Too simple to plan' precedes 90% of scope-drift incidents."
+    applicable_skills: [brainstorming, plan-builder, plan-review, context-discovery]
+    severity: high
+    counter_action: "Write a 5-section micro-plan (goal, approach, files touched, tests, rollback). Get AskUserQuestion approval. Then start. Takes 10 min, saves 2 hours."
+    linked_law: LAW-DESIGN-001
+
+  - id: FLAG-PLAN-002
+    category: planning
+    thought: "Let me just start coding and see where it goes"
+    reality: "Coding without a plan = architecting in your prefrontal cortex under tool-use latency. You will burn 10x tokens exploring paths a 15-min plan would have rejected."
+    applicable_skills: [brainstorming, plan-builder, context-discovery, interactive-flow]
+    severity: critical
+    counter_action: "STOP. Invoke brainstorming skill. Present 2-3 approaches via AskUserQuestion. Wait for design approval. THEN invoke plan-builder. THEN code."
+    linked_law: LAW-DESIGN-001
+
+  - id: FLAG-PLAN-003
+    category: planning
+    thought: "Plan later, let me prototype first to see if it works"
+    reality: "'Prototype first' = 'write production code I will pretend to throw away'. You will adapt the prototype, not rewrite it. Prototyping without a plan is planning-by-accretion."
+    applicable_skills: [brainstorming, plan-builder, scope-check]
+    severity: high
+    counter_action: "If you genuinely need a spike, scope it: timebox (30 min), named branch (spike/*), explicit 'deleted after' commit. Otherwise, plan first."
+    linked_law: LAW-DESIGN-001
+
+  - id: FLAG-PLAN-004
+    category: planning
+    thought: "I know the pattern from last sprint, same plan applies"
+    reality: "Patterns repeat but CONTEXT does not. Tables, personas, constraints, API shape — all different. Reusing a plan verbatim skips the discovery where the gotcha lives."
+    applicable_skills: [plan-builder, plan-review, context-discovery, senior-review-checklist]
+    severity: medium
+    counter_action: "Run context-discovery skill FIRST. Then adapt the prior plan's structure — but RE-FILL every section with this feature's specifics. Shortcut: copy template, not content."
+    linked_law: LAW-PLAN-001
+
+  - id: FLAG-PLAN-005
+    category: planning
+    thought: "Plan scored 10/15 but deadline is tight, let's ship it"
+    reality: "A plan below 12/15 has 3+ weak sections. Those sections become your incident retrospectives. Gate G1 at 12/15 is calibrated on historical data — below it, rework cost > plan-enrichment cost."
+    applicable_skills: [plan-builder, plan-review, programme-manager]
+    severity: critical
+    counter_action: "Identify the 3 weakest sections. Spend 30 min researching 2026 best practices + Context7 for each. Re-score. 12/15 is usually 1 research session away."
+    linked_law: LAW-PLAN-001
+
+  # ==========================================================================
+  # CATEGORY 4 — REVIEW & COMPLETION RATIONALIZATIONS
+  # Maps to LAW-VERIFY-001 (evidence-before-assertions)
+  # ==========================================================================
+
+  - id: FLAG-REVIEW-001
+    category: review
+    thought: "Tests should pass now, committing"
+    reality: "'Should pass' is a wish, not evidence. Confidence is not verification. Until the command runs and the output is read, you do not know — you hope."
+    applicable_skills: [verification, finishing-branch, code-review, ship-all]
+    severity: critical
+    counter_action: "Run the exact verification command. Read the full output. Confirm exit 0 + 0 failures. Quote the evidence in your response BEFORE claiming success."
+    linked_law: LAW-VERIFY-001
+
+  - id: FLAG-REVIEW-002
+    category: review
+    thought: "Good enough, we can refactor later"
+    reality: "'Later' is the cemetery where good intentions go. Code merged ships to production. Every refactor-later is a mortgage with compound interest paid in incident reviews."
+    applicable_skills: [code-review, senior-review-checklist, code-simplify, finishing-branch]
+    severity: high
+    counter_action: "If it is not refactor-ready today, it is not merge-ready today. Either fix now (cheapest moment) or file a TaskCreate with owner + deadline — never 'later' as a rhetorical device."
+    linked_law: LAW-VERIFY-001
+
+  - id: FLAG-REVIEW-003
+    category: review
+    thought: "YAGNI — nobody will notice this edge case"
+    reality: "YAGNI means 'don't build speculative features', not 'don't handle real inputs'. Edge cases happen IN PRODUCTION to REAL users, not in your head."
+    applicable_skills: [code-review, senior-review-checklist, tdd, verification]
+    severity: high
+    counter_action: "List the edge case. Ask: 'can a user actually trigger this?' If yes, add a test + handler. YAGNI applies to features, not robustness."
+    linked_law: LAW-VERIFY-001
+
+  - id: FLAG-REVIEW-004
+    category: review
+    thought: "The agent reported success, task is done"
+    reality: "Agent reports are NOT evidence. Agents can claim success while leaving an empty diff, broken tests, or uncommitted files. Trust but verify — always check the VCS diff independently."
+    applicable_skills: [verification, subagent-dispatch, code-review, finishing-branch]
+    severity: critical
+    counter_action: "Run `git diff` or `git status`. Confirm actual file changes match the agent's report. Run the verification command yourself. Only then close the loop."
+    linked_law: LAW-VERIFY-001
+
+  - id: FLAG-REVIEW-005
+    category: review
+    thought: "Trust me, I've done this pattern 20 times"
+    reality: "Experience speeds recognition, not verification. The 20 previous times had 20 different contexts. This one has its own gotcha you have not met yet."
+    applicable_skills: [code-review, senior-review-checklist, verification, scope-check]
+    severity: medium
+    counter_action: "Treat familiarity as a hypothesis, not a conclusion. Run the verification step anyway. If the pattern truly holds, verification takes 30 seconds — no cost."
+    linked_law: LAW-VERIFY-001
+
+  # ==========================================================================
+  # CATEGORY 5 — SCOPE RATIONALIZATIONS
+  # Maps to LAW-SCOPE-001 (scope-drift-prevention)
+  # ==========================================================================
+
+  - id: FLAG-SCOPE-001
+    category: scope
+    thought: "Just a tiny fix while I'm here"
+    reality: "There is no such thing as a tiny fix outside scope. Every detour changes the plan's blast radius, invalidates the effort estimate, and makes the diff harder to review. 'Tiny' is what you call it before the merge conflict."
+    applicable_skills: [scope-check, systematic-debugging, tdd, code-review]
+    severity: high
+    counter_action: "STOP. Note the 'tiny fix' in a TODO or decision-log. Finish the original task first. Open a separate branch + PR for the detour — never silent in-line drift."
+    linked_law: LAW-SCOPE-001
+
+  - id: FLAG-SCOPE-002
+    category: scope
+    thought: "While I'm in this file..."
+    reality: "Being in a file is not a license to edit it. The file was opened for one reason — satisfy that reason and close. Drive-by edits create review noise and hide the real diff."
+    applicable_skills: [scope-check, code-review, senior-review-checklist, executing-plans]
+    severity: high
+    counter_action: "Ask: 'is this edit in the original task scope?' If no, revert the drive-by and log it separately. One file, one purpose per PR."
+    linked_law: LAW-SCOPE-001
+
+  - id: FLAG-SCOPE-003
+    category: scope
+    thought: "This touches something unrelated but it's the same bug really"
+    reality: "If it is truly the same bug, root cause analysis will prove it — go prove it. If you skip the proof, 'same bug really' is just a rationalization for skipping Phase 1."
+    applicable_skills: [scope-check, systematic-debugging, tdd]
+    severity: critical
+    counter_action: "Run systematic-debugging Phase 1 on the 'unrelated' file. If the trace links back to the original root cause, expand scope WITH evidence. Otherwise, defer."
+    linked_law: LAW-SCOPE-001
+
+  - id: FLAG-SCOPE-004
+    category: scope
+    thought: "One quick cleanup can't hurt"
+    reality: "Cleanups that can't wait for a cleanup sprint are diffs hiding in a feature PR. Reviewers miss the real change, the effort estimate is wrong, and the commit history is muddled."
+    applicable_skills: [scope-check, code-review, finishing-branch, senior-discipline-checklist]
+    severity: medium
+    counter_action: "Add the cleanup to a `CLEANUP-TODO.md` or backlog issue. Keep the current PR laser-focused on the original task. Ship cleanups in dedicated hygiene sprints."
+    linked_law: LAW-SCOPE-001
+
+  - id: FLAG-SCOPE-005
+    category: scope
+    thought: "I'll note it but not fix"
+    reality: "Notes without ownership rot in comments. 'TODO' written today is 'we always had that bug' in six months. If it matters enough to note, it matters enough to file."
+    applicable_skills: [scope-check, decision-log, code-review]
+    severity: medium
+    counter_action: "Convert the note into a Forgejo/GitHub issue with owner + severity. Link the issue from decision-log.jsonl. 'Mentioned in a comment' is not triage."
+    linked_law: LAW-SCOPE-001
+
+# ==========================================================================
+# Registry metadata
+# ==========================================================================
+metadata:
+  total_flags: 25
+  categories:
+    tdd: 5
+    debugging: 5
+    planning: 5
+    review: 5
+    scope: 5
+  severity_distribution:
+    critical: 8
+    high: 12
+    medium: 5
+    low: 0
+  law_coverage:
+    LAW-TDD-001: 5
+    LAW-DBG-001: 5
+    LAW-DESIGN-001: 3
+    LAW-PLAN-001: 2
+    LAW-VERIFY-001: 5
+    LAW-SCOPE-001: 5
+  linter_rules:
+    - "L2: skills with superpowers_pattern: [red_flags] MUST inject a <red-flags> table"
+    - "L9: red-flags table headers MUST be exactly | Thought | Reality |"
+    - "Max 20 rows per table per skill body"

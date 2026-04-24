@@ -64,7 +64,7 @@ while IFS= read -r line; do
             printf "${GOLD}🔧 %s${RESET} %s\n" "$name" "$desc"
             ;;
           thinking)
-            # Extended thinking blocks — show 1-line preview
+            # Adaptive thinking blocks (CC transcript format) — show 1-line preview
             think=$(printf '%s' "$block" | jq -r '.thinking // ""' 2>/dev/null | head -c 100 | tr '\n' ' ')
             [ -n "$think" ] && printf "${DIM}🧠 %s${RESET}\n" "$think"
             ;;

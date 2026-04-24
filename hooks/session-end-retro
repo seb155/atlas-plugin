@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# ATLAS SessionEnd Hook — Auto Retrospective (v6.0)
+# Reminds the model to invoke session-retrospective skill before exiting
+#
+# Paired with existing hooks/session-end-memory-cleanup (memory hygiene).
+# This hook is the retrospective-pattern companion that nudges the model
+# to capture lessons, gotchas, decisions, and next steps.
+
+set -euo pipefail
+
+# Read stdin
+INPUT=$(cat 2>/dev/null || echo '{}')
+
+# Empty-session detection heuristic (v6.0.0-alpha.5 P1-3):
+# Skip reminder if session had no significant activity. Checks:
+#   1. Any git commits in current cwd since a reasonable threshold (15 min)
+#   2. Any file modifications in .claude/ or memory/ recently
+# Fallback: if detection fails or produces ambiguous signal → emit reminder (safe default)
+SIGNIFICANT=0
+if command -v git &>/dev/null && git rev-parse --git-dir &>/dev/null 2>&1; then
+  # Count commits in last 60 min (session-level timeframe)
+  RECENT_COMMITS=$(git log --since="60 minutes ago" --oneline 2>/dev/null | wc -l || echo 0)
+  if [ "$RECENT_COMMITS" -ge 1 ]; then
+    SIGNIFICANT=1
+  fi
+fi
+# Check recent file mods in .claude/ or memory/ (15 min window)
+if [ "$SIGNIFICANT" -eq 0 ]; then
+  if find .claude memory 2>/dev/null -type f -mmin -15 | head -1 | grep -q .; then
+    SIGNIFICANT=1
+  fi
+fi
+# If no significant activity detected, exit quietly
+if [ "$SIGNIFICANT" -eq 0 ]; then
+  echo '{"continue": true}'
+  exit 0
+fi
+
+REMINDER=$(cat <<'EOF'
+# ATLAS Session End — Retrospective Pattern
+
+Before closing this session, consider invoking the `session-retrospective` skill to capture:
+
+- Lessons learned (what worked, what didn't)
+- Gotchas for future sessions (anti-patterns encountered)
+- Decisions made (architectural choices, trade-offs)
+- Next steps (open tasks, follow-ups)
+
+Use the `Skill` tool: `session-retrospective` or create a handoff file in `memory/handoff-YYYY-MM-DD-<topic>.md`.
+
+This is optional (session may have been short/trivial) but recommended for any session with:
+- Multiple commits
+- New files created
+- Architectural decisions made
+- Blockers encountered
+EOF
+)
+
+# Emit reminder via env var passthrough (avoid shell-escape fragility with apostrophes)
+export REMINDER
+python3 <<'PYEOF'
+import json, os
+print(json.dumps({
+    'hookSpecificOutput': {
+        'hookEventName': 'SessionEnd',
+        'additionalContext': os.environ.get('REMINDER', '')
+    }
+}))
+PYEOF

@@ -73,6 +73,21 @@ Reads `scripts/smoke-endpoints.yml` from the current repo. Typical checks:
 - Issue builder: `scripts/smoke-report.py`
 - CI trigger: `.woodpecker/post-deploy-smoke.yml`
 
+## Monitor Pattern (v6.0 SOTA)
+
+Stream smoke test runs in real-time:
+
+```bash
+Monitor({
+  description: "smoke gate failures or completion",
+  command: "scripts/smoke.sh --watch | grep --line-buffered -E 'FAIL|PASS|exit'",
+  persistent: false,
+  timeout_ms: 120000  # 2 min smoke tests are quick
+})
+```
+
+Match BOTH FAIL et PASS et exit signatures. If silent → smoke crashed, investigate.
+
 ## References
 
 - `.blueprint/plans/hazy-mapping-stallman.md` Section E + Phase 2 T2.1-T2.4

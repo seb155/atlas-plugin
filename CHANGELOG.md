@@ -1,39 +1,327 @@
 # Changelog
 
-## v5.44.4 (2026-04-23)
+## v6.0.0-alpha.6 (2026-04-23 20:52 EDT) — Sprint 0 complete + Sprint 1 P1 partial
 
-### 🐛 Bug Fixes
-- fix(ci-release): distinguish legacy stale tags from concurrent pipelines (#44)
+### 🔧 Pre-existing Bug Fixes
 
+- **`./build.sh all` broken** — Legacy `build_tier` loop iterated old tier names `admin/dev/user` via `profiles/${tier}.yaml`. Those profiles were removed during SP-DEDUP Phase 1 (Sprint 7, alpha.1). Fix: rewire `all` case to use `MODULAR_PLUGINS` array + `build_modular_plugin` function (same architecture as `./build.sh modular` which already worked).
+  - Impact: `./build.sh all` now produces expected output (core: 30 skills / dev-addon: 36 skills / admin-addon: 66 skills)
+  - Commit: `5bb3a20`
 
+### ✨ Sprint 1 P1 Quality Items (partial — 2/10 items)
 
-## v5.44.3 (2026-04-23)
+**P1-3: session-end-retro SOTA upgrade** (commit `f053c17`):
+- Added empty-session detection heuristic — skip reminder if:
+  - Zero git commits in last 60 min (session timeframe)
+  - Zero file modifications in `.claude/` or `memory/` in last 15 min
+- Applied same env-var passthrough JSON escape fix as P0-2 (robustness vs apostrophes)
+- Fallback: emit reminder on detection ambiguity (safe default)
 
-### 🐛 Bug Fixes
-- fix(ci-release): auto-release loops past stale tags (#43)
+**P1-7: ADR-0004 knowledge dedup rationale** (commit `f053c17`):
+- Retroactive ADR documenting knowledge-engine + knowledge-manager → knowledge merge (shipped alpha.3)
+- Closes audit trail gap flagged by SOTA review 2026-04-23 Agent C
+- Includes: rationale, alternatives considered, consequences, verification, HITL decision record, revisit triggers
 
+**P1-8: [1m] variant mandate (critical doc)** (this commit):
+- Added 🔴 CRITICAL section at top of `skills/refs/model-benchmarks-2026-04/SKILL.md`
+- Documents: `model: opus` shortcut → silent 256K fallback risk
+- Canonical model ID list with correct variants
+- Enforcement layers (L1/L3/L5/L7) with status (planned for v6.1)
+- History note: Sprint 0 P0 fixes on 3 AGENT.md
 
+### 🚧 HITL Pending (alpha.6 → beta.1)
 
-## v5.44.2 (2026-04-23)
+P1 items remaining (~8h):
+- P1-1: Prompt caching on iron-laws + red-flags + AGENT.md (`cache_control: ephemeral`)
+- P1-2: Smoke tests for merged skills (knowledge, gms-mgmt collision flags)
+- P1-4: effort-router timeout 2s→5s + parallelization
+- P1-5: Migrate anti-patterns-from-plummer.md (needs merge main first)
+- P1-6: L8 fuzzy → SHA256 byte-exact
+- P1-9: (DONE in alpha.6 — `./build.sh all` fix)
+- P1-10: Philosophy Engine integration tests
 
-### 🐛 Bug Fixes
-- fix(ci): filter non-semver tags in auto-release detection
+Meta items:
+- Merge main v5.44.0 into feat/v6-sprint1-foundation (~18 conflicts including gms-*, knowledge-* modify/delete)
+- Live validation (`./scripts/validate-v6-session.sh`)
+- Cost/accuracy A/B vs v5.23.0
+- PR #23 update + marketplace alpha publish
 
-### 🔧 Other Changes
-- Merge pull request 'fix(ci): filter non-semver tags in auto-release' (#42) from hotfix/semver-tag-filter into main
+### ✅ Verification
 
+- `./build.sh all`: frontmatter 0 violations + Philosophy Engine 10/10 + all 3 modular plugins build green
+- Hooks syntax validated: `bash -n hooks/session-end-retro hooks/pre-compact-sota-context`
+- `grep -r "claude-opus-4-7" agents/`: only `claude-opus-4-7[1m]` variants
 
+### 🔗 References
 
-## v5.44.1 (2026-04-23)
+- Plan: `.blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md`
+- SOTA review: `memory/atlas-v6-sota-review-2026-04-23.md`
+- HITL Gate 2 approval: 2026-04-23 19:52 EDT (batch — covers all alpha.5/alpha.6 work)
 
-### 🐛 Bug Fixes
-- fix(ci): unblock release pipeline — 3 false-positive fixes
+---
 
-### 🔧 Other Changes
-- Merge pull request 'fix(ci): unblock release pipeline — 3 false-positive fixes' (#41) from hotfix/release-pipeline-false-positives into main
+## v6.0.0-alpha.5 (2026-04-23 20:30 EDT) — Sprint 0 P0 SOTA Fixes (5 critical)
 
+### 🔴 Critical Fixes (SOTA Review 2026-04-23)
 
+Post-v6.0.0-alpha.4 SOTA review (`memory/atlas-v6-sota-review-2026-04-23.md`) identified 5 P0 critical fixes blocking v6.0 GA. All applied this release (~1h effort).
 
+**P0-1 — 3 Opus AGENT.md missing [1m] suffix** (CRITICAL — user-flagged):
+- `agents/code-reviewer/AGENT.md`: `model: opus` → `model: claude-opus-4-7[1m]`
+- `agents/infra-expert/AGENT.md`: `model: opus` → `model: claude-opus-4-7[1m]`
+- `agents/plan-architect/AGENT.md`: `model: opus` → `model: claude-opus-4-7[1m]`
+- Impact: restores 1M context window (was silently resolving to 256K default with shortcut `model: opus`)
+
+**P0-2 — JSON escape bug in pre-compact-sota-context:20**:
+- Replaced fragile shell escape `'''$REMINDER'''` with env-var passthrough to Python `json.dumps()`
+- Impact: apostrophes in PreCompact content no longer break hook JSON output
+- Verification: JSON validates with complex content including quotes/apostrophes
+
+**P0-3 — (already done) build.sh exit 1 on frontmatter violations**:
+- Confirmed `_validate_frontmatter_v6` + caller enforce `exit 1` on violations (line 919)
+- SOTA review Agent C flagged as gap; investigation showed it's already in place
+- No code change needed, but validated behavior
+
+**P0-4 — hard-gate-linter integration in build.sh pipeline** (CRITICAL — safety net):
+- Added call to `scripts/execution-philosophy/hard-gate-linter.sh all` after frontmatter validation
+- Philosophy Engine safety net: 0% → 100% enforcement
+- New flag: `--skip-hard-gate` for dev iteration (not recommended for release)
+- Verification: 10/10 Tier-1 skills pass
+
+**P0-5 — ADR-0003 status resolution (PROPOSED → APPROVED)**:
+- Retroactively stamped APPROVED with Seb Gagnon as approver + date (2026-04-23)
+- Audit trail note added: shipped de facto in alpha.3, now properly approved via HITL Gate 2 batch
+
+### 📊 Audit & Review Artifacts
+
+Session 2026-04-23 (~57 min) produced comprehensive audit + SOTA review:
+- `memory/atlas-v6-audit-report-2026-04-23.md` — Master audit (4 agents, 814 artifacts, 8.6/10 health)
+- `memory/atlas-v6-pruning-batch.yaml` — Approved batch verdicts (HITL Gate 2)
+- `memory/atlas-v6-sota-review-2026-04-23.md` — Master SOTA review (3 agents, 5 P0 identified)
+- `memory/audit-skills-verdicts.yaml` — Skills verdicts detail (19KB)
+- `memory/handoff-2026-04-23-evening-atlas-v6-phase0-audit.md` — Session handoff
+- `.blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md` — Plan v6 (14 dimensions, 15 gates)
+- `.blueprint/plans/.../revision-2026-04-23.md` — Plan revision (reflects actual v6 state)
+
+### 🚧 HITL Pending (alpha.5 → beta.1)
+
+- [ ] Live session validation (`./scripts/validate-v6-session.sh`)
+- [ ] Cost/accuracy A/B vs v5.23.0 baseline
+- [ ] Rebase feat/v6-sprint1-foundation on main v5.44.0 (~10-20 conflict files expected)
+- [ ] PR #23 merge (marketplace visibility)
+- [ ] 10 P1 quality items (prompt caching, smoke tests, session-end-retro empty detection)
+
+### ✅ Verification
+
+- `./build.sh all`: frontmatter 0 violations + Philosophy Engine 10/10 Tier-1 pass
+- `grep -r "claude-opus-4-7" agents/`: only `claude-opus-4-7[1m]` (zero 256K variants)
+- `hooks/pre-compact-sota-context`: manual test with apostrophe-laden content = clean JSON
+
+### 🔗 References
+
+- Plan: `.blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md`
+- SOTA review: `memory/atlas-v6-sota-review-2026-04-23.md`
+- HITL Gate 2 approval: 2026-04-23 19:52 EDT (batch)
+- Audit methodology: 7 parallel Explore agents (4 audit + 3 SOTA review)
+
+---
+
+## v6.0.0-alpha.4 (2026-04-17 22:30 EDT) — Merge main v5.25.0 (auto-tail-agent integration)
+
+### 🔄 Sync with main
+
+Merged origin/main into feat/v6-sprint1-foundation to integrate v5.24.0 + v5.25.0 changes that were shipped in parallel during v6 development.
+
+**Integrated from main**:
+- `hooks/auto-tail-agent` (Sprint 0.5 sorted-moth implementation by Seb)
+- `profiles/core.yaml` registration of auto-tail-agent SubagentStart hook
+- v5.24.0 + v5.25.0 release commits
+
+**Preserved from v6**:
+- All Philosophy Engine deliverables (9 Iron Laws, 25 Red Flags, hard-gate-linter, effort-heuristic)
+- All 4 SOTA hooks (inject-meta-skill, pre-compact-sota-context, session-end-retro, effort-router)
+- knowledge + gms-mgmt merged skills (HITL approved)
+- atlas-loop + atlas-routines new skills
+- All Sprint 1-7 work (frontmatter v6, agent SOTA allocation, build.sh inherits, etc.)
+
+**Merge resolution**:
+- VERSION + manifests: kept v6 versions, bumped to alpha.4
+- CHANGELOG: preserved both branches chronologically (v6.0 entries on top)
+- hooks/hooks.json + profiles/core.yaml: auto-merged cleanly (no manual conflict)
+- dist/: deleted + rebuilt from scratch via `./build.sh modular`
+
+### 🚧 Marketplace visibility
+
+Plugin marketplace (Forgejo git-subdir source) reads from main HEAD. To see v6.0.0-alpha.4 in `/plugin Discover`, options:
+- Wait PR #23 merge (will move main to v6)
+- Manual install from branch (if CC supports `--branch` flag)
+
+---
+
+## v6.0.0-alpha.3 (2026-04-17 22:00 EDT) — High-risk dedup merges (HITL approved) + zero-paternalisme
+
+### 🎯 Major Dedup Phase 2 (HITL Seb approved 21:40 EDT)
+
+**Merge A — knowledge skill (engine + manager → knowledge)**
+- 6 skills → 5 (cumul -1 net)
+- 10 subcommands preserved (ask, ingest, status, discover, gaps, search, rules, scope, vault-list, vault-upload)
+- Zero collision, clean merge
+- 156+98 lines source → 274 lines unified
+- Cross-refs migrated: atlas-assist L319, auto-orchestrator L152, atlas-assist-master L135, _metadata.yaml
+
+**Merge B — gms-mgmt skill (4 gms-* → gms-mgmt)**
+- 5 skills → 2 (-3 net for gms suite, cumul -4)
+- 16 subcommands preserved across 4 sections (cockpit/profiler/onboard/insights)
+- 2 collisions resolved via flag-based routing :
+  - `/atlas gms team` → cockpit (default), `--deep` → profiler matrix
+  - `/atlas gms insights` → insights (default scan complet), `--quick` → cockpit mini
+- 596 lines source → 625 lines unified (+29 routing table + migration notes)
+- Cross-refs migrated: _dependencies.yaml (-7L block), auto-orchestrator L157, atlas-assist-master L137
+
+### ✨ Zero-Paternalisme Enforcement (cumul anti-modération)
+
+(Already in alpha.2 + companion repos)
+- ~/.claude/CLAUDE.md "ZERO MODÉRATION PATERNALISTE" section
+- vault SebG calibration-rules.md Rule 7 INVERSION + Rule 13 NEW
+- daimon-context-injector signals opt-in only (ATLAS_DAIMON_SIGNALS_VERBOSE=1)
+- pattern-signal-detector chronic_dissatisfaction DEPRECATED
+- atlas-assist L116 reframe (descriptive, never prescriptive)
+
+### 📊 Stats cumul vs v5.23.0
+
+- Skills count: 117 → 113 unique (-4 from this dedup, +1 atlas-routines)
+- Tier counts: core 30 / dev 36 / admin 66 (was 70 → -4)
+- 26 subcommands preserved across both merges (zero functionality loss)
+- bats 30/32 PASS (2 pre-existing fails in CHANGELOG/MIGRATION docs, unrelated)
+- hard-gate-linter all: 10/10 Tier-1 PASS
+- build.sh modular: 0 violations
+
+### 🚧 HITL Pending (alpha → GA)
+
+- Live session validation (run `./scripts/validate-v6-session.sh` after `claude` restart)
+- Cost/accuracy A/B (run `./scripts/benchmark-v6.sh`)
+- Marketplace alpha publish
+
+### Plan reference
+
+`.blueprint/plans/regarde-comment-adapter-atlas-compressed-wave.md` (HITL #2 dedup phase 2)
+
+---
+
+## v6.0.0-alpha.2 (2026-04-17 21:30 EDT) — HITL execution + 2 ADRs APPROVED + atlas-routines
+
+### ✨ Features
+
+- `skills/atlas-routines/SKILL.md` (141L) — NEW skill wrapping Anthropic Routines API (cloud automation, 2026-04-14). Complementary to atlas-loop (in-session CronCreate). Subcommands: create/delete/list/run. atlas-core: 29→30 skills.
+- `skills/session-pickup/SKILL.md` +14L — added "Complementary to CC Session Recap" section per ADR-0003.
+
+### ✅ HITL Decisions Resolved
+
+- **ADR-0001 MCP browser consolidation: APPROVED** (audit confirmed 0 refs to computer-use, zero migration needed).
+- **ADR-0002 Routines vs CronCreate: APPROVED** (BOTH adopted as complementary; atlas-routines shipped this release).
+- **ADR-0003 Session Recap vs session-pickup: APPLIED** (note added to session-pickup SKILL.md, both kept distinct).
+
+### 📊 Audit + Documentation
+
+- `memory/AUDIT-2026-04-17-other-files.md` (130L synapse-side) — 370 .md files audited, 171 "Other" classified, 5 categorization recommendations + 10 deprecation candidates. **Zero deletion**.
+- `dedup-recommendations.md` +25L — Phase 1 YAML inheritance dedup BLOCKED (build_modular_plugin doesn't support `inherits:` keyword). Sprint 7 task `build-modular-inherits` proposed (~2-3h) to unblock.
+
+### 📊 Stats
+
+- 4 atomic commits cumul on top of v6.0.0-alpha.1 (this release adds 1 commit ~15 files)
+- bats 32/32 PASS, hard-gate-linter all 10/10 PASS, build.sh modular 0 violations
+
+### 🚧 HITL Pending (alpha → GA)
+
+- Approve dedup mapping (117 → ~60 destructive merge HITL)
+- Sprint 7: refactor build_modular_plugin pour `inherits:` keyword (unblocks dedup phase 1)
+- Live session validation (23KB SessionStart payload size — requires session restart)
+- Cost/accuracy A/B vs v5.23.0 baseline
+- Marketplace alpha publish
+
+### 🔗 Forgejo
+
+- PR #23: https://forgejo.axoiq.com/axoiq/atlas-plugin/pulls/23
+
+---
+
+## v6.0.0-alpha.1 (2026-04-17) — Philosophy Engine + SOTA Foundation
+
+### 🎯 BREAKING CHANGES (alpha — opt-in)
+
+This release introduces the v6.0 Philosophy Engine, codifying execution discipline via Iron Laws + Red Flags + `<HARD-GATE>` patterns inspired by Superpowers (obra/superpowers). It is BACKWARDS COMPATIBLE for skills that haven't been migrated yet (defaults preserved).
+
+### ✨ Major Features
+
+**Philosophy Engine (Sprint 2)**
+- 9 Iron Laws codified in `scripts/execution-philosophy/iron-laws.yaml` (TDD, debugging, design, verification, planning, scope drift, subagent independence, enterprise compliance, context discovery)
+- 25 Red Flags corpus across 5 categories (TDD/Debugging/Planning/Review/Scope) in `red-flags-corpus.yaml`
+- `hard-gate-linter.sh` (450L, L1-L10 rules + Jaccard 80% fuzzy matching)
+- `effort-heuristic.sh` (275L, 6-bucket weighted keyword routing)
+- 10 Tier-1 skills migrated with `<HARD-GATE>` + `<red-flags>` tables (tdd, systematic-debugging, plan-builder, verification, code-review, brainstorming, context-discovery, scope-check, subagent-dispatch, enterprise-audit)
+
+**Frontmatter v6 schema (Sprint 1)**
+- New SKILL.md keys: `effort`, `thinking_mode`, `superpowers_pattern`, `see_also`
+- New AGENT.md keys: `effort`, `thinking_mode`, `isolation`, `task_budget`
+- 17 AGENT.md migrated per SOTA allocation (plan-architect=max, code-reviewer=xhigh OPUS UPGRADE, infra-expert=xhigh OPUS UPGRADE, team-engineer/devops/data=high)
+- Schemas documented in `.blueprint/schemas/` (4 files, 780L)
+- `build.sh` validates frontmatter v6 (+189L)
+
+**SOTA Hooks (Sprint 3)**
+- `hooks/inject-meta-skill` — SessionStart injects atlas-assist FULL content (23KB) + 9 Iron Laws (Superpowers pattern)
+- `hooks/pre-compact-sota-context` — PreCompact 6-section preservation reminder
+- `hooks/session-end-retro` — SessionEnd nudge toward retrospective
+- `hooks/effort-router` — PreToolUse[Task|Agent] effort suggestion via heuristic
+
+**Verbosity reduction (Sprint 4)**
+- Top 10 longest skills compressed -32% net (1783 lines saved, zero info loss)
+- memory-dream 1167→515, atlas-doctor 946→603, atlas-team 710→516, etc.
+
+**Agent SOTA enhancements (Sprint 5)**
+- `dispatch.sh` 6-level effort routing (low|medium|high|xhigh|max|auto)
+- `task-budget.sh` advisory token ceiling exposure
+- `atlas-loop` skill (autonomous CronCreate + ScheduleWakeup + Monitor wrapper)
+- Monitor pattern documented in ci-management, smoke-gate, deploy-hotfix
+
+### 🔧 Migrations Required
+
+For Opus 4.7 compatibility (mandatory):
+- ❌ `extended thinking` mode (`{type: "enabled", budget_tokens: N}`) — REJECTED by API
+- ✅ `adaptive thinking` (`thinking_mode: adaptive` in frontmatter) — ENFORCED
+- 7 references remediated in this release (no active call sites remain)
+
+### 📊 Stats
+
+- 5 atomic commits (Sprint 1 → Sprint 5)
+- 132 files changed vs v5.23.0, +5546/-6492 (NET -946 — compression victory)
+- 32 bats tests (was 17, +15 new for Philosophy Engine)
+- Test coverage Tier-1 skills: 0% → 100%
+- 117 unique skills audited (CSV in tests/inventory/)
+- 4 ADRs proposed (HITL pending: dedup execution; MCP browser pair APPROVED 2026-04-17)
+
+### 🚧 HITL Pending (alpha → GA gate)
+
+- Approve dedup mapping (117 → ~60 target requires destructive merge)
+- ~~Choose MCP browser pair (claude-in-chrome + playwright recommended; computer-use drop)~~
+- ✓ MCP browser consolidation (ADR-0001) APPROVED — computer-use deprecated, zero refs to migrate
+- Live session validation of new SessionStart injection (23KB payload size)
+- Cost/accuracy measurement vs v5.23.0 baseline (target ≥+25% accuracy, ≤+15% cost)
+
+### 📚 Documentation
+
+- New `.blueprint/schemas/` (4 docs, 780L)
+- New `.blueprint/adrs/0001-mcp-browser-consolidation.md`
+- New `.blueprint/plans/dedup-recommendations.md`
+- Updated `skills/agent-visibility/README.md` (220L user guide)
+- Updated `skills/agent-visibility/SKILL.md` (Plan Status corrected: all 5 phases shipped)
+
+### Plan reference
+
+`.blueprint/plans/regarde-comment-adapter-atlas-compressed-wave.md` (306h plan, ~3h actual via parallel dispatch — 100x avg accel)
+
+---
+
+## v5.25.0 (2026-04-18) — main parallel release
 ## v5.44.0 (2026-04-23)
 
 ### ✨ Features
@@ -558,14 +846,10 @@ See `synapse/.blueprint/plans/atlas-plugin-version-est-wise-duckling.md` for ful
 ### ✨ Features
 - feat(profiles): register auto-tail-agent hook in atlas-core
 
-
-
-## v5.24.0 (2026-04-18)
+## v5.24.0 (2026-04-18) — main parallel release
 
 ### ✨ Features
 - feat(hooks): auto-tail-agent for subagent tmux visibility (sp-agent-vis layer 3)
-
-
 
 ## v5.23.0 (2026-04-17)
 

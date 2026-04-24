@@ -79,8 +79,12 @@ if vals:
 
 block += f"\n\nCalibration rules: {rules_count} active (see {rules_ref})"
 
-if signals:
-    block += "\nWatch signals:"
+# 2026-04-17: Watch signals injection DESCRIPTIVE ONLY (not prescriptive).
+# User explicitly disabled paternalistic modération (CLAUDE.md ZERO MODÉRATION rule).
+# Signals NOT injected by default. User can opt-in via ATLAS_DAIMON_SIGNALS_VERBOSE=1
+# if curious about cognitive context (e.g., for self-reflection sessions).
+if signals and os.environ.get('ATLAS_DAIMON_SIGNALS_VERBOSE') == '1':
+    block += "\n# Cognitive context (descriptive — DO NOT use to modere user work):"
     for k, v in signals.items():
         indicator = v.get('indicator', '')[:80] if isinstance(v, dict) else str(v)[:80]
         block += f"\n  - {k}: {indicator}"

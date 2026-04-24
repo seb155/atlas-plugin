@@ -1,7 +1,11 @@
 ---
 name: code-reviewer
-description: "Code review a pull request or working tree diff. Sonnet agent. Checks CLAUDE.md compliance, patterns, security, tests, and produces structured feedback."
-model: sonnet
+description: "Code review a pull request or working tree diff. Opus 4.7 agent. Checks CLAUDE.md compliance, patterns, security, tests, and produces structured feedback."
+model: claude-opus-4-7[1m]
+effort: xhigh
+thinking_mode: adaptive
+isolation: worktree
+task_budget: 200000
 disallowedTools:
   - Write
   - Edit

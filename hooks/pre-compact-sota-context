@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# ATLAS PreCompact Hook — Context Preservation (v6.0 SOTA)
+# Emits reminder of 6 mandatory sections before compaction
+# Does NOT block compaction (advisory only) — only warns if critical
+#
+# Paired with existing hooks/pre-compact-context (git-state snapshot).
+# This hook is the structured-protocol companion that reminds the model
+# of the 6 Mandatory Sections from .claude/rules/compaction-protocol.md
+
+set -euo pipefail
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
+# Read stdin (JSON from CC)
+INPUT=$(cat 2>/dev/null || echo '{}')
+
+# Extract trigger reason (if provided)
+TRIGGER=$(echo "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('trigger', 'unknown'))" 2>/dev/null || echo "unknown")
+
+# Build preservation reminder
+REMINDER=$(cat <<'EOF'
+# ATLAS Compaction Protocol — 6 Mandatory Sections
+
+When compressing, preserve:
+
+1. **Session Intent** — original user goal, constraints, active plan/sub-plan
+2. **Current State** — accomplished tasks, active phase, branch, worktree
+3. **Artifact Trail** (CRITICAL) — exact file paths, test results, configs changed
+4. **Decisions Made** — architectural choices with rationale, HITL outcomes
+5. **Errors & Blockers** — exact error messages, workarounds, deferred issues
+6. **Next Steps** — remaining tasks, dependencies, verification commands
+
+ALWAYS preserve under compression:
+- Full file paths (not "several files")
+- Error codes (not "an error occurred")
+- Branch name, git state
+- Test commands + results
+- User preferences
+- Plan identifiers (SP-XX, Phase N)
+
+MERGE new info INTO existing sections (don't regenerate from scratch).
+EOF
+)
+
+# Emit as hookSpecificOutput additionalContext
+# Pass via env var to avoid shell-escape fragility with apostrophes in content
+export REMINDER
+python3 <<'PYEOF'
+import json, os
+print(json.dumps({
+    'hookSpecificOutput': {
+        'hookEventName': 'PreCompact',
+        'additionalContext': os.environ.get('REMINDER', '')
+    }
+}))
+PYEOF

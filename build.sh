@@ -3,15 +3,45 @@
 # Usage: ./build.sh [admin|dev|user|worker|all]          — tier mode
 #        ./build.sh domain <name>                         — single domain
 #        ./build.sh domains                               — all 6 domains
+#
+# Flags:
+#        --skip-frontmatter    Bypass v6.0 frontmatter validation (dev iteration)
+#        --skip-hard-gate      Bypass Philosophy Engine hard-gate linting (dev iteration)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 VERSION=$(cat VERSION | tr -d '[:space:]')
-TIERS="${1:-all}"
 METADATA_FILE="skills/_metadata.yaml"
 CMD_METADATA_FILE="commands/_metadata.yaml"
+
+# ── Argument parsing (v6.0: support --skip-frontmatter flag) ───────
+# Separate positional args from flags so validation can be bypassed
+# during dev iteration without changing the tier/domain selection.
+SKIP_FRONTMATTER=0
+SKIP_HARD_GATE=0
+POSITIONAL=()
+for arg in "$@"; do
+  case "$arg" in
+    --skip-frontmatter)
+      SKIP_FRONTMATTER=1
+      ;;
+    --skip-hard-gate)
+      SKIP_HARD_GATE=1
+      ;;
+    --*)
+      echo "❌ Unknown flag: $arg"
+      exit 1
+      ;;
+    *)
+      POSITIONAL+=("$arg")
+      ;;
+  esac
+done
+# Restore positional args so downstream references ($1, $2) keep working
+set -- "${POSITIONAL[@]:-}"
+TIERS="${1:-all}"
 
 # Propagate VERSION to source JSON files (keeps them in sync)
 if command -v python3 &>/dev/null; then
@@ -31,31 +61,215 @@ for f in ['.claude-plugin/plugin.json', '.claude-plugin/marketplace.json']:
 " 2>/dev/null || true
 fi
 
+# ── v6.0 frontmatter validation ────────────────────────────────────
+# Per plan section F + .blueprint/schemas/skill-frontmatter-v6.md +
+# .blueprint/schemas/agent-frontmatter-v6.md.
+#
+# Validates (when field is PRESENT):
+#   - effort ∈ {low, medium, high, xhigh, max, auto}         (skill R3 + agent A4)
+#   - thinking_mode == 'adaptive'                            (skill R4 + agent A5)
+#   - superpowers_pattern[] ⊆ {iron_law, red_flags, hard_gate, none}  (skill only)
+#   - isolation ∈ {worktree, none}                           (agents only)
+#
+# Backward compat: missing fields are OK (deprecation warning deferred to v6.1).
+# Python helper is invoked once over ALL files for speed (single fork).
+#
+# Output format for violations (stderr):
+#   ❌ VIOLATION: <path>:L<line> - <field> '<value>' not in enum {<allowed>}
+_validate_frontmatter_v6() {
+  # Idempotent: reruns produce identical output, no side-effects.
+  echo "🔍 Validating v6.0 frontmatter..."
+
+  local violations
+  violations=$(python3 <<'PYEOF'
+import os
+import re
+import sys
+from pathlib import Path
+
+try:
+    import yaml
+except ImportError:
+    print("ERROR: PyYAML not installed (pip install pyyaml)", file=sys.stderr)
+    sys.exit(2)
+
+# Enums from .blueprint/schemas/*-v6.md
+EFFORT_ENUM = {"low", "medium", "high", "xhigh", "max", "auto"}
+THINKING_MODE_ENUM = {"adaptive"}
+SUPERPOWERS_ENUM = {"iron_law", "red_flags", "hard_gate", "none"}
+ISOLATION_ENUM = {"worktree", "none"}
+
+FM_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
+violations = []
+
+
+def find_line(text: str, key: str) -> int:
+    """Best-effort line number of a top-level frontmatter key."""
+    for idx, line in enumerate(text.splitlines(), start=1):
+        if re.match(rf"^\s*{re.escape(key)}\s*:", line):
+            return idx
+    return 1
+
+
+def parse_fm(path: Path):
+    try:
+        text = path.read_text(encoding="utf-8")
+    except Exception as e:
+        return None, f"read error: {e}"
+    m = FM_RE.match(text)
+    if not m:
+        return None, None  # No frontmatter — skip (legacy)
+    try:
+        data = yaml.safe_load(m.group(1)) or {}
+    except yaml.YAMLError as e:
+        return None, f"YAML parse error: {e}"
+    if not isinstance(data, dict):
+        return None, "frontmatter is not a mapping"
+    return (data, text), None
+
+
+def check_enum(path: Path, text: str, field: str, value, enum_set: set, is_list: bool = False):
+    line = find_line(text, field)
+    if is_list:
+        if not isinstance(value, list):
+            violations.append(
+                f"❌ VIOLATION: {path}:L{line} - {field} must be a list, got {type(value).__name__}"
+            )
+            return
+        invalid = [v for v in value if v not in enum_set]
+        for bad in invalid:
+            violations.append(
+                f"❌ VIOLATION: {path}:L{line} - {field} '{bad}' not in enum {sorted(enum_set)}"
+            )
+    else:
+        if value not in enum_set:
+            violations.append(
+                f"❌ VIOLATION: {path}:L{line} - {field} '{value}' not in enum {sorted(enum_set)}"
+            )
+
+
+# SKILL.md validation
+for skill_md in sorted(Path("skills").rglob("SKILL.md")):
+    parsed, err = parse_fm(skill_md)
+    if err:
+        violations.append(f"❌ VIOLATION: {skill_md}:L1 - {err}")
+        continue
+    if parsed is None:
+        continue
+    fm, text = parsed
+
+    if "effort" in fm:
+        check_enum(skill_md, text, "effort", fm["effort"], EFFORT_ENUM)
+    if "thinking_mode" in fm:
+        check_enum(skill_md, text, "thinking_mode", fm["thinking_mode"], THINKING_MODE_ENUM)
+    if "superpowers_pattern" in fm:
+        check_enum(
+            skill_md, text, "superpowers_pattern", fm["superpowers_pattern"],
+            SUPERPOWERS_ENUM, is_list=True,
+        )
+
+# AGENT.md validation
+for agent_md in sorted(Path("agents").rglob("AGENT.md")):
+    parsed, err = parse_fm(agent_md)
+    if err:
+        violations.append(f"❌ VIOLATION: {agent_md}:L1 - {err}")
+        continue
+    if parsed is None:
+        continue
+    fm, text = parsed
+
+    if "effort" in fm:
+        check_enum(agent_md, text, "effort", fm["effort"], EFFORT_ENUM)
+    if "thinking_mode" in fm:
+        check_enum(agent_md, text, "thinking_mode", fm["thinking_mode"], THINKING_MODE_ENUM)
+    if "isolation" in fm:
+        check_enum(agent_md, text, "isolation", fm["isolation"], ISOLATION_ENUM)
+
+if violations:
+    print("\n".join(violations))
+    sys.exit(1)
+sys.exit(0)
+PYEOF
+)
+  local rc=$?
+
+  if [ $rc -eq 0 ]; then
+    echo "✅ v6.0 frontmatter valid (0 violations)"
+    return 0
+  fi
+
+  # Print detailed violations to stderr
+  echo "$violations" >&2
+  local count
+  count=$(echo "$violations" | grep -c '^❌ VIOLATION' || true)
+  echo "" >&2
+  echo "❌ $count frontmatter violation(s) detected" >&2
+  echo "   Schemas: .blueprint/schemas/{skill,agent}-frontmatter-v6.md" >&2
+  echo "   Bypass:  ./build.sh $TIERS --skip-frontmatter" >&2
+  return 1
+}
+
 # Resolve profile inheritance and collect all items for a field
 # Usage: resolve_field <tier> <field>
+#
+# `inherits:` field accepts EITHER:
+#   - a scalar  → `inherits: dev-addon`
+#   - a list    → `inherits: [core, dev-addon]`
+#   - or absent → no inheritance (backward-compat for profiles without inherits)
+#
+# Parents are resolved left-to-right (first parent = oldest ancestor), then
+# current profile's items are appended. Set union via `awk '!seen[$0]++'`
+# guarantees dedup while preserving first-seen ordering (stable output).
+#
+# `tier` argument is the profile basename (without `.yaml`). Works for any
+# profile convention — tiers (`core`, `dev-addon`, `admin-addon`) and legacy
+# tier names (`user`, `worker`) share the same function.
 resolve_field() {
   local tier="$1"
   local field="$2"
   local profile="profiles/${tier}.yaml"
   local items=""
 
-  # Check if this tier inherits from another
-  local parent
-  parent=$(yq -r '.inherits // ""' "$profile")
-
-  # Recurse into parent first (base items come first)
-  if [ -n "$parent" ] && [ -f "profiles/${parent}.yaml" ]; then
-    items=$(resolve_field "$parent" "$field")
+  if [ ! -f "$profile" ]; then
+    return 0
   fi
 
-  # Add this tier's items
+  # Extract parents as a newline-delimited list. Handles three YAML shapes:
+  #   - scalar: `inherits: dev-addon`         → emit "dev-addon"
+  #   - list:   `inherits: [core, dev-addon]` → emit "core\ndev-addon"
+  #   - absent or null: emit nothing
+  # Two select() arms cover scalar and sequence; tag check is yq v4 idiom.
+  local parents
+  parents=$(yq -r '(.inherits | select(tag == "!!str")), (.inherits | select(tag == "!!seq") | .[])' "$profile" 2>/dev/null || true)
+
+  # Recurse into each parent IN ORDER (base items come first).
+  # Earlier parents are more generic → their items appear first in the union.
+  local parent
+  while IFS= read -r parent; do
+    [ -z "$parent" ] && continue
+    if [ -f "profiles/${parent}.yaml" ]; then
+      local parent_items
+      parent_items=$(resolve_field "$parent" "$field")
+      if [ -n "$parent_items" ]; then
+        if [ -n "$items" ]; then
+          items="${items}"$'\n'"${parent_items}"
+        else
+          items="$parent_items"
+        fi
+      fi
+    fi
+  done <<< "$parents"
+
+  # Append this tier's own items (current profile always wins last position).
   local tier_items
   tier_items=$(yq -r ".${field} // [] | .[]" "$profile" 2>/dev/null || true)
 
   if [ -n "$items" ] && [ -n "$tier_items" ]; then
-    echo -e "${items}\n${tier_items}" | awk '!seen[$0]++'
+    # Dedup while preserving first-seen order.
+    echo -e "${items}\n${tier_items}" | awk 'NF && !seen[$0]++'
   elif [ -n "$items" ]; then
-    echo "$items"
+    echo "$items" | awk 'NF && !seen[$0]++'
   else
     echo "$tier_items"
   fi
@@ -522,14 +736,17 @@ build_modular_plugin() {
   local name="$1"
   local profile=""
   local output_name=""
+  local profile_key=""  # basename of the profile file (without .yaml) — key for resolve_field
 
   # Resolve profile path and output name
   if [ -f "profiles/${name}.yaml" ]; then
     profile="profiles/${name}.yaml"
     output_name="$name"
+    profile_key="$name"
   elif [ -f "profiles/${name}-addon.yaml" ]; then
     profile="profiles/${name}-addon.yaml"
     output_name="${name%-addon}"  # dev-addon → dev
+    profile_key="${name}-addon"
   else
     echo "❌ modular profile not found for: $name"
     exit 1
@@ -550,9 +767,14 @@ build_modular_plugin() {
     cp "manifests/atlas-${name}.yaml" "$output/_addon-manifest.yaml"
   fi
 
-  # Skills: read directly from profile YAML
+  # v6.0 SP-DEDUP Phase 1: resolve `inherits:` via `resolve_field`.
+  # Behavior is identical to the prior direct-yq read when the profile has NO
+  # `inherits:` key (baseline: core=30, dev-addon=36, admin-addon=67). When
+  # `inherits:` is present (scalar or list), parents are merged in order and
+  # deduplicated, enabling DRY profiles without regressing shipped counts.
+  # Skills: merge inherited + own (union, dedup, first-seen order).
   local skills
-  skills=$(yq -r '.skills // [] | .[]' "$profile" 2>/dev/null || true)
+  skills=$(resolve_field "$profile_key" "skills")
 
   for skill in $skills; do
     if [ -d "skills/$skill" ]; then
@@ -564,7 +786,7 @@ build_modular_plugin() {
 
   # Refs
   local refs
-  refs=$(yq -r '.refs // [] | .[]' "$profile" 2>/dev/null || true)
+  refs=$(resolve_field "$profile_key" "refs")
   if [ -n "$refs" ]; then
     mkdir -p "$output/skills/refs"
     for ref in $refs; do
@@ -574,14 +796,19 @@ build_modular_plugin() {
 
   # Agents
   local agents
-  agents=$(yq -r '.agents // [] | .[]' "$profile" 2>/dev/null || true)
+  agents=$(resolve_field "$profile_key" "agents")
   for agent in $agents; do
     [ -d "agents/$agent" ] && cp -r "agents/$agent" "$output/agents/"
   done
 
-  # Hooks
+  # Hooks — resolve inherited + own.
+  # NOTE: legacy `build_tier` uses delta-only hooks for child tiers to avoid
+  # SessionStart duplication when multiple tiers install side-by-side. In the
+  # v5+ modular world, each plugin stands alone (core / dev-addon / admin-addon
+  # are installed independently) and needs its own full hooks.json. Therefore
+  # hooks ARE resolved via inheritance here — unlike tier builds.
   local hooks
-  hooks=$(yq -r '.hooks // [] | .[]' "$profile" 2>/dev/null || true)
+  hooks=$(resolve_field "$profile_key" "hooks")
   if [ -z "$hooks" ]; then
     echo '{"hooks":{}}' > "$output/hooks/hooks.json"
   else
@@ -684,14 +911,57 @@ echo "  ATLAS Plugin Builder v${VERSION}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# 2026-04-19: "all" aliased to "modular" (v5+ SP-DEDUP architecture).
-# Legacy tiers (admin/dev/user → profiles/admin.yaml etc) superseded by
-# modular plugins (admin-addon/dev-addon/core). "build.sh all" now identical to "modular".
-if [ "$TIERS" = "all" ]; then
-  TIERS="modular"
+# v6.0 Sprint 1 Task 1.6: Validate frontmatter enums before resolving profile
+# inheritance / packaging. Runs once per invocation (idempotent).
+# Use --skip-frontmatter to bypass (backward compat / dev iteration).
+if [ "$SKIP_FRONTMATTER" -eq 1 ]; then
+  echo "⏭️  Skipping v6.0 frontmatter validation (--skip-frontmatter)"
+  echo ""
+else
+  if ! _validate_frontmatter_v6; then
+    echo ""
+    echo "❌ Build aborted: fix violations or re-run with --skip-frontmatter"
+    exit 1
+  fi
+  echo ""
 fi
 
-if [ "$TIERS" = "domains" ]; then
+# ── Philosophy Engine hard-gate linting (v6.0 Sprint 2) ──────────────
+# Validates Tier-1 skills against Iron Laws + Red Flags + HARD-GATE contracts.
+# Idempotent: reruns produce identical output.
+# Bypass with --skip-hard-gate for dev iteration (not recommended for release).
+# Exit 1 if any violation detected (safety net, previously not enforced).
+if [ "$SKIP_HARD_GATE" -eq 1 ]; then
+  echo "⏭️  Skipping Philosophy Engine hard-gate linting (--skip-hard-gate)"
+  echo ""
+elif [ -x scripts/execution-philosophy/hard-gate-linter.sh ]; then
+  echo "🔍 Philosophy Engine lint (Tier-1 skills)..."
+  if ! ./scripts/execution-philosophy/hard-gate-linter.sh all; then
+    echo ""
+    echo "❌ Build aborted: Philosophy Engine violations detected."
+    echo "   Fix violations in Tier-1 skills, or re-run with --skip-hard-gate (not recommended)"
+    echo "   Schema: .blueprint/schemas/philosophy-engine-schema.md"
+    exit 1
+  fi
+  echo ""
+else
+  echo "⚠️  Philosophy Engine linter not found (scripts/execution-philosophy/hard-gate-linter.sh missing or not executable)"
+  echo ""
+fi
+
+if [ "$TIERS" = "all" ]; then
+  # v6.0 fix: `all` now builds modular plugins (core + dev-addon + admin-addon).
+  # Legacy build_tier loop iterated `admin dev user` but those profiles were
+  # removed during SP-DEDUP Phase 1 refactor (Sprint 7). Modular plugins are
+  # the canonical v5+ architecture. Use `./build.sh modular` for same result.
+  for p in "${MODULAR_PLUGINS[@]}"; do
+    build_modular_plugin "$p"
+    echo ""
+  done
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  All modular plugins built successfully!"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+elif [ "$TIERS" = "domains" ]; then
   for d in "${DOMAIN_NAMES[@]}"; do
     build_domain "$d"
     echo ""

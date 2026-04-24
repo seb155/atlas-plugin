@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# ATLAS SessionStart Meta-Skill Injection (v6.0 Philosophy Engine)
+#
+# Injects the FULL content of the atlas-assist master skill, plus a compact
+# summary of active Iron Laws, into the Claude Code system prompt at every
+# session start/resume/clear/compact.
+#
+# Pattern: Superpowers-style full content embedding for priority enforcement
+# (see refs/superpowers-upstream/hooks/session-start).
+#
+# Contract with Claude Code hook system:
+#   stdout → JSON {"hookSpecificOutput":{"hookEventName":"SessionStart",
+#                                         "additionalContext":"<payload>"}}
+#   exit 0 always (fail-open: if anything fails, emit {"continue":true}
+#                  so CC does not block or see partial JSON)
+#
+# Related:
+#   - hooks/session-start        — existing hook (NOT modified). Runs first.
+#   - hooks/hooks.json           — registers this hook after session-start.
+#   - skills/atlas-assist/       — SSoT master skill body (frontmatter stripped).
+#   - scripts/execution-philosophy/iron-laws.yaml — 9 Iron Laws corpus.
+
+set -o pipefail
+
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+ATLAS_ASSIST_SKILL="$PLUGIN_ROOT/skills/atlas-assist/SKILL.md"
+IRON_LAWS_YAML="$PLUGIN_ROOT/scripts/execution-philosophy/iron-laws.yaml"
+
+# Fail-open helper: always keep CC running
+emit_noop() {
+  echo '{"continue":true}'
+  exit 0
+}
+
+# If the required master skill is missing, fail-open silently.
+[ -f "$ATLAS_ASSIST_SKILL" ] || emit_noop
+
+# Resolve a usable python3 (keep it simple; this hook runs before lib/python.sh)
+_PY=$(command -v python3 || command -v python || true)
+[ -n "$_PY" ] || emit_noop
+
+# Write the payload to a temp file to avoid bash→python quote/escape hell
+TMP_PAYLOAD=$(mktemp "${TMPDIR:-/tmp}/atlas-meta-skill.XXXXXX") || emit_noop
+trap 'rm -f "$TMP_PAYLOAD"' EXIT
+
+# ─── 1. Atlas-assist body (strip frontmatter between first two `---`) ──────
+# awk: after seeing 2 frontmatter fence lines, emit everything that follows.
+ATLAS_BODY=$(awk '/^---$/ { c++; next } c >= 2 { print }' "$ATLAS_ASSIST_SKILL" 2>/dev/null || true)
+[ -n "$ATLAS_BODY" ] || emit_noop
+
+# ─── 2. Compact Iron Laws registry (id + title only) ──────────────────────
+IRON_LAWS_SUMMARY=""
+if [ -f "$IRON_LAWS_YAML" ]; then
+  IRON_LAWS_SUMMARY=$("$_PY" - <<'PYEOF' "$IRON_LAWS_YAML" 2>/dev/null || echo ""
+import sys
+
+path = sys.argv[1]
+try:
+    import yaml  # preferred
+    with open(path) as f:
+        data = yaml.safe_load(f)
+    laws = data.get("laws", []) if isinstance(data, dict) else []
+except Exception:
+    # Minimal fallback parser: grep "- id:" / "title:" pairs (no dep on PyYAML)
+    laws = []
+    current = {}
+    try:
+        with open(path) as f:
+            for line in f:
+                s = line.rstrip()
+                if s.lstrip().startswith("- id:"):
+                    if current.get("id"):
+                        laws.append(current)
+                    current = {"id": s.split("- id:", 1)[1].strip()}
+                elif s.lstrip().startswith("title:") and current:
+                    current["title"] = (
+                        s.split("title:", 1)[1].strip().strip('"').strip("'")
+                    )
+        if current.get("id"):
+            laws.append(current)
+    except Exception:
+        laws = []
+
+if not laws:
+    sys.exit(0)
+
+out = ["## Active Iron Laws (NON-NEGOTIABLE)", ""]
+for law in laws:
+    lid = law.get("id", "?")
+    title = law.get("title") or law.get("name") or ""
+    out.append(f"- **{lid}**: {title}")
+out.append("")
+out.append(
+    "These laws are hard gates. Violating one requires explicit HITL override "
+    "via AskUserQuestion."
+)
+print("\n".join(out))
+PYEOF
+)
+fi
+
+# ─── 3. Assemble full payload ──────────────────────────────────────────────
+{
+  printf '<EXTREMELY_IMPORTANT>\n'
+  printf '# ATLAS v6.0 — Meta-Skill Priority Injection\n\n'
+  printf 'You have ATLAS installed. The full body of the `atlas-core:atlas-assist` '
+  printf 'master skill is injected below so its instructions take priority over '
+  printf 'ad-hoc reasoning. For all OTHER skills, use the `Skill` tool.\n\n'
+  printf -- '---\n\n'
+  printf '%s\n\n' "$ATLAS_BODY"
+  if [ -n "$IRON_LAWS_SUMMARY" ]; then
+    printf -- '---\n\n'
+    printf '%s\n\n' "$IRON_LAWS_SUMMARY"
+  fi
+  printf -- '---\n\n'
+  printf '**Philosophy Engine ACTIVE** — Iron Laws are non-negotiable. '
+  printf 'Use the `Skill` tool for any matched skill. '
+  printf 'The 1%% Rule applies: tiny, reversible, verifiable steps.\n'
+  printf '</EXTREMELY_IMPORTANT>\n'
+} > "$TMP_PAYLOAD" 2>/dev/null || emit_noop
+
+# ─── 4. Emit CC-compliant JSON ─────────────────────────────────────────────
+# Use python to JSON-escape the payload and wrap in the expected envelope.
+"$_PY" - "$TMP_PAYLOAD" <<'PYEOF' 2>/dev/null || emit_noop
+import json
+import sys
+
+path = sys.argv[1]
+try:
+    with open(path) as f:
+        payload = f.read()
+except Exception:
+    print('{"continue":true}')
+    sys.exit(0)
+
+envelope = {
+    "hookSpecificOutput": {
+        "hookEventName": "SessionStart",
+        "additionalContext": payload,
+    }
+}
+print(json.dumps(envelope))
+PYEOF
+
+exit 0

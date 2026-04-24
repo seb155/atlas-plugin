@@ -1,0 +1,62 @@
+# ATLAS Plugin — .claude/rules/_meta.yaml (Phase 4 activation)
+#
+# Consumed by: hooks/rules-conditional-loader.sh (SessionStart)
+# Schema: .blueprint/schemas/rules-meta-v1.md
+# Target: reduce SessionStart token injection 33K → <15K tokens
+
+rules:
+  # Always-loaded rules (core plugin development context)
+  plugin-architecture.md:
+    auto_include: always
+    priority: 9
+    description: "ATLAS plugin architecture (tiers, profiles, skills, hooks)"
+
+  skill-development.md:
+    auto_include: always
+    priority: 8
+    description: "Skill development conventions + frontmatter v6 schema"
+
+  hook-development.md:
+    auto_include: conditional
+    priority: 7
+    description: "Hook development patterns + hooks.json registration"
+    triggers:
+      cwd_contains: [hooks]
+      file_patterns: ["hooks/*", "*.sh", "hooks.json"]
+      branch_patterns: ["feat/hook-*", "feat/*-hook"]
+
+  enterprise-context.md:
+    auto_include: always
+    priority: 7
+    description: "Enterprise-grade patterns (observability, security, multi-tenant)"
+
+  secret-management.md:
+    auto_include: conditional
+    priority: 9  # High when matches — security critical
+    description: "Infisical + Vault + .env policy chain (Phase B Zero-Trust)"
+    triggers:
+      cwd_contains: [secret, auth, security, scripts/auth, hooks]
+      file_patterns: ["*secret*", "*token*", "*auth*", ".env*"]
+      branch_patterns: ["security/*", "auth/*"]
+
+  performance.md:
+    auto_include: conditional
+    priority: 6
+    description: "Performance discipline (hot paths, allocation, caching)"
+    triggers:
+      cwd_contains: [hooks, scripts, hot_path]
+      branch_patterns: ["perf/*"]
+      file_patterns: ["*perf*", "*benchmark*", "build.sh"]
+
+# Loader behavior:
+# - Max 10 rules selected per session (MAX_SELECTED in hook)
+# - Scoring: cwd_contains (+10) + branch_patterns (+5) + file_patterns (+3) + priority
+# - auto_include: always → priority + 100 boost
+# - auto_include: never → excluded entirely
+# - Fallback (no _meta.yaml or zero selected): code-quality.md + dod.md auto-loaded
+#
+# Verification after session restart:
+#   1. Start new Claude Code session in this repo
+#   2. Look for "Rules Context (v6.0 conditional loader)" in SessionStart output
+#   3. Expected: 3-5 rules loaded (depending on cwd + branch + recent files)
+#   4. Adjust priorities/triggers here if too many or few rules selected
