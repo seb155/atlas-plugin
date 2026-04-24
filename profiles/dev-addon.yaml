@@ -35,6 +35,13 @@ skills:
   - task-framing             # v6.1.0 — complexity assessment (LAW-WORKFLOW-002)
   - ci-feedback-loop         # v6.1.0 — post-push CI polling (LAW-WORKFLOW-001)
 
+  # v6.1.0 — Workflow library Cat 1 Programming (5 P0/P1 orchestrators)
+  - workflow-code-change     # P0 — small focused change with verify + CI
+  - workflow-feature         # P0 — full feature pipeline (flagship, 9 steps)
+  - workflow-bug-fix         # P1 — reproducer → regression test → root cause
+  - workflow-refactor        # P1 — behavior-preserving restructure
+  - workflow-plugin-dev      # P1 — atlas-plugin self-development
+
   # Ship
   - finishing-branch
   - ship-all
