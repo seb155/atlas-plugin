@@ -42,6 +42,20 @@ skills:
   - workflow-refactor        # P1 — behavior-preserving restructure
   - workflow-plugin-dev      # P1 — atlas-plugin self-development
 
+  # v6.1.0 — Workflow library Cat 2 Product & Vision (5 orchestrators)
+  - workflow-product-vision        # P0 — 3-12 month vision doc for stakeholders
+  - workflow-product-roadmap       # P1 — strategic roadmap + OKRs
+  - workflow-feature-discovery     # P1 — JTBD + personas + problem validation
+  - workflow-client-alignment      # P1 — demo prep + stakeholder sync
+  - workflow-pitch-narrative       # P2 — elevator pitch / investor deck
+
+  # v6.1.0 — Workflow library Cat 3 UX/UI Design (5 orchestrators)
+  - workflow-ux-wireframe          # P1 — low-fi ASCII mockups via AskUserQuestion
+  - workflow-ui-mockup             # P1 — hi-fi + design system + 6 states
+  - workflow-user-flow             # P2 — Mermaid user journey map
+  - workflow-design-review         # P1 — WCAG 2.2 AA + Nielsen 10 heuristics
+  - workflow-prototype             # P2 — interactive HTML/React stub + browser smoke
+
   # Ship
   - finishing-branch
   - ship-all
