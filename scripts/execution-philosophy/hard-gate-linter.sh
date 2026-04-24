@@ -145,8 +145,38 @@ to_lower() {
   printf "%s" "$1" | tr '[:upper:]' '[:lower:]'
 }
 
+# Normalize text for byte-exact SHA256 matching: strip leading/trailing whitespace
+# per line, collapse internal whitespace to single space, lowercase.
+# Used by L8 primary check (SHA256 byte-exact) — more strict than fuzzy.
+sha256_normalize() {
+  printf "%s" "$1" \
+    | tr '[:upper:]' '[:lower:]' \
+    | awk '{
+        # strip leading/trailing spaces, collapse internal spaces
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "")
+        gsub(/[[:space:]]+/, " ")
+        print
+      }' \
+    | awk 'NF>0' \
+    | tr '\n' ' ' \
+    | sed 's/[[:space:]]*$//'
+}
+
+# SHA256 byte-exact match: returns 0 if hashes match, 1 otherwise.
+# Primary L8 check (v6.0.0-alpha.6 P1-6 — SOTA review Agent A finding).
+# Replaces fuzzy-only matching which had false-positives at 80% threshold.
+sha256_match() {
+  local a="$1"
+  local b="$2"
+  local hash_a hash_b
+  hash_a=$(sha256_normalize "$a" | sha256sum | cut -d' ' -f1)
+  hash_b=$(sha256_normalize "$b" | sha256sum | cut -d' ' -f1)
+  [[ "$hash_a" = "$hash_b" ]]
+}
+
 # Fuzzy similarity between two strings — percent of shared words (>=3 chars).
-# Returns integer 0-100 on stdout. Used by L8.
+# Returns integer 0-100 on stdout. Used by L8 fallback (when SHA256 doesn't match).
+# v6.0.0-alpha.6: threshold tightened from 80% → 85% to reduce false positives.
 fuzzy_match_pct() {
   local a="$1"
   local b="$2"
@@ -308,22 +338,36 @@ lint_skill() {
     fi
   fi
 
-  # ---- L8: HARD-GATE statement matches an iron-laws.yaml law (fuzzy >=80%)
+  # ---- L8: HARD-GATE statement matches an iron-laws.yaml law
+  # v6.0.0-alpha.6 P1-6 (SOTA review Agent A):
+  #   PRIMARY:  SHA256 byte-exact match (normalized whitespace + case)
+  #   FALLBACK: fuzzy word overlap >=85% (tightened from 80% to reduce false-pos)
+  #   If neither matches → warning (downgrade from FAIL — allows ambiguous matches
+  #   while still surfacing drift).
   if [[ "$needs_hard_gate" -eq 1 && -n "$hg_content" && -f "$IRON_LAWS_YAML" ]]; then
-    local statements best_pct=0
+    local statements best_pct=0 exact_match=0
     statements=$(load_iron_law_statements)
     if [[ -n "$statements" ]]; then
       while IFS= read -r stmt; do
         [[ -z "$stmt" ]] && continue
+        # PRIMARY: SHA256 byte-exact check (fast short-circuit on first match)
+        if sha256_match "$hg_content" "$stmt"; then
+          exact_match=1
+          break
+        fi
+        # FALLBACK: fuzzy word overlap (tracked for best-fit reporting)
         local pct
         pct=$(fuzzy_match_pct "$hg_content" "$stmt")
         (( pct > best_pct )) && best_pct=$pct
       done <<< "$statements"
-      if (( best_pct >= 80 )); then
-        printf "  %s✓ L8 match:%s iron-laws.yaml (%d%% similarity)\n" \
+      if (( exact_match == 1 )); then
+        printf "  %s✓ L8 match:%s iron-laws.yaml (SHA256 byte-exact)\n" \
+          "$GREEN" "$RESET"
+      elif (( best_pct >= 85 )); then
+        printf "  %s✓ L8 match:%s iron-laws.yaml (%d%% fuzzy — consider SHA256 sync)\n" \
           "$GREEN" "$RESET" "$best_pct"
       else
-        printf "  %s⚠ L8 warning:%s HARD-GATE best fuzzy match to iron-laws.yaml = %d%% (target >=80%%)\n" \
+        printf "  %s⚠ L8 warning:%s HARD-GATE best fuzzy match to iron-laws.yaml = %d%% (SHA256 mismatch; fuzzy threshold >=85%%)\n" \
           "$YELLOW" "$RESET" "$best_pct" >&2
         warns_local=$((warns_local + 1))
       fi
