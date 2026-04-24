@@ -1,5 +1,71 @@
 # Changelog
 
+## v6.0.0-alpha.5 (2026-04-23 20:30 EDT) — Sprint 0 P0 SOTA Fixes (5 critical)
+
+### 🔴 Critical Fixes (SOTA Review 2026-04-23)
+
+Post-v6.0.0-alpha.4 SOTA review (`memory/atlas-v6-sota-review-2026-04-23.md`) identified 5 P0 critical fixes blocking v6.0 GA. All applied this release (~1h effort).
+
+**P0-1 — 3 Opus AGENT.md missing [1m] suffix** (CRITICAL — user-flagged):
+- `agents/code-reviewer/AGENT.md`: `model: opus` → `model: claude-opus-4-7[1m]`
+- `agents/infra-expert/AGENT.md`: `model: opus` → `model: claude-opus-4-7[1m]`
+- `agents/plan-architect/AGENT.md`: `model: opus` → `model: claude-opus-4-7[1m]`
+- Impact: restores 1M context window (was silently resolving to 256K default with shortcut `model: opus`)
+
+**P0-2 — JSON escape bug in pre-compact-sota-context:20**:
+- Replaced fragile shell escape `'''$REMINDER'''` with env-var passthrough to Python `json.dumps()`
+- Impact: apostrophes in PreCompact content no longer break hook JSON output
+- Verification: JSON validates with complex content including quotes/apostrophes
+
+**P0-3 — (already done) build.sh exit 1 on frontmatter violations**:
+- Confirmed `_validate_frontmatter_v6` + caller enforce `exit 1` on violations (line 919)
+- SOTA review Agent C flagged as gap; investigation showed it's already in place
+- No code change needed, but validated behavior
+
+**P0-4 — hard-gate-linter integration in build.sh pipeline** (CRITICAL — safety net):
+- Added call to `scripts/execution-philosophy/hard-gate-linter.sh all` after frontmatter validation
+- Philosophy Engine safety net: 0% → 100% enforcement
+- New flag: `--skip-hard-gate` for dev iteration (not recommended for release)
+- Verification: 10/10 Tier-1 skills pass
+
+**P0-5 — ADR-0003 status resolution (PROPOSED → APPROVED)**:
+- Retroactively stamped APPROVED with Seb Gagnon as approver + date (2026-04-23)
+- Audit trail note added: shipped de facto in alpha.3, now properly approved via HITL Gate 2 batch
+
+### 📊 Audit & Review Artifacts
+
+Session 2026-04-23 (~57 min) produced comprehensive audit + SOTA review:
+- `memory/atlas-v6-audit-report-2026-04-23.md` — Master audit (4 agents, 814 artifacts, 8.6/10 health)
+- `memory/atlas-v6-pruning-batch.yaml` — Approved batch verdicts (HITL Gate 2)
+- `memory/atlas-v6-sota-review-2026-04-23.md` — Master SOTA review (3 agents, 5 P0 identified)
+- `memory/audit-skills-verdicts.yaml` — Skills verdicts detail (19KB)
+- `memory/handoff-2026-04-23-evening-atlas-v6-phase0-audit.md` — Session handoff
+- `.blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md` — Plan v6 (14 dimensions, 15 gates)
+- `.blueprint/plans/.../revision-2026-04-23.md` — Plan revision (reflects actual v6 state)
+
+### 🚧 HITL Pending (alpha.5 → beta.1)
+
+- [ ] Live session validation (`./scripts/validate-v6-session.sh`)
+- [ ] Cost/accuracy A/B vs v5.23.0 baseline
+- [ ] Rebase feat/v6-sprint1-foundation on main v5.44.0 (~10-20 conflict files expected)
+- [ ] PR #23 merge (marketplace visibility)
+- [ ] 10 P1 quality items (prompt caching, smoke tests, session-end-retro empty detection)
+
+### ✅ Verification
+
+- `./build.sh all`: frontmatter 0 violations + Philosophy Engine 10/10 Tier-1 pass
+- `grep -r "claude-opus-4-7" agents/`: only `claude-opus-4-7[1m]` (zero 256K variants)
+- `hooks/pre-compact-sota-context`: manual test with apostrophe-laden content = clean JSON
+
+### 🔗 References
+
+- Plan: `.blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md`
+- SOTA review: `memory/atlas-v6-sota-review-2026-04-23.md`
+- HITL Gate 2 approval: 2026-04-23 19:52 EDT (batch)
+- Audit methodology: 7 parallel Explore agents (4 audit + 3 SOTA review)
+
+---
+
 ## v6.0.0-alpha.4 (2026-04-17 22:30 EDT) — Merge main v5.25.0 (auto-tail-agent integration)
 
 ### 🔄 Sync with main
