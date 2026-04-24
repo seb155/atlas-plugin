@@ -1,5 +1,92 @@
 # Changelog
 
+## v6.1.0-alpha.1 (2026-04-24 10:55 EDT) — SOTA Workflow Library
+
+### ✨ New Features
+
+**46 Workflow Skills across 11 Categories** (orchestrate existing skills into enforced pipelines with Iron Laws):
+
+- **Cat 1 Programming** (5): workflow-code-change (P0), workflow-feature (P0 flagship 9-step), workflow-bug-fix, workflow-refactor, workflow-plugin-dev
+- **Cat 2 Product & Vision** (5): workflow-product-vision (P0), workflow-product-roadmap, workflow-feature-discovery, workflow-client-alignment, workflow-pitch-narrative
+- **Cat 3 UX/UI Design** (5): workflow-ux-wireframe, workflow-ui-mockup, workflow-user-flow, workflow-design-review (WCAG 2.2 AA HARD_GATE), workflow-prototype
+- **Cat 4 Collaboration** (3): workflow-brainstorm-collab (P0 HITL), workflow-facilitate-decision, workflow-stakeholder-sync
+- **Cat 5 Architecture** (4): workflow-architecture, workflow-brainstorm-solo, workflow-spec-first, workflow-system-design
+- **Cat 6 Planning** (5): workflow-plan-large (P0), workflow-plan-feature, workflow-sprint-plan, workflow-estimate, workflow-sprint-retro
+- **Cat 7 Infrastructure** (5): workflow-deploy (P0), workflow-infra-change, workflow-network, workflow-security, workflow-incident-response (P0)
+- **Cat 8 Research** (4): workflow-research-deep, workflow-audit (4-phase audit protocol), workflow-debug-investigation, workflow-exploration
+- **Cat 9 Documentation** (4): workflow-doc-write, workflow-adr-log, workflow-retrospective, workflow-handoff (P0)
+- **Cat 10 Data/Analytics** (3): workflow-data-analysis, workflow-benchmark, workflow-cost-tracking
+- **Cat 11 Meta** (3): workflow-quality-gate (P0), workflow-audit-ship (15-layer enterprise), workflow-incident-postmortem
+
+**Three new Iron Laws** (SHA256-signed):
+- `LAW-WORKFLOW-001` NO_PUSH_WITHOUT_CI_VERIFY — addresses 2026-04-23 incident root-cause
+- `LAW-WORKFLOW-002` TASK_FRAMING_BEFORE_CODE — no feature >1h without complexity assessment
+- `LAW-WORKFLOW-003` FINISHING_BRANCH_BEFORE_PR — no PR without finishing-a-development-branch
+
+**Two new atomic skills**:
+- `task-framing` — complexity assessment (trivial/moderate/complex)
+- `ci-feedback-loop` — post-push CI polling until terminal (Woodpecker API)
+
+**Six new hooks**:
+- `post-git-push` (PostToolUse[Bash]) — enforces LAW-WORKFLOW-001, logs .claude/ci-audit.jsonl
+- `pre-git-push` (PreToolUse[Bash]) — advisory (uncommitted, unresolved CI, force-push)
+- `atlas-lock-acquire` / `atlas-lock-release` (CLI helpers) — file-lock primary (O.3)
+- `workflow-intent-detect` (UserPromptSubmit) — natural language → workflow suggestion (0.3 confidence)
+- `ci-audit-log` (CLI helper) — audit trail for non-push events
+
+**Session lifecycle CLI** (`scripts/atlas-modules/session.sh`):
+- `atlas session {start,pause,handoff,end-session,status,overview,who,roadmap,audit,dream}`
+- Smart handoff state-detector routes to CLOSE vs HANDOFF path
+
+**Workflow CLI escape hatches** (extended `scripts/atlas-modules/workflow.sh`):
+- `atlas workflow {skip,abort,customize}` — HARD_GATE-aware
+
+**Interactive picker + ops** (`scripts/atlas-modules/picker.sh`):
+- `atlas` (no args) — RECENT + ALL repos with usage ranking
+- `atlas {doctor,sweep,who}` — ecosystem health/cleanup/active-work
+
+**Workflow schema v1** + registry (46 workflows / 11 categories) + validator (`scripts/workflow-validate.sh`) + 31 bats smoke tests.
+
+### 🐛 Bug Fixes
+
+- **`cleanup-worktrees`**: Fix `&&` → `||` in `ahead_main > 0 && ahead_dev > 0` condition. Repos without local `dev` branch always had `ahead_dev=0`, wiping active worktrees with 5+ commits ahead of main. Observed ~7 times during v6.1 session development.
+
+### 📊 Stats
+
+- **46 workflow skills** (~8,000 LOC)
+- **2 atomic skills** (task-framing, ci-feedback-loop)
+- **6 hooks** (4 registered in hooks.json, 2 CLI helpers)
+- **3 Iron Laws** (12 total now, 9 v6.0 + 3 v6.1)
+- **~27 commits** on feat/v6.1-workflow-library
+- **31 bats smoke tests** — all PASS
+- **CI**: 10+ pipelines, all eventually GREEN
+
+### 🔗 dev.axoiq.com Integration (Phase 8 MVP)
+
+Companion PR on `dev-portal` repo (branch `feat/atlas-overview-v6.1`):
+- New 8th sidebar perspective "ATLAS"
+- `/atlas/overview` page with stats (46/11/12/10) + P0 workflows spotlight
+- `/api/atlas/workflows` API route (30s polling)
+- `AtlasOverviewDashboard` component (shadcn/ui + Framer Motion pattern)
+
+### 📘 Documentation
+
+- `MIGRATION-V6-TO-V6.1.md` — per-persona adoption guide
+- `.blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md` (1600+ lines, Sections M/N/O/P/Q)
+- `.blueprint/plans/v6.1-tasks.md` — 103 atomic tasks with critical path
+
+### ⚠️ Known Limitations (v6.1.0-alpha.1)
+
+- **Phase 7 polish deferred** (7/17 items → v6.1.x beta): ci-audit-digest daily cron, interactive-flow tiered reveal, session-pickup resume, auto-orchestrator intent mapping, intent accuracy corpus, HITL Gate 4, session-hint smart defaults
+- **Phase 8 dashboard** 3/17 tasks (MVP only): remaining widgets + WebSocket + Playwright smoke + full WCAG = v6.1.x
+- **Phase 8.5 CLI** 4/14 tasks (MVP only): ink TUI skipped (bash-first design), remaining (shell completion, atlas map, pin/star, .atlasrc.yaml) = v6.1.x
+
+### 🙏 Session Notes
+
+v6.1.0-alpha.1 was built in a single ~5h30min Opus 4.7 [1m] session covering phases 1-9. Context budget calibration for text-heavy skill authoring was favorable (~x0.5 vs nominal). Worktree wipes (6+ times) were mitigated by the cleanup-worktrees bug fix shipped IN this release for future sessions.
+
+---
+
 ## v6.0.0-alpha.6 (2026-04-23 20:52 EDT) — Sprint 0 complete + Sprint 1 P1 partial
 
 ### 🔧 Pre-existing Bug Fixes
