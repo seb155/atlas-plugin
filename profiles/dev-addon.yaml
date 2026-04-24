@@ -56,6 +56,24 @@ skills:
   - workflow-design-review         # P1 — WCAG 2.2 AA + Nielsen 10 heuristics
   - workflow-prototype             # P2 — interactive HTML/React stub + browser smoke
 
+  # v6.1.0 — Workflow library Cat 4 Collaboration (3 orchestrators)
+  - workflow-brainstorm-collab     # P0 — HITL divergent/convergent with user
+  - workflow-facilitate-decision   # P1 — tradeoff matrix + ADR
+  - workflow-stakeholder-sync      # P1 — meeting prep + status narrative
+
+  # v6.1.0 — Workflow library Cat 5 Architecture (4 orchestrators)
+  - workflow-architecture          # P1 — system design + plan + ADR
+  - workflow-brainstorm-solo       # P2 — autonomous ideation doc
+  - workflow-spec-first            # P1 — spec + stakeholder review
+  - workflow-system-design         # P1 — C4 + NFR + ADR
+
+  # v6.1.0 — Workflow library Cat 6 Planning (5 orchestrators)
+  - workflow-plan-large            # P0 — 15-section plan with ≥12/15 gate
+  - workflow-plan-feature          # P1 — 5-8 section shorter plan
+  - workflow-sprint-plan           # P1 — 2-week sprint slicing
+  - workflow-estimate              # P2 — calibrated sizing (x0.15-0.25)
+  - workflow-sprint-retro          # P1 — session retro + action items
+
   # Ship
   - finishing-branch
   - ship-all
