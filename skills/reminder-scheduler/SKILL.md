@@ -1,6 +1,6 @@
 ---
 name: reminder-scheduler
-description: "Schedule reminders and follow-ups using Claude Code's CronCreate. Wraps CC native cron for /atlas remind."
+description: "Reminder and follow-up scheduler. This skill should be used when the user asks to 'remind me', 'schedule a reminder', 'follow up in X days', '/atlas remind', or needs a cron-backed callback."
 effort: low
 ---
 

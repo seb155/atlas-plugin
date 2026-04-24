@@ -76,7 +76,7 @@ All now explicitly use `claude-opus-4-7[1m]`.
 TASK REQUIRES...                         → MODEL
 ─────────────────────────────────────────────────
 Architecture, multi-file design           → Opus 4.7
-Adaptive thinking, ultrathink             → Opus 4.7 (max; extended API deprecated 2026-04)
+Adaptive thinking, ultrathink             → Opus 4.7 (xhigh/max effort)
 Planning (>50h effort scope)              → Opus 4.7
 Complex debugging (cross-system)          → Opus 4.7 (xhigh)
 Irreversible decisions                    → Opus 4.7

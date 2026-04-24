@@ -164,7 +164,7 @@ Both models have 1M context — the differentiator is reasoning quality, not con
 
 | Task | Model | Why |
 |------|-------|-----|
-| Planning, architecture, brainstorm | Opus | GPQA +17pts, adaptive thinking (max) |
+| Planning, architecture, brainstorm | Opus | GPQA +17pts, adaptive thinking (xhigh/max effort) |
 | Implementation, tests, review, DB migration | Sonnet | SWE-bench gap 1.2pts, 5x cheaper, 2.7x faster |
 | Validation, search | Haiku | Cheapest capable |
 | Lint, format, type-check | DET (bash) | Zero AI tokens |
@@ -226,6 +226,26 @@ This plugin develops itself. When modifying atlas-plugin:
 - `test_manifest` — plugin.json validity
 - `test_no_hardcoded_paths` — portability
 - `test_skill_quality` — documentation quality
+
+Bats tests (manual, no CI wiring yet due to `.claude/rules/ci-config-freeze-week1.md`):
+- `tests/bats/test-atlas-resolve-version.bats` — 9 resolver scenarios
+- `tests/bats/test-atlas-discover-and-hook.bats` — 8 discover/hook/prune scenarios
+- Run: `bats tests/bats/`
+
+## VERSION RESOLVER (v5.30.0+)
+
+The status line reads `~/.atlas/runtime/capabilities.json` via a 3-tier fallback:
+
+```
+Tier 0: ~/.atlas/runtime/.resolve-version.cache (mtime < 5s — fast path)
+Tier 1: claude plugin list --json (canonical SSoT)
+Tier 2: capabilities.json (SessionStart snapshot)
+Tier 3: filesystem scan (zero-dep fallback)
+```
+
+Drift sentinel: `~/.atlas/runtime/.capabilities.stale` — touched by resolver when
+Tier-1 disagrees with capabilities.json. Read by `capabilities-refresh` hook on
+UserPromptSubmit → rerun discover + delete sentinel. Max 1×/turn. See ADR-006.
 
 ## COMPACTION
 

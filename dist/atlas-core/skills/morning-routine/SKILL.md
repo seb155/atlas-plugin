@@ -1,6 +1,6 @@
 ---
 name: morning-routine
-description: "Daily command center — brief, energy check-in, priorities, brain dump processing"
+description: "Daily morning routine command center. This skill should be used when the user asks to 'morning routine', 'start my day', '/atlas morning', or needs brief + energy check-in + priority review + brain-dump triage."
 effort: medium
 ---
 

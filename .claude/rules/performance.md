@@ -1,5 +1,14 @@
 # Performance Rules (ATLAS Plugin)
 
+> **Scope of THIS file**: ATLAS plugin's own meta-perf (hooks, build, atlas-assist tokens, scripts).
+> **For user-code performance doctrine** (Synapse, axoiq-cloud, GMS App), see `skills/performance-discipline/SKILL.md`.
+
+## Cross-references
+
+- **User-code perf doctrine** (Plummer, v5.39.0): `skills/performance-discipline/SKILL.md` — 4 pillars + 8 AI anti-patterns
+- **Per-project perf budgets** (V2 — planned): `skills/performance-budget/SKILL.md` — `.atlas/perf-budgets.yaml` schema + `verification` L6 integration
+- **Senior review dim 8** (AI-Perf Patterns): `skills/senior-review-checklist/SKILL.md` (added v5.39.0)
+
 ## Hook Constraints
 - Async hooks: max 5s execution, exit 0 on error (non-blocking)
 - Sync hooks: max 10s, can block Claude Code

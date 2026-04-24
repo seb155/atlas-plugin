@@ -1,6 +1,6 @@
 ---
 name: code-hygiene-rules
-description: "Per-language code hygiene rules: naming conventions, folder structure, documentation. Invoke before writing new files OR during cleanup sprints. Cross-project skill."
+description: "Per-language code hygiene rules. Use before writing new files, during cleanup sprints, or when the user asks to 'enforce hygiene', 'naming conventions', 'folder structure', 'code hygiene'."
 effort: low
 refs:
   - naming-conventions

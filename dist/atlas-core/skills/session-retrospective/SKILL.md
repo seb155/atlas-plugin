@@ -1,6 +1,6 @@
 ---
 name: session-retrospective
-description: "End-of-session review, close, and handoff. Capture lessons learned, update memory, note improvements, verify task completion. Includes session close (summary + cleanup) and handoff (context preservation for resume)."
+description: "Session retrospective, close, and handoff. This skill should be used when the user asks to 'end session', '/a-end', '/a-handoff', 'retrospective', 'wrap up', or when the agent has completed a significant chunk of work and should capture lessons before compaction."
 effort: low
 ---
 
@@ -10,6 +10,21 @@ effort: low
 - Before closing or pausing a session
 - After completing a major feature/phase
 - When user requests session close or handoff
+
+## Red Flags (rationalization check)
+
+Before skipping retrospective, ask yourself — are any of these thoughts running? If yes, STOP. The cheapest place to improve the system is at session-end.
+
+| Thought | Reality |
+|---------|---------|
+| "No lessons learned today" | Every session has lessons. If you "can't think of any" — that IS the lesson: look harder. |
+| "I'll do retrospective tomorrow" | Tomorrow's you has forgotten 70% of today's context. Write it NOW. |
+| "Just a summary is enough" | Summary ≠ handoff. Close mode vs Handoff mode have different outputs. Pick correctly. |
+| "No plan changes today, skip INDEX" | INDEX.md + decisions.jsonl are the SSoT. If they drift, future sessions start broken. |
+| "Handoff is 3 bullets, save time" | Rich handoff (10 sections) survives compaction. 3 bullets lose nuance in 1 compaction. |
+| "Improvements go in a future session" | Append to `.blueprint/IMPROVEMENTS.md` NOW with CRITICAL/IMPORTANT/NICE-TO-HAVE/SOTA tags. |
+| "No episode this session — who cares" | Energy + flow state tracking drives daimon calibration. `atlas episode create` is ~30s. |
+| "Topic memory is optional" | If `ATLAS_TOPIC` is set, DUAL-WRITE to topic + global. Topic context survives worktree deletion. |
 
 ## Core Process (Steps 1-5, always run first)
 

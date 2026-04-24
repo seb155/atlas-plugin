@@ -1,0 +1,60 @@
+{
+  "name": "@axoiq/atlas-skill-lint",
+  "version": "0.2.0-atlas.1",
+  "description": "ATLAS fork of LichAmnesia/skill-lint. Adds reasoning-agent-aware SKILL.md handling: treats instructional markdown as documentation (not executable), caps accumulated LOW findings, and honors role-based downgrades on the ATLAS skill corpus. See ADR-019b.",
+  "type": "module",
+  "bin": {
+    "skill-lint": "bin/skill-lint.js"
+  },
+  "main": "src/scanner.js",
+  "exports": {
+    ".": "./src/scanner.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "node bin/skill-lint.js"
+  },
+  "keywords": [
+    "claude-code",
+    "skill",
+    "security",
+    "lint",
+    "linter",
+    "scanner",
+    "prompt-injection",
+    "owasp",
+    "ast10",
+    "agentic-ai",
+    "supply-chain"
+  ],
+  "author": "Shen Huang <me@alwa.info> (https://github.com/ShenHuang)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://forgejo.axoiq.com/axoiq/atlas-skill-lint.git"
+  },
+  "bugs": {
+    "url": "https://forgejo.axoiq.com/axoiq/atlas-skill-lint/issues"
+  },
+  "homepage": "https://forgejo.axoiq.com/axoiq/atlas-skill-lint#readme",
+  "upstream": {
+    "name": "skill-lint",
+    "repo": "https://github.com/LichAmnesia/skill-lint",
+    "forked_from_version": "0.2.0",
+    "forked_at": "2026-04-19"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "yaml": "^2.6.0"
+  }
+}

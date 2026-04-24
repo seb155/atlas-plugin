@@ -1,0 +1,3 @@
+Woodpecker CI observability — kill rate, flaky tests top-10, p50/p95 per workflow, 7-day trend. Auto-files Forgejo issues for flaky tests.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

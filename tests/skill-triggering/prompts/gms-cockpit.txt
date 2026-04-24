@@ -1,0 +1,3 @@
+GMS POC command center — adoption tracking, KC stats, pilier coverage, magic moments. Dashboard for managing the Claude Code POC at G Mining Services (8 MSE, 4 disciplines, 4 Piliers).
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

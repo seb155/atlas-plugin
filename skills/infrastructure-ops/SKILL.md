@@ -1,6 +1,6 @@
 ---
 name: infrastructure-ops
-description: "Admin-tier infrastructure management: VM/container orchestration (Proxmox, Docker, LXC), networking (Tailscale, DNS, Cloudflare), monitoring (Grafana, Prometheus, Uptime Kuma), backup/DR, database administration (PostgreSQL, Valkey), and hardware capacity planning. HITL gates on all destructive operations."
+description: "Admin-tier infrastructure operations. This skill should be used when the user asks to 'manage VMs', 'LXC', 'proxmox ops', 'docker ops', 'backup DR', 'database admin', '/atlas infra ops', or needs Tailscale/DNS/Cloudflare/monitoring changes with HITL gates."
 effort: high
 ---
 

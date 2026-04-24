@@ -119,6 +119,40 @@ atlas_auto_update_plugins() {
     return 0
   fi
 
+  # ──────────────────────────────────────────────────────────────────────
+  # Supply-chain safety gate (Phase B.3 Zero-Trust Plan — added 2026-04-20)
+  # ──────────────────────────────────────────────────────────────────────
+  # Previously this function would silently `git pull + make dev` on every
+  # SessionStart when marketplace had a newer version. That created a
+  # supply-chain attack vector: anyone controlling plugins.axoiq.com or
+  # MITM'ing the domain could push malicious skills/hooks that auto-exec
+  # in every CC session.
+  #
+  # This gate requires one of:
+  #   - ATLAS_AUTO_UPDATE_CONFIRMED=1 (user explicitly opted in this session)
+  #   - CI=1                          (non-interactive automation)
+  #   - force=1                       (atlas upgrade --force)
+  #
+  # Otherwise: show the diff preview and ask the user to re-run explicitly.
+  # Plan: .blueprint/plans/aujourdhui-su-rmon-ordinateur-clever-blum.md
+  if [ "${ATLAS_AUTO_UPDATE_CONFIRMED:-}" != "1" ] && [ -z "${CI:-}" ] && [ "$force" != "1" ]; then
+    # Fetch (no pull) to get fresh refs for preview
+    git -C "$source_repo" fetch origin main --quiet 2>/dev/null || true
+    local preview
+    preview=$(git -C "$source_repo" log --oneline HEAD..origin/main 2>/dev/null | head -5)
+    _atlas_au_log "hitl-gate: confirmation required (inst=$inst_version → mp=$mp_version)"
+    printf '🆙 ATLAS v%s disponible (installed v%s) — HITL gate (Phase B.3)\n' \
+      "$mp_version" "$inst_version"
+    if [ -n "$preview" ]; then
+      printf '   Preview (top 5 commits):\n'
+      printf '%s\n' "$preview" | sed 's/^/     /'
+    fi
+    printf '   To apply: run `/atlas update` OR `ATLAS_AUTO_UPDATE_CONFIRMED=1 claude`\n'
+    printf '   To silence: `export ATLAS_NO_AUTO_UPDATE=1` in ~/.zshrc\n'
+    return 0
+  fi
+  # ──────────────────────────────────────────────────────────────────────
+
   _atlas_au_log "start: upgrading inst=$inst_version → mp=$mp_version (branch=$current_branch force=$force)"
 
   # Pull + build (silent unless failure)

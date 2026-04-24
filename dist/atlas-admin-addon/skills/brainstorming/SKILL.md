@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "Collaborative design exploration. 1 question at a time via AskUserQuestion. 2-3 approaches with comparison tables. ASCII mockups. HITL design approval before implementation."
+description: "Collaborative design exploration. This skill should be used when the user asks to 'brainstorm', 'explore options', 'design a feature', 'compare approaches', or before implementing any non-trivial feature that needs HITL design approval."
 effort: high
 superpowers_pattern: [iron_law, red_flags, hard_gate]
 see_also: [plan-builder, context-discovery]

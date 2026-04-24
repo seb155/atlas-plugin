@@ -1,0 +1,3 @@
+Orchestrate full ecosystem test pyramid from Claude Code. Use when running tests, checking coverage, or verifying test health.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

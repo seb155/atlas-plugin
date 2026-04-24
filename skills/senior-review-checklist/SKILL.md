@@ -1,6 +1,6 @@
 ---
 name: senior-review-checklist
-description: "Systematic code review checklist: SOLID compliance, code smells, design smells, naming, cohesion/coupling, testability. Invoked as mandatory step in code-review skill."
+description: "Macro-level code review checklist. Use when invoked by code-review, when the user asks to 'senior review', 'SOLID audit', 'code smells check', or before shipping any non-trivial change needing architectural rigor."
 effort: medium
 refs:
   - code-smells-catalog
@@ -9,7 +9,7 @@ refs:
 
 # Senior Review Checklist
 
-A systematic checklist for code review at senior level. Runs through 7 dimensions — score each
+A systematic checklist for code review at senior level. Runs through 8 dimensions — score each
 dimension, then synthesize findings into actionable feedback.
 
 This skill is invoked by:
@@ -18,7 +18,23 @@ This skill is invoked by:
 
 **NOT for:** style nits, formatting, linter-catchable issues (those belong to lint + shellcheck).
 
-## 7 Review Dimensions
+## Red Flags (rationalization check)
+
+Before skipping the senior checklist, ask yourself — are any of these thoughts running? If yes, STOP. "Quick glance" reviews let design smells pass that rot the codebase for months.
+
+| Thought | Reality |
+|---------|---------|
+| "Quick glance is fine for this PR" | Only trivial (style-only, single-line) PRs skip. 50+ lines or 3+ files = full checklist. |
+| "Correctness is obvious" | Race conditions, silent except-pass, null at boundaries are NOT obvious. Use the rubric. |
+| "Design weight can be eyeballed" | God Class (>500 lines), Long Method (>50 lines), Primitive Obsession have measurable thresholds. Score them. |
+| "SOLID is academic" | S (Single Resp), L (Liskov), I (Interface Segregation) failures = fragile code. Grade each. |
+| "Naming is a personal preference" | Naming = documentation. Ambiguous names force 2x reading on every future session. |
+| "Testability is for the test author" | Testable code is by design — tight coupling = unobservable code. Flag before merge. |
+| "Observability is the ops team problem" | No logging on a new mutation endpoint = incident 3 weeks later with no trace. Flag it. |
+| "I'll use intuition, not the catalog" | code-smells-catalog + sota-architecture-patterns are structured. Intuition misses 40%. |
+| "AI wrote this, the patterns must be fine" | AI writes *median plausible code* (verbose, layered, defensive). It clears "it works" but produces 1000 slightly-over-allocated chunks. Run AI-Perf dimension 8 explicitly on AI-generated diffs > 50 LoC. |
+
+## 8 Review Dimensions
 
 ### 1. Correctness (40% weight)
 
@@ -35,7 +51,7 @@ Red flags:
 - Missing null/empty checks at API boundaries
 - Mutating shared state without lock
 
-### 2. Design (20% weight)
+### 2. Design (15% weight)
 
 Use `code-smells-catalog` as reference. Check for:
 
@@ -121,6 +137,37 @@ Red flags:
 - New endpoint without project_id filter (multi-tenant rule)
 - Errors logged without correlation ID / trace_id
 
+### 8. AI-Perf Patterns (5% weight)
+
+> Added 2026-04-19 (v5.39.0). Source: `skills/performance-discipline/` (Plummer doctrine).
+> Run this dimension **always** for diffs > 50 LoC where any portion is AI-generated.
+
+AI writes plausible-but-not-lean code. The danger is not one obvious bad routine — it's **a thousand slightly-over-allocated chunks** that all pass tests. Score this dimension by scanning the diff for the 8 anti-patterns:
+
+| # | Anti-pattern | Sev | Quick check |
+|---|--------------|-----|-------------|
+| 1 | Base64 over byte-friendly transport | 🔴 | `rg -n 'b64encode\|btoa\(' --type py --type ts` near `send/write/publish/emit` |
+| 2 | Layer-cake abstraction (deps for trivia) | 🟡 | New deps in PR — apply Pillar 2 of `performance-discipline` (4 questions) |
+| 3 | Allocation in hot loop | 🟡 | dict/list literal inside `for` in `@hot_path`-marked file |
+| 4 | N+1 queries | 🔴 | `await db.X` inside `for/while` loop |
+| 5 | Parsing twice | 🟢 | `JSON.parse(JSON.stringify(...))` / `json.loads(json.dumps(...))` |
+| 6 | Buffer copy without need | 🟡 | `bytes(data)` / `Buffer.from(buf)` on already-immutable input in hot path |
+| 7 | Idle background work no back-off | 🟡 | `setInterval` without `clearInterval` / no visibility-API pause |
+| 8 | Defensive over-validation | 🟢 | 3+ `if X is None / isinstance` branches consecutive on same var (internal call) |
+
+**Scoring**:
+- 0 = HIGH severity pattern present without justification (block)
+- 1-2 = 2+ MED patterns present (request changes)
+- 3 = 1 MED pattern OR 1+ LOW patterns (suggest fix)
+- 4-5 = none of the 8 patterns present, or all justified
+
+**Deep-dive reference**: `skills/performance-discipline/references/anti-patterns-from-plummer.md` — full code examples + "when this pattern IS OK" cases.
+
+Red flags (rationalization):
+- "Tests pass" — Plummer's central thesis: tests verify correctness, not perf or restraint
+- "AI wrote it, it should be fine" — AI optimizes for familiarity, not efficiency (e.g., base64-as-JSON is the most copy-paste-able shape)
+- "It's not THAT slow" — measured? if not, "feels OK on my workstation" ≠ user experience
+
 ## Scoring
 
 For each dimension, score 0-5:
@@ -158,6 +205,7 @@ Scores (0-5):
   Cohesion/Coupling:{N}/5    {1-sentence summary}
   Testability:      {N}/5    {1-sentence summary}
   Observability:    {N}/5    {1-sentence summary}
+  AI-Perf Patterns: {N}/5    {1-sentence summary}
 
 Blockers:
   - {specific issue + file:line + refactor suggested}
@@ -177,6 +225,7 @@ Overall recommendation: {Approve | Request changes | Comment}
 - `sota-architecture-patterns` — for architecture-level concerns (not method-level)
 - `code-review` — parent skill that orchestrates the full PR review
 - `systematic-debugging` — if the PR is a bug fix, verify root cause analysis
+- `performance-discipline` — for dimension 8 deep-dive + Plummer doctrine on AI-output review
 
 ## Anti-patterns in reviews
 

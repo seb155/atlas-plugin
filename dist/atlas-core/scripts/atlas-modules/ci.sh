@@ -52,6 +52,7 @@ _atlas_ci_cmd() {
     list|pipelines|pipes) _atlas_ci_pipelines "$@"; return ;;
     pipeline|info) _atlas_ci_pipeline_info "$@"; return ;;
     rerun|restart|retry) _atlas_ci_rerun "$@"; return ;;
+    live)         _atlas_ci_live "$@"; return ;;
     watch|follow) _atlas_ci_watch "$@"; return ;;
     secrets|secret) _atlas_ci_secrets "$@"; return ;;
     agents|agent) _atlas_ci_agents "$@"; return ;;
@@ -70,6 +71,7 @@ _atlas_ci_help() {
   PIPELINES:
     atlas ci                                Recent pipelines (short summary)
     atlas ci status                         Same as above (legacy alias)
+    atlas ci live [--interval S] [--count N] Real-time TUI dashboard (top N pipelines, auto-refresh)
     atlas ci list [--limit N]               Formatted table of recent pipelines
     atlas ci pipeline <N>                   Detailed JSON summary for pipeline N
     atlas ci rerun <N>                      Retrigger a pipeline
@@ -947,4 +949,339 @@ for wf in d.get('workflows') or []:
     print(f"      {wf.get('name','?'):<20} state={wf.get('state','?'):<10} steps={len(steps):<3} {counts}")
 print()
 PY
+}
+
+# =============================================================================
+# atlas ci live — Real-time TUI dashboard (v5.19.0+)
+# =============================================================================
+# Polls /api/repos/{repo_id}/pipelines (top N) every <interval>s.
+# For each pipeline in 'running' state, fetches detail for workflow breakdown.
+# Renders an 80-col ANSI dashboard, clears screen each refresh.
+# Ctrl+C exits cleanly (trap EXIT).
+#
+# Options:
+#   --interval S   Poll interval in seconds (default 5)
+#   --count N      Number of pipelines to display (default 5)
+#   --once         One-shot snapshot, no refresh loop (same as atlas ci status-detail)
+# =============================================================================
+
+# Allow tests to override curl binary (default: /usr/bin/curl)
+# Set _ATLAS_CI_CURL_BIN=curl in test setup to use PATH-based stub.
+_ATLAS_CI_CURL_BIN="${_ATLAS_CI_CURL_BIN:-/usr/bin/curl}"
+
+# ─── ANSI helpers ────────────────────────────────────────────────
+_CI_RESET='\033[0m'
+_CI_BOLD='\033[1m'
+_CI_DIM='\033[2m'
+_CI_GREEN='\033[32m'
+_CI_RED='\033[31m'
+_CI_YELLOW='\033[33m'
+_CI_BLUE='\033[34m'
+_CI_CYAN='\033[36m'
+_CI_WHITE='\033[37m'
+
+# ─── Map pipeline/workflow status to icon + color ────────────────
+_atlas_ci_live_status_icon() {
+  local st="$1"
+  case "$st" in
+    success)  printf "${_CI_GREEN}✅${_CI_RESET}" ;;
+    failure|error) printf "${_CI_RED}❌${_CI_RESET}" ;;
+    running)  printf "${_CI_YELLOW}🔄${_CI_RESET}" ;;
+    pending)  printf "${_CI_DIM}⏸ ${_CI_RESET}" ;;
+    skipped)  printf "${_CI_DIM}⏭ ${_CI_RESET}" ;;
+    killed)   printf "${_CI_RED}⊗ ${_CI_RESET}" ;;
+    *)        printf "${_CI_DIM}? ${_CI_RESET}" ;;
+  esac
+}
+
+# ─── Elapsed time from epoch seconds ─────────────────────────────
+_atlas_ci_live_elapsed() {
+  local started="$1"
+  local now
+  now=$(/bin/date +%s)
+  if [ -z "$started" ] || [ "$started" = "0" ] || [ "$started" = "null" ]; then
+    printf "?:??"
+    return
+  fi
+  local diff=$(( now - started ))
+  local m=$(( diff / 60 ))
+  local s=$(( diff % 60 ))
+  printf "%d:%02d" "$m" "$s"
+}
+
+# ─── Render one pipeline block (compact, max 4 workflow lines) ───
+# Args: $1 = pipeline JSON (single object), $2 = detail JSON or ""
+_atlas_ci_live_render_pipeline() {
+  local pipe_json="$1"
+  local detail_json="$2"
+
+  /usr/bin/python3 - "$pipe_json" "$detail_json" <<'PY'
+import json, sys, os
+
+# ANSI
+RESET  = '\033[0m'
+BOLD   = '\033[1m'
+DIM    = '\033[2m'
+GREEN  = '\033[32m'
+RED    = '\033[31m'
+YELLOW = '\033[33m'
+BLUE   = '\033[34m'
+CYAN   = '\033[36m'
+
+STATUS_COLORS = {
+    'success': GREEN,
+    'failure': RED,
+    'error':   RED,
+    'running': YELLOW,
+    'pending': DIM,
+    'skipped': DIM,
+    'killed':  RED,
+}
+STATUS_ICONS = {
+    'success': '✅',
+    'failure': '❌',
+    'error':   '❌',
+    'running': '🔄',
+    'pending': '⏸ ',
+    'skipped': '⏭ ',
+    'killed':  '⊗ ',
+}
+
+def colorize(text, color):
+    return f"{color}{text}{RESET}"
+
+def status_str(st):
+    icon = STATUS_ICONS.get(st, '? ')
+    col  = STATUS_COLORS.get(st, '')
+    return f"{col}{icon} {st}{RESET}"
+
+# Parse inputs
+p = json.loads(sys.argv[1])
+detail_raw = sys.argv[2]
+detail = {}
+if detail_raw and detail_raw.strip().startswith('{'):
+    try:
+        detail = json.loads(detail_raw)
+    except Exception:
+        pass
+
+num     = p.get('number', '?')
+status  = p.get('status', '?')
+branch  = (p.get('branch', '?') or '?')[:20]
+sha     = (p.get('commit', '') or '?')[:8]
+msg     = (p.get('message', '') or '').split('\n', 1)[0][:38]
+event   = (p.get('event', '') or '')[:6]
+started = p.get('started', 0) or 0
+
+# Elapsed
+import time
+now = int(time.time())
+elapsed = ''
+if started and started > 0:
+    diff = now - started
+    m, s = diff // 60, diff % 60
+    elapsed = f'{m}:{s:02d}'
+else:
+    elapsed = '?'
+
+# Pipeline header line
+col = STATUS_COLORS.get(status, '')
+icon = STATUS_ICONS.get(status, '? ')
+branch_str = colorize(branch, CYAN)
+sha_str    = colorize(sha,    DIM)
+msg_str    = msg
+evt_str    = colorize(event,  DIM)
+elapsed_str = colorize(elapsed, DIM)
+
+header = f"  {col}{icon}{RESET} {BOLD}#{num:<4}{RESET}  {branch_str}  {sha_str}  {msg_str:<38}  {elapsed_str}  {evt_str}"
+print(header)
+
+# Workflow lines from detail (or summary from list endpoint)
+workflows = detail.get('workflows') or p.get('workflows') or []
+if not workflows:
+    # Summarize from top-level step counts if no detail
+    print(f"  {DIM}   (no workflow detail){RESET}")
+else:
+    for wf in workflows[:5]:
+        wf_name  = (wf.get('name', '?') or '?')[:24]
+        wf_state = wf.get('state', '?')
+        wf_icon  = STATUS_ICONS.get(wf_state, '? ')
+        wf_col   = STATUS_COLORS.get(wf_state, '')
+        steps    = wf.get('children') or []
+        total    = len(steps)
+        ok       = sum(1 for s in steps if s.get('state') == 'success')
+        fail     = sum(1 for s in steps if s.get('state') in ('failure', 'error'))
+        pend     = sum(1 for s in steps if s.get('state') in ('pending', 'skipped'))
+        run      = sum(1 for s in steps if s.get('state') == 'running')
+
+        if total == 0:
+            steps_str = ''
+        elif wf_state == 'success':
+            steps_str = colorize(f'{total}/{total} steps', GREEN)
+        elif wf_state in ('failure', 'error'):
+            steps_str = colorize(f'{ok}/{total} steps', RED)
+            if fail:
+                steps_str += colorize(f' ({fail} fail)', RED)
+        elif wf_state == 'running':
+            steps_str = colorize(f'{ok}/{total} steps', YELLOW)
+            parts = []
+            if ok:   parts.append(colorize(f'{ok} ok', GREEN))
+            if fail: parts.append(colorize(f'{fail} fail', RED))
+            if pend: parts.append(colorize(f'{pend} pending', DIM))
+            if run:  parts.append(colorize(f'{run} running', YELLOW))
+            if parts:
+                steps_str += f' ({", ".join(parts)})'
+        else:
+            steps_str = colorize(f'{total} steps', DIM)
+
+        print(f"  {DIM}   {wf_col}{wf_icon}{wf_name:<24}{RESET}  {steps_str}")
+
+print()
+PY
+}
+
+# ─── Render full dashboard frame ─────────────────────────────────
+_atlas_ci_live_render_frame() {
+  local pipes_json="$1"   # JSON array from list endpoint
+  local count="$2"
+  local timestamp="$3"
+  local interval="$4"
+  local once="$5"
+
+  # Box top
+  local url_label="${_ATLAS_CI_URL}/axoiq/synapse"
+  printf "${_CI_CYAN}╭─ ${_CI_BOLD}ATLAS CI Live${_CI_RESET}${_CI_CYAN} ──────────────────────── %s ─╮${_CI_RESET}\n" "$url_label"
+  if [ "$once" = "1" ]; then
+    printf "${_CI_DIM}│  Snapshot: %-20s                             │${_CI_RESET}\n" "$timestamp"
+  else
+    printf "${_CI_DIM}│  Auto-refresh: %ss  │  Last update: %-12s  │  Ctrl+C to exit  │${_CI_RESET}\n" "$interval" "$timestamp"
+  fi
+  printf "${_CI_CYAN}├───────────────────────────────────────────────────────────────────────────────╯${_CI_RESET}\n"
+  echo ""
+
+  # Decode pipeline list + render each
+  local pipe_nums
+  pipe_nums=$(/usr/bin/python3 - "$pipes_json" "$count" <<'PY'
+import json, sys
+d = json.loads(sys.argv[1])
+n = int(sys.argv[2])
+for p in d[:n]:
+    print(json.dumps(p))
+PY
+)
+
+  local pipe_json
+  while IFS= read -r pipe_json; do
+    [ -z "$pipe_json" ] && continue
+
+    # Fetch detail for running/pending pipelines to get workflow breakdown
+    # NOTE: declare local BEFORE assignment — avoids zsh printing "pnum=X" to stdout
+    local pnum pstatus detail_json
+    detail_json=""
+    pnum=$(/usr/bin/python3 -c "import json,sys; print(json.loads(sys.argv[1]).get('number',''))" "$pipe_json" 2>/dev/null)
+    pstatus=$(/usr/bin/python3 -c "import json,sys; print(json.loads(sys.argv[1]).get('status',''))" "$pipe_json" 2>/dev/null)
+
+    if [ -n "$pnum" ] && [ "$pstatus" = "running" ] || [ "$pstatus" = "pending" ] || [ "$pstatus" = "failure" ]; then
+      detail_json=$("$_ATLAS_CI_CURL_BIN" -sf --max-time 8 \
+        -H "Authorization: Bearer ${WP_TOKEN}" \
+        "${_ATLAS_CI_URL}/api/repos/${_ATLAS_CI_REPO_ID}/pipelines/${pnum}" 2>/dev/null || echo "")
+      # Guard SPA fallback
+      if ! printf '%s' "${detail_json:-}" | /usr/bin/head -c 1 | /bin/grep -q '^{'; then
+        detail_json=""
+      fi
+    fi
+
+    _atlas_ci_live_render_pipeline "$pipe_json" "${detail_json:-}"
+  done <<< "$pipe_nums"
+
+  printf "${_CI_CYAN}╰───────────────────────────────────────────────────────────────────────────────╯${_CI_RESET}\n"
+}
+
+# ─── Entry point: atlas ci live ──────────────────────────────────
+_atlas_ci_live() {
+  local interval=5
+  local count=5
+  local once=0
+
+  # Arg parse
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --interval|-i) interval="${2:-5}"; shift 2 ;;
+      --count|-n)    count="${2:-5}";    shift 2 ;;
+      --once|--snapshot|--status) once=1; shift ;;
+      -h|--help)
+        cat <<'EOF'
+
+  atlas ci live — Real-time Woodpecker CI dashboard
+
+  Usage: atlas ci live [--interval S] [--count N] [--once]
+
+  Options:
+    --interval S   Refresh interval in seconds (default: 5)
+    --count N      Number of pipelines to display (default: 5)
+    --once         One-shot snapshot, exit immediately (no refresh loop)
+    -h, --help     This help
+
+  Environment:
+    WP_TOKEN       Required — Bearer token (read from ~/.env if not set)
+    ATLAS_CI_URL   Override CI base URL (default: https://ci.axoiq.com)
+    ATLAS_CI_REPO_ID Override repo ID (default: 1)
+
+  Examples:
+    atlas ci live                  # auto-refresh every 5s
+    atlas ci live --interval 10    # slower refresh
+    atlas ci live --count 8        # show more pipelines
+    atlas ci live --once           # one-shot snapshot (scriptable)
+EOF
+        return 0
+        ;;
+      *) echo "atlas ci live: unknown option '$1' — try --help" >&2; return 1 ;;
+    esac
+  done
+
+  _atlas_ci_load_token || return 1
+
+  # Override env vars if set (ATLAS_CI_* takes precedence over WP_* defaults)
+  [ -n "${ATLAS_CI_URL:-}" ] && _ATLAS_CI_URL="$ATLAS_CI_URL"
+  [ -n "${ATLAS_CI_REPO_ID:-}" ] && _ATLAS_CI_REPO_ID="$ATLAS_CI_REPO_ID"
+
+  # Trap: clean exit on Ctrl+C (INT/TERM only — not EXIT, to preserve return codes)
+  # shellcheck disable=SC2064
+  trap 'printf "\n"; exit 0' INT TERM
+
+  local fetch_url="${_ATLAS_CI_URL}/api/repos/${_ATLAS_CI_REPO_ID}/pipelines?page=1&per_page=$((count * 2))"
+
+  while true; do
+    local ts
+    ts=$(/bin/date +%H:%M:%S)
+
+    local pipes_json
+    pipes_json=$("$_ATLAS_CI_CURL_BIN" -sf --max-time 10 \
+      -H "Authorization: Bearer ${WP_TOKEN}" \
+      "$fetch_url" 2>/dev/null || echo "")
+
+    # Guard: must be JSON array
+    if ! printf '%s' "${pipes_json:-}" | /usr/bin/head -c 1 | /bin/grep -q '^\['; then
+      if [ "$once" = "1" ]; then
+        echo "❌ Could not reach Woodpecker API at ${_ATLAS_CI_URL}" >&2
+        return 1
+      fi
+      printf "\r  ${_CI_DIM}[%s] Waiting for API...${_CI_RESET}  " "$ts"
+      /bin/sleep "$interval"
+      continue
+    fi
+
+    # Clear screen (ANSI escape — works in any terminal)
+    printf '\033[2J\033[H'
+
+    _atlas_ci_live_render_frame "$pipes_json" "$count" "$ts" "$interval" "$once"
+
+    if [ "$once" = "1" ]; then
+      # Remove EXIT trap before clean return
+      trap - EXIT
+      return 0
+    fi
+
+    /bin/sleep "$interval"
+  done
 }

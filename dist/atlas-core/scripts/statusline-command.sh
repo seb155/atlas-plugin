@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# ATLAS Status Line for Claude Code — Starship Style + SOTA v2.1.83
+# ATLAS Status Line for Claude Code — Starship Style + SOTA v5.30.1
 # Shipped via ATLAS plugin. Deployed by session-start hook.
-# Shows: directory + git_branch + git_status + session + context% + rate% + effort + model
+# Shows: 🏛️ ATLAS {version} + directory + git_branch + git_status + session + agents + context% + rate% + effort + model
 
 input=$(cat)
 
@@ -12,6 +12,10 @@ used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // 0')
 session_name=$(echo "$input" | jq -r '.session_name // empty')
 rate_5h=$(echo "$input" | jq -r '.rate_limits["5h"].used_percentage // 0')
 effort=$(echo "$input" | jq -r '.effort // "auto"')
+
+# ATLAS plugin version (v5.30.1+) — read from capabilities.json SessionStart snapshot
+# Falls back to "?" silently if capabilities file missing (fresh install, pre-SessionStart).
+atlas_version=$(jq -r '.version // "?"' "${ATLAS_DIR:-$HOME/.atlas}/runtime/capabilities.json" 2>/dev/null || echo "?")
 
 # ANSI colors (bold to match Starship bold styles)
 CYAN='\033[1;36m'
@@ -127,5 +131,5 @@ effort_sym="◐"
 [ "$effort" = "low" ] && effort_sym="○"
 [ "$effort" = "high" ] && effort_sym="●"
 
-# Output: dir branch git-status session agents ctx% rate% effort model
-printf "${CYAN}${dir_display}${RESET}${git_branch}${git_status_str}${session_display}${agents_display} ${context_color}${used_int}%%${RESET}${rate_display} ${effort_sym} ${YELLOW}${model_short}${RESET}"
+# Output: 🏛️ATLAS version | dir branch git-status session agents ctx% rate% effort model
+printf "${CYAN}🏛️ ATLAS ${atlas_version}${RESET}  ${CYAN}${dir_display}${RESET}${git_branch}${git_status_str}${session_display}${agents_display} ${context_color}${used_int}%%${RESET}${rate_display} ${effort_sym} ${YELLOW}${model_short}${RESET}"

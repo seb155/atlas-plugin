@@ -1,0 +1,3 @@
+Engineering project maintenance + I&C estimation pipeline. 8 subcommands (status, update, links, map, checklist, recalc, plan, toolkit) plus 4-agent estimation chain with HITL gates.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

@@ -1,6 +1,6 @@
 ---
 name: agent-readiness
-description: "Factory.ai 9-Pillar Agent Readiness scoring. Automated codebase audit for AI agent effectiveness. Runs scripts/agent-readiness-check.sh, displays scores, tracks progression, suggests fixes. Use /atlas readiness for full scan, /atlas readiness --pillar N for single pillar."
+description: "Factory.ai 9-Pillar Agent Readiness scoring. This skill should be used when the user asks to '/atlas readiness', 'agent readiness', 'Factory.ai score', 'codebase AI readiness', or needs a 9-pillar audit of AI-agent-effectiveness."
 effort: low
 ---
 

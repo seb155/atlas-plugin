@@ -1,6 +1,6 @@
 ---
 name: skill-security-audit
-description: "Scan ATLAS skills and hooks for security anti-patterns: eval injection, unquoted vars, secrets, HITL bypass, overly broad permissions. Produces severity report. Triggers on: 'audit skills', 'skill security', 'plugin security'."
+description: "ATLAS skills and hooks security scanner. This skill should be used when the user asks to 'audit skills', 'skill security', 'plugin security', 'scan hooks', or needs eval injection/unquoted-var/secret/HITL-bypass detection with severity report."
 effort: medium
 triggers: ["audit skills", "skill security", "plugin security", "scan hooks"]
 ---
@@ -16,6 +16,44 @@ Distinct from `security-audit` (which scans the application). This scans the **p
 - After adding a new hook or skill
 - Periodic hygiene check (monthly recommended)
 - Before opening marketplace to external contributors
+
+## Two-layer scan (ATLAS-specific + OWASP AST10)
+
+This skill runs **TWO complementary passes** for full coverage:
+
+### Pass 1 — ATLAS-specific heuristics (this skill's tables below)
+
+Hand-curated checks for ATLAS internal patterns (HITL bypass instructions,
+plugin-cache violations, over-broad permissions in our skill descriptions).
+
+### Pass 2 — OWASP Agentic Top 10 (via skill-lint, REC-015 + ADR-013)
+
+Invoke `scripts/pre-install-skill-check.sh` on every skill directory:
+
+```bash
+# Scan all source skills
+for skill in skills/*/; do
+  bash scripts/pre-install-skill-check.sh "$skill" --verbose 2>&1 | tee -a /tmp/skill-lint-report.log
+done
+
+# Scan distributed tier builds (catches post-build injection)
+for skill in dist/*/skills/*/; do
+  bash scripts/pre-install-skill-check.sh "$skill"
+done
+```
+
+**Aggregate findings** (per ADR-013):
+- Any TOXIC verdict → CRITICAL severity, blocks release
+- WARN verdicts → MEDIUM severity, review required
+- SAFE → pass
+
+**Severity mapping** to this skill's report:
+- R01 Prompt Injection (CRITICAL) → enhances "HITL bypass instructions" HIGH
+- R04 Credential Exfil (CRITICAL) → enhances "Hardcoded secrets" CRITICAL
+- R07 Persistence Tamper (CRITICAL) → enhances "Unrestricted file writes" + plugin-cache rule
+- R10 Over-Privilege (HIGH) → new category, add to report under "Permissions"
+
+Reference: ADR-013 (skill-lint security baseline), docs/SECURITY.md (threat model).
 
 ## Scan Categories
 

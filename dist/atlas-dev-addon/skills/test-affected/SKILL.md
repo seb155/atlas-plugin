@@ -1,6 +1,6 @@
 ---
 name: test-affected
-description: "Run only tests affected by uncommitted changes. Wraps pytest-testmon + vitest --changed with a 30s budget. Per-file G1 gate."
+description: "Affected-test runner for pre-push gate. Use when running the G1 pre-push test gate, when the user asks to 'test affected', 'test changes only', 'quick test', or before pushing uncommitted work."
 triggers:
   - "/atlas test-affected"
   - "/atlas ta"

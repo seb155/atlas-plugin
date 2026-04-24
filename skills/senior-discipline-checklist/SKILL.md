@@ -1,6 +1,6 @@
 ---
 name: senior-discipline-checklist
-description: "Systematic rigor audit at micro level: naming, structure, documentation hygiene. Complements senior-review-checklist (macro architecture). Invoke during hygiene sprints or code audit."
+description: "Micro-level discipline audit checklist. Use during hygiene sprints, code audits, when the user asks to 'audit hygiene', 'discipline check', 'naming audit', or when senior-review-checklist needs a micro-level complement."
 effort: medium
 refs:
   - naming-conventions

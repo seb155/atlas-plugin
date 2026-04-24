@@ -1,6 +1,6 @@
 ---
 name: auto-orchestrator
-description: "Intelligent meta-skill that analyzes intent, scores available skills, detects gaps, and chains optimal pipelines. The brain of ATLAS."
+description: "ATLAS auto-orchestrator (skill router brain). Use when the agent needs to route an ambiguous user request, when no specific ATLAS skill has been pre-selected, or when chaining multiple skills into an optimal pipeline with gap detection."
 effort: low
 inputs:
   intent: string

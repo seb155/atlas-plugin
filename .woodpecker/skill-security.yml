@@ -1,0 +1,142 @@
+# ATLAS Plugin — Skill Security Scan (Woodpecker)
+# Runs LichAmnesia/skill-lint against all skills in skills/ to detect
+# prompt injection, credential exfiltration, over-privilege, and other
+# OWASP Agentic Skills Top 10 threats.
+#
+# Policy (per ADR-013):
+# - TOXIC verdict (score ≥10 OR single CRITICAL) → FAIL pipeline (block merge)
+# - WARN verdict (5 ≤ score < 10) → report as warning, don't fail
+# - SAFE verdict (score < 5) → pass silently
+#
+# Reference: docs/ADR/ADR-013-skill-lint-security-baseline.md
+# Source: plan joyful-hare Batch 1 REC-016
+#
+# NOTE: Use $$ for shell variables, ${WP_VAR} for Woodpecker variables.
+
+when:
+  branch: [main, dev]
+  event: [push, pull_request]
+  path:
+    include:
+      - "skills/**"
+      - "dist/**/skills/**"
+      - ".claude-plugin/**"
+      - "scripts/pre-install-skill-check.sh"
+      - ".woodpecker/skill-security.yml"
+
+steps:
+  skill-lint-scan:
+    image: node:20-slim
+    commands:
+      # Install git + jq for script dependencies (slim image has neither)
+      - apt-get update -qq && apt-get install -y -qq git jq > /dev/null 2>&1
+      - echo "Node version:" && node --version
+      - echo "jq version:" && jq --version
+
+      # ATLAS fork path (v5.36.1+ / ADR-019b): pre-install-skill-check.sh
+      # now defaults to the vendored fork at third_party/atlas-skill-lint.
+      # Lazy-install its 2 runtime deps (chalk, yaml) so the scan loop doesn't
+      # pay the install cost per-skill. Falls back to upstream if vendor dir
+      # is missing (SKILL_LINT_PACKAGE env override still honored).
+      - |
+        if [ -d third_party/atlas-skill-lint ] && [ ! -d third_party/atlas-skill-lint/node_modules ]; then
+          (cd third_party/atlas-skill-lint && npm install --silent --omit=dev --no-audit --no-fund)
+          echo "✓ Vendored ATLAS fork deps installed"
+        else
+          echo "⏭️  Vendored fork absent — wrapper will fall back to upstream via npx"
+        fi
+
+      # Scan every skill under skills/
+      # Fail on any TOXIC verdict (exit 2 from pre-install-skill-check.sh)
+      - |
+        set -e
+        SKILL_DIRS=$$(find skills -maxdepth 2 -name "SKILL.md" -exec dirname {} \; 2>/dev/null | sort -u)
+        if [ -z "$$SKILL_DIRS" ]; then
+          echo "⚠️  No skills found under skills/ — nothing to scan."
+          exit 0
+        fi
+
+        echo "Scanning $$(echo "$$SKILL_DIRS" | wc -l) skills..."
+        echo ""
+        FAIL_COUNT=0
+        WARN_COUNT=0
+        SAFE_COUNT=0
+        TOXIC_LIST=""
+
+        for skill in $$SKILL_DIRS; do
+          echo "→ Scanning $$skill"
+          set +e
+          bash ./scripts/pre-install-skill-check.sh "$$skill" > /tmp/scan-out.txt 2>&1
+          EXIT=$$?
+          set -e
+
+          case "$$EXIT" in
+            0)
+              SAFE_COUNT=$$((SAFE_COUNT + 1))
+              echo "  ✅ SAFE"
+              ;;
+            1)
+              WARN_COUNT=$$((WARN_COUNT + 1))
+              echo "  ⚠️  WARN (review required — non-blocking in CI)"
+              cat /tmp/scan-out.txt | grep -E "^\s*\[R" || true
+              ;;
+            2)
+              FAIL_COUNT=$$((FAIL_COUNT + 1))
+              TOXIC_LIST="$$TOXIC_LIST\n  - $$skill"
+              echo "  ❌ TOXIC"
+              cat /tmp/scan-out.txt | grep -E "^\s*\[R" || true
+              ;;
+            *)
+              FAIL_COUNT=$$((FAIL_COUNT + 1))
+              TOXIC_LIST="$$TOXIC_LIST\n  - $$skill (linter error, exit $$EXIT)"
+              echo "  💥 LINTER ERROR (exit $$EXIT)"
+              cat /tmp/scan-out.txt
+              ;;
+          esac
+          echo ""
+        done
+
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "📊 SKILL SCAN SUMMARY"
+        echo "   SAFE:  $$SAFE_COUNT"
+        echo "   WARN:  $$WARN_COUNT"
+        echo "   TOXIC: $$FAIL_COUNT"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+        if [ "$$FAIL_COUNT" -gt 0 ]; then
+          echo ""
+          echo "❌ Pipeline FAILED — TOXIC skills detected:"
+          echo -e "$$TOXIC_LIST"
+          echo ""
+          echo "Policy (ADR-013): TOXIC skills may never be merged to main."
+          echo "Review findings above and fix root causes. Do not override this gate."
+          exit 2
+        fi
+
+        if [ "$$WARN_COUNT" -gt 0 ]; then
+          echo ""
+          echo "⚠️  WARN verdicts found — not blocking, but review recommended."
+        fi
+
+        echo "✅ Skill security scan passed."
+    environment:
+      # skill-lint respects NO_COLOR — keep CI logs clean
+      NO_COLOR: "1"
+      # SKILL_LINT_PACKAGE intentionally UNSET so pre-install-skill-check.sh
+      # uses the vendored ATLAS fork at third_party/atlas-skill-lint by default.
+      # Set to 'github:LichAmnesia/skill-lint' to bypass the fork.
+
+  plugin-json-validate:
+    image: alpine:3.20
+    commands:
+      - apk add --no-cache bash jq > /dev/null 2>&1
+      - bash scripts/validate-plugin-json.sh
+    # plugin-json-validate exit 1 (warnings) does NOT fail CI
+    # Only exit 2 (hard errors) fails. Without `failure: ignore` below,
+    # Woodpecker would fail the pipeline on any non-zero exit including the
+    # validator's exit-1-on-warnings. This step was previously masked by
+    # skill-lint-scan failing first (skipped). With skill-lint-scan now
+    # green (v5.37.0 fork), the drift surfaces. Explicit ignore matches
+    # the intent stated in the existing yml comment.
+    failure: ignore

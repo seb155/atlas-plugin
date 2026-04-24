@@ -1,6 +1,6 @@
 ---
 name: user-profiler
-description: "Build and display the user's complete profile. Expertise map, interests, working style, relationships, goals. Human context engineering."
+description: "User profile builder and display. This skill should be used when the user asks to 'show my profile', 'who am I', 'update my profile', '/atlas profile', or when ATLAS needs to refresh the expertise map before personalized routing."
 effort: medium
 ---
 

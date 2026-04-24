@@ -1,0 +1,1 @@
+I want to let users export their data in bulk from the dashboard. Not sure if we should do CSV download, email delivery, or an async job with a webhook. What are the tradeoffs and which should we pick?

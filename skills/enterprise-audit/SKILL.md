@@ -1,6 +1,6 @@
 ---
 name: enterprise-audit
-description: "14-dimension enterprise readiness audit for G Mining due diligence. Python checker engine (toolkit/audit/) + ATLAS skill orchestration. Covers: multi-tenancy, data integrity, deployment, security, testing, ops, code quality, docs, deps, API surface, i18n, a11y, governance, performance. Scoring A-F with HITL gates."
+description: "14-dimension enterprise readiness audit. This skill should be used when the user asks to '/atlas audit-enterprise', 'enterprise audit', 'due diligence', 'G Mining audit', 'SOC2 readiness', or needs an A-F scored audit of multi-tenancy/security/docs/governance."
 effort: high
 superpowers_pattern: [iron_law, red_flags, hard_gate]
 see_also: [security-audit, codebase-audit, plan-builder]
@@ -97,6 +97,10 @@ python3 -m toolkit.audit \
 
 **Delegation rules:**
 - `security` dimension → invoke `security-audit` skill; import JSON results
+  - **Skill supply-chain sub-audit** (per ADR-013): also invoke `scripts/pre-install-skill-check.sh` on every skill directory under `skills/` and `dist/*/skills/`
+  - Aggregate skill-lint findings (R01-R10 per OWASP Agentic Top 10)
+  - Any TOXIC verdict → CRITICAL severity finding (blocks enterprise readiness)
+  - WARN verdicts → MEDIUM severity findings
 - `testing` dimension → invoke `verification` skill; import coverage + test counts
 - All other dimensions → run toolkit checker directly
 

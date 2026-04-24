@@ -1,0 +1,3 @@
+Systematic rigor audit at micro level: naming, structure, documentation hygiene. Complements senior-review-checklist (macro architecture). Invoke during hygiene sprints or code audit.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

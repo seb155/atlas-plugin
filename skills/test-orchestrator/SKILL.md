@@ -1,6 +1,6 @@
 ---
 name: test-orchestrator
-description: "Orchestrate full ecosystem test pyramid from Claude Code. Use when running tests, checking coverage, or verifying test health."
+description: "Full-ecosystem test pyramid orchestrator. This skill should be used when the user asks to 'run all tests', 'test orchestrator', 'check coverage', 'verify test health', or needs the full L0-L4 pyramid executed with reporting."
 model: sonnet
 ---
 

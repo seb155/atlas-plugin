@@ -1,0 +1,1 @@
+I need to add user authentication to my FastAPI backend with JWT tokens, password hashing, and session management. Can you put together a detailed implementation plan before we start coding?

@@ -1,7 +1,7 @@
 ---
 name: infra-expert
 description: "Infrastructure expert for homelab and cloud ops. Opus 4.7 agent. Proxmox, Docker, IaC, GPU passthrough, networking, capacity planning. Full SSH access with HITL gates."
-model: opus
+model: claude-opus-4-7[1m]
 effort: xhigh
 thinking_mode: adaptive
 isolation: worktree

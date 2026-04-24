@@ -1,6 +1,6 @@
 ---
 name: document-generator
-description: "Generate PPTX, DOCX, XLSX documents with storytelling structure, visual layouts, and iterative HITL validation at each phase. Templates: 5-act, problem-solution, dashboard, metrics."
+description: "Document generator for PPTX, DOCX, XLSX. This skill should be used when the user asks to 'generate a slide deck', 'build a presentation', 'create a document', 'make a spreadsheet', '/a-present', or needs storytelling-structured output."
 effort: medium
 ---
 

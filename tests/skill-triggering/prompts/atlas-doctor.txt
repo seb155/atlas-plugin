@@ -1,0 +1,3 @@
+# EVAL-EXEMPT: meta/programmatic skill without natural naive trigger
+# Reason: Invoked by other skills, hooks, or direct CLI commands — not by user prompts.
+# To enable eval: remove this comment + write a prompt that would naturally invoke this skill.

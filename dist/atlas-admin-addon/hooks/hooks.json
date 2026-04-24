@@ -6,12 +6,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/feature-drift-detector\"",
-            "async": true,
-            "timeout": 5
-          },
-          {
-            "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/detect-stale-git\"",
             "async": true,
             "timeout": 5

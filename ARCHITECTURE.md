@@ -83,4 +83,4 @@ Installed via `dev-install.sh` which syncs the launcher to the user's shell prof
 
 ---
 
-*Updated: 2026-04-07 | Source: atlas-dev-plugin v4.26.3*
+*Updated: 2026-04-18 | Source: atlas-dev-plugin v5.28.0*

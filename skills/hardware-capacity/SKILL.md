@@ -1,6 +1,6 @@
 ---
 name: hardware-capacity
-description: "Hardware inventory and capacity planning. CPU/RAM/disk/GPU audit, resource allocation, growth projections, thermal monitoring."
+description: "Hardware inventory and capacity planner. This skill should be used when the user asks to 'capacity audit', 'hardware status', 'CPU/RAM/disk/GPU', 'resource planning', '/atlas hardware', or needs growth projections with thermal data."
 ---
 
 # Hardware Capacity Planning

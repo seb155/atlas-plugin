@@ -1,6 +1,6 @@
 ---
 name: ci-health
-description: "Woodpecker CI observability — kill rate, flaky tests top-10, p50/p95 per workflow, 7-day trend. Auto-files Forgejo issues for flaky tests."
+description: "Woodpecker CI observability dashboard. This skill should be used when the user asks to 'ci health', 'flaky tests', 'pipeline trend', 'kill rate', '/atlas ci health', or needs 7-day p50/p95 across workflows."
 triggers:
   - "/atlas ci-health"
   - "/atlas ci status"

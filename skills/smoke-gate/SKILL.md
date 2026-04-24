@@ -1,6 +1,6 @@
 ---
 name: smoke-gate
-description: "Post-deploy G3 gate. Run scripts/smoke.sh against dev/staging/prod, emit structured JSON, create Forgejo issue on red (alert-only policy)."
+description: "Post-deploy G3 smoke gate. Use when a deployment has just completed on dev/staging/prod, when the user asks to 'run smoke', 'G3 gate', 'post-deploy check', '/smoke-gate', or when CI needs a structured JSON emit with Forgejo auto-issue on red."
 triggers:
   - "/atlas smoke-gate"
   - "/atlas smoke"

@@ -25,6 +25,7 @@ skills:
   # Quality & Review
   - code-review
   - code-simplify
+  - performance-discipline   # v5.39.0 — Plummer doctrine, AI-perf review lens
   - systematic-debugging
   - verification
   - test-orchestrator
@@ -86,7 +87,7 @@ hooks:
   - tdd-guard               # PreToolUse[Write|Edit] — block edits without failing test
   - claudemd-lint           # PostToolUse[Write|Edit] on CLAUDE.md — validate frontmatter + W3H
   - detect-stale-git        # Stop — warn if working tree has stale refs / uncommitted
-  - feature-drift-detector  # Stop — flag scope creep outside feature branch
+  # feature-drift-detector registered in hooks.json SessionStart block (removed from Stop profile 2026-04-18)
   # v5.22.0 Sprint 2.5 — pre-push CI quality gate (advisory)
   - pre-push-affected       # PreToolUse[Bash(git push)] — run test-affected, advisory
 

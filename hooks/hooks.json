@@ -348,6 +348,12 @@
           },
           {
             "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/capabilities-refresh\"",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/atlas-status-writer\"",
             "async": true,
             "timeout": 5

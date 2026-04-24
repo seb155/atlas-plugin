@@ -8,6 +8,21 @@ effort: low
 
 Create, improve, and maintain Claude Code skills and plugins. Covers the full lifecycle from ideation to packaging.
 
+## Red Flags (rationalization check)
+
+Before skipping skill-management conventions, ask yourself — are any of these thoughts running? If yes, STOP. Skills are behavior-shaping code; malformed skills silently fail to activate.
+
+| Thought | Reality |
+|---------|---------|
+| "I'll wing the SKILL.md format" | Malformed frontmatter breaks discovery. Always copy `templates/SKILL.md.template`. |
+| "Description = what the skill does" | Description = WHEN to use, not WHAT it does (CSO rule, ADR-011). Workflow summary = skill-body skip. |
+| "I don't need Red Flags for this skill" | Behavior-shaping skills need them (ADR-009). Utility/reference skills are exempt. |
+| "5000 words is fine, more detail is better" | Target 1500-2000 (ADR-010). Past 5000 = Level 3 candidates (move to references/). |
+| "Inline scripts in SKILL.md is convenient" | Anti-pattern. Move to `scripts/` (executable) or `references/` (docs loaded on demand). |
+| "I'll edit the plugin cache directly" | NEVER. `~/.claude/plugins/cache/` is read-only. Edit source repo, then `make dev`. |
+| "Progressive Disclosure is ceremony" | Level 1 (frontmatter) always loaded, Level 2 on trigger, Level 3 on-demand. Saves 80%+ context. |
+| "Skip the activation test — it's manual" | Without pressure-test RED/GREEN (obra TDD-for-skills), you can't verify the skill triggers. |
+
 ## Skill Anatomy
 
 ```

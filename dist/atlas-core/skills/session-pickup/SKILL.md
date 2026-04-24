@@ -1,6 +1,6 @@
 ---
 name: session-pickup
-description: "Resume a previous session from handoff file. Full context reload, rich briefing, scope-locked drill-in with plan mode gate. Triggers on: /pickup, /atlas pickup, 'resume session', 'continue where I left off'."
+description: "Session resume from handoff file. This skill should be used when the user asks to '/pickup', '/atlas pickup', 'resume session', 'continue where I left off', or loads a prior session with full context reload and plan-mode gate."
 effort: low
 ---
 

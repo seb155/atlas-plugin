@@ -1,0 +1,145 @@
+---
+name: skill-name-kebab-case
+description: "{PURPOSE_CLAUSE: 1 sentence ≤20 words}. This skill should be used when the user asks to 'specific phrase 1', 'specific phrase 2', 'specific phrase 3'."
+effort: low | medium | high
+version: 0.1.0
+metadata:
+  category: {domain|meta|workflow|infra}
+  sources:
+    - "{citation or upstream reference if derived}"
+---
+
+<!--
+  ATLAS Skill Template (v2, 2026-04-19 — Progressive Disclosure enforced)
+  References:
+    - docs/ADR/ADR-011-skill-description-convention.md (Level 1 format)
+    - docs/ADR/ADR-010-progressive-disclosure.md (3-level structure)
+    - docs/SKILL-AUTHORING.md (authoring guide)
+
+  Progressive Disclosure — 3 levels (MANDATORY per ADR-010):
+  • Level 1 (this frontmatter): always in system prompt (~100 words)
+  • Level 2 (SKILL.md body below): loaded when skill triggers, TARGET 1500-2000 words, MAX 5000 words
+  • Level 3 (scripts/ + references/ + assets/ sibling dirs): loaded on-demand
+    - scripts/  — executable code (bash, python, node) — may run without loading
+    - references/ — markdown/JSON docs — loaded into context as needed
+    - assets/   — output files (templates, PPTX, images) — NEVER loaded as context
+
+  Follow these rules BEFORE editing this template:
+  1. Description = triggering conditions, NOT workflow summary (CSO rule, ADR-011)
+  2. Use Form A (Anthropic canonical "This skill should be used when...") for user-facing skills
+  3. Use Form B ("Use when...") for meta/internal skills
+  4. Max 500 chars for name+description combined
+  5. Body word count: target 1500-2000, cap at 5000 (see Verification below)
+
+  Verification (run before commit):
+    wc -w SKILL.md                # should be ≤ 5000
+    ls scripts/ references/ assets/ 2>/dev/null   # only present if needed
+-->
+
+# {Skill Title}
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance this skill applies to the task,
+you MUST invoke it. Non-negotiable.
+</EXTREMELY-IMPORTANT>
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent for a narrow task, skip this skill's
+autonomous invocation — your dispatcher already decided skill relevance.
+</SUBAGENT-STOP>
+
+## Overview
+
+{1-2 sentence core principle or purpose. What is this skill? Why does it exist?}
+
+## When to Use
+
+Activate this skill when:
+- {Trigger phrase 1 matching description}
+- {Trigger phrase 2}
+- {Symptom or context signal}
+
+Do NOT activate when:
+- {Anti-trigger 1: wrong scope}
+- {Anti-trigger 2: better skill exists}
+
+## Red Flags (rationalization check)
+
+Before skipping this skill, ask yourself: are any of these thoughts
+running? If yes → STOP, you're rationalizing. Invoke the skill.
+
+| Thought | Reality |
+|---------|---------|
+| "This is a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "I can just do this quickly" | Skills tell you HOW. Check first. |
+| "The skill is overkill" | Simple → complex fast. Use it. |
+| "I remember this pattern" | Skills evolve. Read current version. |
+
+## Required Background (optional)
+
+**REQUIRED:** Understand atlas-core:atlas-assist before this skill.
+**SEE ALSO:** atlas-dev-addon:code-review, atlas-admin-addon:security-audit.
+
+(Do NOT use `@` links — they force-load 200k+ context.)
+
+## Workflow
+
+### Step 1: {First action}
+{Concrete imperative: "To do X, run Y"}
+
+```bash
+# Example command
+command --flag value
+```
+
+### Step 2: {Second action}
+{Next step}
+
+### Step 3: {Final action}
+{Complete the task}
+
+## Quick Reference
+
+| Input | Action | Output |
+|-------|--------|--------|
+| {scenario A} | {action} | {result} |
+| {scenario B} | {action} | {result} |
+
+## Common Mistakes
+
+- **{Mistake 1}**: {what goes wrong and why}. Fix: {correction}.
+- **{Mistake 2}**: {wrong approach}. Fix: {right approach}.
+
+## Real-World Impact (optional)
+
+{Concrete results, benchmarks, or incidents prevented}
+
+## References
+
+- Related skill: atlas-core:{skill-name}
+- Documentation: docs/{reference-doc}.md
+- External: {URL or citation}
+
+## Level 3 — Bundled Resources (optional, remove if unused)
+
+Place content in sibling directories (not inline below) per Progressive Disclosure.
+
+### scripts/
+Executable code. Example: `scripts/validate.sh` for linting, `scripts/render.py` for generation.
+Invoked via Bash/subprocess — not loaded into context.
+
+### references/
+On-demand documentation. Example: `references/api-schema.md`, `references/patterns.md`.
+Claude loads when the skill body mentions them.
+
+### assets/
+Output templates. Example: `assets/template.pptx`, `assets/cover-letter.docx`.
+**NEVER loaded as context** — Claude copies/modifies them as output.
+
+**Validation**: if this section is unused, remove it entirely. Empty-but-documented is worse than absent.
+
+---
+
+*Template version 2.0 — 2026-04-19 — Progressive Disclosure enforced (ADR-010).*
+*See SKILL-AUTHORING.md for authoring details and migration guide.*

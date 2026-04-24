@@ -1,6 +1,6 @@
 ---
 name: ultrathink
-description: "Deep reasoning mode with structured decision frameworks. 6 subcommands: adr, matrix, risk, tradeoff, compare, chain. Auto-detects analysis type from topic. Persists decisions via decision-log. Triggers on: /ultrathink, 'think deeply about', 'analyze thoroughly', 'ultrathink'."
+description: "Deep reasoning mode with decision frameworks (adr/matrix/risk/tradeoff/compare/chain). This skill should be used when the user asks to '/ultrathink', 'think deeply about', 'analyze thoroughly', 'ultrathink', or needs structured decision analysis persisted via decision-log."
 effort: medium
 depends_on: [decision-log]
 triggers: ["ultrathink", "think deeply", "analyze thoroughly", "deep analysis", "architectural decision"]
@@ -10,6 +10,21 @@ triggers: ["ultrathink", "think deeply", "analyze thoroughly", "deep analysis", 
 
 Activate maximum thinking budget (~32K tokens) with **structured decision frameworks**.
 Maps to Claude Code's native `ultrathink` keyword for highest reasoning quality.
+
+## Red Flags (rationalization check)
+
+Before skipping ultrathink on a significant decision, ask yourself — are any of these thoughts running? If yes, STOP. Architectural choices locked in without deep reasoning cost months.
+
+| Thought | Reality |
+|---------|---------|
+| "I don't need to go deep — I know the answer" | Then use the framework to CONFIRM it. Knowing unmeasured = guessing. |
+| "Matrix scoring is busywork" | Weighted matrix makes tradeoffs VISIBLE. Gut-feel hides them. |
+| "This isn't architectural enough for ADR" | Tech stack, data model, lib choice = architectural. Low bar. Run `ultrathink adr`. |
+| "I'll just use /effort max without the framework" | /effort bumps tokens. ultrathink adds STRUCTURE (ADR / matrix / risk / tradeoff). Different tools. |
+| "Decision-log at end is enough" | ultrathink → decision-log is a PIPELINE. ultrathink produces the log payload. |
+| "Risk matrix is overkill for dev work" | Pre-deploy risks (data loss, security gaps) deserve 15 min. Post-incident postmortem costs days. |
+| "Single option, no comparison needed" | Even single-option decisions have alternatives (do-nothing, defer). Name them. |
+| "No prior decisions to chain to" | Check `.claude/decisions.jsonl` first. You might contradict a 2-week-old choice. |
 
 ## v5.7.0+ Native `/effort` (Phase 4)
 

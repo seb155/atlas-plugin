@@ -1,6 +1,6 @@
 ---
 name: devops-deploy
-description: "Unified deployment orchestration: pre-flight → CI monitor → deploy (staging/prod/sandbox) → health check → custom validators → data sync → report. Config-driven via .atlas/deploy.yaml. Supports deployment modes (auto/gated/manual) and types (full/quick/hotfix/promote)."
+description: "Unified deployment orchestration. This skill should be used when the user asks to 'deploy', '/a-deploy', 'ship to staging', 'ship to prod', 'devops deploy', or needs .atlas/deploy.yaml-driven rollout with custom validators."
 effort: medium
 ---
 

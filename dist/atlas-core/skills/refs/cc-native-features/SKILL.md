@@ -105,7 +105,9 @@ description: "Claude Code v2.1.111 native features reference — effort system, 
 
 **Rule**: With 1M context, NEVER suggest session handoff for context reasons.
 
-## Adaptive Thinking (formerly Extended Thinking)
+## Adaptive Thinking (formerly "Extended Thinking")
+
+> **Post-migration 2026-04-19**: Anthropic renamed "extended thinking" → "adaptive thinking". API param now `thinking: {type: "adaptive"}` (old `{type: "enabled", budget_tokens: N}` returns 400). CC uses `/effort` setting to control depth.
 
 - **API change 2026-04**: Opus 4.7 deprecated explicit thinking-enabled mode + token budgets. Only adaptive (`{"type": "adaptive"}` or via effort).
 - Opus 4.7: adaptive enabled by default (v2.0.67); new `xhigh` tier (v2.1.111+, between `high` and `max`)

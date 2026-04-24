@@ -1,0 +1,22 @@
+[project]
+name = "atlas-exchange"
+version = "0.1.0"
+description = "Authentik OIDC → CF Access Service Token exchange microservice (Phase B.2.c)"
+requires-python = ">=3.13"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "httpx>=0.27",
+  "python-jose[cryptography]>=3.3",
+  "structlog>=25.1",
+  "pydantic>=2.9",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "pytest-httpx>=0.35",
+  "ruff>=0.8",
+  "mypy>=1.13",
+]

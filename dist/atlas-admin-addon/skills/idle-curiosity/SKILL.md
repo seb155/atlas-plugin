@@ -1,6 +1,6 @@
 ---
 name: idle-curiosity
-description: "Autonomous exploration engine — discovers under-explored topics, unused skills, and knowledge gaps. CronCreate-based scheduling, max 1 exploration/day, HITL gate on every insight. SP-COGNITION Gap #5 (Curiosity-Driven Learning)."
+description: "Autonomous curiosity exploration engine. Use when a daily cron fires, when the user asks to '/atlas curiosity', 'explore gaps', 'idle curiosity', or when ATLAS has idle capacity and should surface under-explored topics with HITL gate."
 effort: medium
 ---
 

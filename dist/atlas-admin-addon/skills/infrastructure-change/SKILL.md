@@ -1,6 +1,6 @@
 ---
 name: infrastructure-change
-description: "Admin-tier infrastructure change orchestration: CF Tunnel, Caddy, Authentik, DNS, NetBird. Pre-flight validation, HITL gates on destructive ops, rollback support. Prevents cascade failures like the 2026-03-30 incident."
+description: "Admin-tier infrastructure change orchestrator. This skill should be used when the user asks to 'change CF tunnel', 'update Caddy', 'Authentik config', 'DNS change', 'NetBird change', '/atlas infra change', or touches any networking primitive with cascade-failure risk."
 effort: high
 ---
 

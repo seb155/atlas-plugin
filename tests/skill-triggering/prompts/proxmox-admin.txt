@@ -1,0 +1,3 @@
+Proxmox VE administration. VM/LXC lifecycle, storage pools, GPU passthrough, clustering, backup/restore, resource quotas.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

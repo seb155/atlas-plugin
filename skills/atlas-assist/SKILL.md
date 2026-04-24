@@ -1,6 +1,6 @@
 ---
 name: atlas-assist
-description: "Master skill for ATLAS — AXOIQ's unified AI engineering assistant. Auto-routing co-pilot with HITL gates and autonomous optimization."
+description: "Master skill for ATLAS auto-routing co-pilot. Use when SessionStart injects the ATLAS plugin, when the user invokes '/atlas', or when any request needs tier-aware routing to ATLAS skills and HITL gates."
 ---
 
 <!-- SOURCE TEMPLATE — Built version in dist/ has correct tier-specific counts.
@@ -249,14 +249,15 @@ Architecture decisions (GPQA +17pts justifies premium) | Cross-system debugging 
 
 **Principle**: Opus = orchestrator brain | Sonnet = workhorse | Haiku = validator | DET = deterministic.
 
-| Task | Model | Why | Benchmark |
-|------|-------|-----|-----------|
-| Planning, architecture, brainstorm | **Opus 4.7** | Deep reasoning | GPQA 91.3% vs 74.1% (+17pts) |
-| Adaptive thinking (ultrathink) | **Opus 4.7** | 128K max output (adaptive only; extended deprecated) | Output 2x Sonnet |
-| Cross-system debugging | **Opus 4.7** | Multi-file reasoning | Reasoning gap matters |
-| Implementation, bug fixes | **Sonnet 4.6** | 97-99% coding, 5x cheaper | SWE-bench 79.6% vs 80.8% |
-| Code review, security audit | **Sonnet 4.6** | Pattern matching | GDPval 1633 > 1606 (Sonnet leads) |
-| DB migrations, testing | **Sonnet 4.6** | Well-scoped, gap negligible | 2.7x faster |
+| Task Type | Model | Why | Key Benchmark |
+|-----------|-------|-----|---------------|
+| Planning, architecture, brainstorm | **Opus 4.7** | Deep reasoning justifies premium | GPQA 91.3% vs 74.1% (+17pts) |
+| Adaptive thinking (ultrathink, effort=xhigh/max) | **Opus 4.7** | 128K max output for detailed plans | Output limit 2x Sonnet |
+| Complex debugging, cross-system | **Opus 4.7** | Multi-file reasoning | Reasoning gap matters here |
+| Implementation, bug fixes | **Sonnet 4.6** | 97-99% coding quality, 5x cheaper | SWE-bench 79.6% vs 80.8% (1.2pts) |
+| Code review, security audit | **Sonnet 4.6** | Pattern matching sufficient | GDPval 1633 > 1606 (Sonnet leads) |
+| DB migrations | **Sonnet 4.6** | SQL is well-scoped, gap negligible | SWE-bench gap = 1.2pts |
+| Testing | **Sonnet 4.6** | Tests follow patterns | 2.7x faster iteration |
 | Validation, search, checklists | **Haiku 4.5** | Cheapest capable | 12x cheaper than Sonnet |
 | Lint, format, type-check | **DET** | Bash, zero AI | Free |
 
@@ -347,6 +348,11 @@ When the model is about to enter Claude's native plan mode (EnterPlanMode):
 | "Doesn't need a formal plan" | plan-quality rules say otherwise |
 | "I'll just do this one thing first" | Check BEFORE doing anything |
 | "The skill is overkill" | Use it. Simple things become complex |
+| "I remember the ATLAS skill list" | 131 skills. Memory drifts. Read `~/.atlas/runtime/capabilities.json`. |
+| "The user's intent is obvious" | Complexity gate auto-detects (trivial/moderate/complex). Run the gate. |
+| "I'll skip the persona header this one time" | Persona header is NON-NEGOTIABLE. Every response starts with it. |
+| "Subagents add overhead for this task" | MODERATE tasks (60% of requests) = dispatch Sonnet. Cost ratio is 5x. |
+| "Plan mode via EnterPlanMode is faster" | Native plan mode bypasses context-discovery + plan-builder. Always intercept. |
 
 ## Skill Name Priority (MANDATORY)
 

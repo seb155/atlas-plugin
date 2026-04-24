@@ -1,0 +1,1 @@
+I just implemented the fix for the race condition in the queue processor. Before I commit, I want to make sure it actually works end-to-end. Can you verify the fix?

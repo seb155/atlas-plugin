@@ -1,6 +1,6 @@
 ---
 name: feature-board
-description: "Feature registry dashboard with WIP audit. Parse FEATURES.md, render kanban board + validation matrix + WIP health analysis. /atlas board for status, /atlas board wip for WIP audit + reset. Proactive suggestions at session start."
+description: "Feature registry dashboard and WIP audit. This skill should be used when the user asks to '/atlas board', 'feature board', 'kanban', 'WIP audit', 'feature status', or at session start when FEATURES.md drift needs surfacing."
 effort: low
 ---
 

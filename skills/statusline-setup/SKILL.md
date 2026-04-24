@@ -1,6 +1,6 @@
 ---
 name: statusline-setup
-description: "Configure CShip + Starship + ATLAS status line for Claude Code. Installs CShip binary, deploys Starship custom modules, wires settings.json. HITL at each step. Cross-platform: Linux, macOS, Windows."
+description: "Status line configurator (CShip + Starship + ATLAS). This skill should be used when the user asks to 'setup statusline', 'configure cship', 'starship modules', '/atlas statusline', or installs the visual status line cross-platform."
 effort: low
 ---
 

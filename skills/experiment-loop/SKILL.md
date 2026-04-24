@@ -1,6 +1,6 @@
 ---
 name: experiment-loop
-description: "Autonomous optimization loop inspired by Karpathy's autoresearch. Loads experiment config, iterates (analyze→mutate→execute→measure→decide), HITL gates on significant changes. Uses experiment-runner agent."
+description: "Autonomous optimization loop (autoresearch). This skill should be used when the user asks to 'run experiment', 'optimize', 'autoresearch', '/atlas experiment', or has a config.yaml for analyze→mutate→execute→measure→decide with HITL gates."
 effort: high
 context: fork
 agent: experiment-runner

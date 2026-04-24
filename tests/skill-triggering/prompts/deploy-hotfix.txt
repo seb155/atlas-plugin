@@ -1,0 +1,3 @@
+Deploy file hotfix to running container without CI rebuild. SCP → docker cp → clear pycache → restart → health check. Supports SSH jump hosts.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

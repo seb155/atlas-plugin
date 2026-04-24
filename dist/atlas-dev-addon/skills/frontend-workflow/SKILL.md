@@ -1,6 +1,6 @@
 ---
 name: frontend-workflow
-description: "Iterative frontend development workflow: brainstorm UX → mockup → HITL review → implement in shared lib → wire consumer → consolidate. Enforces architecture-first for UI work. Use when building pages, components, or UI features."
+description: "Iterative frontend development workflow. This skill should be used when the user asks to 'build a page', 'create a component', 'design UX', 'implement UI', or needs architecture-first routing from mockup to shared-lib consumer wiring."
 effort: high
 ---
 
@@ -12,6 +12,21 @@ Orchestrates the full frontend development cycle with mandatory HITL gates.
 Prevents the common mistake of coding UI before deciding WHERE it lives and HOW it integrates.
 
 **Trigger**: Any task involving UI components, pages, visual features, or frontend work.
+
+## Red Flags (rationalization check)
+
+Before jumping to UI code, ask yourself — are any of these thoughts running? If yes, STOP. Architecture-first isn't a ceremony — it prevents rewriting the same UI 3x.
+
+| Thought | Reality |
+|---------|---------|
+| "Just start coding the UI, decide location later" | Location (shared lib vs app) is architecturally irreversible. Decide BEFORE coding. |
+| "I don't need a mockup, the design is obvious" | ASCII mockup forces explicit layout + data flow decisions. Free-form = ambiguity. |
+| "Brainstorm phase for a button? Overkill" | UX convergence (reuse X or build new?) saves weeks of duplicate components. |
+| "I'll put it in frontend/src/ for now, refactor later" | "For now" becomes "forever". Decide: shared lib (atlas-components) or app-specific. |
+| "Data flow can be wired after the UI works" | Data-provider-first prevents prop-drilling refactors later. Wire before building. |
+| "Type-check is fine, skipping visual review" | Visual review catches layout bugs type-check misses. Both gates are mandatory. |
+| "Consumer wiring can wait" | Consumer plan (which apps use this?) drives where it lives. Decide upfront. |
+| "This component is too small for the full workflow" | Small components accumulate — without workflow, you get 30 one-off variants. |
 
 ## The 6 Phases
 

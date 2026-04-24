@@ -1,6 +1,6 @@
 ---
 name: engineering-ops
-description: "Engineering project maintenance + I&C estimation pipeline. 8 subcommands (status, update, links, map, checklist, recalc, plan, toolkit) plus 4-agent estimation chain with HITL gates."
+description: "Engineering project maintenance and I&C estimation pipeline. This skill should be used when the user asks to '/a-eng status', '/a-eng-estimate', 'I&C estimation', 'engineering project', 'toolkit', or manages multi-discipline engineering deliverables."
 effort: high
 ---
 

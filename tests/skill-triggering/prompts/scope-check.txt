@@ -1,0 +1,3 @@
+Detect scope drift. Are you touching files outside the original task? Stop and verify before proceeding.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)

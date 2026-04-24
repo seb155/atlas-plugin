@@ -1,0 +1,3 @@
+Generate PPTX, DOCX, XLSX documents with storytelling structure, visual layouts, and iterative HITL validation at each phase. Templates: 5-act, problem-solution, dashboard, metrics.
+
+(Generated placeholder from skill description; please review and refine with a more natural user phrasing.)
