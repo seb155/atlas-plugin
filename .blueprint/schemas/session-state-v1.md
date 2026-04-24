@@ -156,9 +156,83 @@ fi
 | `session-pickup` | Restore approved_gates (--persist) | v6.0.0 GA |
 | `session-retrospective` | Record approval history | v6.0.0 GA |
 
+## v1.1 Extensions (v6.1.0 — workflow library)
+
+Added 2026-04-24 for workflow library + session-lifecycle commands (Section O
+of parent plan) + event-sourcing pattern (Section Q.2).
+
+### New top-level fields
+
+```yaml
+active_workflow:
+  name: string              # e.g., "workflow-feature"
+  schema_version: integer   # pinned at workflow start (Q.5 migration safety)
+  started_at: ISO8601
+  worktree: string
+  branch: string
+  task_id: string           # idempotency key (Q.3)
+  completed_steps: list[integer]
+  skipped_steps: list[{step: int, reason: string, ts: ISO8601}]
+  pending_hitl: list[{step: int, gate: string, asked_at: ISO8601}]
+
+last_session:
+  ended_at: ISO8601 | null
+  ended_path: enum[close-session|handoff|abandon|null]
+  handoff_file: string | null
+  resumable: boolean
+
+session_events_file: string     # default ".claude/session-events.jsonl"
+session_events_count: integer
+
+local_lock:
+  held: boolean
+  acquired_at: ISO8601 | null
+  heartbeat_at: ISO8601 | null
+  lock_file_path: string | null
+
+last_intent:
+  detected_at: ISO8601
+  input_sample: string
+  matched_workflow: string | null
+  confidence: float
+  user_response: enum[accepted|rejected|ignored]
+```
+
+### Session Events Schema (`.claude/session-events.jsonl`, Q.2)
+
+Append-only JSONL. Reducer `scripts/atlas-modules/session-state-reducer.sh`
+derives current state from events.
+
+Event types: `workflow_started | step_started | step_completed | step_skipped
+| step_failed | hitl_gate_fired | hitl_gate_resolved | workflow_completed
+| workflow_handoff | workflow_abandoned | lock_acquired | lock_released
+| intent_detected`.
+
+Example:
+```jsonl
+{"ts":"2026-04-24T06:00:00Z","type":"workflow_started","workflow":"workflow-feature","task_id":"uuid-v4"}
+{"ts":"2026-04-24T06:05:00Z","type":"step_started","step":1,"skill":"task-framing"}
+{"ts":"2026-04-24T06:15:00Z","type":"step_completed","step":1,"duration_ms":600000,"evidence":["memory/framing.md"]}
+```
+
+### Auto-resume flow (Section N.6)
+
+On `/atlas start`, session-pickup reads session-state.json:
+1. If `active_workflow` present + `resumable: true` → AskUserQuestion resume/fresh/review
+2. If resume: inject condensed step_completed evidence + position at `next_step`
+3. If fresh: emit `workflow_abandoned` event + clear active_workflow
+
+### Migration v1.0 → v1.1
+
+- All v1.0 fields preserved (additive only)
+- New fields default to `null` / empty lists
+- Reducer regenerates cache fields from events.jsonl
+- No migration script needed
+
 ## Version History
 
 - **v1.0** (2026-04-23): Initial schema — Phase 5 foundation shipped in v6.0.0-alpha.6
+- **v1.1** (2026-04-24): Workflow library extensions (active_workflow, events, lock, intent) — v6.1.0 Phase 1 Task 1.9
 
 ## References
 

@@ -1,7 +1,15 @@
 # ATLAS Plugin — Claude Code AI Engineering Assistant
 
+<!-- stable-prefix-start: this preamble changes rarely (v6.1 M.1 — keep cache warm) -->
+
 > **Stack**: Bash + yq + Python (tests) | **Version**: `cat VERSION` | **Branch**: `main`
 > **Repo**: `forgejo.axoiq.com/axoiq/atlas-plugin` | **Owner**: Seb Gagnon (AXOIQ)
+
+<!-- stable-prefix-end -->
+
+<!-- CACHE-AUDIT-BASELINE (v6.1 Task 1.7): to measure prompt cache hit rate,
+     run `/cost` after a long session. Target post-v6.1: 50-70% cached input tokens.
+     This file's top section is marked stable to stay in cache prefix. -->
 
 ## IDENTITY
 

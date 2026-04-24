@@ -1,0 +1,610 @@
+# Workflow Registry v1.0.0 — atlas-plugin v6.1.0
+#
+# Authority: .blueprint/schemas/workflow-schema-v1.md
+# Companion: scripts/execution-philosophy/iron-laws.yaml
+# Updated: 2026-04-24
+#
+# This file is the canonical catalog of all workflow-* skills. The
+# /atlas workflow list command reads this. The intent-detect hook
+# uses it to map natural language to workflows. workflow-validate.sh
+# verifies every skill file matches an entry here.
+
+version: 1.0.0
+updated: 2026-04-24
+schema_ref: .blueprint/schemas/workflow-schema-v1.md
+
+# ==========================================================================
+# Categories (11)
+# ==========================================================================
+categories:
+  - id: programming
+    name: "Programming"
+    emoji: "💻"
+    description: "Code-writing workflows: features, bugs, refactors, plugin development"
+    persona_primary: [engineer]
+    workflow_count: 5
+
+  - id: product
+    name: "Product & Vision"
+    emoji: "🎯"
+    description: "Client-facing strategy: vision docs, roadmap, discovery, pitch, alignment"
+    persona_primary: [product_manager, client_demo]
+    workflow_count: 5
+
+  - id: uxui
+    name: "UX / UI Design"
+    emoji: "🎨"
+    description: "Visual + interaction design: wireframes, mockups, flows, review, prototypes"
+    persona_primary: [designer]
+    workflow_count: 5
+
+  - id: collab
+    name: "Collaboration"
+    emoji: "🤝"
+    description: "HITL-heavy facilitated work: collaborative brainstorm, decisions, stakeholder sync"
+    persona_primary: [all]
+    workflow_count: 3
+
+  - id: architecture
+    name: "Architecture"
+    emoji: "🏛️"
+    description: "System design, ADRs, architectural brainstorming, spec-first"
+    persona_primary: [engineer, architect]
+    workflow_count: 4
+
+  - id: planning
+    name: "Planning (Project Mgmt)"
+    emoji: "📅"
+    description: "Tactical planning: sprint plans, estimates, retros, plan-builder flows"
+    persona_primary: [engineer, product_manager]
+    workflow_count: 5
+
+  - id: infrastructure
+    name: "Infrastructure"
+    emoji: "🌐"
+    description: "Deploy, infra-change, network, security, incident response"
+    persona_primary: [devops, infra_engineer]
+    workflow_count: 5
+
+  - id: research
+    name: "Research"
+    emoji: "🔍"
+    description: "Deep-research, codebase audit, debug investigation, exploration"
+    persona_primary: [engineer, architect]
+    workflow_count: 4
+
+  - id: documentation
+    name: "Documentation"
+    emoji: "📝"
+    description: "Doc-writing, ADR logging, retrospectives, handoffs"
+    persona_primary: [all]
+    workflow_count: 4
+
+  - id: analytics
+    name: "Data / Analytics"
+    emoji: "📊"
+    description: "Data analysis, benchmarks, cost tracking"
+    persona_primary: [engineer, product_manager]
+    workflow_count: 3
+
+  - id: meta
+    name: "Meta / Cross-cutting"
+    emoji: "⚙️"
+    description: "Quality gates, audit-ship, incident postmortems"
+    persona_primary: [all]
+    workflow_count: 3
+
+# ==========================================================================
+# Workflows (46)
+# ==========================================================================
+workflows:
+
+  # ---------- Cat 1: Programming (5) ----------
+  - name: workflow-code-change
+    category: programming
+    priority: P0
+    description: "Small focused code change with verify + CI gate"
+    iron_laws: [LAW-WORKFLOW-001, LAW-VERIFY-001]
+    chains: [task-framing, verification-before-completion, ci-feedback-loop]
+    estimated_duration_min: 30
+    persona_tags: [engineer]
+    triggers: ["change code", "tweak", "small fix", "modify function"]
+    phase: 2
+
+  - name: workflow-feature
+    category: programming
+    priority: P0
+    description: "Full feature development pipeline — task-framing through CI-verified ship"
+    iron_laws: [LAW-WORKFLOW-001, LAW-WORKFLOW-002, LAW-WORKFLOW-003, LAW-TDD-001]
+    chains: [task-framing, brainstorming, writing-plans, tdd, code-review, verification-before-completion, finishing-a-development-branch, ci-feedback-loop]
+    estimated_duration_min: 120
+    persona_tags: [engineer]
+    triggers: ["new feature", "add feature", "build a feature", "implement"]
+    phase: 2
+
+  - name: workflow-bug-fix
+    category: programming
+    priority: P1
+    description: "Bug fix with regression test + CI verify"
+    iron_laws: [LAW-DBG-001, LAW-TDD-001, LAW-WORKFLOW-001]
+    chains: [task-framing, systematic-debugging, tdd, code-review, verification-before-completion, ci-feedback-loop]
+    estimated_duration_min: 60
+    persona_tags: [engineer]
+    triggers: ["fix bug", "broken", "error", "debug"]
+    phase: 2
+
+  - name: workflow-refactor
+    category: programming
+    priority: P1
+    description: "Refactor with baseline review + after review + CI"
+    iron_laws: [LAW-VERIFY-001, LAW-WORKFLOW-001]
+    chains: [task-framing, code-review, verification-before-completion, code-review, verification-before-completion, ci-feedback-loop]
+    estimated_duration_min: 90
+    persona_tags: [engineer]
+    triggers: ["refactor", "clean up", "restructure"]
+    phase: 2
+
+  - name: workflow-plugin-dev
+    category: programming
+    priority: P1
+    description: "Atlas-plugin self-development flow"
+    iron_laws: [LAW-WORKFLOW-001, LAW-WORKFLOW-003]
+    chains: [plan-builder, skill-management, hookify, plugin-builder, verification-before-completion, ship-all]
+    estimated_duration_min: 120
+    persona_tags: [engineer]
+    triggers: ["add skill", "new hook", "plugin feature", "atlas skill"]
+    phase: 2
+
+  # ---------- Cat 2: Product & Vision (5) ----------
+  - name: workflow-product-vision
+    category: product
+    priority: P0
+    description: "3-12 month product vision doc for client/stakeholders"
+    chains: [deep-research, workflow-brainstorm-collab, decision-log]
+    estimated_duration_min: 180
+    persona_tags: [product_manager, client_demo]
+    triggers: ["product vision", "where are we going", "long-term roadmap"]
+    phase: 3
+
+  - name: workflow-product-roadmap
+    category: product
+    priority: P1
+    description: "Strategic roadmap with OKRs + themes"
+    chains: [vision-alignment, programme-manager, decision-log]
+    estimated_duration_min: 120
+    persona_tags: [product_manager]
+    triggers: ["roadmap", "OKR", "quarterly plan"]
+    phase: 3
+
+  - name: workflow-feature-discovery
+    category: product
+    priority: P1
+    description: "Jobs-to-be-done + personas + problem validation"
+    chains: [user-profiler, deep-research, workflow-stakeholder-sync]
+    estimated_duration_min: 90
+    persona_tags: [product_manager, designer]
+    triggers: ["user research", "jobs to be done", "problem validation", "discovery"]
+    phase: 3
+
+  - name: workflow-client-alignment
+    category: product
+    priority: P1
+    description: "Stakeholder sync, demo prep, alignment doc"
+    chains: [workflow-stakeholder-sync, decision-log]
+    estimated_duration_min: 60
+    persona_tags: [client_demo, product_manager]
+    triggers: ["client meeting", "demo prep", "alignment", "stakeholder"]
+    phase: 3
+
+  - name: workflow-pitch-narrative
+    category: product
+    priority: P2
+    description: "Sales/investor pitch — elevator narrative"
+    chains: [visual-generator]
+    estimated_duration_min: 60
+    persona_tags: [product_manager]
+    triggers: ["pitch", "sales deck", "investor", "elevator"]
+    phase: 3
+
+  # ---------- Cat 3: UX / UI Design (5) ----------
+  - name: workflow-ux-wireframe
+    category: uxui
+    priority: P1
+    description: "Low-fi wireframes + ASCII mockups"
+    chains: [frontend-design]
+    estimated_duration_min: 45
+    persona_tags: [designer]
+    triggers: ["wireframe", "low-fi mockup", "sketch UI"]
+    phase: 3
+
+  - name: workflow-ui-mockup
+    category: uxui
+    priority: P1
+    description: "Hi-fi mockup + design system alignment"
+    chains: [frontend-design, visual-qa]
+    estimated_duration_min: 90
+    persona_tags: [designer]
+    triggers: ["hi-fi mockup", "visual design", "figma-style"]
+    phase: 3
+
+  - name: workflow-user-flow
+    category: uxui
+    priority: P2
+    description: "End-to-end user journey map"
+    estimated_duration_min: 45
+    persona_tags: [designer, product_manager]
+    triggers: ["user flow", "journey map", "user path"]
+    phase: 3
+
+  - name: workflow-design-review
+    category: uxui
+    priority: P1
+    description: "Critique + WCAG 2.2 AA + Nielsen heuristics"
+    chains: [visual-qa, decision-log]
+    estimated_duration_min: 60
+    persona_tags: [designer]
+    triggers: ["design review", "WCAG", "a11y", "accessibility", "critique"]
+    phase: 3
+
+  - name: workflow-prototype
+    category: uxui
+    priority: P2
+    description: "Interactive HTML/React prototype stub"
+    chains: [frontend-design, browser-automation]
+    estimated_duration_min: 120
+    persona_tags: [designer, engineer]
+    triggers: ["prototype", "interactive demo", "clickable mock"]
+    phase: 3
+
+  # ---------- Cat 4: Collaboration (3) ----------
+  - name: workflow-brainstorm-collab
+    category: collab
+    priority: P0
+    description: "HITL facilitated brainstorm — divergent WITH user, converge to decision"
+    chains: [brainstorming, interactive-flow]
+    estimated_duration_min: 45
+    persona_tags: [all]
+    triggers: ["brainstorm with me", "help me think about", "explore options together"]
+    requires_hitl: true
+    phase: 4
+
+  - name: workflow-facilitate-decision
+    category: collab
+    priority: P1
+    description: "Tradeoff matrix + HITL approval + ADR"
+    chains: [decision-log]
+    estimated_duration_min: 30
+    persona_tags: [all]
+    triggers: ["decide", "tradeoff", "pick between", "should we"]
+    requires_hitl: true
+    phase: 4
+
+  - name: workflow-stakeholder-sync
+    category: collab
+    priority: P1
+    description: "Meeting prep, status narrative, 1:1 agenda"
+    estimated_duration_min: 30
+    persona_tags: [product_manager, client_demo]
+    triggers: ["meeting prep", "1:1", "sync", "status update"]
+    phase: 4
+
+  # ---------- Cat 5: Architecture (4) ----------
+  - name: workflow-architecture
+    category: architecture
+    priority: P1
+    description: "Architecture decision + plan + ADR"
+    chains: [deep-research, writing-plans, decision-log]
+    estimated_duration_min: 120
+    persona_tags: [engineer, architect]
+    triggers: ["architecture", "design system", "architectural decision"]
+    phase: 4
+
+  - name: workflow-brainstorm-solo
+    category: architecture
+    priority: P2
+    description: "Autonomous ideation — agent produces doc, not decision"
+    chains: [brainstorming]
+    estimated_duration_min: 30
+    persona_tags: [engineer]
+    triggers: ["brainstorm options", "think about", "ideate"]
+    phase: 4
+
+  - name: workflow-spec-first
+    category: architecture
+    priority: P1
+    description: "Spec template → stakeholder review → implementation handoff"
+    chains: [decision-log]
+    estimated_duration_min: 90
+    persona_tags: [engineer, architect]
+    triggers: ["spec", "specification", "design doc"]
+    phase: 4
+
+  - name: workflow-system-design
+    category: architecture
+    priority: P1
+    description: "C4 diagram + ADR + review"
+    chains: [decision-log]
+    estimated_duration_min: 120
+    persona_tags: [architect]
+    triggers: ["system design", "C4", "component diagram"]
+    phase: 4
+
+  # ---------- Cat 6: Planning (5) ----------
+  - name: workflow-plan-large
+    category: planning
+    priority: P0
+    description: "Chains task-framing → plan-builder → plan-review → HITL approval"
+    iron_laws: [LAW-PLAN-001, LAW-WORKFLOW-002]
+    chains: [task-framing, plan-builder, plan-review]
+    estimated_duration_min: 180
+    persona_tags: [engineer, architect]
+    triggers: ["large plan", "mega plan", "multi-phase"]
+    phase: 4
+
+  - name: workflow-plan-feature
+    category: planning
+    priority: P1
+    description: "Smaller-scope plan-builder flow"
+    iron_laws: [LAW-PLAN-001]
+    chains: [task-framing, plan-builder]
+    estimated_duration_min: 60
+    persona_tags: [engineer]
+    triggers: ["plan feature", "plan this"]
+    phase: 4
+
+  - name: workflow-sprint-plan
+    category: planning
+    priority: P1
+    description: "Sprint template (2 weeks) + task slicing"
+    estimated_duration_min: 60
+    persona_tags: [product_manager, engineer]
+    triggers: ["sprint plan", "2-week plan", "this sprint"]
+    phase: 4
+
+  - name: workflow-estimate
+    category: planning
+    priority: P2
+    description: "Complexity sizing + story points"
+    estimated_duration_min: 30
+    persona_tags: [engineer, product_manager]
+    triggers: ["estimate", "sizing", "story points", "how long"]
+    phase: 4
+
+  - name: workflow-sprint-retro
+    category: planning
+    priority: P1
+    description: "Session retrospective + team retro template"
+    chains: [session-retrospective]
+    estimated_duration_min: 30
+    persona_tags: [all]
+    triggers: ["retro", "retrospective", "sprint end", "what went well"]
+    phase: 4
+
+  # ---------- Cat 7: Infrastructure (5) ----------
+  - name: workflow-deploy
+    category: infrastructure
+    priority: P0
+    description: "Deploy with verification + CI gate + audit-ship"
+    iron_laws: [LAW-WORKFLOW-001, LAW-VERIFY-001]
+    chains: [devops-deploy, verification-before-completion, ci-feedback-loop]
+    estimated_duration_min: 45
+    persona_tags: [devops]
+    triggers: ["deploy", "push to prod", "ship", "release"]
+    phase: 5
+
+  - name: workflow-infra-change
+    category: infrastructure
+    priority: P1
+    description: "Infra change + peer review + deploy"
+    chains: [infrastructure-change, code-review]
+    estimated_duration_min: 90
+    persona_tags: [devops, infra_engineer]
+    triggers: ["infra change", "infrastructure", "config change"]
+    phase: 5
+
+  - name: workflow-network
+    category: infrastructure
+    priority: P2
+    description: "Network change + verification"
+    chains: [infrastructure-ops]
+    estimated_duration_min: 60
+    persona_tags: [infra_engineer]
+    triggers: ["network", "VLAN", "firewall", "routing"]
+    phase: 5
+
+  - name: workflow-security
+    category: infrastructure
+    priority: P1
+    description: "Security audit + remediation + verify"
+    chains: [security-audit, verification-before-completion]
+    estimated_duration_min: 90
+    persona_tags: [devops, infra_engineer]
+    triggers: ["security audit", "security fix", "vulnerability"]
+    phase: 5
+
+  - name: workflow-incident-response
+    category: infrastructure
+    priority: P0
+    description: "Incident triage + hotfix + postmortem"
+    chains: [deploy-hotfix, verification-before-completion]
+    estimated_duration_min: 120
+    persona_tags: [devops]
+    triggers: ["incident", "outage", "production down", "P0"]
+    phase: 5
+
+  # ---------- Cat 8: Research (4) ----------
+  - name: workflow-research-deep
+    category: research
+    priority: P1
+    description: "Deep research (multi-query) + synthesis + decision-log"
+    chains: [deep-research, decision-log]
+    estimated_duration_min: 60
+    persona_tags: [engineer, architect, product_manager]
+    triggers: ["deep research", "investigate", "research topic"]
+    phase: 5
+
+  - name: workflow-audit
+    category: research
+    priority: P1
+    description: "Codebase audit + report + enforcement plan"
+    chains: [codebase-audit]
+    estimated_duration_min: 120
+    persona_tags: [engineer, architect]
+    triggers: ["audit", "code review deep", "tech debt scan"]
+    phase: 5
+
+  - name: workflow-debug-investigation
+    category: research
+    priority: P1
+    description: "Systematic debugging + root-cause doc"
+    iron_laws: [LAW-DBG-001]
+    chains: [systematic-debugging]
+    estimated_duration_min: 60
+    persona_tags: [engineer]
+    triggers: ["debug investigation", "why is X slow", "root cause"]
+    phase: 5
+
+  - name: workflow-exploration
+    category: research
+    priority: P2
+    description: "Context discovery + codebase map"
+    chains: [context-discovery]
+    estimated_duration_min: 45
+    persona_tags: [engineer]
+    triggers: ["explore", "understand codebase", "learn the code"]
+    phase: 5
+
+  # ---------- Cat 9: Documentation (4) ----------
+  - name: workflow-doc-write
+    category: documentation
+    priority: P1
+    description: "Template per doc type (README, API, runbook)"
+    estimated_duration_min: 60
+    persona_tags: [all]
+    triggers: ["write docs", "README", "API docs", "runbook"]
+    phase: 6
+
+  - name: workflow-adr-log
+    category: documentation
+    priority: P1
+    description: "Decision-log → ADR template → index update"
+    chains: [decision-log]
+    estimated_duration_min: 30
+    persona_tags: [engineer, architect]
+    triggers: ["ADR", "decision record", "architectural decision"]
+    phase: 6
+
+  - name: workflow-retrospective
+    category: documentation
+    priority: P1
+    description: "Session retro + team retro + memory index"
+    chains: [session-retrospective]
+    estimated_duration_min: 30
+    persona_tags: [all]
+    triggers: ["retrospective", "what I learned", "lessons learned"]
+    phase: 6
+
+  - name: workflow-handoff
+    category: documentation
+    priority: P0
+    description: "Retro + dream + a-handoff format + memory write"
+    chains: [session-retrospective, memory-dream, a-handoff]
+    estimated_duration_min: 30
+    persona_tags: [all]
+    triggers: ["handoff", "end session", "wrap up", "à suivre"]
+    phase: 6
+
+  # ---------- Cat 10: Data / Analytics (3) ----------
+  - name: workflow-data-analysis
+    category: analytics
+    priority: P2
+    description: "Data exploration + hypothesis + visualization"
+    estimated_duration_min: 90
+    persona_tags: [engineer, product_manager]
+    triggers: ["data analysis", "explore data", "visualize"]
+    phase: 6
+
+  - name: workflow-benchmark
+    category: analytics
+    priority: P2
+    description: "Flow analytics + baseline + comparison + report"
+    chains: [flow-analytics]
+    estimated_duration_min: 60
+    persona_tags: [engineer]
+    triggers: ["benchmark", "performance test", "compare versions"]
+    phase: 6
+
+  - name: workflow-cost-tracking
+    category: analytics
+    priority: P2
+    description: "Cost analytics + dashboard + alerts"
+    chains: [cost-analytics]
+    estimated_duration_min: 45
+    persona_tags: [product_manager, devops]
+    triggers: ["cost tracking", "spend", "budget"]
+    phase: 6
+
+  # ---------- Cat 11: Meta / Cross-cutting (3) ----------
+  - name: workflow-quality-gate
+    category: meta
+    priority: P0
+    description: "Verification + code review + audit-ship"
+    iron_laws: [LAW-VERIFY-001]
+    chains: [verification-before-completion, code-review, ship-all]
+    estimated_duration_min: 30
+    persona_tags: [engineer]
+    triggers: ["quality gate", "before shipping", "final check"]
+    phase: 6
+
+  - name: workflow-audit-ship
+    category: meta
+    priority: P1
+    description: "Enterprise audit + ship-all with verification"
+    chains: [enterprise-audit, ship-all]
+    estimated_duration_min: 60
+    persona_tags: [devops]
+    triggers: ["audit and ship", "enterprise check", "compliance ship"]
+    phase: 6
+
+  - name: workflow-incident-postmortem
+    category: meta
+    priority: P1
+    description: "Incident postmortem + Iron Law check + enforcement protocol"
+    chains: [audit-enforcement-protocol]
+    estimated_duration_min: 90
+    persona_tags: [devops, engineer]
+    triggers: ["postmortem", "after incident", "root cause analysis"]
+    phase: 6
+
+# ==========================================================================
+# Registry metadata
+# ==========================================================================
+metadata:
+  total_workflows: 46
+  priority_breakdown:
+    P0: 10    # addresses 2026-04-23 fix + critical daily use
+    P1: 27    # important daily workflows
+    P2: 9     # nice-to-have for v6.1.0
+
+  category_counts:
+    programming: 5
+    product: 5
+    uxui: 5
+    collab: 3
+    architecture: 4
+    planning: 5
+    infrastructure: 5
+    research: 4
+    documentation: 4
+    analytics: 3
+    meta: 3
+
+  hitl_required: 2  # workflow-brainstorm-collab, workflow-facilitate-decision
+  iron_law_coverage: 17  # workflows referencing at least 1 Iron Law
+
+  validation_rules:
+    - "every name starts with 'workflow-'"
+    - "every category in the 11-enum above"
+    - "every iron_law ref resolves to iron-laws.yaml"
+    - "every chain entry is a registered skill OR another workflow-*"
+    - "phase field matches parent plan phase assignment"
