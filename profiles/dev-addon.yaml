@@ -87,6 +87,22 @@ skills:
   - workflow-debug-investigation   # P1 — systematic debugging + root cause doc
   - workflow-exploration           # P2 — 8-phase context discovery + codemap
 
+  # v6.1.0 — Workflow library Cat 9 Documentation (4 orchestrators)
+  - workflow-doc-write             # P1 — per doc-type templates (README/API/runbook/tutorial)
+  - workflow-adr-log               # P1 — ADR template + decisions.jsonl
+  - workflow-retrospective         # P1 — session retro + memory dream
+  - workflow-handoff               # P0 — handoff file with 6 mandatory sections
+
+  # v6.1.0 — Workflow library Cat 10 Data / Analytics (3 orchestrators)
+  - workflow-data-analysis         # P2 — hypothesis + evidence + viz
+  - workflow-benchmark             # P2 — baseline + delta + significance
+  - workflow-cost-tracking         # P2 — spend + trend + alerts
+
+  # v6.1.0 — Workflow library Cat 11 Meta / Cross-cutting (3 orchestrators)
+  - workflow-quality-gate          # P0 — verify + review + score ≥ 8/10
+  - workflow-audit-ship            # P1 — enterprise 15-layer + ship-all
+  - workflow-incident-postmortem   # P1 — blameless RCA + enforcement protocol
+
   # Ship
   - finishing-branch
   - ship-all
