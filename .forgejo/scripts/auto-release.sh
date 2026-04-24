@@ -86,6 +86,17 @@ fi
 
 # ─── Compute next version ────────────────────────────────────────────
 CURRENT="${LAST_TAG#v}"
+
+# v6.0.0-alpha.11 fix: skip auto-release on pre-release versions (alpha/beta/rc).
+# Pre-release versions must be bumped MANUALLY (e.g. ./scripts/publish.sh alpha).
+# Arithmetic on pre-release tag fails: PAT="0-alpha.11" is not a valid integer.
+if [[ "$CURRENT" =~ -(alpha|beta|rc)\. ]]; then
+  echo "⏸️  Skipping auto-release: current tag is pre-release ($CURRENT)"
+  echo "   Pre-release bumps must be manual (./scripts/publish.sh alpha|beta|rc)"
+  echo "   Auto-release resumes when a stable release (non-prerelease) is tagged."
+  exit 0
+fi
+
 IFS='.' read -r MAJ MIN PAT <<< "$CURRENT"
 # Handle empty/non-numeric values
 MAJ=${MAJ:-0}; MIN=${MIN:-0}; PAT=${PAT:-0}
