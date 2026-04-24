@@ -1,5 +1,65 @@
 # Changelog
 
+## v6.0.0-alpha.6 (2026-04-23 20:52 EDT) — Sprint 0 complete + Sprint 1 P1 partial
+
+### 🔧 Pre-existing Bug Fixes
+
+- **`./build.sh all` broken** — Legacy `build_tier` loop iterated old tier names `admin/dev/user` via `profiles/${tier}.yaml`. Those profiles were removed during SP-DEDUP Phase 1 (Sprint 7, alpha.1). Fix: rewire `all` case to use `MODULAR_PLUGINS` array + `build_modular_plugin` function (same architecture as `./build.sh modular` which already worked).
+  - Impact: `./build.sh all` now produces expected output (core: 30 skills / dev-addon: 36 skills / admin-addon: 66 skills)
+  - Commit: `5bb3a20`
+
+### ✨ Sprint 1 P1 Quality Items (partial — 2/10 items)
+
+**P1-3: session-end-retro SOTA upgrade** (commit `f053c17`):
+- Added empty-session detection heuristic — skip reminder if:
+  - Zero git commits in last 60 min (session timeframe)
+  - Zero file modifications in `.claude/` or `memory/` in last 15 min
+- Applied same env-var passthrough JSON escape fix as P0-2 (robustness vs apostrophes)
+- Fallback: emit reminder on detection ambiguity (safe default)
+
+**P1-7: ADR-0004 knowledge dedup rationale** (commit `f053c17`):
+- Retroactive ADR documenting knowledge-engine + knowledge-manager → knowledge merge (shipped alpha.3)
+- Closes audit trail gap flagged by SOTA review 2026-04-23 Agent C
+- Includes: rationale, alternatives considered, consequences, verification, HITL decision record, revisit triggers
+
+**P1-8: [1m] variant mandate (critical doc)** (this commit):
+- Added 🔴 CRITICAL section at top of `skills/refs/model-benchmarks-2026-04/SKILL.md`
+- Documents: `model: opus` shortcut → silent 256K fallback risk
+- Canonical model ID list with correct variants
+- Enforcement layers (L1/L3/L5/L7) with status (planned for v6.1)
+- History note: Sprint 0 P0 fixes on 3 AGENT.md
+
+### 🚧 HITL Pending (alpha.6 → beta.1)
+
+P1 items remaining (~8h):
+- P1-1: Prompt caching on iron-laws + red-flags + AGENT.md (`cache_control: ephemeral`)
+- P1-2: Smoke tests for merged skills (knowledge, gms-mgmt collision flags)
+- P1-4: effort-router timeout 2s→5s + parallelization
+- P1-5: Migrate anti-patterns-from-plummer.md (needs merge main first)
+- P1-6: L8 fuzzy → SHA256 byte-exact
+- P1-9: (DONE in alpha.6 — `./build.sh all` fix)
+- P1-10: Philosophy Engine integration tests
+
+Meta items:
+- Merge main v5.44.0 into feat/v6-sprint1-foundation (~18 conflicts including gms-*, knowledge-* modify/delete)
+- Live validation (`./scripts/validate-v6-session.sh`)
+- Cost/accuracy A/B vs v5.23.0
+- PR #23 update + marketplace alpha publish
+
+### ✅ Verification
+
+- `./build.sh all`: frontmatter 0 violations + Philosophy Engine 10/10 + all 3 modular plugins build green
+- Hooks syntax validated: `bash -n hooks/session-end-retro hooks/pre-compact-sota-context`
+- `grep -r "claude-opus-4-7" agents/`: only `claude-opus-4-7[1m]` variants
+
+### 🔗 References
+
+- Plan: `.blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md`
+- SOTA review: `memory/atlas-v6-sota-review-2026-04-23.md`
+- HITL Gate 2 approval: 2026-04-23 19:52 EDT (batch — covers all alpha.5/alpha.6 work)
+
+---
+
 ## v6.0.0-alpha.5 (2026-04-23 20:30 EDT) — Sprint 0 P0 SOTA Fixes (5 critical)
 
 ### 🔴 Critical Fixes (SOTA Review 2026-04-23)
