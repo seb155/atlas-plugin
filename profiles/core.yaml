@@ -71,9 +71,8 @@ hooks:
 # v6.1.0+: workflow library git-push discipline (LAW-WORKFLOW-001)
 - pre-git-push                # PreToolUse[Bash] — advisory checks before git push (v6.1.0 Task 1.6)
 - post-git-push               # PostToolUse[Bash] — audit log + ci-feedback-loop reminder (v6.1.0 Task 1.5)
-# v6.1.0 Phase 7 — session lifecycle + intent detection
-- atlas-lock-acquire          # invoked from atlas session start (O.3 file-lock)
-- atlas-lock-release          # invoked from atlas session pause/handoff
+# v6.1.0 Phase 7 — intent detection (only workflow-intent-detect is event-driven;
+# atlas-lock-acquire/release are CLI helpers invoked from session.sh, not CC events)
 - workflow-intent-detect      # UserPromptSubmit — 0.3 confidence, fail-open (N.1)
 # v5.7.0+: Model-aware context threshold (replaces hardcoded CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=83)
 - context-threshold-injector  # SessionStart + UserPromptSubmit — dynamic 92/83 per model
