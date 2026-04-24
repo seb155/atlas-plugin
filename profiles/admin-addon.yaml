@@ -6,6 +6,7 @@ description: Superuser — includes dev tools + infra, security, governance, GMS
 # 2026-04-17 — 33 skills, 13 hooks, 7 agents, 8 refs removed (inherited from dev-addon).
 inherits: dev-addon
 skills:
+- flow-analytics
 # Infrastructure & DevOps
 - devops-deploy
 - deploy-hotfix

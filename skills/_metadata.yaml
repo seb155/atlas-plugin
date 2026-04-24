@@ -1,868 +1,1050 @@
-# ATLAS Skills Metadata — Single Source of Truth
-# Used by: build.sh (tier+domain builds), scripts/generate-master-skill.sh (atlas-assist generation)
-#
-# owner: which TIER plugin OWNS this skill (where the SKILL.md lives in tier dist/)
-#   core = base tier (everyone), dev = dev delta, admin = admin delta
-#   infra/enterprise = domain-exclusive (not in any tier)
-#
-# domains: which DOMAIN plugins BUNDLE this skill (functional grouping)
-#   A skill can be owned by 'admin' (tier) but bundled in 'infra' (domain)
-#   Skills without domains are tier-exclusive (admin only, no domain bundle)
-#
-# SP-DEDUP Phase 2: Tier builds use 'owner', Domain builds use profile YAML directly.
-#
-# Optional fields (SOTA upgrade 2026-04-11):
-#   inputs: typed data the skill expects (e.g. ["plan_path: string", "overrides?: object"])
-#   outputs: typed data the skill produces (e.g. ["manifest_path: string", "cost_estimate: number"])
-#   depends_on: skills that must exist for this skill to work (e.g. [decision-log])
-#   triggers: keywords/phrases that should auto-suggest this skill (e.g. ["deploy", "ship to prod"])
-#   weight: 1-10, how prominent the skill is in atlas-assist (default 5)
-#           weight >= 8: description shown inline in atlas-assist listing
-#           weight < 8: name+emoji only (description loads on demand via Skill tool)
-#
-# Updated: 2026-04-11
-
-# Category header emojis (for grouped skill lists)
 category_emojis:
-  Planning: "🏗️"
-  Implementation: "⚡"
-  Quality: "📊"
-  Ship: "📦"
-  Deploy: "🎯"
-  Optimize: "🧬"
-  Knowledge: "📚"
-  Meta: "🛡️"
-  Personal: "👤"
-  Infrastructure: "🔧"
-  Security: "🔐"
-  Project: "📌"
-  Governance: "🏢"
-
-# Per-skill metadata
+  Planning: "\U0001F3D7\uFE0F"
+  Implementation: "\u26A1"
+  Quality: "\U0001F4CA"
+  Ship: "\U0001F4E6"
+  Deploy: "\U0001F3AF"
+  Optimize: "\U0001F9EC"
+  Knowledge: "\U0001F4DA"
+  Meta: "\U0001F6E1\uFE0F"
+  Personal: "\U0001F464"
+  Infrastructure: "\U0001F527"
+  Security: "\U0001F510"
+  Project: "\U0001F4CC"
+  Governance: "\U0001F3E2"
 skills:
-  # ===========================================
-  # CORE tier (base — 15 skills)
-  # ===========================================
   agent-visibility:
-    emoji: "👁️"
+    emoji: "\U0001F441\uFE0F"
     category: Observability
     owner: core
     plugin: core
-    domains: [core]
-    description: "Subagent visibility — statusline 🤖 counter + atlas agents CLI + tmux auto-tail (SP-AGENT-VIS v5.2.0)"
-    triggers: ["what are agents doing", "show agent output", "tail the agent", "agent status", "atlas agents", "background agent visibility"]
-
+    domains:
+    - core
+    description: "Subagent visibility \u2014 statusline \U0001F916 counter + atlas\
+      \ agents CLI + tmux auto-tail (SP-AGENT-VIS v5.2.0)"
+    triggers:
+    - what are agents doing
+    - show agent output
+    - tail the agent
+    - agent status
+    - atlas agents
+    - background agent visibility
   atlas-doctor:
-    emoji: "🩺"
+    emoji: "\U0001FA7A"
     category: Meta
     owner: core
     plugin: core
-    domains: [core]
-    description: "System health check with 8-category dashboard and auto-fix"
-
+    domains:
+    - core
+    description: System health check with 8-category dashboard and auto-fix
   discovery:
-    emoji: "🔍"
+    emoji: "\U0001F50D"
     category: Meta
     owner: core
     plugin: core
-    domains: [core]
-    description: "Inspect/refresh ATLAS capability discovery (installed addons, tier, persona)"
-
+    domains:
+    - core
+    description: Inspect/refresh ATLAS capability discovery (installed addons, tier,
+      persona)
   atlas-location:
-    emoji: "📍"
+    emoji: "\U0001F4CD"
     category: Meta
     owner: core
     plugin: core
-    domains: [core]
-    description: "Location profiles, WiFi network trust, and security adaptation"
-
+    domains:
+    - core
+    description: Location profiles, WiFi network trust, and security adaptation
   atlas-onboarding:
-    emoji: "👋"
+    emoji: "\U0001F44B"
     category: Meta
     owner: core
     plugin: core
-    domains: [core]
-    description: "Guided 5-phase setup wizard for new users"
-
+    domains:
+    - core
+    description: Guided 5-phase setup wizard for new users
   browser-automation:
-    emoji: "🌐"
+    emoji: "\U0001F310"
     category: Meta
     owner: core
     plugin: dev
-    domains: [frontend]
-    description: "Browser automation for E2E testing and visual QA"
-
+    domains:
+    - frontend
+    description: Browser automation for E2E testing and visual QA
   context-discovery:
-    emoji: "🔭"
+    emoji: "\U0001F52D"
     category: Planning
     owner: core
     plugin: core
-    domains: [core]
-    description: "Auto-scan project + CLAUDE.md audit + codemap generation"
-    triggers: ["scan project", "discover context", "audit claude.md", "codemap", "context scan"]
+    domains:
+    - core
+    description: Auto-scan project + CLAUDE.md audit + codemap generation
+    triggers:
+    - scan project
+    - discover context
+    - audit claude.md
+    - codemap
+    - context scan
     weight: 9
-
   deep-research:
-    emoji: "📚"
+    emoji: "\U0001F4DA"
     category: Knowledge
     owner: core
     plugin: core
-    domains: [core]
-    description: "Multi-query decomposition → search → triangulate → synthesize"
-    triggers: ["research", "deep dive", "investigate", "analyse approfondie", "recherche"]
+    domains:
+    - core
+    description: "Multi-query decomposition \u2192 search \u2192 triangulate \u2192\
+      \ synthesize"
+    triggers:
+    - research
+    - deep dive
+    - investigate
+    - analyse approfondie
+    - recherche
     weight: 8
-
   document-generator:
-    emoji: "📄"
+    emoji: "\U0001F4C4"
     category: Knowledge
     owner: core
     plugin: core
-    domains: [core]
-    description: "Generate PPTX/DOCX/XLSX with storytelling and layouts"
-
+    domains:
+    - core
+    description: Generate PPTX/DOCX/XLSX with storytelling and layouts
   knowledge-builder:
-    emoji: "🧠"
+    emoji: "\U0001F9E0"
     category: Personal
     owner: core
     plugin: core
-    domains: [core]
-    description: "Learn facts/preferences/relationships. Confidence-based"
-
+    domains:
+    - core
+    description: Learn facts/preferences/relationships. Confidence-based
   morning-brief:
-    emoji: "☀️"
+    emoji: "\u2600\uFE0F"
     category: Personal
     owner: core
     plugin: core
-    domains: [core]
-    description: "Compile daily brief: agenda + emails + tasks + suggestions"
-
+    domains:
+    - core
+    description: 'Compile daily brief: agenda + emails + tasks + suggestions'
   morning-routine:
-    emoji: "🌅"
+    emoji: "\U0001F305"
     category: Personal
     owner: admin
     plugin: core
-    domains: [core]
-    description: "Daily command center — energy check-in, brief, priorities, brain dump"
-
+    domains:
+    - core
+    description: "Daily command center \u2014 energy check-in, brief, priorities,\
+      \ brain dump"
   weekly-review:
-    emoji: "📋"
+    emoji: "\U0001F4CB"
     category: Personal
     owner: admin
     plugin: core
-    domains: [core]
-    description: "Weekly reflection — life domains survey, OKR progress, wins, next week planning"
-
+    domains:
+    - core
+    description: "Weekly reflection \u2014 life domains survey, OKR progress, wins,\
+      \ next week planning"
   note-capture:
-    emoji: "📝"
+    emoji: "\U0001F4DD"
     category: Personal
     owner: core
     plugin: core
-    domains: [core]
-    description: "Quick capture notes with tags, context, linked to meetings/projects"
-
+    domains:
+    - core
+    description: Quick capture notes with tags, context, linked to meetings/projects
   reminder-scheduler:
-    emoji: "⏰"
+    emoji: "\u23F0"
     category: Personal
     owner: core
     plugin: core
-    domains: [core]
-    description: "Schedule reminders via CronCreate"
-
+    domains:
+    - core
+    description: Schedule reminders via CronCreate
   scope-check:
-    emoji: "🛡️"
+    emoji: "\U0001F6E1\uFE0F"
     category: Meta
     owner: core
     plugin: core
-    domains: [core]
-    description: "Detect drift. Are you working outside original scope?"
-
+    domains:
+    - core
+    description: Detect drift. Are you working outside original scope?
   user-profiler:
-    emoji: "👤"
+    emoji: "\U0001F464"
     category: Personal
     owner: core
     plugin: core
-    domains: [core]
-    description: "Build and display user's complete profile"
-
+    domains:
+    - core
+    description: Build and display user's complete profile
   youtube-transcript:
-    emoji: "🎬"
+    emoji: "\U0001F3AC"
     category: Knowledge
     owner: core
     plugin: core
-    domains: [core]
-    description: "Extract YouTube video transcripts to timestamped markdown files"
-
-  # ===========================================
-  # DEV tier (delta — 25 skills)
-  # ===========================================
+    domains:
+    - core
+    description: Extract YouTube video transcripts to timestamped markdown files
   brainstorming:
-    emoji: "💡"
+    emoji: "\U0001F4A1"
     category: Planning
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Collaborative design exploration. 1 question at a time. 2-3 approaches. HITL approval"
-    inputs: ["user_intent: string", "codebase_context?: string"]
-    outputs: ["design_doc_path: string", "design_approval: bool", "phase_sketch: string[]"]
-    triggers: ["brainstorm", "explore ideas", "design options", "approaches", "how should we"]
+    domains:
+    - dev
+    description: Collaborative design exploration. 1 question at a time. 2-3 approaches.
+      HITL approval
+    inputs:
+    - 'user_intent: string'
+    - 'codebase_context?: string'
+    outputs:
+    - 'design_doc_path: string'
+    - 'design_approval: bool'
+    - 'phase_sketch: string[]'
+    triggers:
+    - brainstorm
+    - explore ideas
+    - design options
+    - approaches
+    - how should we
     weight: 9
-
   ci-management:
-    emoji: "🔧"
+    emoji: "\U0001F527"
     category: Deploy
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "CI/CD pipeline management — Forgejo Actions status, logs, rerun, runner fleet"
-
+    domains:
+    - dev
+    description: "CI/CD pipeline management \u2014 Forgejo Actions status, logs, rerun,\
+      \ runner fleet"
   code-review:
-    emoji: "🔍"
+    emoji: "\U0001F50D"
     category: Quality
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Code review with confidence filtering. Local or PR mode"
-    inputs: ["diff_content: git_diff", "claude_md_rules: string[]", "pr_url?: string"]
-    outputs: ["review_findings: json", "false_positive_rate: float", "pr_comments?: posted"]
-    triggers: ["review code", "code review", "review PR", "check this code", "revue de code"]
+    domains:
+    - dev
+    description: Code review with confidence filtering. Local or PR mode
+    inputs:
+    - 'diff_content: git_diff'
+    - 'claude_md_rules: string[]'
+    - 'pr_url?: string'
+    outputs:
+    - 'review_findings: json'
+    - 'false_positive_rate: float'
+    - 'pr_comments?: posted'
+    triggers:
+    - review code
+    - code review
+    - review PR
+    - check this code
+    - revue de code
     weight: 8
-
   code-simplify:
-    emoji: "✨"
+    emoji: "\u2728"
     category: Quality
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Refactoring for clarity, consistency, maintainability"
-
+    domains:
+    - dev
+    description: Refactoring for clarity, consistency, maintainability
   performance-discipline:
-    emoji: "🏎️"
+    emoji: "\U0001F3CE\uFE0F"
     category: Quality
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Performance discipline doctrine — treat perf as first-class build artifact (Plummer)"
-    triggers: ["check perf", "is this fast enough", "review for performance", "AI wrote this is it efficient", "should we add this dependency", "startup time", "memory budget", "audit hot path", "optimize this loop", "why is this slow"]
+    domains:
+    - dev
+    description: "Performance discipline doctrine \u2014 treat perf as first-class\
+      \ build artifact (Plummer)"
+    triggers:
+    - check perf
+    - is this fast enough
+    - review for performance
+    - AI wrote this is it efficient
+    - should we add this dependency
+    - startup time
+    - memory budget
+    - audit hot path
+    - optimize this loop
+    - why is this slow
     weight: 7
-
   decision-log:
-    emoji: "📋"
+    emoji: "\U0001F4CB"
     category: Meta
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Log architectural decisions to .claude/decisions.jsonl"
-
+    domains:
+    - dev
+    description: Log architectural decisions to .claude/decisions.jsonl
   engineering-ops:
-    emoji: "⚙️"
+    emoji: "\u2699\uFE0F"
     category: Optimize
     owner: dev
     plugin: dev
-    domains: [infra]
-    description: "I&C maintenance + 4-agent estimation pipeline"
-
+    domains:
+    - infra
+    description: I&C maintenance + 4-agent estimation pipeline
   executing-plans:
-    emoji: "⚡"
+    emoji: "\u26A1"
     category: Implementation
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Load plan → TaskCreate per step → execute with subagents"
-    inputs: ["plan_path: string", "execution_manifest?: json", "override_flags?: object"]
-    outputs: ["task_list: created", "test_results: verified", "cost_report: json"]
+    domains:
+    - dev
+    description: "Load plan \u2192 TaskCreate per step \u2192 execute with subagents"
+    inputs:
+    - 'plan_path: string'
+    - 'execution_manifest?: json'
+    - 'override_flags?: object'
+    outputs:
+    - 'task_list: created'
+    - 'test_results: verified'
+    - 'cost_report: json'
     weight: 9
-
   execution-strategy:
-    emoji: "📋"
+    emoji: "\U0001F4CB"
     category: Planning
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Analyze plan → optimal execution strategy: model allocation, parallel vs sequential, cost estimation"
-    inputs: ["plan_path: string", "override_flags?: object", "model_pricing?: json"]
-    outputs: ["execution_manifest_path: string", "cost_estimate: number", "parallel_groups: json"]
+    domains:
+    - dev
+    description: "Analyze plan \u2192 optimal execution strategy: model allocation,\
+      \ parallel vs sequential, cost estimation"
+    inputs:
+    - 'plan_path: string'
+    - 'override_flags?: object'
+    - 'model_pricing?: json'
+    outputs:
+    - 'execution_manifest_path: string'
+    - 'cost_estimate: number'
+    - 'parallel_groups: json'
     weight: 9
-
   forgejo-pr:
-    emoji: "🔀"
+    emoji: "\U0001F500"
     category: Ship
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Forgejo PR lifecycle: create, rebase, merge, cleanup. One command to promote dev→main."
-
+    domains:
+    - dev
+    description: "Forgejo PR lifecycle: create, rebase, merge, cleanup. One command\
+      \ to promote dev\u2192main."
   deploy-hotfix:
-    emoji: "🩹"
+    emoji: "\U0001FA79"
     category: Deploy
     owner: admin
     plugin: admin
-    domains: [infra, dev]
-    description: "Deploy file hotfix to running container via docker cp + restart + health check. SSH jump host support."
-
+    domains:
+    - infra
+    - dev
+    description: Deploy file hotfix to running container via docker cp + restart +
+      health check. SSH jump host support.
   api-healthcheck:
-    emoji: "🏥"
+    emoji: "\U0001F3E5"
     category: Quality
     owner: dev
     plugin: dev
-    domains: [dev, infra]
-    description: "Batch test all API endpoints. Parallel curl, status codes, response times. Config-driven."
-
+    domains:
+    - dev
+    - infra
+    description: Batch test all API endpoints. Parallel curl, status codes, response
+      times. Config-driven.
   visual-qa:
-    emoji: "👁️"
+    emoji: "\U0001F441\uFE0F"
     category: Quality
     owner: dev
     plugin: dev
-    domains: [dev, frontend]
-    description: "Multi-page visual QA via Chrome MCP. Auto-navigate routes, screenshot, error detection, pass/fail matrix."
-
+    domains:
+    - dev
+    - frontend
+    description: Multi-page visual QA via Chrome MCP. Auto-navigate routes, screenshot,
+      error detection, pass/fail matrix.
   finishing-branch:
-    emoji: "📦"
+    emoji: "\U0001F4E6"
     category: Ship
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Commit + push + PR + CI + cleanup (conventional commits)"
-    inputs: ["branch_name: string", "test_results: passing", "dod_tier?: enum"]
-    outputs: ["merge_option: enum", "commit_sha: string", "pr_url?: string", "branch_deleted: bool"]
-    triggers: ["commit", "finish branch", "create PR", "merge", "ship this", "push"]
+    domains:
+    - dev
+    description: Commit + push + PR + CI + cleanup (conventional commits)
+    inputs:
+    - 'branch_name: string'
+    - 'test_results: passing'
+    - 'dod_tier?: enum'
+    outputs:
+    - 'merge_option: enum'
+    - 'commit_sha: string'
+    - 'pr_url?: string'
+    - 'branch_deleted: bool'
+    triggers:
+    - commit
+    - finish branch
+    - create PR
+    - merge
+    - ship this
+    - push
     weight: 9
-
   ship-all:
-    emoji: "🚀"
+    emoji: "\U0001F680"
     category: Ship
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Full repo ship: audit git state, clean branches/worktrees/stashes, merge PRs, deploy all envs, verify health"
-
+    domains:
+    - dev
+    description: 'Full repo ship: audit git state, clean branches/worktrees/stashes,
+      merge PRs, deploy all envs, verify health'
   frontend-design:
-    emoji: "🎨"
+    emoji: "\U0001F3A8"
     category: Planning
     owner: dev
     plugin: dev
-    domains: [frontend]
-    description: "UI/UX implementation from specs. Distinctive, production-grade"
-
+    domains:
+    - frontend
+    description: UI/UX implementation from specs. Distinctive, production-grade
   frontend-workflow:
-    emoji: "🎨"
+    emoji: "\U0001F3A8"
     category: Planning
     owner: dev
     plugin: dev
-    domains: [frontend]
-    description: "6-phase iterative UX development with architectural gates and HITL"
-
+    domains:
+    - frontend
+    description: 6-phase iterative UX development with architectural gates and HITL
   git-worktrees:
-    emoji: "🌿"
+    emoji: "\U0001F33F"
     category: Implementation
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Isolated branch per feature. Safety verification (Forgejo-native)"
-    triggers: ["worktree", "isolate branch", "feature branch", "nouvelle branche"]
+    domains:
+    - dev
+    description: Isolated branch per feature. Safety verification (Forgejo-native)
+    triggers:
+    - worktree
+    - isolate branch
+    - feature branch
+    - nouvelle branche
     weight: 8
-
   hookify:
-    emoji: "🪝"
+    emoji: "\U0001FA9D"
     category: Meta
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Create Claude Code hooks from conversation patterns"
-
+    domains:
+    - dev
+    description: Create Claude Code hooks from conversation patterns
   plan-builder:
-    emoji: "🏗️"
+    emoji: "\U0001F3D7\uFE0F"
     category: Planning
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Generate ultra-detailed 15-section plans (A-O) with quality gate 12/15"
-    inputs: ["context_discovery_report?: string", "existing_plan?: string", "research_questions?: string[]"]
-    outputs: ["plan_path: string", "quality_score: number", "approval: bool"]
-    triggers: ["write a plan", "create plan", "planifier", "plan for", "implementation plan"]
+    domains:
+    - dev
+    description: Generate ultra-detailed 15-section plans (A-O) with quality gate
+      12/15
+    inputs:
+    - 'context_discovery_report?: string'
+    - 'existing_plan?: string'
+    - 'research_questions?: string[]'
+    outputs:
+    - 'plan_path: string'
+    - 'quality_score: number'
+    - 'approval: bool'
+    triggers:
+    - write a plan
+    - create plan
+    - planifier
+    - plan for
+    - implementation plan
     weight: 10
-
   plugin-builder:
-    emoji: "🔌"
+    emoji: "\U0001F50C"
     category: Meta
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Build Claude Code plugins from scratch with correct structure and validation"
-
+    domains:
+    - dev
+    description: Build Claude Code plugins from scratch with correct structure and
+      validation
   session-pickup:
-    emoji: "🔄"
+    emoji: "\U0001F504"
     category: Meta
     owner: dev
     plugin: core
-    domains: [core]
-    description: "Resume from handoff file — context reload, rich briefing, scope-locked drill-in"
-
+    domains:
+    - core
+    description: "Resume from handoff file \u2014 context reload, rich briefing, scope-locked\
+      \ drill-in"
   session-retrospective:
-    emoji: "🔄"
+    emoji: "\U0001F504"
     category: Meta
     owner: dev
     plugin: core
-    domains: [core]
-    description: "End-of-session lessons + session close + handoff context"
+    domains:
+    - core
+    description: End-of-session lessons + session close + handoff context
     weight: 8
-
   skill-management:
-    emoji: "🧩"
+    emoji: "\U0001F9E9"
     category: Meta
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Create, improve, benchmark skills. Plugin development"
-
+    domains:
+    - dev
+    description: Create, improve, benchmark skills. Plugin development
   subagent-dispatch:
-    emoji: "🤖"
+    emoji: "\U0001F916"
     category: Implementation
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Dispatch Sonnet subagents per task. 2-stage review"
-    inputs: ["plan_path: string", "execution_manifest: json", "task_id: string"]
-    outputs: ["subagent_output: string", "spec_compliance: bool", "code_quality: bool", "cost_actual: number"]
+    domains:
+    - dev
+    description: Dispatch Sonnet subagents per task. 2-stage review
+    inputs:
+    - 'plan_path: string'
+    - 'execution_manifest: json'
+    - 'task_id: string'
+    outputs:
+    - 'subagent_output: string'
+    - 'spec_compliance: bool'
+    - 'code_quality: bool'
+    - 'cost_actual: number'
     weight: 8
-
   systematic-debugging:
-    emoji: "🔬"
+    emoji: "\U0001F52C"
     category: Quality
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Hypothesize → verify → fix. Max 2 attempts then escalate"
-    triggers: ["debug", "bug", "fix error", "not working", "investigate issue", "ça marche pas"]
+    domains:
+    - dev
+    description: "Hypothesize \u2192 verify \u2192 fix. Max 2 attempts then escalate"
+    triggers:
+    - debug
+    - bug
+    - fix error
+    - not working
+    - investigate issue
+    - "\xE7a marche pas"
     weight: 8
-
   tdd:
-    emoji: "🧪"
+    emoji: "\U0001F9EA"
     category: Implementation
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Failing test → minimal impl → pass → commit. Strict TDD cycle"
-    inputs: ["feature_spec: string", "test_framework: enum"]
-    outputs: ["test_file_path: string", "test_status: passing", "commit_sha: string"]
-    triggers: ["write test", "test first", "tdd", "add test", "failing test"]
+    domains:
+    - dev
+    description: "Failing test \u2192 minimal impl \u2192 pass \u2192 commit. Strict\
+      \ TDD cycle"
+    inputs:
+    - 'feature_spec: string'
+    - 'test_framework: enum'
+    outputs:
+    - 'test_file_path: string'
+    - 'test_status: passing'
+    - 'commit_sha: string'
+    triggers:
+    - write test
+    - test first
+    - tdd
+    - add test
+    - failing test
     weight: 8
-
   test-orchestrator:
-    emoji: "🧪"
+    emoji: "\U0001F9EA"
     category: Quality
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "Test pyramid orchestration: unit, integration, E2E, security, coverage"
-
+    domains:
+    - dev
+    description: 'Test pyramid orchestration: unit, integration, E2E, security, coverage'
   verification:
-    emoji: "📊"
+    emoji: "\U0001F4CA"
     category: Quality
     owner: dev
     plugin: dev
-    domains: [dev]
-    description: "L1-L4 tests + E2E + security scan + perf benchmarks"
-    inputs: ["plan_path?: string", "code_changes: git_diff", "environment_health?: json"]
-    outputs: ["verification_report: markdown", "dod_score: number", "dod_tier: enum", "security_scan: json"]
-    triggers: ["verify", "run tests", "check quality", "quality gate", "vérifier"]
+    domains:
+    - dev
+    description: L1-L4 tests + E2E + security scan + perf benchmarks
+    inputs:
+    - 'plan_path?: string'
+    - 'code_changes: git_diff'
+    - 'environment_health?: json'
+    outputs:
+    - 'verification_report: markdown'
+    - 'dod_score: number'
+    - 'dod_tier: enum'
+    - 'security_scan: json'
+    triggers:
+    - verify
+    - run tests
+    - check quality
+    - quality gate
+    - "v\xE9rifier"
     weight: 9
-
   vision-alignment:
-    emoji: "🧭"
+    emoji: "\U0001F9ED"
     category: Planning
     owner: dev
     plugin: dev
-    domains: [enterprise]
-    description: "Strategic idea intake — scan mega plan, sub-plans, features, backlog before deciding"
-
+    domains:
+    - enterprise
+    description: "Strategic idea intake \u2014 scan mega plan, sub-plans, features,\
+      \ backlog before deciding"
   visual-generator:
-    emoji: "🎨"
+    emoji: "\U0001F3A8"
     category: Knowledge
     owner: dev
     plugin: dev
-    description: "Generate diagrams, infographics, photos via Gemini API (Imagen 4 + Flash)"
-
-  # ===========================================
-  # ADMIN tier (delta — 33 skills)
-  # ===========================================
+    description: Generate diagrams, infographics, photos via Gemini API (Imagen 4
+      + Flash)
   atlas-dev-self:
-    emoji: "🔁"
+    emoji: "\U0001F501"
     category: Meta
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Self-development workflow for the ATLAS plugin itself"
-
+    domains:
+    - enterprise
+    description: Self-development workflow for the ATLAS plugin itself
   atlas-team:
-    emoji: "👥"
+    emoji: "\U0001F465"
     category: Implementation
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Agent Teams blueprints — spawn coordinated worker squads in tmux panes (jarvis, feature, debug, review, audit)"
-
+    domains:
+    - enterprise
+    description: "Agent Teams blueprints \u2014 spawn coordinated worker squads in\
+      \ tmux panes (jarvis, feature, debug, review, audit)"
   atlas-vault:
-    emoji: "🔐"
+    emoji: "\U0001F510"
     category: Security
     owner: admin
     plugin: core
-    domains: [core]
-    description: "Ingest user vault for personalized behavior and trust-based access"
-
+    domains:
+    - core
+    description: Ingest user vault for personalized behavior and trust-based access
   atlas-workspace-setup:
-    emoji: "🔧"
+    emoji: "\U0001F527"
     category: Meta
     owner: admin
     plugin: core
-    domains: [core]
-    description: "Configure multi-session development workspace: tmux, split-screen, Agent Teams"
-
+    domains:
+    - core
+    description: 'Configure multi-session development workspace: tmux, split-screen,
+      Agent Teams'
   code-analysis:
-    emoji: "🔎"
+    emoji: "\U0001F50E"
     category: Quality
     owner: admin
     plugin: admin
-    domains: [dev]
-    description: "Codebase analysis: dead code, dependency graphs, dataflow tracing"
-
+    domains:
+    - dev
+    description: 'Codebase analysis: dead code, dependency graphs, dataflow tracing'
   devops-deploy:
-    emoji: "🎯"
+    emoji: "\U0001F3AF"
     category: Deploy
     owner: admin
     plugin: admin
-    domains: [infra]
-    description: "Deploy to any env with health checks, validators, data sync"
-    inputs: ["deploy_config: yaml", "branch_name: string", "deployment_type: enum"]
-    outputs: ["deployment_status: enum", "health_check_results: json", "report: markdown"]
-    triggers: ["deploy", "ship to prod", "mise en prod", "push staging", "release to"]
+    domains:
+    - infra
+    description: Deploy to any env with health checks, validators, data sync
+    inputs:
+    - 'deploy_config: yaml'
+    - 'branch_name: string'
+    - 'deployment_type: enum'
+    outputs:
+    - 'deployment_status: enum'
+    - 'health_check_results: json'
+    - 'report: markdown'
+    triggers:
+    - deploy
+    - ship to prod
+    - mise en prod
+    - push staging
+    - release to
     weight: 8
-
   codebase-audit:
-    emoji: "🔬"
+    emoji: "\U0001F52C"
     category: Quality
     owner: admin
     plugin: admin
-    domains: [enterprise, dev]
-    description: "20-dimension agent team codebase audit with weighted scoring and remediation roadmap"
-
+    domains:
+    - enterprise
+    - dev
+    description: 20-dimension agent team codebase audit with weighted scoring and
+      remediation roadmap
   enterprise-audit:
-    emoji: "🏢"
+    emoji: "\U0001F3E2"
     category: Governance
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "14-dimension enterprise readiness audit for due diligence"
-
+    domains:
+    - enterprise
+    description: 14-dimension enterprise readiness audit for due diligence
   episode-create:
-    emoji: "📖"
+    emoji: "\U0001F4D6"
     category: Personal
     owner: admin
     plugin: core
-    description: "Create narrative episode capturing session experiential context"
-
+    description: Create narrative episode capturing session experiential context
   experiment-loop:
-    emoji: "🧬"
+    emoji: "\U0001F9EC"
     category: Optimize
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Autonomous optimization (autoresearch pattern)"
-
+    domains:
+    - enterprise
+    description: Autonomous optimization (autoresearch pattern)
   feature-board:
-    emoji: "📌"
+    emoji: "\U0001F4CC"
     category: Project
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Feature registry dashboard — kanban, validation matrix, roadmap"
-
+    domains:
+    - enterprise
+    description: "Feature registry dashboard \u2014 kanban, validation matrix, roadmap"
   infrastructure-change:
-    emoji: "🏗️"
+    emoji: "\U0001F3D7\uFE0F"
     category: Infrastructure
     owner: admin
     plugin: admin
-    domains: [infra]
-    description: "CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with pre-flight validation"
-
+    domains:
+    - infra
+    description: CF Tunnel, Caddy, Authentik, DNS, NetBird change orchestration with
+      pre-flight validation
   infrastructure-ops:
-    emoji: "🔧"
+    emoji: "\U0001F527"
     category: Infrastructure
     owner: admin
     plugin: admin
-    domains: [infra]
-    description: "Infrastructure management: VMs, containers, networking, monitoring"
-
+    domains:
+    - infra
+    description: 'Infrastructure management: VMs, containers, networking, monitoring'
   intuition-log:
-    emoji: "💭"
+    emoji: "\U0001F4AD"
     category: Personal
     owner: admin
     plugin: core
-    description: "Capture gut feelings and emerging patterns as persistent intuition files"
-
+    description: Capture gut feelings and emerging patterns as persistent intuition
+      files
   knowledge:
-    emoji: "🧠"
+    emoji: "\U0001F9E0"
     category: Knowledge
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Unified knowledge layer (engine + manager merged 2026-04-17) — TEG ask/ingest + UKL coverage/discover/gaps/search/rules/scope/vault"
-
+    domains:
+    - enterprise
+    description: "Unified knowledge layer (engine + manager merged 2026-04-17) \u2014\
+      \ TEG ask/ingest + UKL coverage/discover/gaps/search/rules/scope/vault"
   marketplace-manager:
-    emoji: "🏪"
+    emoji: "\U0001F3EA"
     category: Meta
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Marketplace plugin management — publish, version, distribute"
-
+    domains:
+    - enterprise
+    description: "Marketplace plugin management \u2014 publish, version, distribute"
   memory-dream:
-    emoji: "🌙"
+    emoji: "\U0001F319"
     category: Meta
     owner: admin
     plugin: core
-    domains: [core]
-    description: "Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather, consolidate, prune"
-    triggers: ["dream", "consolidate memory", "clean memory", "memory maintenance"]
-
+    domains:
+    - core
+    description: 'Memory consolidation (CC auto-dream pattern). 4-phase: orient, gather,
+      consolidate, prune'
+    triggers:
+    - dream
+    - consolidate memory
+    - clean memory
+    - memory maintenance
   onboarding-check:
-    emoji: "✅"
+    emoji: "\u2705"
     category: Meta
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Team readiness audit — 12-check grade A-F with auto-fix mode"
-
+    domains:
+    - enterprise
+    description: "Team readiness audit \u2014 12-check grade A-F with auto-fix mode"
   plan-review:
-    emoji: "🔍"
+    emoji: "\U0001F50D"
     category: Quality
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Iterative plan review with simulation, consolidation, and HITL gates"
-
+    domains:
+    - enterprise
+    description: Iterative plan review with simulation, consolidation, and HITL gates
   platform-update:
-    emoji: "🆙"
+    emoji: "\U0001F199"
     category: Meta
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "SOTA audit + auto-update for ATLAS plugin and CC environment"
-
+    domains:
+    - enterprise
+    description: SOTA audit + auto-update for ATLAS plugin and CC environment
   product-health:
-    emoji: "🏥"
+    emoji: "\U0001F3E5"
     category: Quality
     owner: admin
     plugin: admin
-    domains: [frontend]
-    description: "Application reality audit — live validation via API, browser, and tests"
-
+    domains:
+    - frontend
+    description: "Application reality audit \u2014 live validation via API, browser,\
+      \ and tests"
   programme-manager:
-    emoji: "📊"
+    emoji: "\U0001F4CA"
     category: Project
     owner: admin
     plugin: admin
-    domains: [enterprise]
-    description: "Programme management — mega plan tracking, sub-plan coordination"
-
+    domains:
+    - enterprise
+    description: "Programme management \u2014 mega plan tracking, sub-plan coordination"
   relationship-manager:
-    emoji: "🤝"
+    emoji: "\U0001F91D"
     category: Personal
     owner: admin
     plugin: core
-    description: "Create or update deep relationship profiles for team members and collaborators"
-
+    description: Create or update deep relationship profiles for team members and
+      collaborators
   security-audit:
-    emoji: "🔐"
+    emoji: "\U0001F510"
     category: Security
     owner: admin
     plugin: admin
-    domains: [infra]
-    description: "Security scanning, RBAC audit, vulnerability assessment, compliance"
-    triggers: ["security audit", "vulnerability scan", "OWASP", "security check", "audit sécurité"]
-
+    domains:
+    - infra
+    description: Security scanning, RBAC audit, vulnerability assessment, compliance
+    triggers:
+    - security audit
+    - vulnerability scan
+    - OWASP
+    - security check
+    - "audit s\xE9curit\xE9"
   session-spawn:
-    emoji: "🚀"
+    emoji: "\U0001F680"
     category: Meta
     owner: admin
     plugin: core
-    domains: [core]
-    description: "Multi-session orchestration — spawn/continue/list CC sessions in tmux"
-
+    domains:
+    - core
+    description: "Multi-session orchestration \u2014 spawn/continue/list CC sessions\
+      \ in tmux"
   statusline-setup:
-    emoji: "📟"
+    emoji: "\U0001F4DF"
     category: Infrastructure
     owner: admin
     plugin: admin
-    domains: [frontend]
-    description: "Configure CShip + Starship status line for Claude Code sessions"
-
+    domains:
+    - frontend
+    description: Configure CShip + Starship status line for Claude Code sessions
   ultrathink:
-    emoji: "🧠"
+    emoji: "\U0001F9E0"
     category: Meta
     owner: admin
     plugin: admin
-    domains: [dev]
-    description: "Deep reasoning with structured frameworks (ADR, matrix, risk, tradeoff, compare, chain). Auto-detects analysis type. Persists via decision-log."
-    depends_on: [decision-log]
-    triggers: ["ultrathink", "think deeply", "analyze thoroughly", "deep analysis", "architectural decision"]
+    domains:
+    - dev
+    description: Deep reasoning with structured frameworks (ADR, matrix, risk, tradeoff,
+      compare, chain). Auto-detects analysis type. Persists via decision-log.
+    depends_on:
+    - decision-log
+    triggers:
+    - ultrathink
+    - think deeply
+    - analyze thoroughly
+    - deep analysis
+    - architectural decision
     weight: 9
-
   atlas-analytics:
-    emoji: "📊"
+    emoji: "\U0001F4CA"
     category: Meta
     owner: admin
     plugin: admin
-    description: "Hook activity analytics dashboard — task-log, permission events, session stats"
-
+    description: "Hook activity analytics dashboard \u2014 task-log, permission events,\
+      \ session stats"
   cost-analytics:
-    emoji: "💰"
+    emoji: "\U0001F4B0"
     category: Meta
     owner: admin
     plugin: core
-    domains: [dev, core]
-    description: "Claude Code API cost tracking — real token usage from session JSONL, daily/weekly/monthly/sprint views via ccusage"
-
+    domains:
+    - dev
+    - core
+    description: "Claude Code API cost tracking \u2014 real token usage from session\
+      \ JSONL, daily/weekly/monthly/sprint views via ccusage"
   gms-mgmt:
-    emoji: "🏭"
+    emoji: "\U0001F3ED"
     category: Project
     owner: admin
     plugin: admin
-    description: "GMS unified management (cockpit + profiler + onboard + insights merged 2026-04-17). 16 subcommands: status/kc-report/team/skills/insights/report/sync/profile/gaps/bus-factor/onboard. Collisions resolved via --deep/--quick flags."
-
+    description: 'GMS unified management (cockpit + profiler + onboard + insights
+      merged 2026-04-17). 16 subcommands: status/kc-report/team/skills/insights/report/sync/profile/gaps/bus-factor/onboard.
+      Collisions resolved via --deep/--quick flags.'
   idle-curiosity:
-    emoji: "🔍"
+    emoji: "\U0001F50D"
     category: Cognitive
     owner: admin
     plugin: admin
-    description: "Autonomous exploration engine — discovers under-explored topics and knowledge gaps. HITL gated."
-
-  # ===========================================
-  # DOMAIN-EXCLUSIVE: infra
-  # ===========================================
+    description: "Autonomous exploration engine \u2014 discovers under-explored topics\
+      \ and knowledge gaps. HITL gated."
   mesh-diagnostics:
-    emoji: "🔌"
+    emoji: "\U0001F50C"
     category: Infrastructure
     owner: infra
     plugin: infra
-    domains: [infra]
-    description: "NetBird and Tailscale mesh network health diagnostics"
-
+    domains:
+    - infra
+    description: NetBird and Tailscale mesh network health diagnostics
   network-audit:
-    emoji: "🌐"
+    emoji: "\U0001F310"
     category: Infrastructure
     owner: infra
     plugin: infra
-    domains: [infra]
-    description: "Network infrastructure audit: DNS, ports, VLAN, SSL, firewall"
-
+    domains:
+    - infra
+    description: 'Network infrastructure audit: DNS, ports, VLAN, SSL, firewall'
   proxmox-admin:
-    emoji: "🖥️"
+    emoji: "\U0001F5A5\uFE0F"
     category: Infrastructure
     owner: infra
     plugin: infra
-    domains: [infra]
-    description: "Proxmox VE administration: VM/LXC lifecycle, storage, GPU passthrough, clustering"
-
+    domains:
+    - infra
+    description: 'Proxmox VE administration: VM/LXC lifecycle, storage, GPU passthrough,
+      clustering'
   iac-orchestrator:
-    emoji: "🏗️"
+    emoji: "\U0001F3D7\uFE0F"
     category: Infrastructure
     owner: infra
     plugin: infra
-    domains: [infra]
-    description: "Infrastructure as Code: Terraform/OpenTofu plans, cloud-init, state management"
-
+    domains:
+    - infra
+    description: 'Infrastructure as Code: Terraform/OpenTofu plans, cloud-init, state
+      management'
   hardware-capacity:
-    emoji: "📊"
+    emoji: "\U0001F4CA"
     category: Infrastructure
     owner: infra
     plugin: infra
-    domains: [infra]
-    description: "Hardware inventory and capacity planning: CPU/RAM/disk/GPU audit and projections"
-
+    domains:
+    - infra
+    description: 'Hardware inventory and capacity planning: CPU/RAM/disk/GPU audit
+      and projections'
   infra-inventory:
-    emoji: "🔍"
+    emoji: "\U0001F50D"
     category: Infrastructure
     owner: infra
     plugin: infra
-    domains: [infra]
-    description: "Live infrastructure scanning: PVE nodes, VMs, storage, GPUs. Drift detection."
-
-  # ===========================================
-  # DOMAIN-EXCLUSIVE: enterprise
-  # ===========================================
+    domains:
+    - infra
+    description: 'Live infrastructure scanning: PVE nodes, VMs, storage, GPUs. Drift
+      detection.'
   persona-loadout:
-    emoji: "🎭"
+    emoji: "\U0001F3AD"
     category: Meta
     owner: admin
     plugin: admin
-    domains: [core, dev]
-    description: "Switch ATLAS behavior to match work role. 6 personas: startup-cto, devops-lead, solo-founder, PM, security, ic-engineer"
-    triggers: ["persona", "switch role", "switch mode", "as a", "comme un"]
+    domains:
+    - core
+    - dev
+    description: 'Switch ATLAS behavior to match work role. 6 personas: startup-cto,
+      devops-lead, solo-founder, PM, security, ic-engineer'
+    triggers:
+    - persona
+    - switch role
+    - switch mode
+    - as a
+    - comme un
     weight: 8
-
-  # ===========================================
-  # META: Orchestration & Pipeline
-  # ===========================================
   auto-orchestrator:
-    emoji: "🧠"
+    emoji: "\U0001F9E0"
     category: Meta
     owner: admin
     plugin: admin
-    domains: [core, dev, admin]
+    domains:
+    - core
+    - dev
+    - admin
     weight: 10
-    description: "Intelligent meta-skill: analyze intent, score 89+ skills, detect gaps, chain optimal pipelines, recommend agents"
-    triggers: ["auto", "atlas auto", "what should I use", "quel skill", "comment faire", "do the thing", "fais-le", "which skill", "recommend"]
-    inputs: ["intent: string"]
-    outputs: ["recommended_skills: list", "execution_plan: markdown"]
-    depends_on: [skill-management, decision-log]
-
+    description: 'Intelligent meta-skill: analyze intent, score 89+ skills, detect
+      gaps, chain optimal pipelines, recommend agents'
+    triggers:
+    - auto
+    - atlas auto
+    - what should I use
+    - quel skill
+    - comment faire
+    - do the thing
+    - fais-le
+    - which skill
+    - recommend
+    inputs:
+    - 'intent: string'
+    outputs:
+    - 'recommended_skills: list'
+    - 'execution_plan: markdown'
+    depends_on:
+    - skill-management
+    - decision-log
   interactive-flow:
-    emoji: "🔄"
+    emoji: "\U0001F504"
     category: Implementation
     owner: dev
     plugin: dev
-    domains: [dev]
+    domains:
+    - dev
     weight: 9
-    description: "Conversational dev pipeline: discover → brainstorm → plan → implement → verify → ship. Full feature flow with HITL at every phase."
-    triggers: ["flow", "pipeline", "brainstorm et implémente", "full workflow", "do everything", "feature complète", "du début à la fin"]
-    inputs: ["feature_description: string"]
-    outputs: ["commit_sha: string", "verification_report: markdown"]
-    depends_on: [context-discovery, brainstorming, plan-builder, executing-plans, verification, finishing-branch]
-
+    description: "Conversational dev pipeline: discover \u2192 brainstorm \u2192 plan\
+      \ \u2192 implement \u2192 verify \u2192 ship. Full feature flow with HITL at\
+      \ every phase."
+    triggers:
+    - flow
+    - pipeline
+    - "brainstorm et impl\xE9mente"
+    - full workflow
+    - do everything
+    - "feature compl\xE8te"
+    - "du d\xE9but \xE0 la fin"
+    inputs:
+    - 'feature_description: string'
+    outputs:
+    - 'commit_sha: string'
+    - 'verification_report: markdown'
+    depends_on:
+    - context-discovery
+    - brainstorming
+    - plan-builder
+    - executing-plans
+    - verification
+    - finishing-branch
   self-propose:
-    emoji: "🔄"
+    emoji: "\U0001F504"
     category: Meta
     owner: enterprise
     plugin: enterprise
-    domains: [enterprise]
-    description: "Self-improvement engine. Aggregates dream reports, retrospectives, workflow analytics"
-
-  # Added by v5 audit (2026-04-12)
+    domains:
+    - enterprise
+    description: Self-improvement engine. Aggregates dream reports, retrospectives,
+      workflow analytics
   secret-manager:
-    emoji: "🔑"
-    category: "Security"
-    owner: "admin"
-    plugin: "admin"
-    description: "Manage infrastructure secrets via Infisical with .env fallback"
-
+    emoji: "\U0001F511"
+    category: Security
+    owner: admin
+    plugin: admin
+    description: Manage infrastructure secrets via Infisical with .env fallback
   skill-security-audit:
-    emoji: "🛡️"
-    category: "Security"
-    owner: "admin"
-    plugin: "admin"
-    description: "Scan skills and hooks for security anti-patterns"
-
+    emoji: "\U0001F6E1\uFE0F"
+    category: Security
+    owner: admin
+    plugin: admin
+    description: Scan skills and hooks for security anti-patterns
   agent-readiness:
-    emoji: "🤖"
-    category: "Quality"
-    owner: "admin"
-    plugin: "admin"
-    description: "Factory.ai 9-Pillar Agent Readiness scoring"
-
+    emoji: "\U0001F916"
+    category: Quality
+    owner: admin
+    plugin: admin
+    description: Factory.ai 9-Pillar Agent Readiness scoring
   infra-health:
-    emoji: "🏥"
-    category: "Infrastructure"
-    owner: "admin"
-    plugin: "admin"
-    description: "Infrastructure health audit — 57 endpoints, auto-heal recipes"
-
+    emoji: "\U0001F3E5"
+    category: Infrastructure
+    owner: admin
+    plugin: admin
+    description: "Infrastructure health audit \u2014 57 endpoints, auto-heal recipes"
+  flow-analytics:
+    tier: admin
+    since: v6.0.0-alpha.6
