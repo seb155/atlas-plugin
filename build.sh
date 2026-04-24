@@ -950,12 +950,16 @@ else
 fi
 
 if [ "$TIERS" = "all" ]; then
-  for t in admin dev user; do
-    build_tier "$t"
+  # v6.0 fix: `all` now builds modular plugins (core + dev-addon + admin-addon).
+  # Legacy build_tier loop iterated `admin dev user` but those profiles were
+  # removed during SP-DEDUP Phase 1 refactor (Sprint 7). Modular plugins are
+  # the canonical v5+ architecture. Use `./build.sh modular` for same result.
+  for p in "${MODULAR_PLUGINS[@]}"; do
+    build_modular_plugin "$p"
     echo ""
   done
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "  All 4 tiers built successfully!"
+  echo "  All modular plugins built successfully!"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 elif [ "$TIERS" = "domains" ]; then
   for d in "${DOMAIN_NAMES[@]}"; do
