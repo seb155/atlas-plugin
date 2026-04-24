@@ -11,8 +11,30 @@ set -euo pipefail
 # Read stdin
 INPUT=$(cat 2>/dev/null || echo '{}')
 
-# Check if session had significant activity (heuristic: any TaskList updates? files modified?)
-# For now, always emit reminder
+# Empty-session detection heuristic (v6.0.0-alpha.5 P1-3):
+# Skip reminder if session had no significant activity. Checks:
+#   1. Any git commits in current cwd since a reasonable threshold (15 min)
+#   2. Any file modifications in .claude/ or memory/ recently
+# Fallback: if detection fails or produces ambiguous signal → emit reminder (safe default)
+SIGNIFICANT=0
+if command -v git &>/dev/null && git rev-parse --git-dir &>/dev/null 2>&1; then
+  # Count commits in last 60 min (session-level timeframe)
+  RECENT_COMMITS=$(git log --since="60 minutes ago" --oneline 2>/dev/null | wc -l || echo 0)
+  if [ "$RECENT_COMMITS" -ge 1 ]; then
+    SIGNIFICANT=1
+  fi
+fi
+# Check recent file mods in .claude/ or memory/ (15 min window)
+if [ "$SIGNIFICANT" -eq 0 ]; then
+  if find .claude memory 2>/dev/null -type f -mmin -15 | head -1 | grep -q .; then
+    SIGNIFICANT=1
+  fi
+fi
+# If no significant activity detected, exit quietly
+if [ "$SIGNIFICANT" -eq 0 ]; then
+  echo '{"continue": true}'
+  exit 0
+fi
 
 REMINDER=$(cat <<'EOF'
 # ATLAS Session End — Retrospective Pattern
@@ -34,12 +56,14 @@ This is optional (session may have been short/trivial) but recommended for any s
 EOF
 )
 
-python3 -c "
-import json
+# Emit reminder via env var passthrough (avoid shell-escape fragility with apostrophes)
+export REMINDER
+python3 <<'PYEOF'
+import json, os
 print(json.dumps({
     'hookSpecificOutput': {
         'hookEventName': 'SessionEnd',
-        'additionalContext': '''$REMINDER'''
+        'additionalContext': os.environ.get('REMINDER', '')
     }
 }))
-"
+PYEOF
