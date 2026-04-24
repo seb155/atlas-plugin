@@ -1,75 +1,62 @@
-# ATLAS Plugin — .claude/rules/_meta.yaml (Phase 4 activation example)
+# ATLAS Plugin — .claude/rules/_meta.yaml (Phase 4 activation)
 #
-# This file activates the rules-conditional-loader.sh hook by declaring
-# per-rule triggers. Only matching rules get injected at SessionStart.
-#
+# Consumed by: hooks/rules-conditional-loader.sh (SessionStart)
 # Schema: .blueprint/schemas/rules-meta-v1.md
-# Hook: hooks/rules-conditional-loader.sh
 # Target: reduce SessionStart token injection 33K → <15K tokens
 
 rules:
-  # This meta-doc lists example rules. Real rules live in .claude/rules/*.md
-  # For atlas-plugin itself, the "rules" are in CLAUDE.md (self-contained).
-  # This file demonstrates the pattern for projects USING atlas-plugin.
+  # Always-loaded rules (core plugin development context)
+  plugin-architecture.md:
+    auto_include: always
+    priority: 9
+    description: "ATLAS plugin architecture (tiers, profiles, skills, hooks)"
 
-  # Example 1: always-on coding hygiene
-  code-quality.md:
+  skill-development.md:
     auto_include: always
     priority: 8
-    description: "Per-language code hygiene rules — always loaded"
+    description: "Skill development conventions + frontmatter v6 schema"
 
-  # Example 2: always-on DoD
-  dod.md:
+  hook-development.md:
+    auto_include: conditional
+    priority: 7
+    description: "Hook development patterns + hooks.json registration"
+    triggers:
+      cwd_contains: [hooks]
+      file_patterns: ["hooks/*", "*.sh", "hooks.json"]
+      branch_patterns: ["feat/hook-*", "feat/*-hook"]
+
+  enterprise-context.md:
     auto_include: always
     priority: 7
-    description: "Definition of Done — 13-layer validation"
+    description: "Enterprise-grade patterns (observability, security, multi-tenant)"
 
-  # Example 3: conditional testing rules (only when in backend or tests/)
-  testing-discipline.md:
+  secret-management.md:
     auto_include: conditional
-    priority: 7
-    description: "Testing rules (pytest flags, TVT tiers, mock budget)"
+    priority: 9  # High when matches — security critical
+    description: "Infisical + Vault + .env policy chain (Phase B Zero-Trust)"
     triggers:
-      cwd_contains: [backend, tests, frontend]
-      file_patterns: ["*test*.py", "*.test.ts", "*.test.tsx", "test_*.py"]
-      branch_patterns: ["feat/*", "fix/*"]
+      cwd_contains: [secret, auth, security, scripts/auth, hooks]
+      file_patterns: ["*secret*", "*token*", "*auth*", ".env*"]
+      branch_patterns: ["security/*", "auth/*"]
 
-  # Example 4: conditional enterprise security
-  enterprise-security.md:
-    auto_include: conditional
-    priority: 9  # High priority when matches
-    description: "Enterprise security patterns (auth, RBAC, secrets)"
-    triggers:
-      cwd_contains: [auth, security, backend/app/core, scripts/auth]
-      file_patterns: ["*auth*", "*security*", "*secret*", "*token*"]
-
-  # Example 5: conditional frontend state (Zustand)
-  zustand-enforcement.md:
+  performance.md:
     auto_include: conditional
     priority: 6
-    description: "Zustand selector pattern enforcement (no destructure, useShallow)"
+    description: "Performance discipline (hot paths, allocation, caching)"
     triggers:
-      cwd_contains: [frontend, src/store]
-      file_patterns: ["*.tsx", "*.ts", "*store*"]
-
-  # Example 6: conditional performance guidance
-  performance-discipline.md:
-    auto_include: conditional
-    priority: 6
-    description: "Performance discipline (Plummer V1 doctrine)"
-    triggers:
-      cwd_contains: [hot_path, perf]
+      cwd_contains: [hooks, scripts, hot_path]
       branch_patterns: ["perf/*"]
-      file_patterns: ["*perf*", "*benchmark*"]
-
-  # Example 7: never — useful when rule is for documentation only
-  compaction-protocol.md:
-    auto_include: never  # Injected by PreCompact hook instead
-    description: "Compaction 6-section preservation (PreCompact hook only)"
+      file_patterns: ["*perf*", "*benchmark*", "build.sh"]
 
 # Loader behavior:
-# - Max 10 rules selected per session (budget)
+# - Max 10 rules selected per session (MAX_SELECTED in hook)
 # - Scoring: cwd_contains (+10) + branch_patterns (+5) + file_patterns (+3) + priority
-# - auto_include: always → priority + 100 boost (top of list)
+# - auto_include: always → priority + 100 boost
 # - auto_include: never → excluded entirely
-# - Fallback if no matches: code-quality.md + dod.md (always loaded by default)
+# - Fallback (no _meta.yaml or zero selected): code-quality.md + dod.md auto-loaded
+#
+# Verification after session restart:
+#   1. Start new Claude Code session in this repo
+#   2. Look for "Rules Context (v6.0 conditional loader)" in SessionStart output
+#   3. Expected: 3-5 rules loaded (depending on cwd + branch + recent files)
+#   4. Adjust priorities/triggers here if too many or few rules selected
