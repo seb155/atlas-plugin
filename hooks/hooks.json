@@ -377,6 +377,12 @@
           },
           {
             "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/workflow-intent-detect\"",
+            "async": true,
+            "timeout": 3
+          },
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/capabilities-refresh\"",
             "async": true,
             "timeout": 5

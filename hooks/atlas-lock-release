@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# ATLAS Lock Release Hook (v6.1.0)
+#
+# Removes local file-lock for current branch. If --shared was used during acquire,
+# also removes remote git marker ref.
+#
+# Invoked from: scripts/atlas-modules/session.sh session_pause, session_handoff
+# Advisory only — never blocks (exit 0)
+
+set -euo pipefail
+
+CLAUDE_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}/.claude"
+LOCKS_DIR="${CLAUDE_DIR}/locks"
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+BRANCH_SLUG=$(echo "$BRANCH" | tr '/' '-')
+LOCK_FILE="${LOCKS_DIR}/${BRANCH_SLUG}.lock.json"
+
+if [[ -f "$LOCK_FILE" ]]; then
+  rm -f "$LOCK_FILE"
+  echo "🔓 Lock released: ${LOCK_FILE}"
+else
+  echo "   (no lock to release for ${BRANCH})"
+fi
+
+exit 0

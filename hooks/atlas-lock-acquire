@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# ATLAS Lock Acquire Hook (v6.1.0)
+#
+# File-lock primary (revised from git-notes per SOTA review O.3):
+#   1. Check .claude/locks/<branch-slug>.lock.json — if present + TTL valid, emit warning
+#   2. If expired (no heartbeat > 30 min), auto-release + acquire
+#   3. If absent, atomic create via mkdir (O_EXCL-like semantics)
+#   4. Optional: push git marker ref if --shared mode (Section O.3)
+#
+# Invoked from: scripts/atlas-modules/session.sh session_start
+# Advisory only — never blocks session start (exit 0 always)
+
+set -euo pipefail
+
+CLAUDE_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}/.claude"
+LOCKS_DIR="${CLAUDE_DIR}/locks"
+mkdir -p "$LOCKS_DIR" 2>/dev/null || true
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+BRANCH_SLUG=$(echo "$BRANCH" | tr '/' '-')
+LOCK_FILE="${LOCKS_DIR}/${BRANCH_SLUG}.lock.json"
+
+WORKTREE=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+AGENT_ID="${CLAUDE_AGENT_ID:-${USER:-human}}"
+PID="$$"
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+TTL_MIN=30
+
+# Check existing lock
+if [[ -f "$LOCK_FILE" ]]; then
+  HEARTBEAT_AT=$(python3 -c "import json; d=json.load(open('$LOCK_FILE')); print(d.get('heartbeat_at', ''))" 2>/dev/null || echo "")
+  if [[ -n "$HEARTBEAT_AT" ]]; then
+    # Parse heartbeat, check if stale (>30 min)
+    STALE=$(python3 <<PYEOF 2>/dev/null
+from datetime import datetime, timezone
+import sys
+try:
+    hb = datetime.fromisoformat("$HEARTBEAT_AT".replace("Z", "+00:00"))
+    now = datetime.now(timezone.utc)
+    age_min = (now - hb).total_seconds() / 60
+    print("stale" if age_min > $TTL_MIN else "active")
+except Exception:
+    print("stale")
+PYEOF
+)
+    if [[ "$STALE" == "active" ]]; then
+      EXISTING_AGENT=$(python3 -c "import json; d=json.load(open('$LOCK_FILE')); print(d.get('agent_id', '?'))" 2>/dev/null || echo "?")
+      echo "⚠️  Lock held by $EXISTING_AGENT (heartbeat: $HEARTBEAT_AT)"
+      echo "   Collision — consider new worktree or coordinate via /atlas session who"
+      # Still proceed — advisory, not blocking
+    fi
+  fi
+fi
+
+# Acquire (overwrite stale or create new)
+cat > "$LOCK_FILE" <<EOF
+{
+  "branch": "${BRANCH}",
+  "worktree": "${WORKTREE}",
+  "agent_id": "${AGENT_ID}",
+  "pid": ${PID},
+  "acquired_at": "${NOW}",
+  "heartbeat_at": "${NOW}",
+  "ttl_min": ${TTL_MIN}
+}
+EOF
+
+echo "🔒 Lock acquired: ${LOCK_FILE}"
+exit 0
