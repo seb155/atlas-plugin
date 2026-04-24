@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# ATLAS CI Audit Log Hook (v6.1.0)
+#
+# This is functionally identical to post-git-push (which already appends to
+# .claude/ci-audit.jsonl). The v6.1 plan Task 7.7 requests an explicit
+# ci-audit-log hook — here it is, alias/dispatcher to post-git-push semantics.
+#
+# For independent use (non-push events that should still log to ci-audit.jsonl),
+# invoke this hook directly with JSON on stdin:
+#   echo '{"event":"deploy","repo":"X","branch":"main"}' | ci-audit-log
+#
+# Integration: called from workflow-deploy, workflow-incident-response skills.
+
+set -euo pipefail
+
+CLAUDE_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}/.claude"
+AUDIT_FILE="${CLAUDE_DIR}/ci-audit.jsonl"
+mkdir -p "$CLAUDE_DIR" 2>/dev/null || true
+
+INPUT=$(cat 2>/dev/null || echo '{}')
+TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+python3 <<PYEOF >> "$AUDIT_FILE" 2>/dev/null || true
+import json, os, sys
+try:
+    d = json.loads("""${INPUT//\"/\\\"}""" or "{}")
+except Exception:
+    d = {}
+
+entry = {
+    "ts": "${TIMESTAMP}",
+    "event": d.get("event", "manual_log"),
+    "repo": d.get("repo", os.path.basename(os.getcwd())),
+    "branch": d.get("branch", ""),
+    "commit": d.get("commit", ""),
+    "user": os.environ.get("USER", "unknown"),
+    "agent_id": os.environ.get("CLAUDE_AGENT_ID", "human"),
+    "details": d.get("details", {}),
+}
+print(json.dumps(entry, separators=(",", ":")))
+PYEOF
+
+exit 0

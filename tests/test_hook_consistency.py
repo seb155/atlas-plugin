@@ -27,6 +27,7 @@ PROFILES_DIR = PLUGIN_ROOT / "profiles"
 CLI_HELPERS = {
     "run-hook.sh", "autonomy-gate.sh",
     "atlas-lock-acquire", "atlas-lock-release",
+    "ci-audit-log",  # v6.1.0 — invoked from workflows, not CC events
 }
 
 # Directories/files to skip when scanning hooks/
