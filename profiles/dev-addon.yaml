@@ -74,6 +74,19 @@ skills:
   - workflow-estimate              # P2 — calibrated sizing (x0.15-0.25)
   - workflow-sprint-retro          # P1 — session retro + action items
 
+  # v6.1.0 — Workflow library Cat 7 Infrastructure (5 orchestrators)
+  - workflow-deploy                # P0 — deploy with pre+post smoke
+  - workflow-infra-change          # P1 — IaC change + peer review + snapshot
+  - workflow-network               # P2 — VLAN/firewall/DNS + multi-vantage verify
+  - workflow-security              # P1 — 4-phase security audit + remediation
+  - workflow-incident-response     # P0 — triage + hotfix + postmortem scheduled
+
+  # v6.1.0 — Workflow library Cat 8 Research (4 orchestrators)
+  - workflow-research-deep         # P1 — multi-query decomposition + synthesis
+  - workflow-audit                 # P1 — 4-phase audit (inventory/fix/enforce/verify)
+  - workflow-debug-investigation   # P1 — systematic debugging + root cause doc
+  - workflow-exploration           # P2 — 8-phase context discovery + codemap
+
   # Ship
   - finishing-branch
   - ship-all
