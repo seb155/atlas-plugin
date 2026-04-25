@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# hooks/statusline-heal — SessionStart auto-heal for the ATLAS status line
+#
+# SP-STATUSLINE-SOTA-V3 Sprint D (L6).
+#
+# Triggered on every SessionStart (matchers: startup|resume|clear|compact).
+# Detects three failure modes and heals each one without user intervention:
+#
+#   1. settings.local.json statusLine.command is missing OR points to a
+#      non-existent / non-executable file
+#         → log + write a "needs-install" sentinel for next interactive
+#           session to surface (we never auto-mutate settings.local.json
+#           silently; that's an HITL boundary)
+#
+#   2. capabilities.json .version is "?" (yaml_get cascade) or file missing
+#         → re-run atlas-discover-addons.sh in the background (best-effort)
+#
+#   3. md5 of deployed wrapper.sh differs from plugin source
+#         → log only; the user can run install.sh to redeploy
+#
+# Contract:
+#   - Runs in <100ms p95 (all checks are cheap: jq read, md5sum, file stat)
+#   - Never blocks session start (background work uses & + disown)
+#   - Silent stdout (SessionStart contract: stdout becomes Claude's context;
+#     we don't want healing logs polluting context)
+#   - All events go to .statusline-heal.log
+#
+# Exit codes: always 0 (heal hook never blocks session)
+
+set -uo pipefail
+
+LOG="${ATLAS_DIR:-$HOME/.atlas}/runtime/.statusline-heal.log"
+mkdir -p "$(dirname "$LOG")" 2>/dev/null
+
+# Skip for subagents (Claude Code sets CLAUDE_AGENT_ID)
+[ -n "${CLAUDE_AGENT_ID:-}" ] && exit 0
+
+# Resolve plugin source — used to compute md5 drift
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+SOURCE_DIR="$PLUGIN_ROOT/scripts"
+
+TARGET="${ATLAS_STATUSLINE_TARGET:-$HOME/.local/share/atlas-statusline}"
+SETTINGS_LOCAL="$HOME/.claude/settings.local.json"
+CAPS="${ATLAS_DIR:-$HOME/.atlas}/runtime/capabilities.json"
+SENTINEL="${ATLAS_DIR:-$HOME/.atlas}/runtime/.statusline-needs-install"
+
+now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+
+# Status accumulator (logged as one line at end)
+HEAL_STATUS="ok"
+HEAL_NOTES=()
+
+# ─── Check 1: settings.local.json ───────────────────────────────────────
+check_settings() {
+    local cmd=""
+    if [ -f "$SETTINGS_LOCAL" ] && command -v jq >/dev/null 2>&1; then
+        cmd=$(jq -r '.statusLine.command // ""' "$SETTINGS_LOCAL" 2>/dev/null)
+    fi
+    if [ -z "$cmd" ]; then
+        HEAL_STATUS="needs-install"
+        HEAL_NOTES+=("settings.local.json statusLine.command unset")
+        touch "$SENTINEL" 2>/dev/null
+        return
+    fi
+    # Expand $HOME / ${HOME} if literal
+    local resolved="${cmd//\$\{HOME\}/$HOME}"
+    resolved="${resolved//\$HOME/$HOME}"
+    if [ ! -x "$resolved" ]; then
+        HEAL_STATUS="needs-install"
+        HEAL_NOTES+=("settings.local.json statusLine.command not executable: $resolved")
+        touch "$SENTINEL" 2>/dev/null
+    fi
+}
+
+# ─── Check 2: capabilities.json freshness ──────────────────────────────
+check_capabilities() {
+    local v="?"
+    if [ -f "$CAPS" ] && command -v jq >/dev/null 2>&1; then
+        v=$(jq -r '.version // "?"' "$CAPS" 2>/dev/null || echo "?")
+    fi
+    if [ "$v" = "?" ] || [ -z "$v" ]; then
+        HEAL_NOTES+=("capabilities.json .version='$v' — re-running discover")
+        # Background re-run (best-effort, no blocking)
+        if [ -x "$SOURCE_DIR/atlas-discover-addons.sh" ]; then
+            ("$SOURCE_DIR/atlas-discover-addons.sh" >/dev/null 2>&1) &
+            disown
+        fi
+        # Don't escalate to "needs-install" — discover usually fixes it
+        [ "$HEAL_STATUS" = "ok" ] && HEAL_STATUS="refreshing"
+    fi
+}
+
+# ─── Check 3: wrapper md5 drift ─────────────────────────────────────────
+check_drift() {
+    local target_wrapper="$TARGET/statusline-wrapper.sh"
+    local source_wrapper="$SOURCE_DIR/statusline-wrapper.sh"
+    [ ! -f "$target_wrapper" ] && return  # Settings check will handle
+    [ ! -f "$source_wrapper" ] && return  # Plugin packaging issue, not our problem
+    local mt ms
+    mt=$(md5sum "$target_wrapper" 2>/dev/null | cut -d' ' -f1)
+    ms=$(md5sum "$source_wrapper" 2>/dev/null | cut -d' ' -f1)
+    if [ -n "$mt" ] && [ -n "$ms" ] && [ "$mt" != "$ms" ]; then
+        HEAL_NOTES+=("wrapper drift: target=${mt:0:8} source=${ms:0:8}")
+        [ "$HEAL_STATUS" = "ok" ] && HEAL_STATUS="drift"
+    fi
+}
+
+# ─── Run checks ─────────────────────────────────────────────────────────
+check_settings
+check_capabilities
+check_drift
+
+# ─── Log ────────────────────────────────────────────────────────────────
+notes_str=""
+if [ ${#HEAL_NOTES[@]} -gt 0 ]; then
+    # join with " | "
+    notes_str=$(printf ' | %s' "${HEAL_NOTES[@]}")
+    notes_str="${notes_str:3}"
+fi
+{
+    printf '%s  status=%s  source=%s  cwd=%s  notes=%s\n' \
+        "$(now)" "$HEAL_STATUS" \
+        "${CLAUDE_SOURCE:-${1:-unknown}}" \
+        "${PWD:-unknown}" \
+        "$notes_str"
+} >> "$LOG" 2>/dev/null
+
+# Never block — even if the log write fails
+exit 0

@@ -482,6 +482,15 @@ build_tier() {
   # Copy CShip config (statusline)
   [ -f "scripts/cship.toml" ] && cp "scripts/cship.toml" "$output/scripts/"
 
+  # SP-STATUSLINE-V3 Sprint B+C: ship installer + doctor as a sub-directory.
+  # Both scripts use $(dirname $0)/.. to locate sibling artifacts, so they
+  # must stay together at scripts/statusline/.
+  if [ -d "scripts/statusline" ]; then
+    mkdir -p "$output/scripts/statusline"
+    cp scripts/statusline/*.sh "$output/scripts/statusline/" 2>/dev/null || true
+    chmod +x "$output/scripts/statusline/"*.sh 2>/dev/null || true
+  fi
+
   # v5.1+: atlas-assist is UNIFIED (single master in atlas-core).
   # Source of truth: scripts/atlas-assist-master.md (hand-crafted, adaptive).
   # The master reads ~/.atlas/runtime/capabilities.json at runtime to adapt

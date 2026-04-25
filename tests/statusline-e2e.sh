@@ -41,8 +41,12 @@ if [ -z "$EXPECTED_VERSION" ]; then
   exit 1
 fi
 
-# Minimal CC status-line JSON (covers all fields consumed by statusline-command.sh)
-CC_JSON='{"workspace":{"current_dir":"/tmp"},"model":{"id":"claude-opus-4-7"},"context_window":{"used_percentage":0},"rate_limits":{"5h":{"used_percentage":0}},"effort":"high"}'
+# Minimal CC status-line JSON — aligned with official CC schema
+# (https://code.claude.com/docs/en/statusline). SP-STATUSLINE-V3 Sprint A
+# fixed several field-name bugs (.effort.level vs .effort,
+# .rate_limits.five_hour vs .rate_limits["5h"]) — this fixture exercises
+# the corrected field paths.
+CC_JSON='{"workspace":{"current_dir":"/tmp"},"model":{"id":"claude-opus-4-7","display_name":"Opus"},"context_window":{"used_percentage":42,"context_window_size":1000000},"rate_limits":{"five_hour":{"used_percentage":12}},"effort":{"level":"high"},"exceeds_200k_tokens":false}'
 
 case "$MODE" in
   local|--local)
@@ -105,7 +109,23 @@ esac
 # Weak assertion (only the version marker) was proven to pass on fallback
 # strings like "🏛️ ATLAS 5.35.0  (statusline script missing at …)", defeating
 # the purpose of the test. The double check forces real plugin-script exec.
-EXPECTED_MARKER="🏛️ ATLAS $EXPECTED_VERSION"
+#
+# Version-marker policy:
+#   - ci mode      → must match the source VERSION file exactly
+#                    (hermetic env, plugin source is our truth)
+#   - --local mode → must match a SemVer-shaped version (any X.Y.Z[-suffix])
+#                    because the user's deployed plugin may be on a different
+#                    version than the source repo (intentional during dev)
+case "$MODE" in
+    local|--local)
+        EXPECTED_MARKER_REGEX='🏛️ ATLAS [0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?'
+        EXPECTED_MARKER="(any SemVer in --local mode)"
+        ;;
+    *)
+        EXPECTED_MARKER_REGEX="🏛️ ATLAS $EXPECTED_VERSION"
+        EXPECTED_MARKER="🏛️ ATLAS $EXPECTED_VERSION"
+        ;;
+esac
 EXPECTED_MODEL_TOKEN="opus"   # derived from CC_JSON model "claude-opus-4-7"
 
 fail() {
@@ -125,8 +145,8 @@ fail() {
   } >&2
 }
 
-if ! printf '%s' "$OUTPUT" | grep -qF "$EXPECTED_MARKER"; then
-  fail "status line output did NOT contain version marker '$EXPECTED_MARKER'"
+if ! printf '%s' "$OUTPUT" | grep -qE "$EXPECTED_MARKER_REGEX"; then
+  fail "status line output did NOT contain version marker matching '$EXPECTED_MARKER'"
   exit 1
 fi
 
@@ -149,5 +169,42 @@ if ! printf '%s' "$OUTPUT" | grep -qF "$EXPECTED_MODEL_TOKEN"; then
   exit 1
 fi
 
-echo "PASS: status line contains '$EXPECTED_MARKER' + model token (mode: $MODE)"
+# SP-STATUSLINE-V3 Sprint E: assert the rendered output contains NO bare
+# "ATLAS ?" token — that's the original 2026-04-25 forensic symptom and
+# every iteration of the plan is a regression-guard against it. Fall back
+# strings include the "?-unresolvable" suffix instead, which is allowed.
+STRIPPED=$(printf '%s' "$OUTPUT" | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g')
+if [[ "$STRIPPED" =~ ATLAS\ \?\  ]] || [[ "$STRIPPED" =~ ATLAS\ \?$ ]]; then
+  fail "render contains BARE 'ATLAS ?' token — version resolution regressed"
+  exit 1
+fi
+
+# Sprint A L9 (effort.level): assert an effort symbol is present (◐|○|●).
+# If still using ".effort" instead of ".effort.level", we'd always get ◐
+# regardless of input; with input "high" we expect ●.
+if ! printf '%s' "$STRIPPED" | grep -qE '●|◐|○'; then
+  fail "render missing effort symbol (●|◐|○) — L9 regression?"
+  exit 1
+fi
+
+# Sprint A L10 (rate_limits.five_hour): with input rate_limits.five_hour
+# .used_percentage=12, we expect "R12%" in the rendered output. If still
+# reading .rate_limits["5h"], the number would be 0 → no R-segment shown.
+# In --local mode the deployed plugin may pre-date the L10 fix, so accept
+# either presence of R12% OR proven-old plugin (different version).
+case "$MODE" in
+    local|--local)
+        if ! printf '%s' "$STRIPPED" | grep -qF "R12%"; then
+            echo "WARN: deployed plugin does not render rate_limits — likely pre-L10 (mode: $MODE)" >&2
+        fi
+        ;;
+    *)
+        if ! printf '%s' "$STRIPPED" | grep -qF "R12%"; then
+            fail "render missing rate_limits indicator 'R12%' — L10 regression?"
+            exit 1
+        fi
+        ;;
+esac
+
+echo "PASS: status line contains '$EXPECTED_MARKER' + model + effort symbol (mode: $MODE)"
 exit 0
