@@ -21,7 +21,7 @@ This created three compounding risks:
    client codenames (THM-012, BRTZ, G Mining), proprietary MSE 4-layer schema
    scrapable by competitors.
 3. **No audit trail**: no way to know who downloaded the plugin, when, or how
-   many times. Operational audit gap for G Mining pilot (mai 2026).
+   many times. Compliance / NDA violation risk for G Mining pilot (mai 2026).
 
 Phase A (shipped 2026-04-20 20:54 EDT, homelab-iac PR #11) closed the
 browser/scraper gap via Authentik ForwardAuth on non-manifest/non-git paths.
@@ -102,7 +102,7 @@ Phase B.1 steps (mai 2026-04-25 → 04-26):
 2. Policies (precedence ordered):
    - P1 `Service — CC/CI clients` (decision: non_identity, include service_token list)
    - P2 `Humans — AXOIQ team` (decision: allow, Authentik OIDC IdP + emails)
-   - P3 `Humans — G Mining pilot` (decision: allow, emails from pilot roster)
+   - P3 `Humans — G Mining pilot` (decision: allow, emails from NDA roster)
 3. Generate 3 initial service tokens (cc-client-seb, cc-client-axoiq-team, ci-agents)
 4. Store tokens in Vaultwarden collection `AXOIQ/Marketplace Tokens` with metadata
 5. Update Caddyfile `plugins.axoiq.com` block to trust CF Access JWT
