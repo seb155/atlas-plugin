@@ -180,15 +180,17 @@ Rule: the status line **never** emits a bare `?` token. If we cannot resolve, we
 | L3 | Fix `statusline-command.sh` (renamed `command.sh`): if `.version == "?"` use highest-priority addon version | `scripts/statusline/command.sh` | ±5 | Sprint A |
 | **L9** | **Fix `effort` field: read `.effort.level` (not `.effort`) per official CC JSON schema** | `scripts/statusline/command.sh` | ±2 | **Sprint A** |
 | **L10** | **Fix `rate_limits` field: read `.rate_limits.five_hour.used_percentage` (not `.rate_limits["5h"]`)** | `scripts/statusline/command.sh` + modules | ±5 | **Sprint A** |
-| **L11** | **Fix `context_window.size` → `.context_window.context_window_size` per official schema** | `scripts/atlas-context-size-module.sh` | ±2 | **Sprint A** |
-| **L12** | **Fix `exceeds_200k` → `.exceeds_200k_tokens` (top-level, per official schema)** | `scripts/atlas-200k-badge-module.sh` | ±2 | **Sprint A** |
+| L11 | Fix `context_window.size` → `.context_window.context_window_size` per official schema | `scripts/atlas-context-size-module.sh` | ±2 | **Sprint B** (deferred) |
+| L12 | Fix `exceeds_200k` → `.exceeds_200k_tokens` (top-level, per official schema) | `scripts/atlas-200k-badge-module.sh` | ±2 | **Sprint B** (deferred) |
 | L4 | New idempotent installer with HITL gate, dependency check, settings.local.json migration | `scripts/statusline/install.sh` | ±150 | Sprint B |
 | L5 | New 8-level audit + mock-render assertion | `scripts/statusline/doctor.sh` | ±200 | Sprint C |
 | L6 | Auto-heal session-start hook | `hooks/ts/statusline-heal.ts` | ±80 | Sprint D |
 | L7 | Skill `statusline-setup` rewritten to delegate to install.sh (~50 lines instead of 250) | `skills/statusline-setup/SKILL.md` | rewrite | Sprint E |
 | L8 | ADR-023 (settings.json territory) + bats E2E test asserting no `?` in render | `docs/ADR/`, `tests/statusline.bats` | ±30 + doc | Sprint E |
 
-**Sprint A scope updated**: now contains 7 fixes (L1–L3 + L9–L12). All are <5 LOC each, total ~30 LOC — still single-day effort but addresses **all** silent JSON-schema bugs in addition to the version resolution cascade.
+**Sprint A scope (final)**: 5 fixes (L1, L2, L3, L9, L10). All <10 LOC each, total ~25 LOC. Addresses the version-resolution cascade (cause #2-#5) and the two silent JSON-schema bugs in `statusline-command.sh` (causes #6 + #7).
+
+**L11 and L12 deferred to Sprint B**: the custom CShip modules (`atlas-context-size-module.sh`, `atlas-200k-badge-module.sh`) read `CSHIP_*` environment variables. The exact mechanism by which CShip exposes JSON fields to custom commands (stdin? env vars? template substitution?) is not documented at cship.dev as of 2026-04-25, and a quick probe could not isolate it. Fixing those modules requires reading cship's source or an isolated experiment. Sprint B's installer can include this investigation as part of its dependency-validation step.
 
 ### L1 detailed diff (preview)
 
