@@ -40,8 +40,6 @@ skills:
 - atlas-dev-self
 - atlas-analytics
 - ultrathink
-# GMS-specific (G Mining Services) — 2026-04-17 SP-DEDUP merged 4→1
-- gms-mgmt
 refs:
 # Inherited from dev-addon: composition-patterns, react-best-practices,
 # web-design-guidelines, gmining-excel, code-smells-catalog,

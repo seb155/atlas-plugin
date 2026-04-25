@@ -487,8 +487,8 @@ For Opus 4.7 compatibility (mandatory):
 
 ### 🔧 Other Changes
 - Merge pull request 'feat: Phase B Zero-Trust (partial) — HITL hook + atlas-setup.sh + ADRs + pilot template' (#32) from feature/phase-b-zero-trust-clean into main
-- docs: remove NDA prerequisite gate from G Mining pilot onboarding (per Seb)
-- docs: G Mining pilot onboarding template with NDA prerequisite (Phase B.6)
+- docs: remove nda prerequisite gate from pilot onboarding (rollout) (per Seb)
+- docs: pilot onboarding template with NDA prerequisite (Phase B.6)
 - docs(adr): ADR-020, 021, 022 — Zero-Trust plugins.axoiq.com design rationale
 
 
@@ -883,7 +883,7 @@ cycle, aligned with the freeze's intent. Logged in `decisions.jsonl`.
 - Feature flag: `ATLAS_AUTO_DETECT_PROFILE=true` opt-in (recommended, added to ~/.zshrc)
 - Backward compat: existing flags work; profiles are additive opt-in
 - Deprecations: `-y/--yolo` logs warning, scheduled removal v5.30.0
-- Target users: AXOIQ contractors + G Mining MSEs (via npm install) + Seb/core devs (via make dev)
+- Target users: AXOIQ contractors + anchor client MSEs (via npm install) + Seb/core devs (via make dev)
 
 ### Live-Tested Commands (post-ship)
 ```bash
