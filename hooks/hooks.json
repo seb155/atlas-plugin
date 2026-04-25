@@ -30,6 +30,12 @@
           },
           {
             "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/statusline-heal\"",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.sh\" checkpoint-restore",
             "async": true,
             "timeout": 5
