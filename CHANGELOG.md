@@ -1,5 +1,35 @@
 # Changelog
 
+## v6.1.0-alpha.2 (2026-04-25 12:35 EDT) — SP-STATUSLINE-SOTA-V3 (sprints A–E)
+
+### 🔧 Bug fixes (statusline render path)
+
+- **L1**: `yaml_get` falls through to grep when yq returns empty (snap-yq AppArmor cascade) and strips inline comments from values like `tier_priority: 3   # 1=core, ...`
+- **L2**: `TIER_MAX_VERSION` initialized from `dirname/../VERSION` instead of empty — capabilities.json `.version` is honest even when discover degraded
+- **L3**: `statusline-command.sh` falls back to `addons[max_priority].version` when `.version="?"`, never emits a bare `?` (final marker is `?-unresolvable`)
+- **L9**: `statusline-command.sh` reads `.effort.level` per official CC schema (was `.effort` — always returned null → `auto` → `◐` regardless of user setting)
+- **L10**: `statusline-command.sh` reads `.rate_limits.five_hour.used_percentage` per official CC schema (was `.rate_limits["5h"]` — never matched → R-segment never displayed)
+
+### ✨ New features
+
+- **L4** `scripts/statusline/install.sh` — idempotent installer with HITL gate, dependency check, settings.local.json migration, md5-based drift detection
+- **L5** `scripts/statusline/doctor.sh` — 8-level audit with `--json` for `/atlas doctor` integration
+- **L6** `hooks/statusline-heal` — SessionStart auto-heal hook (<200ms p95) detects broken settings, stale capabilities, md5 drift; logs to `~/.atlas/runtime/.statusline-heal.log`
+- **L7** `skills/statusline-setup/SKILL.md` — full rewrite (278 lines → ~70 lines), delegates to install.sh
+
+### 📜 Documentation
+
+- **ADR-023** — codifies that ATLAS writes only to `~/.claude/settings.local.json`, never `settings.json`. Closes the territorial gap left by ADR-019 after the 2026-04-25 forensic incident where dotfile-sync wiped `enabledPlugins.atlas-*`.
+- **ADR-024** — documents that CShip/Starship custom commands receive empty stdin and no JSON env vars; cancels L11/L12 (custom module field-name fixes have no observable effect); the bash render path is canonical.
+
+### 🧪 Tests
+
+46 new bats cases across 4 files plus extended E2E asserting no bare `?`, effort symbol present, `R12%` rendered (L9/L10 regression guards).
+
+### 🗺️ Plan
+
+`.blueprint/plans/sp-statusline-sota-v3.md` (15 sections, 9 root causes, sprints A–E, acceptance criteria). PR #46 merged 2026-04-25 (merge commit `ed31cd75`).
+
 ## v6.1.0-alpha.1 (2026-04-24 10:55 EDT) — SOTA Workflow Library
 
 ### ✨ New Features
