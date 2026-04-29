@@ -188,6 +188,68 @@ When the user requests development work, run the pipeline declared in `capabilit
 - **Git**: `feature/*` → `dev` → `main` (PR + CI green). 1 worktree per feature.
 - **Plans**: 15 sections (A-O), gate 12/15, in `.blueprint/plans/`.
 
+## Plan-Anchored Development (NON-NEGOTIABLE — added 2026-04-26)
+
+Before ANY agent spawn, ANY session pickup, ANY multi-file refactor: read and reference the **parent plan SSoT** in `.blueprint/plans/{plan-name}.md`.
+
+**Mandatory briefing template** for every spawned agent prompt:
+
+```markdown
+**Plan parent SSoT** : `.blueprint/plans/{plan-name}.md` (version vX.Y, score G1 N/15)
+
+**Sections critiques à lire AVANT de coder** :
+- A. Context & Vision — pourquoi ce changement existe, audiences, success outcome
+- B. Architecture — DAG waves + decisions locked + reuse existing patterns
+- F. Files critical — paths exacts à modifier (NE PAS inventer de nouveaux paths)
+- G. Verification — commands à passer pour confirmer GREEN
+- H. Persona E2E acceptance — critères mesurables (perf, UX, auth)
+
+**Tâche assignée** : {task-id} {task-title}
+
+**Contraintes (NON-NÉGOCIABLES)** :
+- Quality top + tests complets + ultrathink à chaque décision
+- Pas de pression de délai
+- Verify GREEN AVANT commit
+- Commit lowercase per commitlint rule
+- DO NOT push (coordinator batch)
+```
+
+**Forbidden patterns**:
+- Spawn agent with prompt that doesn't include the briefing template
+- "I'll just do X quickly" without grepping the parent plan to verify alignment
+- Inventing new paths/files without confirming non-existence in plan Section F
+- Claiming "DONE" without confronting Persona E2E criteria from plan Section H
+- Refactoring architecture (route/store/schema) without reading plan Section B decisions locked
+
+**Recommended patterns**:
+- First tool of every session = Read `.blueprint/plans/INDEX.md` or parent plan of current worktree
+- Mandatory briefing template in all spawned prompts
+- If plan parent contradicts user request → ASK reconciliation
+- Update parent plan (incremental edit) if major decision made during session
+- Reference parent plan path in commit body: "Per `.blueprint/plans/X.md` Section L.2 ..."
+
+Reference: `feedback_always_reference_initial_plan.md` per-project memory.
+
+## Quality Always > Deadlines (NON-NEGOTIABLE — added 2026-04-26)
+
+Quality is the baseline, NEVER a tradeoff. Time is taken as needed for top quality + full test coverage + ultrathink at every decision.
+
+**Forbidden patterns**:
+- Fictional anchors ("demo G Mining 2026-11-09", "must ship by X")
+- "MVP fast" / "good enough for demo" / "compress effort"
+- Cascading waves on calendar (waves cascade ONLY on `verify GREEN`)
+- Accepting DoD score < SHIPPED tier (≥81%) under deadline pressure
+- Telling agents "make it fast" — instead "make it top quality + ultrathink"
+
+**Allowed anchors** (real only):
+- Contract/PO documented in `axoiq-business/`
+- Technical hard constraints (license expiry, API deprecation)
+- Public release tag aligned with release notes
+
+**Operating mode combined**: machine velocity (parallel agents) + autonomous (no human pacing) + **quality always** (no fake deadline) = "fast as POSSIBLE compatible with maximum quality, NEVER cut quality for speed".
+
+Reference: `feedback_quality_always_no_fake_deadlines.md` per-project memory.
+
 ## Capability Refresh
 
 After installing/uninstalling an addon (`/plugin install atlas-dev`), the `capabilities.json` is stale until the next SessionStart. To refresh manually:
@@ -203,3 +265,7 @@ Or invoke the `discovery` skill: "rescan addons" / "what addons do I have".
 - If you think "this doesn't need a skill" — use it anyway.
 - If `capabilities.json` says tier=core but user asks for dev work → tell them they need atlas-dev-addon.
 - Never assume an addon is installed. Always check `capabilities.json`.
+- "We need this shipped before {date}" — if date isn't in a documented contract or technical constraint, it's fictional. Quality > deadlines (NON-NEGOTIABLE rule).
+- "Good enough for demo" — demo IS production. Quality is baseline, not a tradeoff. Fix it now.
+- "Compress this wave to save time" — waves cascade on `verify GREEN`, not calendar. Take the time.
+- "I'll skip reading the parent plan" — Plan-Anchored Development is NON-NEGOTIABLE. First tool every session = read parent plan SSoT.
