@@ -1,6 +1,6 @@
 ---
 name: enterprise-audit
-description: "14-dimension enterprise readiness audit. This skill should be used when the user asks to '/atlas audit-enterprise', 'enterprise audit', 'due diligence', 'G Mining audit', 'SOC2 readiness', or needs an A-F scored audit of multi-tenancy/security/docs/governance."
+description: "14-dimension enterprise readiness audit. This skill should be used when the user asks to '/atlas audit-enterprise', 'enterprise audit', 'due diligence', 'anchor client audit', 'SOC2 readiness', or needs an A-F scored audit of multi-tenancy/security/docs/governance."
 effort: high
 superpowers_pattern: [iron_law, red_flags, hard_gate]
 see_also: [security-audit, codebase-audit, plan-builder]
@@ -11,7 +11,7 @@ thinking_mode: adaptive
 
 <HARD-GATE>
 Enterprise compliance claims MUST have evidence (test output, scan result, signed audit) before marking any control as compliant. Unsubstantiated claims = liability.
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE. If you have not run the verification command in this message, you cannot claim it passes. Evidence before assertions, always. An audit without evidence is a PDF of opinions — it will not survive G Mining due diligence or regulator scrutiny.
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE. If you have not run the verification command in this message, you cannot claim it passes. Evidence before assertions, always. An audit without evidence is a PDF of opinions — it will not survive anchor client due diligence or regulator scrutiny.
 </HARD-GATE>
 
 <red-flags>
@@ -26,7 +26,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE. If you have not run th
 
 </red-flags>
 
-14-dimension enterprise readiness audit. Designed for G Mining / Eldorado Gold due diligence.
+14-dimension enterprise readiness audit. Designed for enterprise due diligence.
 Every finding requires evidence (command output or file reference). HITL gates on scope, report, and all CRITICAL remediations.
 
 ## Pipeline
@@ -224,7 +224,7 @@ git commit -m "audit(enterprise): {env} audit {date} — Grade {grade} ({score}/
 | Delta compare file not found | Warn user, skip delta column, continue |
 | Fix breaks service | Rollback → `infrastructure-ops restart` → AskUserQuestion with error |
 | Max retries reached (2) | AskUserQuestion: "Fix failed twice for [{id}]. Manual intervention required." |
-| Score < 60 (Grade F) | AskUserQuestion: "Grade F detected. Recommend aborting G Mining review?" |
+| Score < 60 (Grade F) | AskUserQuestion: "Grade F detected. Recommend aborting anchor client review?" |
 
 ---
 
@@ -254,5 +254,5 @@ Full audit: `memory/context7-audit-2026-03-19.md`
 - Delegate to existing skills — never duplicate security-audit or verification logic
 - Max 2 fix retries → escalate to human
 - Scoring rubric in `references/scoring-rubric.md` — single source of truth
-- G Mining checklist in `references/gmining-checklist.md` — due diligence alignment
+- anchor client checklist in `references/gmining-checklist.md` — due diligence alignment
 - Context7 best practices in `.claude/rules/enterprise-*.md` — technology-level compliance

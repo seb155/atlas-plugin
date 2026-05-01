@@ -59,10 +59,22 @@ for repo_dir in $(find "$WORKSPACE" -maxdepth 4 -name ".claude" -type d 2>/dev/n
     ahead_main=$( (cd "$wt" && git log main..HEAD --oneline 2>/dev/null || true) | wc -l)
     ahead_dev=$( (cd "$wt" && git log dev..HEAD --oneline 2>/dev/null || true) | wc -l)
 
-    if [ "$ahead_main" -gt 0 ] && [ "$ahead_dev" -gt 0 ]; then
+    # v6.1.0 bug fix: condition was && (AND) which required ahead of BOTH main AND dev.
+    # Repos without a local `dev` branch (e.g., atlas-plugin which uses main-only workflow)
+    # always had ahead_dev=0, making the AND always false, causing active worktrees with
+    # 5+ commits ahead of main to be wiped mid-session. Fix: OR (||) — keep if unique
+    # commits exist vs EITHER trunk. Also handles refname aliases (dev may be trunk).
+    if [ "$ahead_main" -gt 0 ] || [ "$ahead_dev" -gt 0 ]; then
       KEPT=$((KEPT + 1))
       # Clean worktree with unique commits → merge candidate
-      MERGE_CANDIDATES="${MERGE_CANDIDATES}  ${name} (${ahead_dev} commits ahead of dev, ${age_days}d old)\n"
+      # Show whichever ref has the larger ahead count (more informative)
+      ahead_max=$ahead_main
+      trunk_label="main"
+      if [ "$ahead_dev" -gt "$ahead_main" ]; then
+        ahead_max=$ahead_dev
+        trunk_label="dev"
+      fi
+      MERGE_CANDIDATES="${MERGE_CANDIDATES}  ${name} (${ahead_max} commits ahead of ${trunk_label}, ${age_days}d old)\n"
       if [ "$age_days" -ge "$AGE_WARN_DAYS" ]; then
         AGED=$((AGED + 1))
       fi

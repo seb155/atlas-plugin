@@ -5,7 +5,7 @@
     {
       "name": "atlas-core",
       "description": "Shared base — session, memory, context, personal, experiential",
-      "version": "6.0.0-alpha.11",
+      "version": "6.1.0-alpha.2",
       "source": { "source": "git", "url": "https://plugins.axoiq.com" },
       "author": { "name": "AXOIQ", "email": "dev@axoiq.com" }
     }

@@ -1056,3 +1056,57 @@ skills:
     description: "Analyze skill-usage telemetry \u2014 hot skills, zombies, failure\
       \ rates, promote/archive candidates. Admin-tier observability (v6.0.0-alpha.7+)"
     since: v6.0.0-alpha.7
+  doc-regen:
+    emoji: "\U0001F4C4"
+    category: Knowledge
+    owner: dev
+    plugin: dev
+    domains:
+    - dev
+    - knowledge
+    description: "DevHub auto-doc regenerator — AST-based API/subsystem documentation refresh"
+    triggers:
+    - regen docs
+    - update API docs
+    - auto-doc
+    - refresh docs
+    - regenerate docs
+    - devhub docs
+    - document subsystem
+    since: v6.1.0
+  feature-update:
+    emoji: "✏️"
+    category: Project
+    owner: dev
+    plugin: dev
+    domains:
+    - dev
+    - knowledge
+    description: "DevHub feature row updater — PATCH feature status/metadata via API + sync FEATURES.md"
+    triggers:
+    - update feature
+    - mark feature
+    - feature status
+    - set feature
+    - mark as done
+    - feature complete
+    - feature in-progress
+    - close feature
+    since: v6.1.0
+  portal-sync:
+    emoji: "\U0001F504"
+    category: Knowledge
+    owner: dev
+    plugin: dev
+    domains:
+    - dev
+    - knowledge
+    description: "DevHub portal sync — push local blueprint/features/docs state to devhub_db"
+    triggers:
+    - sync portal
+    - update devhub
+    - regen feature board
+    - portal sync
+    - push to devhub
+    - devhub out of date
+    since: v6.1.0
