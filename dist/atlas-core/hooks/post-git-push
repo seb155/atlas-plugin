@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# ATLAS Post Git-Push Hook (v6.1.0)
+#
+# Enforces LAW-WORKFLOW-001 (NO_PUSH_WITHOUT_CI_VERIFY) by:
+#   1. Detecting `git push` Bash calls post-execution
+#   2. Appending to .claude/ci-audit.jsonl (Section O.5)
+#   3. Emitting additionalContext reminder to invoke ci-feedback-loop
+#
+# Trigger: PostToolUse matcher=Bash
+# Exit 0: always (never blocks, only advises)
+# Output: JSON with hookSpecificOutput.additionalContext for reminder
+#
+# Companion: hooks/pre-git-push (pre-checks)
+# Companion: hooks/ci-audit-log (shared audit entries)
+# Plan ref: .blueprint/plans/le-plugin-atlas-core-devrais-adaptive-treasure.md O.5 + M.3 + Q.7
+
+set -euo pipefail
+
+INPUT=$(cat 2>/dev/null || echo '{}')
+
+# Extract tool name and command via python json parse (robust)
+TOOL_NAME=$(echo "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('tool_name', ''))" 2>/dev/null || echo "")
+COMMAND=$(echo "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('tool_input', {}).get('command', ''))" 2>/dev/null || echo "")
+
+# Only act on Bash tool + command containing git push (not force-pushed-to-trash)
+if [[ "$TOOL_NAME" != "Bash" ]] || [[ "$COMMAND" != *"git push"* ]]; then
+  exit 0
+fi
+
+# Extract commit + branch info (best-effort, fail silent)
+COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+REPO=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+# Append to ci-audit.jsonl (project-local, git-excluded)
+CLAUDE_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}/.claude"
+AUDIT_FILE="${CLAUDE_DIR}/ci-audit.jsonl"
+mkdir -p "$CLAUDE_DIR" 2>/dev/null || true
+
+# JSON line (compact) — includes tool_response if available
+STATUS=$(echo "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); r=d.get('tool_response', {}); print('ok' if r.get('success', True) else 'fail')" 2>/dev/null || echo "unknown")
+
+python3 <<PYEOF >> "$AUDIT_FILE" 2>/dev/null || true
+import json, os, sys
+entry = {
+    "ts": "${TIMESTAMP}",
+    "event": "push",
+    "repo": "${REPO}",
+    "branch": "${BRANCH}",
+    "commit": "${COMMIT}",
+    "push_result": "${STATUS}",
+    "ci_state_at_push": "pending",
+    "ci_state_monitored": True,
+    "resolved_at": None,
+    "failed_tests": [],
+    "user": os.environ.get("USER", "unknown"),
+    "agent_id": os.environ.get("CLAUDE_AGENT_ID", "human"),
+}
+print(json.dumps(entry, separators=(",", ":")))
+PYEOF
+
+# Emit reminder via stdout JSON (CC hook API)
+REMINDER="[LAW-WORKFLOW-001 Advisory] Push detected to ${BRANCH} @ ${COMMIT:0:8}. MANDATORY next: invoke ci-feedback-loop skill to verify pipeline. Do NOT push another commit to this branch until CI is green. Audit logged to .claude/ci-audit.jsonl."
+
+python3 <<PYEOF 2>/dev/null || true
+import json, sys
+print(json.dumps({
+    "hookSpecificOutput": {
+        "hookEventName": "PostToolUse",
+        "additionalContext": """${REMINDER}"""
+    }
+}))
+PYEOF
+
+exit 0

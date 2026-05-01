@@ -5,17 +5,32 @@
 
 input=$(cat)
 
-# Extract JSON data
+# Extract JSON data — fields aligned with official CC statusline schema
+# (https://code.claude.com/docs/en/statusline). SP-STATUSLINE-V3 #L9–L12.
 cwd=$(echo "$input" | jq -r '.workspace.current_dir')
 model=$(echo "$input" | jq -r '.model.id')
 used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // 0')
 session_name=$(echo "$input" | jq -r '.session_name // empty')
-rate_5h=$(echo "$input" | jq -r '.rate_limits["5h"].used_percentage // 0')
-effort=$(echo "$input" | jq -r '.effort // "auto"')
+# L10: official field is .rate_limits.five_hour, not .rate_limits["5h"].
+rate_5h=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // 0')
+# L9: official field is .effort.level (object), not .effort (string).
+effort=$(echo "$input" | jq -r '.effort.level // "auto"')
 
-# ATLAS plugin version (v5.30.1+) — read from capabilities.json SessionStart snapshot
-# Falls back to "?" silently if capabilities file missing (fresh install, pre-SessionStart).
-atlas_version=$(jq -r '.version // "?"' "${ATLAS_DIR:-$HOME/.atlas}/runtime/capabilities.json" 2>/dev/null || echo "?")
+# ATLAS plugin version (SP-STATUSLINE-V3 #L3): read .version from capabilities,
+# but if it's "?" or missing, fall back to highest-priority addon's version
+# (honest fallback chain — capabilities.json discover may have failed but
+# the addons[] list is still populated from the filesystem scan).
+CAPS="${ATLAS_DIR:-$HOME/.atlas}/runtime/capabilities.json"
+atlas_version=$(jq -r '.version // "?"' "$CAPS" 2>/dev/null || echo "?")
+if [ "$atlas_version" = "?" ] || [ -z "$atlas_version" ]; then
+    atlas_version=$(jq -r '
+      [.addons[]? | select(.priority? != null)]
+      | sort_by(.priority) | reverse | .[0].version // "?"
+    ' "$CAPS" 2>/dev/null || echo "?")
+fi
+# Final honest marker — never emit a bare "?" so users can grep and we
+# know it's our deliberate fallback, not a parse error elsewhere.
+[ "$atlas_version" = "?" ] && atlas_version="?-unresolvable"
 
 # ANSI colors (bold to match Starship bold styles)
 CYAN='\033[1;36m'

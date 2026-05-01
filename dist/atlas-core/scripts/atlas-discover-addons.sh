@@ -22,20 +22,31 @@ mkdir -p "$OUTPUT_DIR" 2>/dev/null
 
 # ─── Helpers ────────────────────────────────────────────────────────────
 
-# Read a YAML key (uses yq if available, falls back to grep/sed)
+# Read a YAML key (uses yq if available, falls back to grep/sed).
+#
+# yq via snap is AppArmor-confined and silently fails to read ~/.claude/**
+# (returns empty + permission-denied on stderr). Without the grep fallback
+# below, every yaml_get returned "default" → tier=unknown, priority=0 →
+# capabilities.json .version="?" cascade. See SP-STATUSLINE-SOTA-V3 #L1.
 yaml_get() {
   local file="$1" key="$2" default="${3:-}"
   if [ ! -f "$file" ]; then echo "$default"; return; fi
+  local v=""
   if command -v yq >/dev/null 2>&1; then
-    local v
     v=$(yq -r ".${key} // \"\"" "$file" 2>/dev/null || echo "")
-    [ -n "$v" ] && [ "$v" != "null" ] && echo "$v" || echo "$default"
-  else
-    # Fallback: simple grep (only top-level scalar keys)
-    local v
-    v=$(grep "^${key}:" "$file" 2>/dev/null | head -1 | sed "s/^${key}:[[:space:]]*//; s/[\"']//g")
-    [ -n "$v" ] && echo "$v" || echo "$default"
+    [ "$v" = "null" ] && v=""
   fi
+  # Fallback: grep (yq absent, AppArmor-blocked snap, or returned empty).
+  # Strips inline comments ("tier_priority: 3   # 1=core, ...") and
+  # surrounding whitespace/quotes.
+  if [ -z "$v" ]; then
+    v=$(grep "^[[:space:]]*${key}:" "$file" 2>/dev/null | head -1 \
+        | sed -E "s/^[[:space:]]*${key}:[[:space:]]*//
+                  s/[[:space:]]*#.*$//
+                  s/[[:space:]]+$//
+                  s/^[\"']//; s/[\"']$//")
+  fi
+  echo "${v:-$default}"
 }
 
 # Read pipeline_phases array as space-separated list
@@ -97,7 +108,11 @@ TIER_MAX_NAME="core"
 TIER_MAX_PERSONA="helpful assistant"
 TIER_MAX_PIPELINE="DISCOVER → ASSIST"
 TIER_MAX_BANNER="Core"
-TIER_MAX_VERSION=""
+# Honest default: read this script's own VERSION file (always present in
+# both source repo and plugin dist). Only gets overwritten if at least one
+# addon resolves with priority > 0 — which protects against the cascade
+# where empty manifests (yq blocked) leave version unset. SP-STATUSLINE-V3 #L2.
+TIER_MAX_VERSION=$(cat "$(dirname "$0")/../VERSION" 2>/dev/null || echo "")
 TOTAL_SKILLS=0
 TOTAL_AGENTS=0
 

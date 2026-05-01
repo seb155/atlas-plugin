@@ -12,6 +12,12 @@
           },
           {
             "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/statusline-heal\"",
+            "async": true,
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/external-capabilities\"",
             "async": true,
             "timeout": 5
@@ -110,6 +116,12 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/validate-bash\"",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/pre-git-push\"",
+            "timeout": 5,
+            "async": true
           }
         ]
       },
@@ -158,6 +170,17 @@
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/post-git-push\"",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      },
       {
         "matcher": "TaskCreate|TaskUpdate",
         "hooks": [
@@ -209,6 +232,12 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/timestamp-injector\"",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/workflow-intent-detect\"",
+            "async": true,
             "timeout": 3
           },
           {
