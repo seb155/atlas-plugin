@@ -30,6 +30,7 @@ skills:
 - relationship-manager
 - discovery   # v5.1+: capability scanner inspector
 - agent-visibility   # v5.5+: SP-AGENT-VIS subagent visibility (statusline + CLI + tmux tail)
+- zoom-out   # v7-w1.6: meta-cognitive anti-tunnel-vision (cherry-pick mattpocock/skills, MIT)
 refs:
 - atlas-visual-identity
 - external-tools

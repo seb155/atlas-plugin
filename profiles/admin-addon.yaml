@@ -40,6 +40,12 @@ skills:
 - atlas-dev-self
 - atlas-analytics
 - ultrathink
+# v7.0 W1 — Observability & Eval foundation
+- atlas-trace            # W1.1: OpenTelemetry-like distributed tracing
+- skill-scorecard        # W1.2: rolling p50/p99 latency, error rate, cost-per-invocation
+- trace-replay           # W1.3: interactive timeline replay for traces
+- atlas-eval             # W1.5: LLM-as-judge eval harness for skill regression
+- git-guardrails         # W1.7: git safety guardrails companion (cherry-pick mattpocock/skills, MIT)
 refs:
 # Inherited from dev-addon: composition-patterns, react-best-practices,
 # web-design-guidelines, gmining-excel, code-smells-catalog,
@@ -59,6 +65,11 @@ hooks:
 - tdd-guard               # PreToolUse[Write|Edit] — block edits without failing test
 - claudemd-lint           # PostToolUse[Write|Edit] on CLAUDE.md — validate frontmatter + W3H
 - detect-stale-git        # Stop — warn if working tree has stale refs / uncommitted
+# v7.0 W1 — Observability hooks
+- trace-id-injector       # PreToolUse[*] — generate trace+span IDs, write open span (W1.1)
+- trace-id-finalizer      # PostToolUse[*] — close span with duration+status (W1.1)
+- scorecard-emitter       # PostToolUse[*] — emit per-skill scorecard line (W1.2)
+- git-guardrails          # PreToolUse[Bash] — block dangerous git ops (W1.7, mattpocock cherry-pick)
 # feature-drift-detector registered in hooks.json SessionStart block (removed from Stop profile 2026-04-18)
 agents:
 # Inherited from dev-addon (7): plan-architect, plan-reviewer, code-reviewer,

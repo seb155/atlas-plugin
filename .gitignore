@@ -26,3 +26,4 @@ third_party/atlas-skill-lint/package-lock.json
 
 # atlas-eval runtime artifacts (W1.5) — golden datasets are committed, results are not
 evals/results/
+.worktrees/
